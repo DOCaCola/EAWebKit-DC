@@ -161,6 +161,8 @@ public:
 	virtual void		SetTextIntoSelectedInput(const char16_t* contentTextBuffer, bool textWasAccepted = true); 
 	virtual uint32_t	GetTextFromSelectedInput(char16_t* contentTextBuffer, const uint32_t maxcontentTextBufferLength, char16_t* titleTextBuffer = 0, const uint32_t maxTitleTextBufferLength = 0 );
 
+    virtual void        RemoveFocusFromActiveElements();  // Remove focus from any currently active elements ("blur")
+
 	//
 	// Navigation using a controller
 	//

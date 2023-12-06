@@ -1173,6 +1173,37 @@ uint32_t View::GetTextFromSelectedInput(char16_t* contentTextBuffer, const uint3
 	return size;    
 }
 
+void View::RemoveFocusFromActiveElements()
+{
+	if (d->mBeingDebugged)
+	{
+		return;
+	}
+
+	SET_AUTOFPUPRECISION(kFPUPrecisionExtended);
+	EAWEBKIT_THREAD_CHECK();
+	EAWWBKIT_INIT_CHECK();
+
+	WebCore::Frame* pFrame = GetFrame();
+
+	while (pFrame)
+	{
+		WebCore::Document* document = pFrame->document();
+		EAW_ASSERT(document);
+
+		if (document)
+		{
+			WebCore::Element* activeElement = document->activeElement();
+			if (activeElement)
+			{
+				activeElement->blur();
+			}
+		}
+
+		pFrame = pFrame->tree().traverseNext();
+	}
+}
+
 void View::ShowInspector(bool state)
 {
     SET_AUTOFPUPRECISION(EA::WebKit::kFPUPrecisionExtended);
