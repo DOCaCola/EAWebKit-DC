@@ -247,22 +247,26 @@ Color RenderThemeEA::platformInactiveTextSearchHighlightColor() const
 
 Color RenderThemeEA::platformActiveListBoxSelectionBackgroundColor() const
 {
-    return Color(Color::transparent);
+	Color c(EA::WebKit::GetThemeParameters().mColorActiveListBoxSelectionBack);
+	return c;
 }
 
 Color RenderThemeEA::platformInactiveListBoxSelectionBackgroundColor() const
 {
-    return Color(Color::transparent);
+	Color c(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
+	return c;
 }
 
 Color RenderThemeEA::platformActiveListBoxSelectionForegroundColor() const
 {
-    return Color(Color::transparent);
+	Color c(EA::WebKit::GetThemeParameters().mColorActiveListBoxSelectionFore);
+	return c;
 }
 
 Color RenderThemeEA::platformInactiveListBoxSelectionForegroundColor() const
 {
-    return Color(Color::transparent);
+	Color c(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionFore);
+	return c;
 }
 
 void RenderThemeEA::updateCachedSystemFontDescription(CSSValueID propId, FontDescription& fd) const
