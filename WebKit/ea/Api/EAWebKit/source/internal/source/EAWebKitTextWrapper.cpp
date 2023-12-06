@@ -39,7 +39,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <EAText/EATextCache.h>
 #include <EAText/EATextStyle.h>
 #include <EAText/EATextCollation.h>
-#include <EAText/EATextBreak.h> 
+#include <EAText/EATextBreak.h>
+
+#ifndef EAWEBKIT_TEXT_GLYPH_CACHE_SIZE
+	#define EAWEBKIT_TEXT_GLYPH_CACHE_SIZE 512
+#endif
+#ifndef EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT
+	#define EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT 8
+#endif
 
 namespace EA
 {
@@ -1691,13 +1698,13 @@ void InitFontSystem(void)
                 return;    
     
             spGlyphCache->SetAllocator(EA::Allocator::ICoreAllocator::GetDefaultAllocator());
-            spGlyphCache->SetOption(EA::Text::GlyphCache::kOptionDefaultSize, 512);
+            spGlyphCache->SetOption(EA::Text::GlyphCache::kOptionDefaultSize, EAWEBKIT_TEXT_GLYPH_CACHE_SIZE);
             spGlyphCache->SetOption(EA::Text::GlyphCache::kOptionDefaultFormat, format);
         
             // This kOptionAutoTextureCreate setting allows the glyph cache to allocate more pages if
             // it runs out of space and nMaxTextureCount > 1. 
             spGlyphCache->SetOption(EA::Text::GlyphCache::kOptionAutoTextureCreate, true);  
-            spGlyphCache->Init(8, 1); // (nMaxTextureCount = 8, nInitialTextureCount = 1) 
+            spGlyphCache->Init(EAWEBKIT_TEXT_GLYPH_CACHE_SIZE, 1); // (nMaxTextureCount = 8, nInitialTextureCount = 1) 
         }
         
         if(!spFontServer)

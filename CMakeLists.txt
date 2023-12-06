@@ -493,7 +493,7 @@ include(GenerateProductVersion)
 
 GenerateProductVersion(ProductVersionFiles
     NAME EAWebKit
-    VERSION 16.3.1.1
+    VERSION 16.3.1.1.0
     COMPANY_NAME EAWebKit-DC
     )
 
@@ -622,6 +622,9 @@ target_include_directories(EAWebKit PRIVATE
 
 target_link_libraries(EAWebKit PUBLIC JavaScriptCore EAText cairo SQLite libjpeg libxml2 DirtySDK)
 
+set(EAWEBKIT_TEXT_GLYPH_CACHE_SIZE "512" CACHE STRING "When using large fonts, the glyph cache may need to be increased")
+set(EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT "8" CACHE STRING "When using large fonts, the glyph cache may need to be increased")
+
 target_compile_definitions(EAWebKit PRIVATE
 	BUILDING_EA__
 	BUILDING_EA__=1
@@ -646,6 +649,8 @@ target_compile_definitions(EAWebKit PRIVATE
 	UNICODE
 	USE_SYSTEM_MALLOC=1
 	UTF_USE_EAASSERT=1
+	EAWEBKIT_TEXT_GLYPH_CACHE_SIZE=${EAWEBKIT_TEXT_GLYPH_CACHE_SIZE}
+	EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT=${EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT}
 	$<$<CONFIG:RELEASE>:NDEBUG>
 	$<$<CONFIG:DEBUG>:EA_DEBUG>
   )
