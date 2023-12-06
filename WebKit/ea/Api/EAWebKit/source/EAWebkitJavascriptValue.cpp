@@ -428,6 +428,7 @@ bool JavascriptValue::Call(JavascriptValue *args, size_t argCount, JavascriptVal
     {
         JSC::JSValue jsvFunction = *GetImpl();
         JSC::ExecState *exec = mExecState;
+        JSC::JSLockHolder lock(exec);
         JSC::JSValue result = JSC::call(exec, jsvFunction, callType, callData, jsvFunction, jsArgs);
 
         if (!exec->hadException())

@@ -297,6 +297,16 @@ public:
 		return (JSC::JSValue*) &mJSValue;
 	}
 
+	inline JSC::ExecState* GetExecState(void) const
+	{
+		return mExecState;
+	}
+
+	inline void SetExecState(JSC::ExecState *exec) 
+	{
+		mExecState = exec;
+	}
+
     void SetExec(JSC::ExecState* exec);
     void Assign(const JSC::JSValue* jsValue);
 
