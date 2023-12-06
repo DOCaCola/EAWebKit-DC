@@ -667,7 +667,7 @@ void PopupMenuEA::OnMouseMoveEvent(const EA::WebKit::MouseMoveEvent& mouseMoveEv
         (mouseMoveEvent.mModifiers & kModifierMaskAlt), (mouseMoveEvent.mModifiers & kModifierMaskOS), 0.0, WebCore::ForceAtClick);
         
         // Make sure mouse is in the scroll bar area
-        if(m_mouseScrollRect.contains(mouseMoveEvent.mX, mouseMoveEvent.mY))
+        if(m_scrollbarCapturingMouse || m_mouseScrollRect.contains(mouseMoveEvent.mX, mouseMoveEvent.mY))
         {
             m_scrollbarWasUnderMouse = true;
             
@@ -688,11 +688,11 @@ void PopupMenuEA::OnMouseMoveEvent(const EA::WebKit::MouseMoveEvent& mouseMoveEv
             }
             return;    
         }
-        else if(m_scrollbarCapturingMouse)
+        else
         {    
             // We need to send a mouse release notification so that the scroll system can know not to track the thumb.
-            m_scrollBar->mouseUp(evt);
-            m_scrollbarCapturingMouse = false;
+            //m_scrollBar->mouseUp(evt);
+            //m_scrollbarCapturingMouse = false;
         }
 
         // Update scrollbar if mouse was over previously
@@ -739,7 +739,7 @@ void PopupMenuEA::OnMouseButtonEvent(const EA::WebKit::MouseButtonEvent& mouseBu
         else
         {
             // Make sure mouse is in the scroll bar area
-            if(m_mouseScrollRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
+            if(m_scrollbarCapturingMouse || m_mouseScrollRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
             {
                 m_scrollbarWasUnderMouse = true;
                 // Convert to the relative pos of the scroll bar on the popup surface
@@ -756,22 +756,29 @@ void PopupMenuEA::OnMouseButtonEvent(const EA::WebKit::MouseButtonEvent& mouseBu
                 m_scrollbarCapturingMouse = true;  
 
                 // Adjust the starting scroll offset as the thumb move is just used for viewing but not selecting
-                int requestedOffset = m_scrollBar->value(); 
+                const int requestedOffset = m_scrollBar->value(); 
                 updateScrollOffset(requestedOffset);
 
                 draw();
                 return;      
             }
+            else
+            {
+	            m_scrollbarWasUnderMouse = false;
+            }
         }
     
         // Update scrollbar if mouse was over previously
         drawScrollBar();
+
+        if(m_mouseScrollRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
+        {
+	        return;
+        }
     }
 
-    if(mouseButtonEvent.mbDepressed)
-    {
-		// On consoles, we don't actually move our cursor when selecting items. So we try to figure out if the we are
-		// in that situation.
+	// On consoles, we don't actually move our cursor when selecting items. So we try to figure out if the we are
+// in that situation.
 #if defined(EA_PLATFORM_CONSOLE)
 		bool onConsole = true;
 #elif defined(EA_PLATFORM_WINDOWS)
@@ -779,25 +786,14 @@ void PopupMenuEA::OnMouseButtonEvent(const EA::WebKit::MouseButtonEvent& mouseBu
 #elif defined(EA_PLATFORM_OSX)
 		bool onConsole = false;
 #endif
-		
-		hide();
+
+    if(mouseButtonEvent.mbDepressed)
+    {
 		// We should only change the selected element if the user clicked inside the html select element. Otherwise, following code would
         // set the focus to a random element based on where the user clicks in the rest of the window.
-        if(m_poppedUpSurfaceRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
+        if(!m_poppedUpSurfaceRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
         {
-			int requestedIndex = (mouseButtonEvent.mY - m_poppedUpSurfaceRect.y()) / m_itemHeight;
-
-	        if(m_scrollBarActive)
-	        {
-                if(requestedIndex < 0)
-			        requestedIndex = 0;
-		        else if(requestedIndex >= m_numItemsVisible)
-			        requestedIndex = (m_numItemsVisible -1);
-
-		        requestedIndex += m_itemScrollOffset;
-	        }
-
-	        updateFocusIndex(requestedIndex, true, true);
+			hide();
         }
 		else 
 		{ 
@@ -812,6 +808,32 @@ void PopupMenuEA::OnMouseButtonEvent(const EA::WebKit::MouseButtonEvent& mouseBu
 					m_popupClient->valueChanged(m_focusedIndex);
 				}
 			}
+		}
+	}
+	else
+	{
+		if (!onConsole && m_poppedUpSurfaceRect.contains(mouseButtonEvent.mX, mouseButtonEvent.mY))
+		{
+            bool bUpdateSelected = false;
+            if (!m_scrollbarCapturingMouse && !m_scrollbarWasUnderMouse)
+            {
+                bUpdateSelected = true;
+	            hide();
+            }
+
+			int requestedIndex = (mouseButtonEvent.mY - m_poppedUpSurfaceRect.y()) / m_itemHeight;
+
+			if (m_scrollBarActive)
+			{
+				if (requestedIndex < 0)
+					requestedIndex = 0;
+				else if (requestedIndex >= m_numItemsVisible)
+					requestedIndex = (m_numItemsVisible - 1);
+
+				requestedIndex += m_itemScrollOffset;
+			}
+
+			updateFocusIndex(requestedIndex, bUpdateSelected, true);
 		}
     }
 }
