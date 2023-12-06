@@ -497,11 +497,17 @@ GenerateProductVersion(ProductVersionFiles
     COMPANY_NAME EAWebKit-DC
     )
 
+# required for proper DLL export
+set(DEF_FILE BuildUtils/Def/EAWebKit_Microsoft.def)
+
 add_library(EAWebKit SHARED
   ${EAWEBKIT_SOURCES}
   $<$<PLATFORM_ID:Windows>:${EAWEBKIT_SOURCES_WIN}>
   $<$<PLATFORM_ID:Windows>:${ProductVersionFiles}>
+  ${DEF_FILE}
   )
+
+set_source_files_properties(${DEF_FILE} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 # Output filename
 set_target_properties(EAWebKit PROPERTIES OUTPUT_NAME "EAWebKit$<$<CONFIG:Debug>:d>")
@@ -650,4 +656,7 @@ if (MSVC)
       /W0
       /bigobj /vmg -bigobj /FS /fp:except-
       )
+  target_link_options(EAWebKit PRIVATE 
+        /DEF:${CMAKE_CURRENT_SOURCE_DIR}/${DEF_FILE}
+    )
 endif()
