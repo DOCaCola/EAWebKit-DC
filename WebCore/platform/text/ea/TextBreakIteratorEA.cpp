@@ -21,6 +21,7 @@
  
 
 #include "config.h"
+#include <string>
 #include "TextBreakIterator.h"
 #include "TextEncoding.h"
 #include "TextBoundaries.h"
