@@ -1552,7 +1552,7 @@ bool SocketTransportHandlerDirtySDK::Tick()
 			{
 				// abaldeva: This assert may get fired if the remote host closes the connection. For now, keeping it enabled
 				// since this code is fairly new. If this assert becomes an issue for your team, please notify.
-				EA_ASSERT_FORMATTED(false, ("Error receiving data on socket. Error code - %d", bytesReceived));
+				//EA_ASSERT_FORMATTED(false, ("Error receiving data on socket. Error code - %d", bytesReceived));
 				sockInfo->errorCode = bytesReceived;
 			}
 		}
