@@ -135,8 +135,8 @@ public:
     //
     // Setting the web page/element content from application 
     //
-	virtual void SetHtml(const char8_t* html, size_t length, const char8_t* baseUrl = "about:blank");
-	virtual void SetContent(const char8_t* data, size_t length, const char8_t* mediaType, const char8_t* baseUrl = "about:blank");// example of mediaType or Content-Type is "text/html; charset=utf-8"
+	virtual void SetHtml(const char8_t* html, size_t length, const char8_t* baseUrl = u8"about:blank");
+	virtual void SetContent(const char8_t* data, size_t length, const char8_t* mediaType, const char8_t* baseUrl = u8"about:blank");// example of mediaType or Content-Type is "text/html; charset=utf-8"
 
     //
     // JavaScript

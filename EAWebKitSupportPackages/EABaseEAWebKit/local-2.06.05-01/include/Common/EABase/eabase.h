@@ -727,7 +727,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	#if defined(EA_PLATFORM_APPLE)
 		#define char8_t char    // The Apple debugger is too stupid to realize char8_t is typedef'd to char, so we #define it.
 	#else
-		typedef char char8_t;
+		#if __cplusplus < 202002L || (defined(_MSVC_LANG) && _MSVC_LANG < 202002L)
+			typedef char char8_t;
+		#endif
 	#endif
 	
 	#if EA_CHAR16_NATIVE

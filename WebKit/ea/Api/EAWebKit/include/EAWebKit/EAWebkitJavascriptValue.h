@@ -182,7 +182,7 @@ public:
     virtual void setProperty(const char *name, const JavascriptValue &value) {}
 
     // Default tostring value.
-    virtual const char8_t *stringValue(void) { return ""; }
+    virtual const char8_t *stringValue(void) { return u8""; }
 
 	// Object property iteration. This will be called for a for-in loop on JS side for this object.
 	class PropertyIterator {
