@@ -32,21 +32,21 @@
 #include "PopupMenuClient.h"
 #include "PlatformScreen.h"
 #include "PageClientEA.h"
-#include "page.h"
-#include "chrome.h"
-#include "webframe.h"
+#include "Page.h"
+#include "Chrome.h"
+#include "WebFrame.h"
 #include "IntRect.h"
 #include "RenderText.h"
 #include "GraphicsContext.h"
 #include "RenderThemeEA.h"
-#include "ScrollBar.h"
+#include "Scrollbar.h"
 #include "RefPtrCairo.h"
 #include "TextRun.h"
 #include <EAWebKit/EAWebKit.h>
 #include <EAWebKit/EAWebKitView.h>
 #include <EAWebKit/EAWebKitSurface.h>
 #include <EAWebKit/EAWebKitInput.h>
-#include <internal/include/EAWebkit_p.h>
+#include <internal/include/EAWebKit_p.h>
 #include <internal/include/EAWebKitAssert.h>
 
 namespace ThemeEA

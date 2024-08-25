@@ -10,9 +10,9 @@ EAWebKit is open-sourced by Electronic Arts under the GNU Lesser General Public 
 
 ## What is EAWebKit-DC
 
-This fork is based on version 16.3.1.1.0 of EAWebKit. It contains some minor additions and fixes for building EAWebKit. See commits for details.
+This fork is based on version 16.4.2.0.0 of EAWebKit. It contains some minor additions and fixes for building EAWebKit. See commits for details.
 
-EAWebKit-DC uses the CMake build system. This is in contrast to the Visual Studio project files coming with the releases from EA. EA's project files are usually unusuable since they were created with internal tooling in mind.
+EAWebKit-DC uses the CMake build system. This is in contrast to the Visual Studio project files coming with the raw releases from EA. EA's project files are usually unusuable since they were created with internal tooling in mind.
 
 ## Building EAWebKit-DC
 

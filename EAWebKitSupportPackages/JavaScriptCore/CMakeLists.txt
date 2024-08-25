@@ -5,7 +5,7 @@ project(
   LANGUAGES C CXX ASM_MASM
 )
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB LOCAL_DIR "local")
@@ -207,6 +207,13 @@ target_compile_definitions(JavaScriptCore PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${JAVASCRIPTCORE_PRIVATE_DEFINITIONS_CXX}>
   )
 
+if(MSVC)
+  target_compile_definitions(JavaScriptCore PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+    _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
+    )
+endif()
+
 if (MSVC)
   target_compile_options(JavaScriptCore PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:
@@ -216,7 +223,8 @@ if (MSVC)
       /fp:except-
       /TP
       /vmg    #<!-- Fix issue when a member function pointer is created before defining the class -->
-      -bigobj /FS /fp:except- -w44946 -w44555 -w44312 -w44296 -w44287 -w44265 -w44254 -w44242
+      $<$<CONFIG:RELEASE>:-Zo -d2SSAOptimizer->
+      -bigobj /FS /Zf /fp:except- -w44946 -w44555 -w44312 -w44296 -w44287 -w44265 -w44254 -w44242
       /wd4530 /wd4996 /wd4275 /wd4574 /wd4365 /wd4100 /wd4324 /wd4350 /wd4464 /wd4482 /wd4577 /wd4711 /wd4746 /wd4986 /wd4987 /wd4819
     >
 

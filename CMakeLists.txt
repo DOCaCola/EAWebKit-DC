@@ -12,7 +12,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	return()
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #option(EAWebKit.ENABLE_LEAN_AND_MEAN "Creates EAWebKit with less options (SVG Disabled)" OFF)
@@ -20,23 +20,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #option(EAWebKit.ForceDisableJIT "" OFF)
 
 add_subdirectory(EAWebKitSupportPackages/cairo)
-add_subdirectory(EAWebKitSupportPackages/coreallocatorEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/DirtySDKEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/EAAssertEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/EABaseEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/EAIOEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/EASTLEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/EATextEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/FreeTypeEAWebKit)
+add_subdirectory(EAWebKitSupportPackages/coreallocator)
+add_subdirectory(EAWebKitSupportPackages/DirtySDK)
+add_subdirectory(EAWebKitSupportPackages/EAAssert)
+add_subdirectory(EAWebKitSupportPackages/EABase)
+add_subdirectory(EAWebKitSupportPackages/EACallstack)
+add_subdirectory(EAWebKitSupportPackages/EAIO)
+add_subdirectory(EAWebKitSupportPackages/EASTL)
+add_subdirectory(EAWebKitSupportPackages/EAStdC)
+add_subdirectory(EAWebKitSupportPackages/EAText)
+add_subdirectory(EAWebKitSupportPackages/EAThread)
+add_subdirectory(EAWebKitSupportPackages/FreeType)
 add_subdirectory(EAWebKitSupportPackages/JavaScriptCore)
-add_subdirectory(EAWebKitSupportPackages/libjpegEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/libpngEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/libxml2EAWebKit)
+add_subdirectory(EAWebKitSupportPackages/libjpeg)
+add_subdirectory(EAWebKitSupportPackages/libpng)
+add_subdirectory(EAWebKitSupportPackages/libxml2)
 add_subdirectory(EAWebKitSupportPackages/pixman)
-add_subdirectory(EAWebKitSupportPackages/PPMallocEAWebKit)
-add_subdirectory(EAWebKitSupportPackages/SQLiteEAWebKit)
+add_subdirectory(EAWebKitSupportPackages/PPMalloc)
+add_subdirectory(EAWebKitSupportPackages/SQLite)
 add_subdirectory(EAWebKitSupportPackages/WTF)
-add_subdirectory(EAWebKitSupportPackages/zlibEAWebKit)
+add_subdirectory(EAWebKitSupportPackages/zlib)
 
 file(GLOB EAWEBKIT_SOURCES
 	#"WebCore/*.cpp"
@@ -493,7 +496,7 @@ include(GenerateProductVersion)
 
 GenerateProductVersion(ProductVersionFiles
     NAME EAWebKit
-    VERSION 16.3.1.1.0
+    VERSION 16.4.2.2.0
     COMPANY_NAME EAWebKit-DC
     )
 
@@ -655,11 +658,19 @@ target_compile_definitions(EAWebKit PRIVATE
 	$<$<CONFIG:DEBUG>:EA_DEBUG>
   )
 
+if(MSVC)
+  target_compile_definitions(EAWebKit PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+    )
+endif()
+
 if (MSVC)
   target_compile_options(EAWebKit PRIVATE
       /MP
       /W0
-      /bigobj /vmg -bigobj /FS /fp:except-
+      $<$<CONFIG:RELEASE>:-Zo -d2SSAOptimizer->
+      /bigobj /vmg -bigobj /FS /Zf /fp:except-
+      /wd4244 /wd4800 /wd4530 /wd4996 /wd4100 /wd4127 /wd4251 /wd4275 /wd4324 /wd4350 /wd4464 /wd4482 /wd4577 /wd4711 /wd4746 /wd4986 /wd4987 /wd4819
       )
   target_link_options(EAWebKit PRIVATE 
         /DEF:${CMAKE_CURRENT_SOURCE_DIR}/${DEF_FILE}
