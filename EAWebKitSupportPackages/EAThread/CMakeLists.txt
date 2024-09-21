@@ -26,7 +26,7 @@ target_include_directories(EAThread PRIVATE
   )
 
 target_include_directories(EAThread PUBLIC
-  $<$<COMPILE_LANGUAGE:CXX>:${LOCAL_DIR}/include>
+  ${LOCAL_DIR}/include
   )
 
 # Add the dependencies of the EAThread library

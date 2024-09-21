@@ -12,6 +12,4 @@ endif()
 
 add_library(EABase INTERFACE)
 
-target_include_directories(EABase INTERFACE
-  $<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:${LOCAL_DIR}/include/Common>
-  )
+target_include_directories(EABase INTERFACE ${LOCAL_DIR}/include/Common)

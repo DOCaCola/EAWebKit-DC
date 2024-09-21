@@ -23,6 +23,14 @@ add_library(EAIO ${EAASSERT_SOURCES} ${EAASSERT_HEADER}  )
 
 target_include_directories(EAIO PUBLIC "${LOCAL_DIR}/include")
 
+if (NOT TARGET EAStdC)
+    add_subdirectory(../EAStdC EAStdC_Build)
+endif()
+
+if (NOT TARGET EASTL)
+    add_subdirectory(../EASTL EASTL_Build)
+endif()
+
 target_link_libraries(EAIO PUBLIC EABase EASTL EAThread EAStdC coreallocator EAAssert)
 
 target_compile_definitions(EAIO PUBLIC

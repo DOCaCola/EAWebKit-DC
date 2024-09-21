@@ -26,6 +26,18 @@ add_library(PPMalloc ${PPMALLOC_SOURCES} ${PPMALLOC_HEADER}  )
 
 target_include_directories(PPMalloc PUBLIC "${LOCAL_DIR}/include")
 
+if (NOT TARGET EABase)
+    add_subdirectory(../EABase EABase_Build)
+endif()
+
+if (NOT TARGET EAThread)
+    add_subdirectory(../EAThread EAThread_Build)
+endif()
+
+if (NOT TARGET EACallstack)
+    add_subdirectory(../EACallstack EACallstack_Build)
+endif()
+
 target_link_libraries(PPMalloc PUBLIC EABase EAThread EACallstack)
 
 target_compile_definitions(PPMalloc PRIVATE

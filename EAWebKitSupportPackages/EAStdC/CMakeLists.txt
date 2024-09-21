@@ -23,8 +23,12 @@ target_include_directories(EAStdC PRIVATE
   )
 
 target_include_directories(EAStdC PUBLIC
-  $<$<COMPILE_LANGUAGE:CXX>:${LOCAL_DIR}/include>
+  ${LOCAL_DIR}/include
   )
+
+if (NOT TARGET EAAssert)
+    add_subdirectory(../EAAssert EAAssert_Build)
+endif()
 
 # Add the dependencies of the EAStdC library
 target_link_libraries(EAStdC PUBLIC EABase EAAssert EAThread)

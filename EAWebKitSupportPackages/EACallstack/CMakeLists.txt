@@ -18,7 +18,19 @@ add_library(EACallstack ${EACALLSTACK_SOURCES})
 
 target_include_directories(EACallstack PUBLIC "${LOCAL_DIR}/include")
 
-target_link_libraries(EACallstack PUBLIC EABase EASTL EAIO EAStdC EAAssert)
+if (NOT TARGET EABase)
+    add_subdirectory(../EABase EABase_Build)
+endif()
+
+if (NOT TARGET coreallocator)
+    add_subdirectory(../coreallocator coreallocator_Build)
+endif()
+
+if (NOT TARGET EAIO)
+    add_subdirectory(../EAIO EAIO_Build)
+endif()
+
+target_link_libraries(EACallstack PUBLIC EABase coreallocator EASTL EAIO EAStdC EAAssert)
 
 target_compile_definitions(EACallstack PRIVATE
   $<$<CONFIG:RELEASE>:EA_SCEDBG_ENABLED=0>

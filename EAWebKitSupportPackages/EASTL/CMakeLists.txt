@@ -22,9 +22,13 @@ target_include_directories(EASTL PRIVATE
   "${LOCAL_DIR}/source"
   )
 
+if (NOT TARGET EABase)
+    add_subdirectory(../EABase EABase_Build)
+endif()
+
 target_include_directories(EASTL PUBLIC
-  $<$<COMPILE_LANGUAGE:CXX>:${LOCAL_DIR}/include>
-  )
+  ${LOCAL_DIR}/include
+)
 
 # Add the dependencies of the EASTL library
 target_link_libraries(EASTL PUBLIC EABase)

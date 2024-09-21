@@ -16,18 +16,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #option(EAWebKit.ENABLE_LEAN_AND_MEAN "Creates EAWebKit with less options (SVG Disabled)" OFF)
-#option(EAWebKit.DisableJIT "If desired, disable JIT on supported platforms." OFF)
-#option(EAWebKit.ForceDisableJIT "" OFF)
 
 add_subdirectory(EAWebKitSupportPackages/cairo)
 add_subdirectory(EAWebKitSupportPackages/coreallocator)
 add_subdirectory(EAWebKitSupportPackages/DirtySDK)
-add_subdirectory(EAWebKitSupportPackages/EAAssert)
-add_subdirectory(EAWebKitSupportPackages/EABase)
-add_subdirectory(EAWebKitSupportPackages/EACallstack)
+#add_subdirectory(EAWebKitSupportPackages/EAAssert)
+#add_subdirectory(EAWebKitSupportPackages/EABase)
+#add_subdirectory(EAWebKitSupportPackages/EACallstack)
 add_subdirectory(EAWebKitSupportPackages/EAIO)
-add_subdirectory(EAWebKitSupportPackages/EASTL)
-add_subdirectory(EAWebKitSupportPackages/EAStdC)
+#add_subdirectory(EAWebKitSupportPackages/EASTL)
+#add_subdirectory(EAWebKitSupportPackages/EAStdC)
 add_subdirectory(EAWebKitSupportPackages/EAText)
 add_subdirectory(EAWebKitSupportPackages/EAThread)
 add_subdirectory(EAWebKitSupportPackages/FreeType)
@@ -627,6 +625,18 @@ target_link_libraries(EAWebKit PUBLIC JavaScriptCore EAText cairo SQLite libjpeg
 
 set(EAWEBKIT_TEXT_GLYPH_CACHE_SIZE "512" CACHE STRING "When using large fonts, the glyph cache may need to be increased")
 set(EAWEBKIT_TEXT_GLYPH_CACHE_TEXTURE_COUNT "8" CACHE STRING "When using large fonts, the glyph cache may need to be increased")
+
+option(JAVASCRIPTCORE_DISABLE_JIT "If desired, disable JIT on supported platforms." OFF)
+option(JAVASCRIPTCORE_FORCE_DISABLE_JIT "Forcing fallback into non jit version for PC builds only." OFF)
+
+if(JAVASCRIPTCORE_DISABLE_JIT)
+    target_compile_definitions(JavaScriptCore PRIVATE ENABLE_JIT=0)
+endif()
+
+if(JAVASCRIPTCORE_FORCE_DISABLE_JIT)
+    target_compile_definitions(JavaScriptCore PRIVATE FORCE_NON_JIT=1)
+endif()
+
 
 target_compile_definitions(EAWebKit PRIVATE
 	BUILDING_EA__
