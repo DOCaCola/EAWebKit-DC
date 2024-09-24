@@ -27,6 +27,14 @@ if (NOT TARGET EAStdC)
     add_subdirectory(../EAStdC EAStdC_Build)
 endif()
 
+if (NOT TARGET coreallocator)
+    add_subdirectory(../coreallocator coreallocator_Build)
+endif()
+
+if (NOT TARGET EAThread)
+    add_subdirectory(../EAThread EAThread_Build)
+endif()
+
 if (NOT TARGET EASTL)
     add_subdirectory(../EASTL EASTL_Build)
 endif()
