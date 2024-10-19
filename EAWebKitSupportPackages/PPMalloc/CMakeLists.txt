@@ -40,6 +40,12 @@ endif()
 
 target_link_libraries(PPMalloc PUBLIC EABase EAThread EACallstack)
 
+option(PPMallocExtraTests "Enable PPMalloc Test Extra configuration" OFF)
+
+if(PPMallocExtraTests)
+    add_definitions(-DPPM_MIN_ALIGN=16 -DPPM_DEBUG=2)
+endif()
+
 target_compile_definitions(PPMalloc PRIVATE
   EASTL_CORE_ALLOCATOR_ENABLED=1
   EASTL_EASTDC_VSNPRINTF=1

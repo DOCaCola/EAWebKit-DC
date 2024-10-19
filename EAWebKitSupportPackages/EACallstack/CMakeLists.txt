@@ -14,6 +14,21 @@ file(GLOB EACALLSTACK_SOURCES
   "${LOCAL_DIR}/source/*.cpp"
   )
 
+if (WIN32)
+  set(WINDOWS_SPECIFIC_SOURCES
+    "${LOCAL_DIR}/source/internal/Win32Runner.cpp"
+    "${LOCAL_DIR}/source/internal/CabReader.cpp"
+  )
+  list(APPEND EACALLSTACK_SOURCES ${WINDOWS_SPECIFIC_SOURCES})
+endif()
+
+set(EXTRA_SOURCES
+  "${LOCAL_DIR}/source/internal/DemangleGCC.cpp"
+  "${LOCAL_DIR}/source/internal/Minidump.cpp"
+  "${LOCAL_DIR}/source/internal/cxa_demangle.cpp"
+)
+list(APPEND EACALLSTACK_SOURCES ${EXTRA_SOURCES})
+
 add_library(EACallstack ${EACALLSTACK_SOURCES})
 
 target_include_directories(EACallstack PUBLIC "${LOCAL_DIR}/include")
