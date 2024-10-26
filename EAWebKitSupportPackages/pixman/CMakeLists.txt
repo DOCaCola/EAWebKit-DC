@@ -72,6 +72,7 @@ target_compile_definitions(pixman PUBLIC
   PIXMAN_NO_TLS
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

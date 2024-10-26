@@ -35,5 +35,6 @@ target_include_directories(coreallocator INTERFACE "${LOCAL_DIR}/include")
 target_compile_definitions(coreallocator PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 ]]

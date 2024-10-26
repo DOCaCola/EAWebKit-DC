@@ -51,6 +51,7 @@ target_compile_definitions(DirtySDK PRIVATE
   WINSOCK_API_LINKAGE=
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

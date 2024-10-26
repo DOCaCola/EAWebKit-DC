@@ -38,6 +38,7 @@ target_compile_definitions(EAStdC PRIVATE
   _GLIBCXX_USE_C99_MATH=1
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

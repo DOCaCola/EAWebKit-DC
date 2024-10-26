@@ -201,6 +201,7 @@ set(JAVASCRIPTCORE_PRIVATE_DEFINITIONS_CXX
     $<$<PLATFORM_ID:Windows>:EAWEBKIT_PLATFORM_HEADER=<windows.h$<ANGLE-R>>
     $<$<CONFIG:RELEASE>:NDEBUG>
     $<$<CONFIG:DEBUG>:EA_DEBUG>
+    $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 target_compile_definitions(JavaScriptCore PRIVATE

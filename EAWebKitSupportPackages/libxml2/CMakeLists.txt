@@ -65,6 +65,7 @@ target_compile_definitions(libxml2 PUBLIC
   NOLIBTOOL
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if (MSVC)

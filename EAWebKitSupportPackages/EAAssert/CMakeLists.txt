@@ -23,6 +23,7 @@ target_link_libraries(EAAssert PUBLIC EABase)
 target_compile_definitions(EAAssert PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if (MSVC)

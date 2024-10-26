@@ -100,6 +100,7 @@ target_compile_definitions(FreeType PRIVATE
   $<$<CONFIG:DEBUG>:FT_DEBUG_LEVEL_TRACE>
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if (MSVC)

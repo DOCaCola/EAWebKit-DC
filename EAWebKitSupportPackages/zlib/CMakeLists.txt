@@ -22,6 +22,7 @@ target_compile_definitions(zlib PUBLIC
   Z_PREFIX=1
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

@@ -24,6 +24,7 @@ target_link_libraries(cairo PUBLIC pixman libpng)
 target_compile_definitions(cairo PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   CAIRO_NO_MUTEX=1
   CAIRO_DISABLE_TMPFILE
   cairo_public=

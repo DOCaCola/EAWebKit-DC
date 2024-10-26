@@ -25,6 +25,7 @@ target_compile_definitions(SQLite PUBLIC
   SQLITE_OS_OTHER
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if (MSVC)

@@ -21,6 +21,7 @@ target_link_libraries(libpng PUBLIC zlib)
 target_compile_definitions(libpng PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   PNG_NO_MMX_CODE PNG_IMPEXP=
   )
 

@@ -70,6 +70,7 @@ target_include_directories(libjpeg PUBLIC "${LOCAL_DIR}/include")
 target_compile_definitions(libjpeg PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   LIBJPEG_EA_SUPPORT_ENABLED=1
   )
 

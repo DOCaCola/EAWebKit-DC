@@ -35,6 +35,7 @@ target_compile_definitions(EAText PRIVATE
   UTF_USE_EAASSERT=1
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

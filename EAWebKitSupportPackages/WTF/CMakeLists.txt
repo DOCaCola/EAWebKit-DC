@@ -78,6 +78,7 @@ target_compile_definitions(WTF PRIVATE
   $<$<PLATFORM_ID:Windows>:EAWEBKIT_PLATFORM_HEADER=<windows.h>>
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 #  <property name="runtime.defines" if="${EAWebKit.ENABLE_LEAN_AND_MEAN}">

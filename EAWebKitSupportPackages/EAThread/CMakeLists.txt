@@ -35,6 +35,7 @@ target_link_libraries(EAThread PUBLIC EABase)
 target_compile_definitions(EAThread PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

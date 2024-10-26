@@ -52,6 +52,7 @@ target_compile_definitions(PPMalloc PRIVATE
   PPM_HIGH_SUPPORTED=1
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)

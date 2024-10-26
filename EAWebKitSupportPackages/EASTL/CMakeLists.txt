@@ -36,6 +36,7 @@ target_link_libraries(EASTL PUBLIC EABase)
 target_compile_definitions(EASTL PRIVATE
   $<$<CONFIG:RELEASE>:NDEBUG>
   $<$<CONFIG:DEBUG>:EA_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:EA_DEBUG>
   )
 
 if(MSVC)
