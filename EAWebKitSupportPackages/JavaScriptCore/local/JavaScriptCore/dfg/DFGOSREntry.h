@@ -23,12 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGOSREntry_h
-#define DFGOSREntry_h
+#pragma once
 
 #include "DFGAbstractValue.h"
 #include "Operands.h"
 #include <wtf/BitVector.h>
+#include <wtf/Expected.h>
 
 namespace JSC {
 
@@ -36,6 +36,14 @@ class ExecState;
 class CodeBlock;
 
 namespace DFG {
+
+enum class OSREntryFail {
+    Disabled,
+    TargetNotDFG,
+    TargetOptimizedOut,
+    BadPrediction,
+    StackGrowthFailed,
+};
 
 #if ENABLE(DFG_JIT)
 struct OSREntryReshuffling {
@@ -57,7 +65,7 @@ struct OSREntryData {
     Operands<AbstractValue> m_expectedValues;
     // Use bitvectors here because they tend to only require one word.
     BitVector m_localsForcedDouble;
-    BitVector m_localsForcedMachineInt;
+    BitVector m_localsForcedAnyInt;
     Vector<OSREntryReshuffling> m_reshufflings;
     BitVector m_machineStackUsed;
     
@@ -70,14 +78,10 @@ inline unsigned getOSREntryDataBytecodeIndex(OSREntryData* osrEntryData)
     return osrEntryData->m_bytecodeIndex;
 }
 
-// Returns a pointer to a data buffer that the OSR entry thunk will recognize and
-// parse. If this returns null, it means 
-void* prepareOSREntry(ExecState*, CodeBlock*, unsigned bytecodeIndex);
+// Returns a pointer to a data buffer that the OSR entry thunk will recognize and parse.
+Expected<void*, OSREntryFail> prepareOSREntry(ExecState*, CodeBlock*, unsigned bytecodeIndex);
 #else
-inline void* prepareOSREntry(ExecState*, CodeBlock*, unsigned) { return 0; }
+inline Expected<void*, OSREntryFail> prepareOSREntry(ExecState*, CodeBlock*, unsigned) { return makeUnexpected(OSREntryFail::Disabled); }
 #endif
 
 } } // namespace JSC::DFG
-
-#endif // DFGOSREntry_h
-

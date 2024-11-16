@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2008, 2016 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Kelvin W Sherlock (ksherlock@gmail.com)
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,9 +29,7 @@
 #include "JSObjectRefPrivate.h"
 
 #include "APICast.h"
-#include "ButterflyInlines.h"
-#include "CodeBlock.h"
-#include "CopiedSpaceInlines.h"
+#include "APIUtils.h"
 #include "DateConstructor.h"
 #include "ErrorConstructor.h"
 #include "Exception.h"
@@ -40,6 +38,7 @@
 #include "InitializeThreading.h"
 #include "JSAPIWrapperObject.h"
 #include "JSArray.h"
+#include "JSCInlines.h"
 #include "JSCallbackConstructor.h"
 #include "JSCallbackFunction.h"
 #include "JSCallbackObject.h"
@@ -52,7 +51,6 @@
 #include "JSValueRef.h"
 #include "ObjectConstructor.h"
 #include "ObjectPrototype.h"
-#include "JSCInlines.h"
 #include "PropertyNameArray.h"
 #include "RegExpConstructor.h"
 
@@ -62,34 +60,14 @@
 
 using namespace JSC;
 
-enum class ExceptionStatus {
-    DidThrow,
-    DidNotThrow
-};
-
-static ExceptionStatus handleExceptionIfNeeded(ExecState* exec, JSValueRef* returnedExceptionRef)
-{
-    if (exec->hadException()) {
-        Exception* exception = exec->exception();
-        if (returnedExceptionRef)
-            *returnedExceptionRef = toRef(exec, exception->value());
-        exec->clearException();
-#if ENABLE(REMOTE_INSPECTOR)
-        exec->vmEntryGlobalObject()->inspectorController().reportAPIException(exec, exception);
-#endif
-        return ExceptionStatus::DidThrow;
-    }
-    return ExceptionStatus::DidNotThrow;
-}
-
 JSClassRef JSClassCreate(const JSClassDefinition* definition)
 {
     initializeThreading();
-    RefPtr<OpaqueJSClass> jsClass = (definition->attributes & kJSClassAttributeNoAutomaticPrototype)
+    auto jsClass = (definition->attributes & kJSClassAttributeNoAutomaticPrototype)
         ? OpaqueJSClass::createNoAutomaticPrototype(definition)
         : OpaqueJSClass::create(definition);
     
-    return jsClass.release().leakRef();
+    return &jsClass.leakRef();
 }
 
 JSClassRef JSClassRetain(JSClassRef jsClass)
@@ -117,7 +95,7 @@ JSObjectRef JSObjectMake(JSContextRef ctx, JSClassRef jsClass, void* data)
 
     JSCallbackObject<JSDestructibleObject>* object = JSCallbackObject<JSDestructibleObject>::create(exec, exec->lexicalGlobalObject(), exec->lexicalGlobalObject()->callbackObjectStructure(), jsClass, data);
     if (JSObject* prototype = jsClass->prototype(exec))
-        object->setPrototype(exec->vm(), prototype);
+        object->setPrototypeDirect(exec->vm(), prototype);
 
     return toRef(object);
 }
@@ -168,7 +146,8 @@ JSObjectRef JSObjectMakeFunction(JSContextRef ctx, JSStringRef name, unsigned pa
         args.append(jsString(exec, parameterNames[i]->string()));
     args.append(jsString(exec, body->string()));
 
-    JSObject* result = constructFunction(exec, exec->lexicalGlobalObject(), args, nameID, sourceURL ? sourceURL->string() : String(), TextPosition(OrdinalNumber::fromOneBasedInt(startingLineNumber), OrdinalNumber::first()));
+    auto sourceURLString = sourceURL ? sourceURL->string() : String();
+    JSObject* result = constructFunction(exec, exec->lexicalGlobalObject(), args, nameID, SourceOrigin { sourceURLString }, sourceURLString, TextPosition(OrdinalNumber::fromOneBasedInt(startingLineNumber), OrdinalNumber()));
     if (handleExceptionIfNeeded(exec, exception) == ExceptionStatus::DidThrow)
         result = 0;
     return toRef(result);
@@ -212,7 +191,7 @@ JSObjectRef JSObjectMakeDate(JSContextRef ctx, size_t argumentCount, const JSVal
     for (size_t i = 0; i < argumentCount; ++i)
         argList.append(toJS(exec, arguments[i]));
 
-    JSObject* result = constructDate(exec, exec->lexicalGlobalObject(), argList);
+    JSObject* result = constructDate(exec, exec->lexicalGlobalObject(), JSValue(), argList);
     if (handleExceptionIfNeeded(exec, exception) == ExceptionStatus::DidThrow)
         result = 0;
 
@@ -251,7 +230,7 @@ JSObjectRef JSObjectMakeRegExp(JSContextRef ctx, size_t argumentCount, const JSV
     for (size_t i = 0; i < argumentCount; ++i)
         argList.append(toJS(exec, arguments[i]));
 
-    JSObject* result = constructRegExp(exec, exec->lexicalGlobalObject(),  argList);
+    JSObject* result = constructRegExp(exec, exec->lexicalGlobalObject(), argList);
     if (handleExceptionIfNeeded(exec, exception) == ExceptionStatus::DidThrow)
         result = 0;
     
@@ -267,8 +246,8 @@ JSValueRef JSObjectGetPrototype(JSContextRef ctx, JSObjectRef object)
     ExecState* exec = toJS(ctx);
     JSLockHolder locker(exec);
 
-    JSObject* jsObject = toJS(object);
-    return toRef(exec, jsObject->prototype());
+    JSObject* jsObject = toJS(object); 
+    return toRef(exec, jsObject->getPrototypeDirect());
 }
 
 void JSObjectSetPrototype(JSContextRef ctx, JSObjectRef object, JSValueRef value)
@@ -291,7 +270,7 @@ void JSObjectSetPrototype(JSContextRef ctx, JSObjectRef object, JSValueRef value
         // Someday we might use proxies for something other than JSGlobalObjects, but today is not that day.
         RELEASE_ASSERT_NOT_REACHED();
     }
-    jsObject->setPrototypeWithCycleCheck(exec, jsValue.isObject() ? jsValue : jsNull());
+    jsObject->setPrototype(exec->vm(), exec, jsValue.isObject() ? jsValue : jsNull());
 }
 
 bool JSObjectHasProperty(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName)
@@ -331,20 +310,24 @@ void JSObjectSetProperty(JSContextRef ctx, JSObjectRef object, JSStringRef prope
         return;
     }
     ExecState* exec = toJS(ctx);
-    JSLockHolder locker(exec);
+    VM& vm = exec->vm();
+    JSLockHolder locker(vm);
+    auto scope = DECLARE_CATCH_SCOPE(vm);
 
     JSObject* jsObject = toJS(object);
     Identifier name(propertyName->identifier(&exec->vm()));
     JSValue jsValue = toJS(exec, value);
 
-    if (attributes && !jsObject->hasProperty(exec, name)) {
-        PropertyDescriptor desc(jsValue, attributes);
-        jsObject->methodTable()->defineOwnProperty(jsObject, exec, name, desc, false);
-    } else {
-        PutPropertySlot slot(jsObject);
-        jsObject->methodTable()->put(jsObject, exec, name, jsValue, slot);
+    bool doesNotHaveProperty = attributes && !jsObject->hasProperty(exec, name);
+    if (LIKELY(!scope.exception())) {
+        if (doesNotHaveProperty) {
+            PropertyDescriptor desc(jsValue, attributes);
+            jsObject->methodTable()->defineOwnProperty(jsObject, exec, name, desc, false);
+        } else {
+            PutPropertySlot slot(jsObject);
+            jsObject->methodTable()->put(jsObject, exec, name, jsValue, slot);
+        }
     }
-
     handleExceptionIfNeeded(exec, exception);
 }
 
@@ -397,21 +380,38 @@ bool JSObjectDeleteProperty(JSContextRef ctx, JSObjectRef object, JSStringRef pr
     return result;
 }
 
+// API objects have private properties, which may get accessed during destruction. This
+// helper lets us get the ClassInfo of an API object from a function that may get called
+// during destruction.
+static const ClassInfo* classInfoPrivate(JSObject* jsObject)
+{
+    VM* vm = jsObject->vm();
+    
+    if (vm->currentlyDestructingCallbackObject != jsObject)
+        return jsObject->classInfo();
+
+    return vm->currentlyDestructingCallbackObjectClassInfo;
+}
+
 void* JSObjectGetPrivate(JSObjectRef object)
 {
     JSObject* jsObject = uncheckedToJS(object);
 
+    const ClassInfo* classInfo = classInfoPrivate(jsObject);
+    
     // Get wrapped object if proxied
-    if (jsObject->inherits(JSProxy::info()))
-        jsObject = jsCast<JSProxy*>(jsObject)->target();
+    if (classInfo->isSubClassOf(JSProxy::info())) {
+        jsObject = static_cast<JSProxy*>(jsObject)->target();
+        classInfo = jsObject->classInfo();
+    }
 
-    if (jsObject->inherits(JSCallbackObject<JSGlobalObject>::info()))
-        return jsCast<JSCallbackObject<JSGlobalObject>*>(jsObject)->getPrivate();
-    if (jsObject->inherits(JSCallbackObject<JSDestructibleObject>::info()))
-        return jsCast<JSCallbackObject<JSDestructibleObject>*>(jsObject)->getPrivate();
+    if (classInfo->isSubClassOf(JSCallbackObject<JSGlobalObject>::info()))
+        return static_cast<JSCallbackObject<JSGlobalObject>*>(jsObject)->getPrivate();
+    if (classInfo->isSubClassOf(JSCallbackObject<JSDestructibleObject>::info()))
+        return static_cast<JSCallbackObject<JSDestructibleObject>*>(jsObject)->getPrivate();
 #if JSC_OBJC_API_ENABLED
-    if (jsObject->inherits(JSCallbackObject<JSAPIWrapperObject>::info()))
-        return jsCast<JSCallbackObject<JSAPIWrapperObject>*>(jsObject)->getPrivate();
+    if (classInfo->isSubClassOf(JSCallbackObject<JSAPIWrapperObject>::info()))
+        return static_cast<JSCallbackObject<JSAPIWrapperObject>*>(jsObject)->getPrivate();
 #endif
     
     return 0;
@@ -421,21 +421,25 @@ bool JSObjectSetPrivate(JSObjectRef object, void* data)
 {
     JSObject* jsObject = uncheckedToJS(object);
 
+    const ClassInfo* classInfo = classInfoPrivate(jsObject);
+    
     // Get wrapped object if proxied
-    if (jsObject->inherits(JSProxy::info()))
-        jsObject = jsCast<JSProxy*>(jsObject)->target();
+    if (classInfo->isSubClassOf(JSProxy::info())) {
+        jsObject = static_cast<JSProxy*>(jsObject)->target();
+        classInfo = jsObject->classInfo();
+    }
 
-    if (jsObject->inherits(JSCallbackObject<JSGlobalObject>::info())) {
-        jsCast<JSCallbackObject<JSGlobalObject>*>(jsObject)->setPrivate(data);
+    if (classInfo->isSubClassOf(JSCallbackObject<JSGlobalObject>::info())) {
+        static_cast<JSCallbackObject<JSGlobalObject>*>(jsObject)->setPrivate(data);
         return true;
     }
-    if (jsObject->inherits(JSCallbackObject<JSDestructibleObject>::info())) {
-        jsCast<JSCallbackObject<JSDestructibleObject>*>(jsObject)->setPrivate(data);
+    if (classInfo->isSubClassOf(JSCallbackObject<JSDestructibleObject>::info())) {
+        static_cast<JSCallbackObject<JSDestructibleObject>*>(jsObject)->setPrivate(data);
         return true;
     }
 #if JSC_OBJC_API_ENABLED
-    if (jsObject->inherits(JSCallbackObject<JSAPIWrapperObject>::info())) {
-        jsCast<JSCallbackObject<JSAPIWrapperObject>*>(jsObject)->setPrivate(data);
+    if (classInfo->isSubClassOf(JSCallbackObject<JSAPIWrapperObject>::info())) {
+        static_cast<JSCallbackObject<JSAPIWrapperObject>*>(jsObject)->setPrivate(data);
         return true;
     }
 #endif
@@ -530,7 +534,7 @@ bool JSObjectIsFunction(JSContextRef ctx, JSObjectRef object)
     JSLockHolder locker(toJS(ctx));
     CallData callData;
     JSCell* cell = toJS(object);
-    return cell->methodTable()->getCallData(cell, callData) != CallTypeNone;
+    return cell->methodTable()->getCallData(cell, callData) != CallType::None;
 }
 
 JSValueRef JSObjectCallAsFunction(JSContextRef ctx, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -553,10 +557,10 @@ JSValueRef JSObjectCallAsFunction(JSContextRef ctx, JSObjectRef object, JSObject
 
     CallData callData;
     CallType callType = jsObject->methodTable()->getCallData(jsObject, callData);
-    if (callType == CallTypeNone)
+    if (callType == CallType::None)
         return 0;
 
-    JSValueRef result = toRef(exec, call(exec, jsObject, callType, callData, jsThisObject, argList));
+    JSValueRef result = toRef(exec, profiledCall(exec, ProfilingReason::API, jsObject, callType, callData, jsThisObject, argList));
     if (handleExceptionIfNeeded(exec, exception) == ExceptionStatus::DidThrow)
         result = 0;
     return result;
@@ -568,7 +572,7 @@ bool JSObjectIsConstructor(JSContextRef, JSObjectRef object)
         return false;
     JSObject* jsObject = toJS(object);
     ConstructData constructData;
-    return jsObject->methodTable()->getConstructData(jsObject, constructData) != ConstructTypeNone;
+    return jsObject->methodTable()->getConstructData(jsObject, constructData) != ConstructType::None;
 }
 
 JSObjectRef JSObjectCallAsConstructor(JSContextRef ctx, JSObjectRef object, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -583,13 +587,14 @@ JSObjectRef JSObjectCallAsConstructor(JSContextRef ctx, JSObjectRef object, size
 
     ConstructData constructData;
     ConstructType constructType = jsObject->methodTable()->getConstructData(jsObject, constructData);
-    if (constructType == ConstructTypeNone)
+    if (constructType == ConstructType::None)
         return 0;
 
     MarkedArgumentBuffer argList;
     for (size_t i = 0; i < argumentCount; i++)
         argList.append(toJS(exec, arguments[i]));
-    JSObjectRef result = toRef(construct(exec, jsObject, constructType, constructData, argList));
+
+    JSObjectRef result = toRef(profiledConstruct(exec, ProfilingReason::API, jsObject, constructType, constructData, argList));
     if (handleExceptionIfNeeded(exec, exception) == ExceptionStatus::DidThrow)
         result = 0;
     return result;

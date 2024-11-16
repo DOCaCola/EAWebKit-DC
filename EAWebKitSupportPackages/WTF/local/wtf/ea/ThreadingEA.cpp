@@ -104,7 +104,6 @@ void initializeThreading()
 	initializeRandomNumberGenerator();
 	wtfThreadData();
 		
-	s_dtoaP5Mutex = new Mutex;
 	initializeDates();
 		
 	ASSERT(EA::WebKit::GetThreadSystem()->IsMainThread());

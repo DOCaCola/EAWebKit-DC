@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGSlowPathGenerator_h
-#define DFGSlowPathGenerator_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -40,6 +39,8 @@ class SlowPathGenerator {
 public:
     SlowPathGenerator(SpeculativeJIT* jit)
         : m_currentNode(jit->m_currentNode)
+        , m_streamIndex(jit->m_stream->size())
+        , m_origin(jit->m_origin) 
     {
     }
     virtual ~SlowPathGenerator() { }
@@ -47,7 +48,10 @@ public:
     {
         m_label = jit->m_jit.label();
         jit->m_currentNode = m_currentNode;
+        jit->m_outOfLineStreamIndex = m_streamIndex;
+        jit->m_origin = m_origin;
         generateInternal(jit);
+        jit->m_outOfLineStreamIndex = std::nullopt;
         if (!ASSERT_DISABLED)
             jit->m_jit.abortWithReason(DFGSlowPathGeneratorFellThrough);
     }
@@ -57,10 +61,15 @@ public:
         RELEASE_ASSERT_NOT_REACHED(); // By default slow path generators don't have a call.
         return MacroAssembler::Call();
     }
+
+    const NodeOrigin& origin() const  { return m_origin; }
+
 protected:
     virtual void generateInternal(SpeculativeJIT*) = 0;
     MacroAssembler::Label m_label;
     Node* m_currentNode;
+    unsigned m_streamIndex;
+    NodeOrigin m_origin;
 };
 
 template<typename JumpType>
@@ -88,22 +97,28 @@ protected:
     MacroAssembler::Label m_to;
 };
 
+enum class ExceptionCheckRequirement {
+    CheckNeeded,
+    CheckNotNeeded
+};
+
 template<typename JumpType, typename FunctionType, typename ResultType>
 class CallSlowPathGenerator : public JumpingSlowPathGenerator<JumpType> {
 public:
     CallSlowPathGenerator(
         JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result)
+        SpillRegistersMode spillMode, ExceptionCheckRequirement requirement, ResultType result)
         : JumpingSlowPathGenerator<JumpType>(from, jit)
         , m_function(function)
         , m_spillMode(spillMode)
+        , m_exceptionCheckRequirement(requirement)
         , m_result(result)
     {
         if (m_spillMode == NeedToSpill)
             jit->silentSpillAllRegistersImpl(false, m_plans, extractResult(result));
     }
     
-    virtual MacroAssembler::Call call() const override
+    MacroAssembler::Call call() const override
     {
         return m_call;
     }
@@ -130,275 +145,66 @@ protected:
             for (unsigned i = m_plans.size(); i--;)
                 jit->silentFill(m_plans[i], canTrample);
         }
+        if (m_exceptionCheckRequirement == ExceptionCheckRequirement::CheckNeeded)
+            jit->m_jit.exceptionCheck();
         this->jumpTo(jit);
     }
 
     FunctionType m_function;
     SpillRegistersMode m_spillMode;
+    ExceptionCheckRequirement m_exceptionCheckRequirement;
     ResultType m_result;
     MacroAssembler::Call m_call;
     Vector<SilentRegisterSavePlan, 2> m_plans;
 };
 
-template<typename JumpType, typename FunctionType, typename ResultType>
-class CallResultAndNoArgumentsSlowPathGenerator
+template<typename JumpType, typename FunctionType, typename ResultType, typename... Arguments>
+class CallResultAndArgumentsSlowPathGenerator
     : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
 public:
-    CallResultAndNoArgumentsSlowPathGenerator(
+    CallResultAndArgumentsSlowPathGenerator(
         JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result)
+        SpillRegistersMode spillMode, ExceptionCheckRequirement requirement, ResultType result, Arguments... arguments)
         : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
+            from, jit, function, spillMode, requirement, result)
+        , m_arguments(std::forward<Arguments>(arguments)...)
     {
     }
-    
+
 protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
+    template<size_t... ArgumentsIndex>
+    void unpackAndGenerate(SpeculativeJIT* jit, std::index_sequence<ArgumentsIndex...>)
     {
         this->setUp(jit);
-        this->recordCall(jit->callOperation(this->m_function, extractResult(this->m_result)));
-        this->tearDown(jit);
-    }
-};
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1>
-class CallResultAndOneArgumentSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
-public:
-    CallResultAndOneArgumentSlowPathGenerator(
-        JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result, ArgumentType1 argument1)
-        : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
-        , m_argument1(argument1)
-    {
-    }
-    
-protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
-    {
-        this->setUp(jit);
-        this->recordCall(jit->callOperation(this->m_function, extractResult(this->m_result), m_argument1));
+        this->recordCall(jit->callOperation(this->m_function, extractResult(this->m_result), std::get<ArgumentsIndex>(m_arguments)...));
         this->tearDown(jit);
     }
 
-    ArgumentType1 m_argument1;
+    void generateInternal(SpeculativeJIT* jit) override
+    {
+        unpackAndGenerate(jit, std::make_index_sequence<std::tuple_size<std::tuple<Arguments...>>::value>());
+    }
+
+    std::tuple<Arguments...> m_arguments;
 };
 
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2>
-class CallResultAndTwoArgumentsSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
-public:
-    CallResultAndTwoArgumentsSlowPathGenerator(
-        JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result, ArgumentType1 argument1,
-        ArgumentType2 argument2)
-        : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
-        , m_argument1(argument1)
-        , m_argument2(argument2)
-    {
-    }
-    
-protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
-    {
-        this->setUp(jit);
-        this->recordCall(jit->callOperation(this->m_function, extractResult(this->m_result), m_argument1, m_argument2));
-        this->tearDown(jit);
-    }
-
-    ArgumentType1 m_argument1;
-    ArgumentType2 m_argument2;
-};
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3>
-class CallResultAndThreeArgumentsSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
-public:
-    CallResultAndThreeArgumentsSlowPathGenerator(
-        JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result, ArgumentType1 argument1,
-        ArgumentType2 argument2, ArgumentType3 argument3)
-        : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
-        , m_argument1(argument1)
-        , m_argument2(argument2)
-        , m_argument3(argument3)
-    {
-    }
-
-protected:    
-    virtual void generateInternal(SpeculativeJIT* jit) override
-    {
-        this->setUp(jit);
-        this->recordCall(
-            jit->callOperation(
-                this->m_function, extractResult(this->m_result), m_argument1, m_argument2,
-                m_argument3));
-        this->tearDown(jit);
-    }
-
-    ArgumentType1 m_argument1;
-    ArgumentType2 m_argument2;
-    ArgumentType3 m_argument3;
-};
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3,
-    typename ArgumentType4>
-class CallResultAndFourArgumentsSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
-public:
-    CallResultAndFourArgumentsSlowPathGenerator(
-        JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result, ArgumentType1 argument1,
-        ArgumentType2 argument2, ArgumentType3 argument3, ArgumentType4 argument4)
-        : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
-        , m_argument1(argument1)
-        , m_argument2(argument2)
-        , m_argument3(argument3)
-        , m_argument4(argument4)
-    {
-    }
-    
-protected:
-    void generateInternal(SpeculativeJIT* jit)
-    {
-        this->setUp(jit);
-        this->recordCall(
-            jit->callOperation(
-                this->m_function, extractResult(this->m_result), m_argument1, m_argument2,
-                m_argument3, m_argument4));
-        this->tearDown(jit);
-    }
-
-    ArgumentType1 m_argument1;
-    ArgumentType2 m_argument2;
-    ArgumentType3 m_argument3;
-    ArgumentType4 m_argument4;
-};
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3,
-    typename ArgumentType4, typename ArgumentType5>
-class CallResultAndFiveArgumentsSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, FunctionType, ResultType> {
-public:
-    CallResultAndFiveArgumentsSlowPathGenerator(
-        JumpType from, SpeculativeJIT* jit, FunctionType function,
-        SpillRegistersMode spillMode, ResultType result, ArgumentType1 argument1,
-        ArgumentType2 argument2, ArgumentType3 argument3, ArgumentType4 argument4,
-        ArgumentType5 argument5)
-        : CallSlowPathGenerator<JumpType, FunctionType, ResultType>(
-            from, jit, function, spillMode, result)
-        , m_argument1(argument1)
-        , m_argument2(argument2)
-        , m_argument3(argument3)
-        , m_argument4(argument4)
-        , m_argument5(argument5)
-    {
-    }
-
-protected:    
-    void generateInternal(SpeculativeJIT* jit)
-    {
-        this->setUp(jit);
-        this->recordCall(
-            jit->callOperation(
-                this->m_function, extractResult(this->m_result), m_argument1, m_argument2,
-                m_argument3, m_argument4, m_argument5));
-        this->tearDown(jit);
-    }
-
-    ArgumentType1 m_argument1;
-    ArgumentType2 m_argument2;
-    ArgumentType3 m_argument3;
-    ArgumentType4 m_argument4;
-    ArgumentType5 m_argument5;
-};
-
-template<typename JumpType, typename FunctionType, typename ResultType>
+template<typename JumpType, typename FunctionType, typename ResultType, typename... Arguments>
 inline std::unique_ptr<SlowPathGenerator> slowPathCall(
     JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, SpillRegistersMode spillMode = NeedToSpill)
+    SpillRegistersMode spillMode, ExceptionCheckRequirement requirement,
+    ResultType result, Arguments... arguments)
 {
-    return std::make_unique<CallResultAndNoArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType>>(
-        from, jit, function, spillMode, result);
+    return std::make_unique<CallResultAndArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType, Arguments...>>(
+        from, jit, function, spillMode, requirement, result, arguments...);
 }
 
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1>
+template<typename JumpType, typename FunctionType, typename ResultType, typename... Arguments>
 inline std::unique_ptr<SlowPathGenerator> slowPathCall(
     JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, ArgumentType1 argument1,
-    SpillRegistersMode spillMode = NeedToSpill)
+    ResultType result, Arguments... arguments)
 {
-    return std::make_unique<CallResultAndOneArgumentSlowPathGenerator<JumpType, FunctionType, ResultType, ArgumentType1>>(
-        from, jit, function, spillMode, result, argument1);
-}
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2>
-inline std::unique_ptr<SlowPathGenerator> slowPathCall(
-    JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, ArgumentType1 argument1, ArgumentType2 argument2,
-    SpillRegistersMode spillMode = NeedToSpill)
-{
-    return std::make_unique<CallResultAndTwoArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType, ArgumentType1, ArgumentType2>>(
-        from, jit, function, spillMode, result, argument1, argument2);
-}
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3>
-inline std::unique_ptr<SlowPathGenerator> slowPathCall(
-    JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, ArgumentType1 argument1, ArgumentType2 argument2,
-    ArgumentType3 argument3, SpillRegistersMode spillMode = NeedToSpill)
-{
-    return std::make_unique<CallResultAndThreeArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType, ArgumentType1, ArgumentType2,
-        ArgumentType3>>(from, jit, function, spillMode, result, argument1, argument2, argument3);
-}
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3,
-    typename ArgumentType4>
-inline std::unique_ptr<SlowPathGenerator> slowPathCall(
-    JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, ArgumentType1 argument1, ArgumentType2 argument2,
-    ArgumentType3 argument3, ArgumentType4 argument4,
-    SpillRegistersMode spillMode = NeedToSpill)
-{
-    return std::make_unique<CallResultAndFourArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType, ArgumentType1, ArgumentType2,
-        ArgumentType3, ArgumentType4>>(from, jit, function, spillMode, result, argument1, argument2, argument3, argument4);
-}
-
-template<
-    typename JumpType, typename FunctionType, typename ResultType,
-    typename ArgumentType1, typename ArgumentType2, typename ArgumentType3,
-    typename ArgumentType4, typename ArgumentType5>
-inline std::unique_ptr<SlowPathGenerator> slowPathCall(
-    JumpType from, SpeculativeJIT* jit, FunctionType function,
-    ResultType result, ArgumentType1 argument1, ArgumentType2 argument2,
-    ArgumentType3 argument3, ArgumentType4 argument4, ArgumentType5 argument5,
-    SpillRegistersMode spillMode = NeedToSpill)
-{
-    return std::make_unique<CallResultAndFiveArgumentsSlowPathGenerator<JumpType, FunctionType, ResultType, ArgumentType1, ArgumentType2,
-        ArgumentType3, ArgumentType4, ArgumentType5>>(from, jit, function, spillMode, result, argument1, argument2, argument3,
-        argument4, argument5);
+    return slowPathCall(
+        from, jit, function, NeedToSpill, ExceptionCheckRequirement::CheckNeeded, result, arguments...);
 }
 
 template<typename JumpType, typename DestinationType, typename SourceType, unsigned numberOfAssignments>
@@ -417,7 +223,7 @@ public:
     }
 
 protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
+    void generateInternal(SpeculativeJIT* jit) override
     {
         this->linkFrom(jit);
         for (unsigned i = numberOfAssignments; i--;)
@@ -461,6 +267,3 @@ inline std::unique_ptr<SlowPathGenerator> slowPathMove(
 } } // namespace JSC::DFG
 
 #endif // ENABLD(DFG_JIT)
-
-#endif // DFGSlowPathGenerator_h
-

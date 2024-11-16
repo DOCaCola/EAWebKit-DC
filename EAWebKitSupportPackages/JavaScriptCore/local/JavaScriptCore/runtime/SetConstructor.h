@@ -23,23 +23,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SetConstructor_h
-#define SetConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
 namespace JSC {
 
 class SetPrototype;
+class GetterSetter;
 
 class SetConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
 
-    static SetConstructor* create(VM& vm, Structure* structure, SetPrototype* setPrototype)
+    static SetConstructor* create(VM& vm, Structure* structure, SetPrototype* setPrototype, GetterSetter* speciesSymbol)
     {
         SetConstructor* constructor = new (NotNull, allocateCell<SetConstructor>(vm.heap)) SetConstructor(vm, structure);
-        constructor->finishCreation(vm, setPrototype);
+        constructor->finishCreation(vm, setPrototype, speciesSymbol);
         return constructor;
     }
 
@@ -55,11 +55,9 @@ private:
         : Base(vm, structure)
     {
     }
-    void finishCreation(VM&, SetPrototype*);
+    void finishCreation(VM&, SetPrototype*, GetterSetter* speciesSymbol);
     static ConstructType getConstructData(JSCell*, ConstructData&);
     static CallType getCallData(JSCell*, CallData&);
 };
 
-}
-
-#endif // !defined(MapConstructor_h)
+} // namespace JSC

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2013, 2015 Apple Inc. All Rights Reserved.
  * Copyright (C) 2011 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorAgentBase_h
-#define InspectorAgentBase_h
+#pragma once
 
 #include <wtf/text/WTFString.h>
+
+namespace JSC {
+class JSGlobalObject;
+}
 
 namespace Inspector {
 
 class BackendDispatcher;
-class FrontendChannel;
+class FrontendRouter;
+class InjectedScriptManager;
+class InspectorEnvironment;
+
+struct AgentContext {
+    InspectorEnvironment& environment;
+    InjectedScriptManager& injectedScriptManager;
+    FrontendRouter& frontendRouter;
+    BackendDispatcher& backendDispatcher;
+};
+
+struct JSAgentContext : public AgentContext {
+    JSAgentContext(AgentContext& context, JSC::JSGlobalObject& globalObject)
+        : AgentContext(context)
+        , inspectedGlobalObject(globalObject)
+    {
+    }
+
+    JSC::JSGlobalObject& inspectedGlobalObject;
+};
 
 enum class DisconnectReason {
     InspectedTargetDestroyed,
@@ -40,13 +62,15 @@ enum class DisconnectReason {
 };
 
 class InspectorAgentBase {
+    WTF_MAKE_FAST_ALLOCATED;
 public:
     virtual ~InspectorAgentBase() { }
 
     String domainName() const { return m_name; }
 
-    virtual void didCreateFrontendAndBackend(FrontendChannel*, BackendDispatcher*) = 0;
+    virtual void didCreateFrontendAndBackend(FrontendRouter*, BackendDispatcher*) = 0;
     virtual void willDestroyFrontendAndBackend(DisconnectReason) = 0;
+    virtual void discardValues() { }
     virtual void discardAgent() { }
 
 protected:
@@ -59,5 +83,3 @@ protected:
 };
 
 } // namespace Inspector
-
-#endif // !defined(InspectorAgentBase_h)

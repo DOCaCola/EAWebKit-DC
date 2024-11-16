@@ -23,20 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WeakSetConstructor_h
-#define WeakSetConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
 namespace JSC {
 
 class WeakSetPrototype;
+class GetterSetter;
 
 class WeakSetConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
 
-    static WeakSetConstructor* create(VM& vm, Structure* structure, WeakSetPrototype* prototype)
+    static WeakSetConstructor* create(VM& vm, Structure* structure, WeakSetPrototype* prototype, GetterSetter*)
     {
         WeakSetConstructor* constructor = new (NotNull, allocateCell<WeakSetConstructor>(vm.heap)) WeakSetConstructor(vm, structure);
         constructor->finishCreation(vm, prototype);
@@ -60,6 +60,4 @@ private:
     static CallType getCallData(JSCell*, CallData&);
 };
 
-}
-
-#endif // !defined(WeakSetConstructor_h)
+} // namespace JSC

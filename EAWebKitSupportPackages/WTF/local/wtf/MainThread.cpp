@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2007, 2008, 2015-2016 Apple Inc. All rights reserved.
  * Copyright (C) 2011, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,35 +35,11 @@
 #include "StdLibExtras.h"
 #include "Threading.h"
 #include <mutex>
+#include <wtf/Lock.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/ThreadSpecific.h>
 
 namespace WTF {
-
-struct FunctionWithContext {
-    MainThreadFunction* function;
-    void* context;
-
-    FunctionWithContext(MainThreadFunction* function = nullptr, void* context = nullptr)
-        : function(function)
-        , context(context)
-    {
-    }
-    bool operator == (const FunctionWithContext& o)
-    {
-        return function == o.function && context == o.context;
-    }
-};
-
-class FunctionWithContextFinder {
-public:
-    FunctionWithContextFinder(const FunctionWithContext& m) : m(m) {}
-    bool operator() (FunctionWithContext& o) { return o == m; }
-    FunctionWithContext m;
-};
-
-
-typedef Deque<FunctionWithContext> FunctionQueue;
 
 static bool callbacksPaused; // This global variable is only accessed from main thread.
 //+EAWebKitChange
@@ -73,19 +49,13 @@ static ThreadIdentifier mainThreadIdentifier;
 #endif
 //-EAWebKitChange
 
-static std::mutex& mainThreadFunctionQueueMutex()
-{
-    static NeverDestroyed<std::mutex> mutex;
-    
-    return mutex;
-}
+static StaticLock mainThreadFunctionQueueMutex;
 
-static FunctionQueue& functionQueue()
+static Deque<Function<void ()>>& functionQueue()
 {
-    static NeverDestroyed<FunctionQueue> functionQueue;
+    static NeverDestroyed<Deque<Function<void ()>>> functionQueue;
     return functionQueue;
 }
-
 //+EAWebKitChange
 //3/31/2015
 #if !OS(DARWIN) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(EA)
@@ -105,7 +75,6 @@ void initializeMainThread()
 #endif
 	//-EAWebKitChange
 
-    mainThreadFunctionQueueMutex();
     initializeMainThreadPlatform();
     initializeGCThreads();
 }
@@ -116,7 +85,6 @@ static pthread_once_t initializeMainThreadKeyOnce = PTHREAD_ONCE_INIT;
 
 static void initializeMainThreadOnce()
 {
-    mainThreadFunctionQueueMutex();
     initializeMainThreadPlatform();
 }
 
@@ -128,7 +96,6 @@ void initializeMainThread()
 #if !USE(WEB_THREAD)
 static void initializeMainThreadToProcessMainThreadOnce()
 {
-    mainThreadFunctionQueueMutex();
     initializeMainThreadToProcessMainThreadPlatform();
 }
 
@@ -164,16 +131,21 @@ void dispatchFunctionsFromMainThread()
 
     auto startTime = std::chrono::steady_clock::now();
 
-    FunctionWithContext invocation;
+    Function<void ()> function;
+
     while (true) {
         {
-            std::lock_guard<std::mutex> lock(mainThreadFunctionQueueMutex());
+            std::lock_guard<StaticLock> lock(mainThreadFunctionQueueMutex);
             if (!functionQueue().size())
                 break;
-            invocation = functionQueue().takeFirst();
+
+            function = functionQueue().takeFirst();
         }
 
-        invocation.function(invocation.context);
+        function();
+
+        // Clearing the function can have side effects, so do so outside of the lock above.
+        function = nullptr;
 
         // If we are running accumulated functions for too long so UI may become unresponsive, we need to
         // yield so the user input can be processed. Otherwise user may not be able to even close the window.
@@ -186,46 +158,20 @@ void dispatchFunctionsFromMainThread()
     }
 }
 
-void callOnMainThread(MainThreadFunction* function, void* context)
+void callOnMainThread(Function<void ()>&& function)
 {
     ASSERT(function);
+
     bool needToSchedule = false;
+
     {
-        std::lock_guard<std::mutex> lock(mainThreadFunctionQueueMutex());
+        std::lock_guard<StaticLock> lock(mainThreadFunctionQueueMutex);
         needToSchedule = functionQueue().size() == 0;
-        functionQueue().append(FunctionWithContext(function, context));
+        functionQueue().append(WTFMove(function));
     }
+
     if (needToSchedule)
         scheduleDispatchFunctionsOnMainThread();
-}
-
-void cancelCallOnMainThread(MainThreadFunction* function, void* context)
-{
-    ASSERT(function);
-
-    std::lock_guard<std::mutex> lock(mainThreadFunctionQueueMutex());
-
-    FunctionWithContextFinder pred(FunctionWithContext(function, context));
-
-    while (true) {
-        // We must redefine 'i' each pass, because the itererator's operator= 
-        // requires 'this' to be valid, and remove() invalidates all iterators
-        FunctionQueue::iterator i(functionQueue().findIf(pred));
-        if (i == functionQueue().end())
-            break;
-        functionQueue().remove(i);
-    }
-}
-
-static void callFunctionObject(void* context)
-{
-    auto function = std::unique_ptr<std::function<void ()>>(static_cast<std::function<void ()>*>(context));
-    (*function)();
-}
-
-void callOnMainThread(std::function<void ()> function)
-{
-    callOnMainThread(callFunctionObject, std::make_unique<std::function<void ()>>(WTF::move(function)).release());
 }
 
 void setMainThreadCallbacksPaused(bool paused)
@@ -258,19 +204,19 @@ bool canAccessThreadLocalDataForThread(ThreadIdentifier threadId)
 }
 #endif
 
-#if ENABLE(PARALLEL_GC)
-static ThreadSpecific<bool>* isGCThread;
-#endif
+static ThreadSpecific<std::optional<GCThreadType>, CanBeGCThread::True>* isGCThread;
 
 void initializeGCThreads()
 {
-#if ENABLE(PARALLEL_GC)
-    isGCThread = new ThreadSpecific<bool>();
-#endif
+    static std::once_flag flag;
+    std::call_once(
+        flag,
+        [] {
+            isGCThread = new ThreadSpecific<std::optional<GCThreadType>, CanBeGCThread::True>();
+        });
 }
 
-#if ENABLE(PARALLEL_GC)
-void registerGCThread()
+void registerGCThread(GCThreadType type)
 {
     if (!isGCThread) {
         // This happens if we're running in a process that doesn't care about
@@ -278,22 +224,24 @@ void registerGCThread()
         return;
     }
 
-    **isGCThread = true;
+    **isGCThread = type;
 }
 
 bool isMainThreadOrGCThread()
 {
-    if (isGCThread->isSet() && **isGCThread)
+    if (mayBeGCThread())
         return true;
 
     return isMainThread();
 }
-#elif OS(DARWIN) && !PLATFORM(EFL) && !PLATFORM(GTK)
-// This is necessary because JavaScriptCore.exp doesn't support preprocessor macros.
-bool isMainThreadOrGCThread()
+
+std::optional<GCThreadType> mayBeGCThread()
 {
-    return isMainThread();
+    if (!isGCThread)
+        return std::nullopt;
+    if (!isGCThread->isSet())
+        return std::nullopt;
+    return **isGCThread;
 }
-#endif
 
 } // namespace WTF

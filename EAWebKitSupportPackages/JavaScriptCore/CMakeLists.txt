@@ -88,7 +88,6 @@ list(APPEND JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/assembler/MacroAssemblerX86Common.cpp"
 
   "${LOCAL_DIR}/JavaScriptCore/disassembler/Disassembler.cpp"
-  "${LOCAL_DIR}/JavaScriptCore/disassembler/LLVMDisassembler.cpp"
   "${LOCAL_DIR}/JavaScriptCore/disassembler/X86Disassembler.cpp"
 
   "${DerivedSourcesDir}/InspectorBackendDispatchers.cpp"

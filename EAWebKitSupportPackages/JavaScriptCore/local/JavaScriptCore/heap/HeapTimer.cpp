@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2012, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +36,8 @@
 
 #if PLATFORM(EFL)
 #include <Ecore.h>
+#elif USE(GLIB)
+#include <glib.h>
 #endif
 
 namespace JSC {
@@ -44,69 +46,73 @@ namespace JSC {
     
 const CFTimeInterval HeapTimer::s_decade = 60 * 60 * 24 * 365 * 10;
 
-static const void* retainAPILock(const void* info)
-{
-    static_cast<JSLock*>(const_cast<void*>(info))->ref();
-    return info;
-}
-
-static void releaseAPILock(const void* info)
-{
-    static_cast<JSLock*>(const_cast<void*>(info))->deref();
-}
-
-HeapTimer::HeapTimer(VM* vm, CFRunLoopRef runLoop)
+HeapTimer::HeapTimer(VM* vm)
     : m_vm(vm)
-    , m_runLoop(runLoop)
+    , m_apiLock(&vm->apiLock())
 {
-    memset(&m_context, 0, sizeof(CFRunLoopTimerContext));
-    m_context.info = &vm->apiLock();
-    m_context.retain = retainAPILock;
-    m_context.release = releaseAPILock;
-    m_timer = adoptCF(CFRunLoopTimerCreate(kCFAllocatorDefault, s_decade, s_decade, 0, 0, HeapTimer::timerDidFire, &m_context));
-    CFRunLoopAddTimer(m_runLoop.get(), m_timer.get(), kCFRunLoopCommonModes);
+    setRunLoop(vm->heap.runLoop());
+}
+
+void HeapTimer::setRunLoop(CFRunLoopRef runLoop)
+{
+    if (m_runLoop) {
+        CFRunLoopRemoveTimer(m_runLoop.get(), m_timer.get(), kCFRunLoopCommonModes);
+        CFRunLoopTimerInvalidate(m_timer.get());
+        m_runLoop.clear();
+        m_timer.clear();
+    }
+    
+    if (runLoop) {
+        m_runLoop = runLoop;
+        memset(&m_context, 0, sizeof(CFRunLoopTimerContext));
+        m_context.info = this;
+        m_timer = adoptCF(CFRunLoopTimerCreate(kCFAllocatorDefault, s_decade, s_decade, 0, 0, HeapTimer::timerDidFire, &m_context));
+        CFRunLoopAddTimer(m_runLoop.get(), m_timer.get(), kCFRunLoopCommonModes);
+    }
 }
 
 HeapTimer::~HeapTimer()
 {
-    CFRunLoopRemoveTimer(m_runLoop.get(), m_timer.get(), kCFRunLoopCommonModes);
-    CFRunLoopTimerInvalidate(m_timer.get());
+    setRunLoop(0);
 }
 
-void HeapTimer::timerDidFire(CFRunLoopTimerRef timer, void* context)
+void HeapTimer::timerDidFire(CFRunLoopTimerRef, void* contextPtr)
 {
-    JSLock* apiLock = static_cast<JSLock*>(context);
-    apiLock->lock();
+    HeapTimer* timer = static_cast<HeapTimer*>(contextPtr);
+    timer->m_apiLock->lock();
 
-    VM* vm = apiLock->vm();
-    // The VM has been destroyed, so we should just give up.
+    RefPtr<VM> vm = timer->m_apiLock->vm();
     if (!vm) {
-        apiLock->unlock();
+        // The VM has been destroyed, so we should just give up.
+        timer->m_apiLock->unlock();
         return;
     }
 
-    HeapTimer* heapTimer = 0;
-    if (vm->heap.fullActivityCallback() && vm->heap.fullActivityCallback()->m_timer.get() == timer)
-        heapTimer = vm->heap.fullActivityCallback();
-    else if (vm->heap.edenActivityCallback() && vm->heap.edenActivityCallback()->m_timer.get() == timer)
-        heapTimer = vm->heap.edenActivityCallback();
-    else if (vm->heap.sweeper()->m_timer.get() == timer)
-        heapTimer = vm->heap.sweeper();
-    else
-        RELEASE_ASSERT_NOT_REACHED();
-
     {
-        JSLockHolder locker(vm);
-        heapTimer->doWork();
+        JSLockHolder locker(vm.get());
+        timer->doWork();
     }
 
-    apiLock->unlock();
+    timer->m_apiLock->unlock();
+}
+
+void HeapTimer::scheduleTimer(double intervalInSeconds)
+{
+    CFRunLoopTimerSetNextFireDate(m_timer.get(), CFAbsoluteTimeGetCurrent() + intervalInSeconds);
+    m_isScheduled = true;
+}
+
+void HeapTimer::cancelTimer()
+{
+    CFRunLoopTimerSetNextFireDate(m_timer.get(), CFAbsoluteTimeGetCurrent() + s_decade);
+    m_isScheduled = false;
 }
 
 #elif PLATFORM(EFL)
 
 HeapTimer::HeapTimer(VM* vm)
     : m_vm(vm)
+    , m_apiLock(&vm->apiLock())
     , m_timer(0)
 {
 }
@@ -140,6 +146,91 @@ bool HeapTimer::timerEvent(void* info)
     
     return ECORE_CALLBACK_CANCEL;
 }
+
+void HeapTimer::scheduleTimer(double intervalInSeconds)
+{
+    if (ecore_timer_freeze_get(m_timer))
+        ecore_timer_thaw(m_timer);
+
+    double targetTime = currentTime() + intervalInSeconds;
+    ecore_timer_interval_set(m_timer, targetTime);
+    m_isScheduled = true;
+}
+
+void HeapTimer::cancelTimer()
+{
+    ecore_timer_freeze(m_timer);
+    m_isScheduled = false;
+}
+#elif USE(GLIB)
+
+static GSourceFuncs heapTimerSourceFunctions = {
+    nullptr, // prepare
+    nullptr, // check
+    // dispatch
+    [](GSource* source, GSourceFunc callback, gpointer userData) -> gboolean
+    {
+        if (g_source_get_ready_time(source) == -1)
+            return G_SOURCE_CONTINUE;
+        g_source_set_ready_time(source, -1);
+        return callback(userData);
+    },
+    nullptr, // finalize
+    nullptr, // closure_callback
+    nullptr, // closure_marshall
+};
+
+HeapTimer::HeapTimer(VM* vm)
+    : m_vm(vm)
+    , m_apiLock(&vm->apiLock())
+    , m_timer(adoptGRef(g_source_new(&heapTimerSourceFunctions, sizeof(GSource))))
+{
+    g_source_set_name(m_timer.get(), "[JavaScriptCore] HeapTimer");
+    g_source_set_callback(m_timer.get(), [](gpointer userData) -> gboolean {
+        static_cast<HeapTimer*>(userData)->timerDidFire();
+        return G_SOURCE_CONTINUE;
+    }, this, nullptr);
+    g_source_attach(m_timer.get(), g_main_context_get_thread_default());
+}
+
+HeapTimer::~HeapTimer()
+{
+    g_source_destroy(m_timer.get());
+}
+
+void HeapTimer::timerDidFire()
+{
+    m_apiLock->lock();
+
+    if (!m_apiLock->vm()) {
+        // The VM has been destroyed, so we should just give up.
+        m_apiLock->unlock();
+        return;
+    }
+
+    {
+        JSLockHolder locker(m_vm);
+        doWork();
+    }
+
+    m_apiLock->unlock();
+}
+
+void HeapTimer::scheduleTimer(double intervalInSeconds)
+{
+    auto delayDuration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::duration<double>(intervalInSeconds));
+    gint64 currentTime = g_get_monotonic_time();
+    gint64 targetTime = currentTime + std::min<gint64>(G_MAXINT64 - currentTime, delayDuration.count());
+    ASSERT(targetTime >= currentTime);
+    g_source_set_ready_time(m_timer.get(), targetTime);
+    m_isScheduled = true;
+}
+
+void HeapTimer::cancelTimer()
+{
+    g_source_set_ready_time(m_timer.get(), -1);
+    m_isScheduled = false;
+}
 #else
 HeapTimer::HeapTimer(VM* vm)
     : m_vm(vm)
@@ -154,6 +245,13 @@ void HeapTimer::invalidate()
 {
 }
 
+void HeapTimer::scheduleTimer(double)
+{
+}
+
+void HeapTimer::cancelTimer()
+{
+}
 #endif
     
 

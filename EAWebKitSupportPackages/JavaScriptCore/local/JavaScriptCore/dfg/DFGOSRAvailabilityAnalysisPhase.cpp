@@ -66,7 +66,7 @@ public:
 
         // This could be made more efficient by processing blocks in reverse postorder.
         
-        LocalOSRAvailabilityCalculator calculator;
+        LocalOSRAvailabilityCalculator calculator(m_graph);
         bool changed;
         do {
             changed = false;
@@ -91,7 +91,7 @@ public:
                     BasicBlock* successor = block->successor(successorIndex);
                     successor->ssa->availabilityAtHead.merge(calculator.m_availability);
                     successor->ssa->availabilityAtHead.pruneByLiveness(
-                        m_graph, successor->firstOrigin().forExit);
+                        m_graph, successor->at(0)->origin.forExit);
                 }
             }
         } while (changed);
@@ -102,11 +102,11 @@ public:
 
 bool performOSRAvailabilityAnalysis(Graph& graph)
 {
-    SamplingRegion samplingRegion("DFG OSR Availability Analysis Phase");
     return runPhase<OSRAvailabilityAnalysisPhase>(graph);
 }
 
-LocalOSRAvailabilityCalculator::LocalOSRAvailabilityCalculator()
+LocalOSRAvailabilityCalculator::LocalOSRAvailabilityCalculator(Graph& graph)
+    : m_graph(graph)
 {
 }
 
@@ -165,7 +165,8 @@ void LocalOSRAvailabilityCalculator::executeNode(Node* node)
         }
         break;
     }
-        
+    
+    case PhantomCreateRest:
     case PhantomDirectArguments:
     case PhantomClonedArguments: {
         InlineCallFrame* inlineCallFrame = node->origin.semantic.inlineCallFrame;
@@ -174,22 +175,26 @@ void LocalOSRAvailabilityCalculator::executeNode(Node* node)
             // given that we can read them from the stack.
             break;
         }
+
+        unsigned numberOfArgumentsToSkip = 0;
+        if (node->op() == PhantomCreateRest)
+            numberOfArgumentsToSkip = node->numberOfArgumentsToSkip();
         
         if (inlineCallFrame->isVarargs()) {
             // Record how to read each argument and the argument count.
             Availability argumentCount =
-                m_availability.m_locals.operand(inlineCallFrame->stackOffset + JSStack::ArgumentCount);
+                m_availability.m_locals.operand(inlineCallFrame->stackOffset + CallFrameSlot::argumentCount);
             
             m_availability.m_heap.set(PromotedHeapLocation(ArgumentCountPLoc, node), argumentCount);
         }
         
         if (inlineCallFrame->isClosureCall) {
             Availability callee = m_availability.m_locals.operand(
-                inlineCallFrame->stackOffset + JSStack::Callee);
+                inlineCallFrame->stackOffset + CallFrameSlot::callee);
             m_availability.m_heap.set(PromotedHeapLocation(ArgumentsCalleePLoc, node), callee);
         }
         
-        for (unsigned i = 0; i < inlineCallFrame->arguments.size() - 1; ++i) {
+        for (unsigned i = numberOfArgumentsToSkip; i < inlineCallFrame->arguments.size() - 1; ++i) {
             Availability argument = m_availability.m_locals.operand(
                 inlineCallFrame->stackOffset + CallFrame::argumentOffset(i));
             
@@ -204,6 +209,17 @@ void LocalOSRAvailabilityCalculator::executeNode(Node* node)
             Availability(node->child2().node()));
         break;
     }
+
+    case PhantomSpread:
+        m_availability.m_heap.set(PromotedHeapLocation(SpreadPLoc, node), Availability(node->child1().node()));
+        break;
+
+    case PhantomNewArrayWithSpread:
+        for (unsigned i = 0; i < node->numChildren(); i++) {
+            Node* child = m_graph.varArgChild(node, i).node();
+            m_availability.m_heap.set(PromotedHeapLocation(NewArrayWithSpreadArgumentPLoc, node, i), Availability(child));
+        }
+        break;
         
     default:
         break;

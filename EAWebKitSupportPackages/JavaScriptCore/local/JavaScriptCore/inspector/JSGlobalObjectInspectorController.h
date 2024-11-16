@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,11 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSGlobalObjectInspectorController_h
-#define JSGlobalObjectInspectorController_h
+#pragma once
 
 #include "InspectorAgentRegistry.h"
 #include "InspectorEnvironment.h"
+#include "InspectorFrontendRouter.h"
+#include "JSGlobalObjectScriptDebugServer.h"
 #include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/text/WTFString.h>
@@ -36,17 +37,11 @@
 #include "AugmentableInspectorController.h"
 #endif
 
-namespace WTF {
-class Stopwatch;
-}
-
-
 namespace JSC {
 class ConsoleClient;
 class Exception;
 class ExecState;
 class JSGlobalObject;
-class JSValue;
 }
 
 namespace Inspector {
@@ -57,6 +52,7 @@ class InjectedScriptManager;
 class InspectorAgent;
 class InspectorConsoleAgent;
 class InspectorDebuggerAgent;
+class InspectorScriptProfilerAgent;
 class JSGlobalObjectConsoleClient;
 class ScriptCallStack;
 
@@ -73,7 +69,8 @@ public:
     ~JSGlobalObjectInspectorController();
 
     void connectFrontend(FrontendChannel*, bool isAutomaticInspection);
-    void disconnectFrontend(DisconnectReason);
+    void disconnectFrontend(FrontendChannel*);
+
     void dispatchMessageFromFrontend(const String&);
 
     void globalObjectDestroyed();
@@ -86,21 +83,22 @@ public:
 
     JSC::ConsoleClient* consoleClient() const;
 
-    virtual bool developerExtrasEnabled() const override;
-    virtual bool canAccessInspectedScriptState(JSC::ExecState*) const override { return true; }
-    virtual InspectorFunctionCallHandler functionCallHandler() const override;
-    virtual InspectorEvaluateHandler evaluateHandler() const override;
-    virtual void willCallInjectedScriptFunction(JSC::ExecState*, const String&, int) override { }
-    virtual void didCallInjectedScriptFunction(JSC::ExecState*) override { }
-    virtual void frontendInitialized() override;
-    virtual Ref<WTF::Stopwatch> executionStopwatch() override;
+    bool developerExtrasEnabled() const override;
+    bool canAccessInspectedScriptState(JSC::ExecState*) const override { return true; }
+    InspectorFunctionCallHandler functionCallHandler() const override;
+    InspectorEvaluateHandler evaluateHandler() const override;
+    void frontendInitialized() override;
+    Ref<WTF::Stopwatch> executionStopwatch() override;
+    JSGlobalObjectScriptDebugServer& scriptDebugServer() override;
+    JSC::VM& vm() override;
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    virtual AugmentableInspectorControllerClient* augmentableInspectorControllerClient() const override { return m_augmentingClient; } 
-    virtual void setAugmentableInspectorControllerClient(AugmentableInspectorControllerClient* client) override { m_augmentingClient = client; }
+    AugmentableInspectorControllerClient* augmentableInspectorControllerClient() const override { return m_augmentingClient; } 
+    void setAugmentableInspectorControllerClient(AugmentableInspectorControllerClient* client) override { m_augmentingClient = client; }
 
-    virtual FrontendChannel* frontendChannel() const override { return m_frontendChannel; }
-    virtual void appendExtraAgent(std::unique_ptr<InspectorAgentBase>) override;
+    const FrontendRouter& frontendRouter() const override { return m_frontendRouter.get(); }
+    BackendDispatcher& backendDispatcher() override { return m_backendDispatcher.get(); }
+    void appendExtraAgent(std::unique_ptr<InspectorAgentBase>) override;
 #endif
 
 private:
@@ -109,21 +107,27 @@ private:
     JSC::JSGlobalObject& m_globalObject;
     std::unique_ptr<InjectedScriptManager> m_injectedScriptManager;
     std::unique_ptr<JSGlobalObjectConsoleClient> m_consoleClient;
-    InspectorAgent* m_inspectorAgent;
-    InspectorConsoleAgent* m_consoleAgent;
-    InspectorDebuggerAgent* m_debuggerAgent;
-    AgentRegistry m_agents;
-    FrontendChannel* m_frontendChannel;
-    RefPtr<BackendDispatcher> m_backendDispatcher;
     Ref<WTF::Stopwatch> m_executionStopwatch;
-    bool m_includeNativeCallStackWithExceptions;
-    bool m_isAutomaticInspection;
+    JSGlobalObjectScriptDebugServer m_scriptDebugServer;
+
+    AgentRegistry m_agents;
+    InspectorAgent* m_inspectorAgent { nullptr };
+    InspectorConsoleAgent* m_consoleAgent { nullptr };
+    InspectorDebuggerAgent* m_debuggerAgent { nullptr };
+
+    Ref<FrontendRouter> m_frontendRouter;
+    Ref<BackendDispatcher> m_backendDispatcher;
+
+    // Used to keep the JSGlobalObject and VM alive while we are debugging it.
+    JSC::Strong<JSC::JSGlobalObject> m_strongGlobalObject;
+    RefPtr<JSC::VM> m_strongVM;
+
+    bool m_includeNativeCallStackWithExceptions { true };
+    bool m_isAutomaticInspection { false };
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    AugmentableInspectorControllerClient* m_augmentingClient;
+    AugmentableInspectorControllerClient* m_augmentingClient { nullptr };
 #endif
 };
 
 } // namespace Inspector
-
-#endif // !defined(JSGlobalObjectInspectorController_h)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Apple Inc. All rights reserved.
+ *  Copyright (C) 2011-2016 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,7 @@
  *
  */
 
-#ifndef ListableHandler_h
-#define ListableHandler_h
+#pragma once
 
 #include <stdint.h>
 #include <wtf/Lock.h>
@@ -28,13 +27,18 @@
 
 namespace JSC {
 
-class MarkStack;
-class MarkStackThreadSharedData;
+class Heap;
 class SlotVisitor;
 
 template<typename T>
 class ListableHandler {
     WTF_MAKE_NONCOPYABLE(ListableHandler);
+
+public:    
+    bool isOnList() const
+    {
+        return m_nextAndFlag & 1;
+    }
     
 protected:
     ListableHandler()
@@ -51,8 +55,7 @@ protected:
 
 private:
     // Allow these classes to use ListableHandler::List.
-    friend class MarkStack;
-    friend class GCThreadSharedData;
+    friend class Heap;
     friend class SlotVisitor;
     
     class List {
@@ -111,5 +114,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ListableHandler_h

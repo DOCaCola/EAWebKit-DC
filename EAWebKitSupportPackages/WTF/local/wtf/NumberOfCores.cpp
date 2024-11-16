@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 University of Szeged. All rights reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,13 +26,7 @@
 #include "config.h"
 #include "NumberOfCores.h"
 
-//+EAWebKitChange
-//3/3/2014
-#if PLATFORM(EA)
-//EAWebKitTODO - figure out how many cores to report for various platforms - looks like numberOfCores() is used in two places
-// 1) Parallel GC, currently disabled
-// 2) ParallelJobs, currently used in platform/graphics/filters
-#elif OS(DARWIN)
+#if OS(DARWIN)
 #include <sys/param.h>
 // sys/types.h must come before sys/sysctl.h because the latter uses
 // data types defined in the former. See sysctl(3) and style(9).
@@ -44,7 +37,6 @@
 #elif OS(WINDOWS)
 #include <windows.h>
 #endif
-//-EAWebKitChange
 
 namespace WTF {
 
@@ -56,11 +48,7 @@ int numberOfProcessorCores()
     if (s_numberOfCores > 0)
         return s_numberOfCores;
 
-//+EAWebKitChange
-//3/3/2014
-#if PLATFORM(EA)
-    s_numberOfCores = defaultIfUnavailable;
-#elif OS(DARWIN)
+#if OS(DARWIN)
     unsigned result;
     size_t length = sizeof(result);
     int name[] = {
@@ -83,7 +71,6 @@ int numberOfProcessorCores()
 #else
     s_numberOfCores = defaultIfUnavailable;
 #endif
-//-EAWebKitChange
     return s_numberOfCores;
 }
 

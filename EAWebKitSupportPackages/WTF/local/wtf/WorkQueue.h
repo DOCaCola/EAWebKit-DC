@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2010, 2015 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  * Portions Copyright (c) 2010 Motorola Mobility, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,23 +34,21 @@
 #include <wtf/RefCounted.h>
 #include <wtf/Threading.h>
 
-#if OS(DARWIN)
+#if USE(COCOA_EVENT_LOOP)
 #include <dispatch/dispatch.h>
 #endif
 
-#if PLATFORM(GTK)
-#include <wtf/glib/GMainLoopSource.h>
-#include <wtf/glib/GRefPtr.h>
-#elif PLATFORM(EFL)
+#if USE(EFL_EVENT_LOOP)
 #include <DispatchQueueEfl.h>
-//+EAWebKitChange
-//11/04/2015
-// Disable windows specific code
-#elif OS(WINDOWS) && !PLATFORM(EA)
-//-EAWebKitChange
-#include <wtf/HashMap.h>
+#endif
+
+#if USE(WINDOWS_EVENT_LOOP)
 #include <wtf/Vector.h>
-#include <wtf/win/WorkItemWin.h>
+#endif
+
+#if USE(GLIB_EVENT_LOOP) || USE(GENERIC_EVENT_LOOP)
+#include <wtf/Condition.h>
+#include <wtf/RunLoop.h>
 #endif
 
 namespace WTF {
@@ -69,21 +66,22 @@ public:
         Utility,
         Background
     };
-    
+
     WTF_EXPORT_PRIVATE static Ref<WorkQueue> create(const char* name, Type = Type::Serial, QOS = QOS::Default);
     virtual ~WorkQueue();
 
-    WTF_EXPORT_PRIVATE virtual void dispatch(std::function<void ()>) override;
-    WTF_EXPORT_PRIVATE void dispatchAfter(std::chrono::nanoseconds, std::function<void ()>);
+    WTF_EXPORT_PRIVATE void dispatch(Function<void ()>&&) override;
+    WTF_EXPORT_PRIVATE void dispatchAfter(std::chrono::nanoseconds, Function<void ()>&&);
 
-#if OS(DARWIN)
-    dispatch_queue_t dispatchQueue() const { return m_dispatchQueue; }
-#elif PLATFORM(GTK)
-    void registerSocketEventHandler(int, std::function<void ()>, std::function<void ()>);
-    void unregisterSocketEventHandler(int);
-#elif PLATFORM(EFL)
+    WTF_EXPORT_PRIVATE static void concurrentApply(size_t iterations, const std::function<void (size_t index)>&);
+
+#if USE(EFL_EVENT_LOOP)
     void registerSocketEventHandler(int, std::function<void ()>);
     void unregisterSocketEventHandler(int);
+#elif USE(COCOA_EVENT_LOOP)
+    dispatch_queue_t dispatchQueue() const { return m_dispatchQueue; }
+#elif USE(GLIB_EVENT_LOOP) || USE(GENERIC_EVENT_LOOP)
+    RunLoop& runLoop() const { return *m_runLoop; }
 #endif
 
 private:
@@ -91,47 +89,33 @@ private:
 
     void platformInitialize(const char* name, Type, QOS);
     void platformInvalidate();
-//+EAWebKitChange
-//11/04/2015
-// Disable windows specific code
-#if OS(WINDOWS) && !PLATFORM(EA)
-//-EAWebKitChange
-    static void CALLBACK handleCallback(void* context, BOOLEAN timerOrWaitFired);
+
+#if USE(WINDOWS_EVENT_LOOP)
     static void CALLBACK timerCallback(void* context, BOOLEAN timerOrWaitFired);
     static DWORD WINAPI workThreadCallback(void* context);
 
     bool tryRegisterAsWorkThread();
     void unregisterAsWorkThread();
     void performWorkOnRegisteredWorkThread();
-
-    static void unregisterWaitAndDestroyItemSoon(PassRefPtr<HandleWorkItem>);
-    static DWORD WINAPI unregisterWaitAndDestroyItemCallback(void* context);
 #endif
 
-#if OS(DARWIN)
+#if USE(EFL_EVENT_LOOP)
+    RefPtr<DispatchQueue> m_dispatchQueue;
+#elif USE(COCOA_EVENT_LOOP)
     static void executeFunction(void*);
     dispatch_queue_t m_dispatchQueue;
-#elif PLATFORM(GTK)
-    ThreadIdentifier m_workQueueThread;
-    GRefPtr<GMainContext> m_eventContext;
-    GRefPtr<GMainLoop> m_eventLoop;
-    GMainLoopSource m_socketEventSource;
-#elif PLATFORM(EFL)
-    RefPtr<DispatchQueue> m_dispatchQueue;
-//+EAWebKitChange
-//11/04/2015
-// Disable windows specific code
-#elif OS(WINDOWS) && !PLATFORM(EA)
-//-EAWebKitChange
+#elif USE(WINDOWS_EVENT_LOOP)
     volatile LONG m_isWorkThreadRegistered;
 
-    Mutex m_workItemQueueLock;
-    Vector<RefPtr<WorkItemWin>> m_workItemQueue;
-
-    Mutex m_handlesLock;
-    HashMap<HANDLE, RefPtr<HandleWorkItem>> m_handles;
+    Mutex m_functionQueueLock;
+    Vector<Function<void ()>> m_functionQueue;
 
     HANDLE m_timerQueue;
+#elif USE(GLIB_EVENT_LOOP) || USE(GENERIC_EVENT_LOOP)
+    ThreadIdentifier m_workQueueThread;
+    Lock m_initializeRunLoopConditionMutex;
+    Condition m_initializeRunLoopCondition;
+    RunLoop* m_runLoop;
 #endif
 };
 

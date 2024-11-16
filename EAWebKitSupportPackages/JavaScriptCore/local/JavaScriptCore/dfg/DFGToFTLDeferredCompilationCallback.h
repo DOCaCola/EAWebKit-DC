@@ -23,13 +23,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGToFTLDeferredCompilationCallback_h
-#define DFGToFTLDeferredCompilationCallback_h
+#pragma once
 
 #if ENABLE(FTL_JIT)
 
 #include "DeferredCompilationCallback.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 
 namespace JSC {
@@ -40,23 +38,17 @@ namespace DFG {
 
 class ToFTLDeferredCompilationCallback : public DeferredCompilationCallback {
 protected:
-    ToFTLDeferredCompilationCallback(PassRefPtr<CodeBlock> dfgCodeBlock);
+    ToFTLDeferredCompilationCallback();
 
 public:
     virtual ~ToFTLDeferredCompilationCallback();
 
-    static Ref<ToFTLDeferredCompilationCallback> create(PassRefPtr<CodeBlock> dfgCodeBlock);
+    static Ref<ToFTLDeferredCompilationCallback> create();
     
-    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*);
-    virtual void compilationDidComplete(CodeBlock*, CompilationResult);
-
-private:
-    RefPtr<CodeBlock> m_dfgCodeBlock;
+    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*, CodeBlock* profiledDFGCodeBlock);
+    virtual void compilationDidComplete(CodeBlock*, CodeBlock* profiledDFGCodeBlock, CompilationResult);
 };
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(FTL_JIT)
-
-#endif // DFGToFTLDeferredCompilationCallback_h
-

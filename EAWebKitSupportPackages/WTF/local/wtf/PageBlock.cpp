@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2010 Apple Inc. All rights reserved.
- * Copyright (C) 2011, 2012 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,35 +35,12 @@
 #include <windows.h>
 #endif
 
-//+EAWebKitChange
-//10/17/2011
-#if PLATFORM(EA)
-#include <../../../../../WebKit/ea/Api/EAWebKit/include/EAWebKit/EAWebkitAllocator.h>
-#endif
-//-EAWebKitChange
 namespace WTF {
 
 static size_t s_pageSize;
 static size_t s_pageMask;
 
-//+EAWebKitChange
-//10/17/2011
-//10/23/2012 - Use PLATFORM(EA) first since OS(UNIX) is true on some platforms.
-#if PLATFORM(EA)
-inline size_t systemPageSize()
-{
-	EA::WebKit::Allocator* pAllocator = EA::WebKit::GetAllocator();
-	if(pAllocator->SupportsOSMemoryManagement())
-	{
-		return pAllocator->SystemPageSize();
-	}
-	else
-	{
-		return 4096;
-	}
-}
-#elif OS(UNIX)
-//-EAWebKitChange
+#if OS(UNIX)
 
 inline size_t systemPageSize()
 {

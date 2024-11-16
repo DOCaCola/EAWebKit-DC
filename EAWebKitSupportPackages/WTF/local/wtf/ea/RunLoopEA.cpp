@@ -83,4 +83,29 @@ bool RunLoop::TimerBase::isActive() const
 	return true;
 }
 
+
+class RunLoop::TimerBase::ScheduledTask
+{
+public:
+	void deref() {}
+};
+
+void WTF::RunLoop::schedule(RefPtr<TimerBase::ScheduledTask>&&)
+{
+	ASSERT(false);
+}
+
+void WTF::RunLoop::schedule(const LockHolder&, RefPtr<TimerBase::ScheduledTask>&&)
+{
+	ASSERT(false);
+}
+void WTF::RunLoop::wakeUp(const LockHolder&)
+{
+	ASSERT(false);
+}
+
+void WTF::RunLoop::scheduleAndWakeUp(RefPtr<TimerBase::ScheduledTask>)
+{
+	ASSERT(false);
+}
 } // namespace WTF

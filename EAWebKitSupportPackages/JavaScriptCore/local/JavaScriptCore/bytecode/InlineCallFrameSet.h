@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef InlineCallFrameSet_h
-#define InlineCallFrameSet_h
+#pragma once
 
 #include "CodeOrigin.h"
 #include <wtf/Bag.h>
@@ -45,13 +44,8 @@ public:
     iterator begin() { return m_frames.begin(); }
     iterator end() { return m_frames.end(); }
 
-    void visitAggregate(SlotVisitor&);
-    
 private:
     Bag<InlineCallFrame> m_frames;
 };
 
 } // namespace JSC
-
-#endif // InlineCallFrameSet_h
-

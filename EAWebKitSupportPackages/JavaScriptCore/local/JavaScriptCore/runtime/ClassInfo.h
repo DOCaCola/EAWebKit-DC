@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
- *  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
+ *  Copyright (C) 2003-2017 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -20,16 +20,15 @@
  *
  */
 
-#ifndef ClassInfo_h
-#define ClassInfo_h
+#pragma once
 
 #include "CallFrame.h"
 #include "ConstructData.h"
-#include "CopyToken.h"
 #include "JSCell.h"
 
 namespace JSC {
 
+class HeapSnapshotBuilder;
 class JSArrayBufferView;
 struct HashTable;
 
@@ -39,20 +38,17 @@ struct MethodTable {
 
     typedef void (*VisitChildrenFunctionPtr)(JSCell*, SlotVisitor&);
     VisitChildrenFunctionPtr visitChildren;
-
-    typedef void (*CopyBackingStoreFunctionPtr)(JSCell*, CopyVisitor&, CopyToken);
-    CopyBackingStoreFunctionPtr copyBackingStore;
-
+    
     typedef CallType (*GetCallDataFunctionPtr)(JSCell*, CallData&);
     GetCallDataFunctionPtr getCallData;
 
     typedef ConstructType (*GetConstructDataFunctionPtr)(JSCell*, ConstructData&);
     GetConstructDataFunctionPtr getConstructData;
 
-    typedef void (*PutFunctionPtr)(JSCell*, ExecState*, PropertyName propertyName, JSValue, PutPropertySlot&);
+    typedef bool (*PutFunctionPtr)(JSCell*, ExecState*, PropertyName propertyName, JSValue, PutPropertySlot&);
     PutFunctionPtr put;
 
-    typedef void (*PutByIndexFunctionPtr)(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
+    typedef bool (*PutByIndexFunctionPtr)(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
     PutByIndexFunctionPtr putByIndex;
 
     typedef bool (*DeletePropertyFunctionPtr)(JSCell*, ExecState*, PropertyName);
@@ -91,6 +87,9 @@ struct MethodTable {
     typedef String (*ClassNameFunctionPtr)(const JSObject*);
     ClassNameFunctionPtr className;
 
+    typedef String (*ToStringNameFunctionPtr)(const JSObject*, ExecState*);
+    ToStringNameFunctionPtr toStringName;
+
     typedef bool (*CustomHasInstanceFunctionPtr)(JSObject*, ExecState*, JSValue);
     CustomHasInstanceFunctionPtr customHasInstance;
 
@@ -103,8 +102,29 @@ struct MethodTable {
     typedef PassRefPtr<ArrayBufferView> (*GetTypedArrayImpl)(JSArrayBufferView*);
     GetTypedArrayImpl getTypedArrayImpl;
 
+    typedef bool (*PreventExtensionsFunctionPtr)(JSObject*, ExecState*);
+    PreventExtensionsFunctionPtr preventExtensions;
+
+    typedef bool (*IsExtensibleFunctionPtr)(JSObject*, ExecState*);
+    IsExtensibleFunctionPtr isExtensible;
+
+    typedef bool (*SetPrototypeFunctionPtr)(JSObject*, ExecState*, JSValue, bool shouldThrowIfCantSet);
+    SetPrototypeFunctionPtr setPrototype;
+
+    typedef JSValue (*GetPrototypeFunctionPtr)(JSObject*, ExecState*);
+    GetPrototypeFunctionPtr getPrototype;
+
     typedef void (*DumpToStreamFunctionPtr)(const JSCell*, PrintStream&);
     DumpToStreamFunctionPtr dumpToStream;
+
+    typedef void (*HeapSnapshotFunctionPtr)(JSCell*, HeapSnapshotBuilder&);
+    HeapSnapshotFunctionPtr heapSnapshot;
+
+    typedef size_t (*EstimatedSizeFunctionPtr)(JSCell*);
+    EstimatedSizeFunctionPtr estimatedSize;
+    
+    typedef void (*VisitOutputConstraintsPtr)(JSCell*, SlotVisitor&);
+    VisitOutputConstraintsPtr visitOutputConstraints;
 };
 
 #define CREATE_MEMBER_CHECKER(member) \
@@ -129,7 +149,6 @@ struct MethodTable {
 #define CREATE_METHOD_TABLE(ClassName) { \
         &ClassName::destroy, \
         &ClassName::visitChildren, \
-        &ClassName::copyBackingStore, \
         &ClassName::getCallData, \
         &ClassName::getConstructData, \
         &ClassName::put, \
@@ -147,11 +166,19 @@ struct MethodTable {
         &ClassName::getStructurePropertyNames, \
         &ClassName::getGenericPropertyNames, \
         &ClassName::className, \
+        &ClassName::toStringName, \
         &ClassName::customHasInstance, \
         &ClassName::defineOwnProperty, \
         &ClassName::slowDownAndWasteMemory, \
         &ClassName::getTypedArrayImpl, \
-        &ClassName::dumpToStream \
+        &ClassName::preventExtensions, \
+        &ClassName::isExtensible, \
+        &ClassName::setPrototype, \
+        &ClassName::getPrototype, \
+        &ClassName::dumpToStream, \
+        &ClassName::heapSnapshot, \
+        &ClassName::estimatedSize, \
+        &ClassName::visitOutputConstraints \
     }, \
     ClassName::TypedArrayStorageType
 
@@ -172,16 +199,7 @@ struct ClassInfo {
         return false;
     }
 
-    bool hasStaticProperties() const
-    {
-        for (const ClassInfo* ci = this; ci; ci = ci->parentClass) {
-            if (ci->staticPropHashTable)
-                return true;
-        }
-        return false;
-    }
-
-    bool hasStaticSetterOrReadonlyProperties() const;
+    JS_EXPORT_PRIVATE bool hasStaticSetterOrReadonlyProperties() const;
 
     const HashTable* staticPropHashTable;
 
@@ -191,5 +209,3 @@ struct ClassInfo {
 };
 
 } // namespace JSC
-
-#endif // ClassInfo_h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGHeapLocation_h
-#define DFGHeapLocation_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -39,7 +38,8 @@ enum LocationKind {
     
     ArrayLengthLoc,
     ButterflyLoc,
-    CheckHasInstanceLoc,
+    CheckTypeInfoFlagsLoc,
+    OverridesHasInstanceLoc,
     ClosureVariableLoc,
     DirectArgumentsLoc,
     GetterLoc,
@@ -52,12 +52,16 @@ enum LocationKind {
     IsFunctionLoc,
     IsObjectOrNullLoc,
     NamedPropertyLoc,
+    RegExpObjectLastIndexLoc,
     SetterLoc,
     StructureLoc,
     TypedArrayByteOffsetLoc,
-    VarInjectionWatchpointLoc,
     StackLoc,
-    StackPayloadLoc
+    StackPayloadLoc,
+    MapBucketLoc,
+    JSMapGetLoc,
+    MapHasLoc,
+    DOMStateLoc,
 };
 
 class HeapLocation {
@@ -152,13 +156,4 @@ template<> struct HashTraits<JSC::DFG::HeapLocation> : SimpleClassHashTraits<JSC
 
 } // namespace WTF
 
-namespace JSC { namespace DFG {
-
-typedef HashMap<HeapLocation, LazyNode> ImpureMap;
-
-} } // namespace JSC::DFG
-
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGHeapLocation_h
-

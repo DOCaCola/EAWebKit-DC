@@ -21,8 +21,7 @@
  *
  */
 
-#ifndef JSGlobalObjectFunctions_h
-#define JSGlobalObjectFunctions_h
+#pragma once
 
 #include "JSCJSValue.h"
 #include <unicode/uchar.h>
@@ -40,8 +39,6 @@ class JSObject;
 EncodedJSValue JSC_HOST_CALL globalFuncEval(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncParseInt(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncParseFloat(ExecState*);
-EncodedJSValue JSC_HOST_CALL globalFuncIsNaN(ExecState*);
-EncodedJSValue JSC_HOST_CALL globalFuncIsFinite(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncDecodeURI(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncDecodeURIComponent(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncEncodeURI(ExecState*);
@@ -49,11 +46,11 @@ EncodedJSValue JSC_HOST_CALL globalFuncEncodeURIComponent(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncEscape(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncUnescape(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncThrowTypeError(ExecState*);
+EncodedJSValue JSC_HOST_CALL globalFuncThrowTypeErrorArgumentsCalleeAndCaller(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncProtoGetter(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState*);
 EncodedJSValue JSC_HOST_CALL globalFuncBuiltinLog(ExecState*);
-
-bool checkProtoSetterAccessAllowed(ExecState*, JSObject*);
+EncodedJSValue JSC_HOST_CALL globalFuncImportModule(ExecState*);
 
 static const double mantissaOverflowLowerBound = 9007199254740992.0;
 double parseIntOverflow(const LChar*, unsigned length, int radix);
@@ -61,5 +58,3 @@ bool isStrWhiteSpace(UChar);
 double jsToNumber(StringView);
 
 } // namespace JSC
-
-#endif // JSGlobalObjectFunctions_h

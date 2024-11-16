@@ -1,6 +1,6 @@
 /*
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2008 Apple Inc. All rights reserved.
+ *  Copyright (C) 2008, 2016 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,20 +18,20 @@
  *
  */
 
-#ifndef BooleanConstructor_h
-#define BooleanConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
 namespace JSC {
 
 class BooleanPrototype;
+class GetterSetter;
 
 class BooleanConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
 
-    static BooleanConstructor* create(VM& vm, Structure* structure, BooleanPrototype* booleanPrototype)
+    static BooleanConstructor* create(VM& vm, Structure* structure, BooleanPrototype* booleanPrototype, GetterSetter*)
     {
         BooleanConstructor* constructor = new (NotNull, allocateCell<BooleanConstructor>(vm.heap)) BooleanConstructor(vm, structure);
         constructor->finishCreation(vm, booleanPrototype);
@@ -55,8 +55,5 @@ private:
 };
 
 JSObject* constructBooleanFromImmediateBoolean(ExecState*, JSGlobalObject*, JSValue);
-JSObject* constructBoolean(ExecState*, const ArgList&);
 
 } // namespace JSC
-
-#endif // BooleanConstructor_h

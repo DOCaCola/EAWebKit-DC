@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2011-2013, 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,16 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef CommonSlowPaths_h
-#define CommonSlowPaths_h
+#pragma once
 
 #include "CodeBlock.h"
 #include "CodeSpecializationKind.h"
 #include "ExceptionHelpers.h"
-#include "JSStackInlines.h"
+#include "FunctionCodeBlock.h"
+#include "SlowPathReturnType.h"
 #include "StackAlignment.h"
 #include "Symbol.h"
-#include "VM.h"
+#include "VMInlines.h"
 #include <wtf/StdLibExtras.h>
 
 namespace JSC {
@@ -49,70 +49,137 @@ namespace CommonSlowPaths {
 struct ArityCheckData {
     unsigned paddedStackSpace;
     void* thunkToCall;
-    void* returnPC;
 };
 
-ALWAYS_INLINE int arityCheckFor(ExecState* exec, JSStack* stack, CodeSpecializationKind kind)
+ALWAYS_INLINE int arityCheckFor(ExecState* exec, VM& vm, CodeSpecializationKind kind)
 {
-    JSFunction* callee = jsCast<JSFunction*>(exec->callee());
+    JSFunction* callee = jsCast<JSFunction*>(exec->jsCallee());
     ASSERT(!callee->isHostFunction());
     CodeBlock* newCodeBlock = callee->jsExecutable()->codeBlockFor(kind);
     int argumentCountIncludingThis = exec->argumentCountIncludingThis();
     
     ASSERT(argumentCountIncludingThis < newCodeBlock->numParameters());
-    int missingArgumentCount = newCodeBlock->numParameters() - argumentCountIncludingThis;
-    int neededStackSpace = missingArgumentCount + 1; // Allow space to save the original return PC.
-    int paddedStackSpace = WTF::roundUpToMultipleOf(stackAlignmentRegisters(), neededStackSpace);
+    int frameSize = argumentCountIncludingThis + CallFrame::headerSizeInRegisters;
+    int alignedFrameSizeForParameters = WTF::roundUpToMultipleOf(stackAlignmentRegisters(),
+        newCodeBlock->numParameters() + CallFrame::headerSizeInRegisters);
+    int paddedStackSpace = alignedFrameSizeForParameters - frameSize;
+    
+    Register* newStack = exec->registers() - WTF::roundUpToMultipleOf(stackAlignmentRegisters(), paddedStackSpace);
 
-    if (!stack->ensureCapacityFor(exec->registers() - paddedStackSpace))
+    if (UNLIKELY(!vm.ensureStackCapacityFor(newStack)))
         return -1;
-    return paddedStackSpace / stackAlignmentRegisters();
+    return paddedStackSpace;
 }
 
 inline bool opIn(ExecState* exec, JSValue propName, JSValue baseVal)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
     if (!baseVal.isObject()) {
-        exec->vm().throwException(exec, createInvalidInParameterError(exec, baseVal));
+        throwException(exec, scope, createInvalidInParameterError(exec, baseVal));
         return false;
     }
 
     JSObject* baseObj = asObject(baseVal);
 
     uint32_t i;
-    if (propName.getUInt32(i))
+    if (propName.getUInt32(i)) {
+        scope.release();
         return baseObj->hasProperty(exec, i);
+    }
 
     auto property = propName.toPropertyKey(exec);
-    if (exec->vm().exception())
-        return false;
+    RETURN_IF_EXCEPTION(scope, false);
+    scope.release();
     return baseObj->hasProperty(exec, property);
 }
 
 inline void tryCachePutToScopeGlobal(
     ExecState* exec, CodeBlock* codeBlock, Instruction* pc, JSObject* scope,
-    ResolveModeAndType modeAndType, PutPropertySlot& slot)
+    GetPutInfo getPutInfo, PutPropertySlot& slot, const Identifier& ident)
 {
     // Covers implicit globals. Since they don't exist until they first execute, we didn't know how to cache them at compile time.
-    
-    if (modeAndType.type() != GlobalProperty && modeAndType.type() != GlobalPropertyWithVarInjectionChecks)
+    ResolveType resolveType = getPutInfo.resolveType();
+    if (resolveType != GlobalProperty && resolveType != GlobalPropertyWithVarInjectionChecks 
+        && resolveType != UnresolvedProperty && resolveType != UnresolvedPropertyWithVarInjectionChecks)
         return;
-    
-    if (!slot.isCacheablePut()
-        || slot.base() != scope
-        || !scope->structure()->propertyAccessesAreCacheable())
-        return;
-    
-    if (slot.type() == PutPropertySlot::NewProperty) {
-        // Don't cache if we've done a transition. We want to detect the first replace so that we
-        // can invalidate the watchpoint.
-        return;
+
+    if (resolveType == UnresolvedProperty || resolveType == UnresolvedPropertyWithVarInjectionChecks) {
+        if (scope->isGlobalObject()) {
+            ResolveType newResolveType = resolveType == UnresolvedProperty ? GlobalProperty : GlobalPropertyWithVarInjectionChecks;
+            resolveType = newResolveType;
+            getPutInfo = GetPutInfo(getPutInfo.resolveMode(), newResolveType, getPutInfo.initializationMode());
+            ConcurrentJSLocker locker(codeBlock->m_lock);
+            pc[4].u.operand = getPutInfo.operand();
+        } else if (scope->isGlobalLexicalEnvironment()) {
+            JSGlobalLexicalEnvironment* globalLexicalEnvironment = jsCast<JSGlobalLexicalEnvironment*>(scope);
+            ResolveType newResolveType = resolveType == UnresolvedProperty ? GlobalLexicalVar : GlobalLexicalVarWithVarInjectionChecks;
+            pc[4].u.operand = GetPutInfo(getPutInfo.resolveMode(), newResolveType, getPutInfo.initializationMode()).operand();
+            SymbolTableEntry entry = globalLexicalEnvironment->symbolTable()->get(ident.impl());
+            ASSERT(!entry.isNull());
+            ConcurrentJSLocker locker(codeBlock->m_lock);
+            pc[5].u.watchpointSet = entry.watchpointSet();
+            pc[6].u.pointer = static_cast<void*>(globalLexicalEnvironment->variableAt(entry.scopeOffset()).slot());
+        }
     }
     
-    scope->structure()->didCachePropertyReplacement(exec->vm(), slot.cachedOffset());
+    if (resolveType == GlobalProperty || resolveType == GlobalPropertyWithVarInjectionChecks) {
+        if (!slot.isCacheablePut()
+            || slot.base() != scope
+            || !scope->structure()->propertyAccessesAreCacheable())
+            return;
+        
+        if (slot.type() == PutPropertySlot::NewProperty) {
+            // Don't cache if we've done a transition. We want to detect the first replace so that we
+            // can invalidate the watchpoint.
+            return;
+        }
+        
+        scope->structure()->didCachePropertyReplacement(exec->vm(), slot.cachedOffset());
 
-    ConcurrentJITLocker locker(codeBlock->m_lock);
-    pc[5].u.structure.set(exec->vm(), codeBlock->ownerExecutable(), scope->structure());
-    pc[6].u.operand = slot.cachedOffset();
+        ConcurrentJSLocker locker(codeBlock->m_lock);
+        pc[5].u.structure.set(exec->vm(), codeBlock, scope->structure());
+        pc[6].u.operand = slot.cachedOffset();
+    }
+}
+
+inline void tryCacheGetFromScopeGlobal(
+    ExecState* exec, VM& vm, Instruction* pc, JSObject* scope, PropertySlot& slot, const Identifier& ident)
+{
+    GetPutInfo getPutInfo(pc[4].u.operand);
+    ResolveType resolveType = getPutInfo.resolveType();
+
+    if (resolveType == UnresolvedProperty || resolveType == UnresolvedPropertyWithVarInjectionChecks) {
+        if (scope->isGlobalObject()) {
+            ResolveType newResolveType = resolveType == UnresolvedProperty ? GlobalProperty : GlobalPropertyWithVarInjectionChecks;
+            resolveType = newResolveType; // Allow below caching mechanism to kick in.
+            ConcurrentJSLocker locker(exec->codeBlock()->m_lock);
+            pc[4].u.operand = GetPutInfo(getPutInfo.resolveMode(), newResolveType, getPutInfo.initializationMode()).operand();
+        } else if (scope->isGlobalLexicalEnvironment()) {
+            JSGlobalLexicalEnvironment* globalLexicalEnvironment = jsCast<JSGlobalLexicalEnvironment*>(scope);
+            ResolveType newResolveType = resolveType == UnresolvedProperty ? GlobalLexicalVar : GlobalLexicalVarWithVarInjectionChecks;
+            SymbolTableEntry entry = globalLexicalEnvironment->symbolTable()->get(ident.impl());
+            ASSERT(!entry.isNull());
+            ConcurrentJSLocker locker(exec->codeBlock()->m_lock);
+            pc[4].u.operand = GetPutInfo(getPutInfo.resolveMode(), newResolveType, getPutInfo.initializationMode()).operand();
+            pc[5].u.watchpointSet = entry.watchpointSet();
+            pc[6].u.pointer = static_cast<void*>(globalLexicalEnvironment->variableAt(entry.scopeOffset()).slot());
+        }
+    }
+
+    // Covers implicit globals. Since they don't exist until they first execute, we didn't know how to cache them at compile time.
+    if (slot.isCacheableValue() && slot.slotBase() == scope && scope->structure()->propertyAccessesAreCacheable()) {
+        if (resolveType == GlobalProperty || resolveType == GlobalPropertyWithVarInjectionChecks) {
+            CodeBlock* codeBlock = exec->codeBlock();
+            Structure* structure = scope->structure(vm);
+            {
+                ConcurrentJSLocker locker(codeBlock->m_lock);
+                pc[5].u.structure.set(exec->vm(), codeBlock, structure);
+                pc[6].u.operand = slot.cachedOffset();
+            }
+            structure->startWatchingPropertyForReplacements(vm, slot.cachedOffset());
+        }
+    }
 }
 
 } // namespace CommonSlowPaths
@@ -120,57 +187,6 @@ inline void tryCachePutToScopeGlobal(
 class ExecState;
 struct Instruction;
 
-#if USE(JSVALUE64)
-// According to C++ rules, a type used for the return signature of function with C linkage (i.e.
-// 'extern "C"') needs to be POD; hence putting any constructors into it could cause either compiler
-// warnings, or worse, a change in the ABI used to return these types.
-struct SlowPathReturnType {
-    void* a;
-    void* b;
-};
-
-inline SlowPathReturnType encodeResult(void* a, void* b)
-{
-    SlowPathReturnType result;
-    result.a = a;
-    result.b = b;
-    return result;
-}
-
-inline void decodeResult(SlowPathReturnType result, void*& a, void*& b)
-{
-    a = result.a;
-    b = result.b;
-}
-
-#else // USE(JSVALUE32_64)
-typedef int64_t SlowPathReturnType;
-
-typedef union {
-    struct {
-        void* a;
-        void* b;
-    } pair;
-    int64_t i;
-} SlowPathReturnTypeEncoding;
-
-inline SlowPathReturnType encodeResult(void* a, void* b)
-{
-    SlowPathReturnTypeEncoding u;
-    u.pair.a = a;
-    u.pair.b = b;
-    return u.i;
-}
-
-inline void decodeResult(SlowPathReturnType result, void*& a, void*& b)
-{
-    SlowPathReturnTypeEncoding u;
-    u.i = result;
-    a = u.pair.a;
-    b = u.pair.b;
-}
-#endif // USE(JSVALUE32_64)
-    
 #define SLOW_PATH
     
 #define SLOW_PATH_DECL(name) \
@@ -183,12 +199,13 @@ SLOW_PATH_HIDDEN_DECL(slow_path_call_arityCheck);
 SLOW_PATH_HIDDEN_DECL(slow_path_construct_arityCheck);
 SLOW_PATH_HIDDEN_DECL(slow_path_create_direct_arguments);
 SLOW_PATH_HIDDEN_DECL(slow_path_create_scoped_arguments);
-SLOW_PATH_HIDDEN_DECL(slow_path_create_out_of_band_arguments);
+SLOW_PATH_HIDDEN_DECL(slow_path_create_cloned_arguments);
 SLOW_PATH_HIDDEN_DECL(slow_path_create_this);
 SLOW_PATH_HIDDEN_DECL(slow_path_enter);
 SLOW_PATH_HIDDEN_DECL(slow_path_get_callee);
 SLOW_PATH_HIDDEN_DECL(slow_path_to_this);
 SLOW_PATH_HIDDEN_DECL(slow_path_throw_tdz_error);
+SLOW_PATH_HIDDEN_DECL(slow_path_throw_strict_mode_readonly_property_write_error);
 SLOW_PATH_HIDDEN_DECL(slow_path_not);
 SLOW_PATH_HIDDEN_DECL(slow_path_eq);
 SLOW_PATH_HIDDEN_DECL(slow_path_neq);
@@ -208,6 +225,7 @@ SLOW_PATH_HIDDEN_DECL(slow_path_mul);
 SLOW_PATH_HIDDEN_DECL(slow_path_sub);
 SLOW_PATH_HIDDEN_DECL(slow_path_div);
 SLOW_PATH_HIDDEN_DECL(slow_path_mod);
+SLOW_PATH_HIDDEN_DECL(slow_path_pow);
 SLOW_PATH_HIDDEN_DECL(slow_path_lshift);
 SLOW_PATH_HIDDEN_DECL(slow_path_rshift);
 SLOW_PATH_HIDDEN_DECL(slow_path_urshift);
@@ -233,9 +251,19 @@ SLOW_PATH_HIDDEN_DECL(slow_path_next_structure_enumerator_pname);
 SLOW_PATH_HIDDEN_DECL(slow_path_next_generic_enumerator_pname);
 SLOW_PATH_HIDDEN_DECL(slow_path_to_index_string);
 SLOW_PATH_HIDDEN_DECL(slow_path_profile_type_clear_log);
+SLOW_PATH_HIDDEN_DECL(slow_path_assert);
 SLOW_PATH_HIDDEN_DECL(slow_path_create_lexical_environment);
 SLOW_PATH_HIDDEN_DECL(slow_path_push_with_scope);
+SLOW_PATH_HIDDEN_DECL(slow_path_resolve_scope);
+SLOW_PATH_HIDDEN_DECL(slow_path_create_rest);
+SLOW_PATH_HIDDEN_DECL(slow_path_get_by_id_with_this);
+SLOW_PATH_HIDDEN_DECL(slow_path_get_by_val_with_this);
+SLOW_PATH_HIDDEN_DECL(slow_path_put_by_id_with_this);
+SLOW_PATH_HIDDEN_DECL(slow_path_put_by_val_with_this);
+SLOW_PATH_HIDDEN_DECL(slow_path_define_data_property);
+SLOW_PATH_HIDDEN_DECL(slow_path_define_accessor_property);
+SLOW_PATH_HIDDEN_DECL(slow_path_throw_static_error);
+SLOW_PATH_HIDDEN_DECL(slow_path_new_array_with_spread);
+SLOW_PATH_HIDDEN_DECL(slow_path_spread);
 
 } // namespace JSC
-
-#endif // CommonSlowPaths_h

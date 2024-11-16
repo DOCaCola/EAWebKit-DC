@@ -23,14 +23,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef BinarySwitch_h
-#define BinarySwitch_h
+#pragma once
 
 #if ENABLE(JIT)
 
 #include "GPRInfo.h"
 #include "MacroAssembler.h"
-#include "WeakRandom.h"
+#include <wtf/WeakRandom.h>
 
 namespace JSC {
 
@@ -94,6 +93,8 @@ private:
         {
             return value < other.value;
         }
+
+        void dump(PrintStream& out) const;
         
         int64_t value;
         unsigned index;
@@ -117,6 +118,8 @@ private:
             , index(index)
         {
         }
+
+        void dump(PrintStream& out) const;
         
         BranchKind kind;
         unsigned index;
@@ -138,6 +141,3 @@ private:
 } // namespace JSC
 
 #endif // ENABLE(JIT)
-
-#endif // BinarySwitch_h
-

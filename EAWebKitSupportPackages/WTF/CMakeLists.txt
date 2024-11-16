@@ -15,6 +15,7 @@ file(GLOB WTF_SOURCES
   "${LOCAL_DIR}/wtf/*.cpp"
   "${LOCAL_DIR}/wtf/dtoa/*.cc"
   "${LOCAL_DIR}/wtf/text/*.cpp"
+  "${LOCAL_DIR}/wtf/text/icu/*.cpp"
   "${LOCAL_DIR}/wtf/threads/*.cpp"
   "${LOCAL_DIR}/wtf/unicode/UTF8.cpp"
   "${LOCAL_DIR}/wtf/unicode/ea/*.cpp"
@@ -37,6 +38,7 @@ target_include_directories(WTF PRIVATE
   "${LOCAL_DIR}/wtf/ea/"
   "${LOCAL_DIR}/wtf/ea/icu/"
   "${LOCAL_DIR}/wtf/text/"
+  "${LOCAL_DIR}/wtf/text/icu/"
   "${LOCAL_DIR}/wtf/threads/"
   "${LOCAL_DIR}/wtf/unicode/"
   )

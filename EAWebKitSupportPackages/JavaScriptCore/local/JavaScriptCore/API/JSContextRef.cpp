@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2013, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -108,8 +108,8 @@ void JSContextGroupClearExecutionTimeLimit(JSContextGroupRef group)
 {
     VM& vm = *toJS(group);
     JSLockHolder locker(&vm);
-    if (vm.watchdog)
-        vm.watchdog->setTimeLimit(Watchdog::noTimeLimit);
+    if (vm.watchdog())
+        vm.watchdog()->setTimeLimit(Watchdog::noTimeLimit);
 }
 
 // From the API's perspective, a global context remains alive iff it has been JSGlobalContextRetained.
@@ -255,12 +255,12 @@ public:
     {
     }
 
-    StackVisitor::Status operator()(StackVisitor& visitor)
+    StackVisitor::Status operator()(StackVisitor& visitor) const
     {
         if (m_remainingCapacityForFrameCapture) {
             // If callee is unknown, but we've not added any frame yet, we should
             // still add the frame, because something called us, and gave us arguments.
-            JSObject* callee = visitor->callee();
+            JSCell* callee = visitor->callee();
             if (!callee && visitor->index())
                 return StackVisitor::Done;
 
@@ -273,7 +273,7 @@ public:
             builder.append(visitor->functionName());
             builder.appendLiteral("() at ");
             builder.append(visitor->sourceURL());
-            if (visitor->isJSFrame()) {
+            if (visitor->hasLineAndColumnInfo()) {
                 builder.append(':');
                 unsigned lineNumber;
                 unsigned unusedColumn;
@@ -292,7 +292,7 @@ public:
 
 private:
     StringBuilder& m_builder;
-    unsigned m_remainingCapacityForFrameCapture;
+    mutable unsigned m_remainingCapacityForFrameCapture;
 };
 
 JSStringRef JSContextCreateBacktrace(JSContextRef ctx, unsigned maxStackSize)
@@ -389,7 +389,7 @@ CFRunLoopRef JSGlobalContextGetDebuggerRunLoop(JSGlobalContextRef ctx)
     ExecState* exec = toJS(ctx);
     JSLockHolder lock(exec);
 
-    return exec->vmEntryGlobalObject()->inspectorDebuggable().debuggerRunLoop();
+    return exec->vmEntryGlobalObject()->inspectorDebuggable().targetRunLoop();
 #else
     UNUSED_PARAM(ctx);
     return nullptr;
@@ -407,7 +407,7 @@ void JSGlobalContextSetDebuggerRunLoop(JSGlobalContextRef ctx, CFRunLoopRef runL
     ExecState* exec = toJS(ctx);
     JSLockHolder lock(exec);
 
-    exec->vmEntryGlobalObject()->inspectorDebuggable().setDebuggerRunLoop(runLoop);
+    exec->vmEntryGlobalObject()->inspectorDebuggable().setTargetRunLoop(runLoop);
 #else
     UNUSED_PARAM(ctx);
     UNUSED_PARAM(runLoop);

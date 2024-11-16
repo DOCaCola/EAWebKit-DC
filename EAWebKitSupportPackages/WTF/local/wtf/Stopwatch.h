@@ -43,6 +43,7 @@ public:
     void stop();
 
     double elapsedTime();
+    double elapsedTimeSinceMonotonicTime(double);
 
     bool isActive() const { return !std::isnan(m_lastStartTime); }
 private:
@@ -75,15 +76,18 @@ inline void Stopwatch::stop()
 
 inline double Stopwatch::elapsedTime()
 {
-    bool shouldSuspend = !std::isnan(m_lastStartTime);
-    if (shouldSuspend)
-        stop();
+    if (!isActive())
+        return m_elapsedTime;
 
-    double elapsedTime = m_elapsedTime;
+    return m_elapsedTime + (monotonicallyIncreasingTime() - m_lastStartTime);
+}
 
-    if (shouldSuspend)
-        start();
-    return elapsedTime;
+inline double Stopwatch::elapsedTimeSinceMonotonicTime(double monotonicTime)
+{
+    if (!isActive())
+        return m_elapsedTime;
+
+    return m_elapsedTime + (monotonicTime - m_lastStartTime);
 }
 
 } // namespace WTF

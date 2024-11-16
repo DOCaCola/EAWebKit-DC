@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGOSRAvailabilityAnalysisPhase_h
-#define DFGOSRAvailabilityAnalysisPhase_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -37,7 +36,7 @@ class Graph;
 
 // Computes BasicBlock::ssa->availabiltiyAtHead/Tail. This is a forward flow type inference
 // over MovHints and SetLocals. This analysis is run directly by the Plan for preparing for
-// lowering to LLVM IR, but it can also be used as a utility. Note that if you run it before
+// lowering to B3 IR, but it can also be used as a utility. Note that if you run it before
 // stack layout, all of the flush availability will omit the virtual register - but it will
 // tell you the format.
 
@@ -47,7 +46,7 @@ bool performOSRAvailabilityAnalysis(Graph&);
 // having run the availability analysis.
 class LocalOSRAvailabilityCalculator {
 public:
-    LocalOSRAvailabilityCalculator();
+    LocalOSRAvailabilityCalculator(Graph&);
     ~LocalOSRAvailabilityCalculator();
     
     void beginBlock(BasicBlock*);
@@ -55,11 +54,9 @@ public:
     void executeNode(Node*);
     
     AvailabilityMap m_availability;
+    Graph& m_graph;
 };
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGOSRAvailabilityAnalysisPhase_h
-

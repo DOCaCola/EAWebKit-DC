@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGForAllKills_h
-#define DFGForAllKills_h
+#pragma once
 
 #include "DFGCombinedLiveness.h"
 #include "DFGGraph.h"
@@ -55,32 +54,17 @@ void forAllKilledOperands(Graph& graph, Node* nodeBefore, Node* nodeAfter, const
     CodeOrigin after = nodeAfter->origin.forExit;
     
     VirtualRegister alreadyNoted;
-    if (!!after) {
-        // If we MovHint something that is live at the time, then we kill the old value.
-        if (nodeAfter->containsMovHint()) {
-            VirtualRegister reg = nodeAfter->unlinkedLocal();
-            if (graph.isLiveInBytecode(reg, after)) {
-                functor(reg);
-                alreadyNoted = reg;
-            }
+    // If we MovHint something that is live at the time, then we kill the old value.
+    if (nodeAfter->containsMovHint()) {
+        VirtualRegister reg = nodeAfter->unlinkedLocal();
+        if (graph.isLiveInBytecode(reg, after)) {
+            functor(reg);
+            alreadyNoted = reg;
         }
-    }
-    
-    if (!before) {
-        if (!after)
-            return;
-        // The true before-origin is the origin at predecessors that jump to us. But there can be
-        // many such predecessors and they will likely all have a different origin. So, it's better
-        // to do the conservative thing.
-        graph.forAllLocalsLiveInBytecode(after, functor);
-        return;
     }
     
     if (before == after)
         return;
-    
-    // before could be unset even if after is, but the opposite cannot happen.
-    ASSERT(!!after);
     
     // It's easier to do this if the inline call frames are the same. This is way faster than the
     // other loop, below.
@@ -91,11 +75,10 @@ void forAllKilledOperands(Graph& graph, Node* nodeBefore, Node* nodeAfter, const
         const FastBitVector& liveBefore = fullLiveness.getLiveness(before.bytecodeIndex);
         const FastBitVector& liveAfter = fullLiveness.getLiveness(after.bytecodeIndex);
         
-        for (unsigned relativeLocal = codeBlock->m_numCalleeRegisters; relativeLocal--;) {
-            if (liveBefore.get(relativeLocal) && !liveAfter.get(relativeLocal))
+        (liveBefore & ~liveAfter).forEachSetBit(
+            [&] (size_t relativeLocal) {
                 functor(virtualRegisterForLocal(relativeLocal) + stackOffset);
-        }
-        
+            });
         return;
     }
     
@@ -170,7 +153,7 @@ void forAllKillsInBlock(
     for (Node* node : combinedLiveness.liveAtTail[block])
         functor(block->size(), node);
     
-    LocalOSRAvailabilityCalculator localAvailability;
+    LocalOSRAvailabilityCalculator localAvailability(graph);
     localAvailability.beginBlock(block);
     // Start at the second node, because the functor is expected to only inspect nodes from the start of
     // the block up to nodeIndex (exclusive), so if nodeIndex is zero then the functor has nothing to do.
@@ -185,6 +168,3 @@ void forAllKillsInBlock(
 }
 
 } } // namespace JSC::DFG
-
-#endif // DFGForAllKills_h
-

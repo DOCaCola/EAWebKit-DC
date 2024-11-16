@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef StructureStubClearingWatchpoint_h
-#define StructureStubClearingWatchpoint_h
+#pragma once
 
 #include "ObjectPropertyCondition.h"
 #include "Watchpoint.h"
@@ -33,14 +32,12 @@
 
 #include <wtf/FastMalloc.h>
 #include <wtf/Noncopyable.h>
-#include <wtf/RefCounted.h>
-#include <wtf/RefPtr.h>
 
 namespace JSC {
 
 class CodeBlock;
+class StructureStubInfo;
 class WatchpointsOnStructureStubInfo;
-struct StructureStubInfo;
 
 class StructureStubClearingWatchpoint : public Watchpoint {
     WTF_MAKE_NONCOPYABLE(StructureStubClearingWatchpoint);
@@ -52,7 +49,7 @@ public:
         std::unique_ptr<StructureStubClearingWatchpoint> next)
         : m_key(key)
         , m_holder(holder)
-        , m_next(WTF::move(next))
+        , m_next(WTFMove(next))
     {
     }
     
@@ -64,7 +61,7 @@ public:
         std::unique_ptr<StructureStubClearingWatchpoint>& head);
 
 protected:
-    virtual void fireInternal(const FireDetail&) override;
+    void fireInternal(const FireDetail&) override;
 
 private:
     ObjectPropertyCondition m_key;
@@ -72,7 +69,9 @@ private:
     std::unique_ptr<StructureStubClearingWatchpoint> m_next;
 };
 
-class WatchpointsOnStructureStubInfo : public RefCounted<WatchpointsOnStructureStubInfo> {
+class WatchpointsOnStructureStubInfo {
+    WTF_MAKE_NONCOPYABLE(WatchpointsOnStructureStubInfo);
+    WTF_MAKE_FAST_ALLOCATED;
 public:
     WatchpointsOnStructureStubInfo(CodeBlock* codeBlock, StructureStubInfo* stubInfo)
         : m_codeBlock(codeBlock)
@@ -85,7 +84,7 @@ public:
     StructureStubClearingWatchpoint* addWatchpoint(const ObjectPropertyCondition& key);
     
     static StructureStubClearingWatchpoint* ensureReferenceAndAddWatchpoint(
-        RefPtr<WatchpointsOnStructureStubInfo>& holderRef,
+        std::unique_ptr<WatchpointsOnStructureStubInfo>& holderRef,
         CodeBlock*, StructureStubInfo*, const ObjectPropertyCondition& key);
     
     CodeBlock* codeBlock() const { return m_codeBlock; }
@@ -100,6 +99,3 @@ private:
 } // namespace JSC
 
 #endif // ENABLE(JIT)
-
-#endif // StructureStubClearingWatchpoint_h
-

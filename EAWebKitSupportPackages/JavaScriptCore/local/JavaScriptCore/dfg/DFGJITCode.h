@@ -23,16 +23,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGJITCode_h
-#define DFGJITCode_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
+#include "CodeBlock.h"
 #include "CompilationResult.h"
 #include "DFGCommonData.h"
 #include "DFGMinifiedGraph.h"
 #include "DFGOSREntry.h"
 #include "DFGOSRExit.h"
+#include "DFGTierUpEntryTrigger.h"
 #include "DFGVariableEventStream.h"
 #include "ExecutionCounter.h"
 #include "JITCode.h"
@@ -51,8 +52,8 @@ public:
     JITCode();
     virtual ~JITCode();
     
-    virtual CommonData* dfgCommon() override;
-    virtual JITCode* dfg() override;
+    CommonData* dfgCommon() override;
+    JITCode* dfg() override;
     
     OSREntryData* appendOSREntryData(unsigned bytecodeIndex, unsigned machineCodeOffset)
     {
@@ -114,6 +115,17 @@ public:
     void validateReferences(const TrackedReferences&) override;
     
     void shrinkToFit();
+
+    RegisterSet liveRegistersToPreserveAtExceptionHandlingCallSite(CodeBlock*, CallSiteIndex) override;
+#if ENABLE(FTL_JIT)
+    CodeBlock* osrEntryBlock() { return m_osrEntryBlock.get(); }
+    void setOSREntryBlock(VM& vm, const JSCell* owner, CodeBlock* osrEntryBlock) { m_osrEntryBlock.set(vm, owner, osrEntryBlock); }
+    void clearOSREntryBlock() { m_osrEntryBlock.clear(); }
+#endif
+
+    static ptrdiff_t commonDataOffset() { return OBJECT_OFFSETOF(JITCode, common); }
+
+    std::optional<CodeOrigin> findPC(CodeBlock*, void* pc) override;
     
 private:
     friend class JITCompiler; // Allow JITCompiler to call setCodeRef().
@@ -126,9 +138,29 @@ public:
     DFG::VariableEventStream variableEventStream;
     DFG::MinifiedGraph minifiedDFG;
 #if ENABLE(FTL_JIT)
-    uint8_t nestedTriggerIsSet { 0 };
+    uint8_t neverExecutedEntry { 1 };
+
     UpperTierExecutionCounter tierUpCounter;
-    RefPtr<CodeBlock> osrEntryBlock;
+
+    // For osrEntryPoint that are in inner loop, this maps their bytecode to the bytecode
+    // of the outerloop entry points in order (from innermost to outermost).
+    //
+    // The key may not always be a target for OSR Entry but the list in the value is guaranteed
+    // to be usable for OSR Entry.
+    HashMap<unsigned, Vector<unsigned>> tierUpInLoopHierarchy;
+
+    // Map each bytecode of CheckTierUpAndOSREnter to its stream index.
+    HashMap<unsigned, unsigned, WTF::IntHash<unsigned>, WTF::UnsignedWithZeroKeyHashTraits<unsigned>> bytecodeIndexToStreamIndex;
+
+    // Map each bytecode of CheckTierUpAndOSREnter to its trigger forcing OSR Entry.
+    // This can never be modified after it has been initialized since the addresses of the triggers
+    // are used by the JIT.
+    HashMap<unsigned, TierUpEntryTrigger> tierUpEntryTriggers;
+
+    // Set of bytecode that were the target of a TierUp operation.
+    HashSet<unsigned, WTF::IntHash<unsigned>, WTF::UnsignedWithZeroKeyHashTraits<unsigned>> tierUpEntrySeen;
+
+    WriteBarrier<CodeBlock> m_osrEntryBlock;
     unsigned osrEntryRetry;
     bool abandonOSREntry;
 #endif // ENABLE(FTL_JIT)
@@ -137,6 +169,3 @@ public:
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGJITCode_h
-

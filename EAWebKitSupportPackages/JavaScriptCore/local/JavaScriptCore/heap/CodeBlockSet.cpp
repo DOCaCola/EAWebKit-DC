@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,12 +28,9 @@
 
 #include "CodeBlock.h"
 #include "JSCInlines.h"
-#include "SlotVisitor.h"
 #include <wtf/CommaPrinter.h>
 
 namespace JSC {
-
-static const bool verbose = false;
 
 CodeBlockSet::CodeBlockSet()
 {
@@ -41,120 +38,83 @@ CodeBlockSet::CodeBlockSet()
 
 CodeBlockSet::~CodeBlockSet()
 {
-    for (CodeBlock* codeBlock : m_oldCodeBlocks)
-        codeBlock->deref();
-
-    for (CodeBlock* codeBlock : m_newCodeBlocks)
-        codeBlock->deref();
 }
 
-void CodeBlockSet::add(PassRefPtr<CodeBlock> codeBlock)
+void CodeBlockSet::add(CodeBlock* codeBlock)
 {
-    CodeBlock* block = codeBlock.leakRef();
-    bool isNewEntry = m_newCodeBlocks.add(block).isNewEntry;
+    LockHolder locker(&m_lock);
+    bool isNewEntry = m_newCodeBlocks.add(codeBlock).isNewEntry;
     ASSERT_UNUSED(isNewEntry, isNewEntry);
 }
 
-void CodeBlockSet::promoteYoungCodeBlocks()
+void CodeBlockSet::promoteYoungCodeBlocks(const LockHolder&)
 {
+    ASSERT(m_lock.isLocked());
     m_oldCodeBlocks.add(m_newCodeBlocks.begin(), m_newCodeBlocks.end());
     m_newCodeBlocks.clear();
 }
 
 void CodeBlockSet::clearMarksForFullCollection()
 {
-    for (CodeBlock* codeBlock : m_oldCodeBlocks) {
-        codeBlock->m_mayBeExecuting = false;
-        codeBlock->m_visitAggregateHasBeenCalled.store(false, std::memory_order_relaxed);
-    }
-
-    // We promote after we clear marks on the old generation CodeBlocks because
-    // none of the young generations CodeBlocks need to be cleared.
-    promoteYoungCodeBlocks();
+    LockHolder locker(&m_lock);
+    for (CodeBlock* codeBlock : m_oldCodeBlocks)
+        codeBlock->clearVisitWeaklyHasBeenCalled();
 }
 
-void CodeBlockSet::clearMarksForEdenCollection(const Vector<const JSCell*>& rememberedSet)
+void CodeBlockSet::lastChanceToFinalize()
 {
-    // This ensures that we will revisit CodeBlocks in remembered Executables even if they were previously marked.
-    for (const JSCell* cell : rememberedSet) {
-        ScriptExecutable* executable = const_cast<ScriptExecutable*>(jsDynamicCast<const ScriptExecutable*>(cell));
-        if (!executable)
-            continue;
-        executable->forEachCodeBlock([](CodeBlock* codeBlock) {
-            codeBlock->m_mayBeExecuting = false;
-            codeBlock->m_visitAggregateHasBeenCalled.store(false, std::memory_order_relaxed);
-        });
-    }
+    LockHolder locker(&m_lock);
+    for (CodeBlock* codeBlock : m_newCodeBlocks)
+        codeBlock->structure()->classInfo()->methodTable.destroy(codeBlock);
+
+    for (CodeBlock* codeBlock : m_oldCodeBlocks)
+        codeBlock->structure()->classInfo()->methodTable.destroy(codeBlock);
 }
 
-void CodeBlockSet::deleteUnmarkedAndUnreferenced(HeapOperation collectionType)
+void CodeBlockSet::deleteUnmarkedAndUnreferenced(CollectionScope scope)
 {
-    HashSet<CodeBlock*>& set = collectionType == EdenCollection ? m_newCodeBlocks : m_oldCodeBlocks;
-
-    // This needs to be a fixpoint because code blocks that are unmarked may
-    // refer to each other. For example, a DFG code block that is owned by
-    // the GC may refer to an FTL for-entry code block that is also owned by
-    // the GC.
-    Vector<CodeBlock*, 16> toRemove;
-    if (verbose)
-        dataLog("Fixpointing over unmarked, set size = ", set.size(), "...\n");
-    for (;;) {
+    LockHolder locker(&m_lock);
+    Vector<CodeBlock*> unmarked;
+    
+    auto consider = [&] (HashSet<CodeBlock*>& set) {
         for (CodeBlock* codeBlock : set) {
-            if (!codeBlock->hasOneRef())
-                continue;
-            if (codeBlock->m_mayBeExecuting)
-                continue;
-            codeBlock->deref();
-            toRemove.append(codeBlock);
+            if (Heap::isMarked(codeBlock))
+                continue;;
+            unmarked.append(codeBlock);
         }
-        if (verbose)
-            dataLog("    Removing ", toRemove.size(), " blocks.\n");
-        if (toRemove.isEmpty())
-            break;
-        for (CodeBlock* codeBlock : toRemove)
+        for (CodeBlock* codeBlock : unmarked) {
+            codeBlock->structure()->classInfo()->methodTable.destroy(codeBlock);
             set.remove(codeBlock);
-        toRemove.resize(0);
+        }
+        unmarked.resize(0);
+    };
+
+    switch (scope) {
+    case CollectionScope::Eden:
+        consider(m_newCodeBlocks);
+        break;
+    case CollectionScope::Full:
+        consider(m_oldCodeBlocks);
+        consider(m_newCodeBlocks);
+        break;
     }
 
     // Any remaining young CodeBlocks are live and need to be promoted to the set of old CodeBlocks.
-    if (collectionType == EdenCollection)
-        promoteYoungCodeBlocks();
+    promoteYoungCodeBlocks(locker);
 }
 
-void CodeBlockSet::remove(CodeBlock* codeBlock)
+bool CodeBlockSet::contains(const LockHolder&, void* candidateCodeBlock)
 {
-    codeBlock->deref();
-    if (m_oldCodeBlocks.contains(codeBlock)) {
-        m_oldCodeBlocks.remove(codeBlock);
-        return;
-    }
-    ASSERT(m_newCodeBlocks.contains(codeBlock));
-    m_newCodeBlocks.remove(codeBlock);
+    RELEASE_ASSERT(m_lock.isLocked());
+    CodeBlock* codeBlock = static_cast<CodeBlock*>(candidateCodeBlock);
+    if (!HashSet<CodeBlock*>::isValidValue(codeBlock))
+        return false;
+    return m_oldCodeBlocks.contains(codeBlock) || m_newCodeBlocks.contains(codeBlock) || m_currentlyExecuting.contains(codeBlock);
 }
 
-void CodeBlockSet::traceMarked(SlotVisitor& visitor)
+void CodeBlockSet::clearCurrentlyExecuting()
 {
-    if (verbose)
-        dataLog("Tracing ", m_currentlyExecuting.size(), " code blocks.\n");
-    for (CodeBlock* codeBlock : m_currentlyExecuting) {
-        ASSERT(codeBlock->m_mayBeExecuting);
-        codeBlock->visitAggregate(visitor);
-    }
-}
-
-void CodeBlockSet::rememberCurrentlyExecutingCodeBlocks(Heap* heap)
-{
-#if ENABLE(GGC)
-    if (verbose)
-        dataLog("Remembering ", m_currentlyExecuting.size(), " code blocks.\n");
-    for (CodeBlock* codeBlock : m_currentlyExecuting) {
-        heap->addToRememberedSet(codeBlock->ownerExecutable());
-        ASSERT(codeBlock->m_mayBeExecuting);
-    }
     m_currentlyExecuting.clear();
-#else
-    UNUSED_PARAM(heap);
-#endif // ENABLE(GGC)
 }
 
 void CodeBlockSet::dump(PrintStream& out) const

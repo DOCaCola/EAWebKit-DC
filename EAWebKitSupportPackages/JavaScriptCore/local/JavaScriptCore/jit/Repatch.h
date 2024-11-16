@@ -23,48 +23,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef Repatch_h
-#define Repatch_h
+#pragma once
 
 #if ENABLE(JIT)
 
 #include "CCallHelpers.h"
 #include "CallVariant.h"
 #include "JITOperations.h"
+#include "PutKind.h"
 
 namespace JSC {
 
-void repatchGetByID(ExecState*, JSValue, const Identifier&, const PropertySlot&, StructureStubInfo&);
+enum class GetByIDKind {
+    Normal,
+    Pure
+};
+
+void repatchGetByID(ExecState*, JSValue, const Identifier&, const PropertySlot&, StructureStubInfo&, GetByIDKind);
 void buildGetByIDList(ExecState*, JSValue, const Identifier&, const PropertySlot&, StructureStubInfo&);
 void buildGetByIDProtoList(ExecState*, JSValue, const Identifier&, const PropertySlot&, StructureStubInfo&);
 void repatchPutByID(ExecState*, JSValue, Structure*, const Identifier&, const PutPropertySlot&, StructureStubInfo&, PutKind);
 void buildPutByIdList(ExecState*, JSValue, Structure*, const Identifier&, const PutPropertySlot&, StructureStubInfo&, PutKind);
 void repatchIn(ExecState*, JSCell*, const Identifier&, bool wasFound, const PropertySlot&, StructureStubInfo&);
 void linkFor(ExecState*, CallLinkInfo&, CodeBlock*, JSFunction* callee, MacroAssemblerCodePtr);
+void linkDirectFor(ExecState*, CallLinkInfo&, CodeBlock*, MacroAssemblerCodePtr);
 void linkSlowFor(ExecState*, CallLinkInfo&);
-void unlinkFor(RepatchBuffer&, CallLinkInfo&);
+void unlinkFor(VM&, CallLinkInfo&);
 void linkVirtualFor(ExecState*, CallLinkInfo&);
 void linkPolymorphicCall(ExecState*, CallLinkInfo&, CallVariant);
-void resetGetByID(RepatchBuffer&, StructureStubInfo&);
-void resetPutByID(RepatchBuffer&, StructureStubInfo&);
-void resetIn(RepatchBuffer&, StructureStubInfo&);
-
-} // namespace JSC
-
-#else // ENABLE(JIT)
-
-#include <wtf/Assertions.h>
-
-namespace JSC {
-
-class RepatchBuffer;
-struct StructureStubInfo;
-
-inline NO_RETURN_DUE_TO_CRASH void resetGetByID(RepatchBuffer&, StructureStubInfo&) { RELEASE_ASSERT_NOT_REACHED(); }
-inline NO_RETURN_DUE_TO_CRASH void resetPutByID(RepatchBuffer&, StructureStubInfo&) { RELEASE_ASSERT_NOT_REACHED(); }
-inline NO_RETURN void resetIn(RepatchBuffer&, StructureStubInfo&) { RELEASE_ASSERT_NOT_REACHED(); }
+void resetGetByID(CodeBlock*, StructureStubInfo&, GetByIDKind);
+void resetPutByID(CodeBlock*, StructureStubInfo&);
+void resetIn(CodeBlock*, StructureStubInfo&);
+void ftlThunkAwareRepatchCall(CodeBlock*, CodeLocationCall, FunctionPtr newCalleeFunction);
 
 } // namespace JSC
 
 #endif // ENABLE(JIT)
-#endif // Repatch_h

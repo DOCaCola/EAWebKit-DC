@@ -35,6 +35,7 @@
 #include "InjectedScriptHost.h"
 #include "InjectedScriptSource.h"
 #include "InspectorValues.h"
+#include "JSCInlines.h"
 #include "JSInjectedScriptHost.h"
 #include "JSLock.h"
 #include "ScriptObject.h"
@@ -58,6 +59,13 @@ InjectedScriptManager::~InjectedScriptManager()
 void InjectedScriptManager::disconnect()
 {
     discardInjectedScripts();
+}
+
+void InjectedScriptManager::discardInjectedScripts()
+{
+    m_injectedScriptHost->clearAllWrappers();
+    m_idToInjectedScript.clear();
+    m_scriptStateToId.clear();
 }
 
 InjectedScriptHost* InjectedScriptManager::injectedScriptHost()
@@ -107,13 +115,6 @@ InjectedScript InjectedScriptManager::injectedScriptForObjectId(const String& ob
     return m_idToInjectedScript.get(injectedScriptId);
 }
 
-void InjectedScriptManager::discardInjectedScripts()
-{
-    m_injectedScriptHost->clearAllWrappers();
-    m_idToInjectedScript.clear();
-    m_scriptStateToId.clear();
-}
-
 void InjectedScriptManager::releaseObjectGroup(const String& objectGroup)
 {
     for (auto& injectedScript : m_idToInjectedScript.values())
@@ -131,11 +132,13 @@ String InjectedScriptManager::injectedScriptSource()
     return StringImpl::createWithoutCopying(InjectedScriptSource_js, sizeof(InjectedScriptSource_js));
 }
 
-Deprecated::ScriptObject InjectedScriptManager::createInjectedScript(const String& source, ExecState* scriptState, int id)
+JSC::JSObject* InjectedScriptManager::createInjectedScript(const String& source, ExecState* scriptState, int id)
 {
-    JSLockHolder lock(scriptState);
+    VM& vm = scriptState->vm();
+    JSLockHolder lock(vm);
+    auto scope = DECLARE_CATCH_SCOPE(vm);
 
-    SourceCode sourceCode = makeSource(source);
+    SourceCode sourceCode = makeSource(source, { });
     JSGlobalObject* globalObject = scriptState->lexicalGlobalObject();
     JSValue globalThisValue = scriptState->globalThisValue();
 
@@ -143,24 +146,21 @@ Deprecated::ScriptObject InjectedScriptManager::createInjectedScript(const Strin
     InspectorEvaluateHandler evaluateHandler = m_environment.evaluateHandler();
     JSValue functionValue = evaluateHandler(scriptState, sourceCode, globalThisValue, evaluationException);
     if (evaluationException)
-        return Deprecated::ScriptObject();
+        return nullptr;
 
     CallData callData;
     CallType callType = getCallData(functionValue, callData);
-    if (callType == CallTypeNone)
-        return Deprecated::ScriptObject();
+    if (callType == CallType::None)
+        return nullptr;
 
     MarkedArgumentBuffer args;
-    args.append(m_injectedScriptHost->jsWrapper(scriptState, globalObject));
+    args.append(m_injectedScriptHost->wrapper(scriptState, globalObject));
     args.append(globalThisValue);
     args.append(jsNumber(id));
 
     JSValue result = JSC::call(scriptState, functionValue, callType, callData, globalThisValue, args);
-    scriptState->clearException();
-    if (result.isObject())
-        return Deprecated::ScriptObject(scriptState, result.getObject());
-
-    return Deprecated::ScriptObject();
+    scope.clearException();
+    return result.getObject();
 }
 
 InjectedScript InjectedScriptManager::injectedScriptFor(ExecState* inspectedExecState)
@@ -176,14 +176,20 @@ InjectedScript InjectedScriptManager::injectedScriptFor(ExecState* inspectedExec
         return InjectedScript();
 
     int id = injectedScriptIdFor(inspectedExecState);
-    Deprecated::ScriptObject injectedScriptObject = createInjectedScript(injectedScriptSource(), inspectedExecState, id);
-    InjectedScript result(injectedScriptObject, &m_environment);
+    auto injectedScriptObject = createInjectedScript(injectedScriptSource(), inspectedExecState, id);
+    if (!injectedScriptObject) {
+        WTFLogAlways("Failed to parse/execute InjectedScriptSource.js!");
+        WTFLogAlways("%s\n", injectedScriptSource().ascii().data());
+        RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    InjectedScript result({ inspectedExecState, injectedScriptObject }, &m_environment);
     m_idToInjectedScript.set(id, result);
     didCreateInjectedScript(result);
     return result;
 }
 
-void InjectedScriptManager::didCreateInjectedScript(InjectedScript)
+void InjectedScriptManager::didCreateInjectedScript(const InjectedScript&)
 {
     // Intentionally empty. This allows for subclasses to inject additional scripts.
 }

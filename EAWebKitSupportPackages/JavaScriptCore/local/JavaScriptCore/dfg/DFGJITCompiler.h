@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGJITCompiler_h
-#define DFGJITCompiler_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -38,10 +37,12 @@
 #include "DFGRegisterBank.h"
 #include "FPRInfo.h"
 #include "GPRInfo.h"
+#include "HandlerInfo.h"
 #include "JITCode.h"
 #include "JITInlineCacheGenerator.h"
 #include "LinkBuffer.h"
 #include "MacroAssembler.h"
+#include "PCToCodeOriginMap.h"
 #include "TempRegisterSet.h"
 
 namespace JSC {
@@ -117,6 +118,7 @@ public:
     // Methods to set labels for the disassembler.
     void setStartOfCode()
     {
+        m_pcToCodeOriginMapBuilder.appendItem(labelIgnoringWatchpoints(), CodeOrigin(0, nullptr));
         if (LIKELY(!m_disassembler))
             return;
         m_disassembler->setStartOfCode(labelIgnoringWatchpoints());
@@ -136,25 +138,24 @@ public:
         m_disassembler->setForNode(node, labelIgnoringWatchpoints());
     }
     
-    void setEndOfMainPath()
-    {
-        if (LIKELY(!m_disassembler))
-            return;
-        m_disassembler->setEndOfMainPath(labelIgnoringWatchpoints());
-    }
+    void setEndOfMainPath();
+    void setEndOfCode();
     
-    void setEndOfCode()
+    CallSiteIndex addCallSite(CodeOrigin codeOrigin)
     {
-        if (LIKELY(!m_disassembler))
-            return;
-        m_disassembler->setEndOfCode(labelIgnoringWatchpoints());
+        return m_jitCode->common.addCodeOrigin(codeOrigin);
     }
-    
-    void emitStoreCodeOrigin(CodeOrigin codeOrigin)
+
+    CallSiteIndex emitStoreCodeOrigin(CodeOrigin codeOrigin)
     {
-        unsigned index = m_jitCode->common.addCodeOrigin(codeOrigin);
-        unsigned locationBits = CallFrame::Location::encodeAsCodeOriginIndex(index);
-        store32(TrustedImm32(locationBits), tagFor(static_cast<VirtualRegister>(JSStack::ArgumentCount)));
+        CallSiteIndex callSite = addCallSite(codeOrigin);
+        emitStoreCallSiteIndex(callSite);
+        return callSite;
+    }
+
+    void emitStoreCallSiteIndex(CallSiteIndex callSite)
+    {
+        store32(TrustedImm32(callSite.bits()), tagFor(static_cast<VirtualRegister>(CallFrameSlot::argumentCount)));
     }
 
     // Add a call out from JIT code, without an exception check.
@@ -165,15 +166,7 @@ public:
         return functionCall;
     }
     
-    void exceptionCheck(Jump jumpToHandler)
-    {
-        m_exceptionChecks.append(jumpToHandler);
-    }
-    
-    void exceptionCheck()
-    {
-        m_exceptionChecks.append(emitExceptionCheck());
-    }
+    void exceptionCheck();
 
     void exceptionCheckWithCallFrameRollback()
     {
@@ -214,14 +207,19 @@ public:
         m_ins.append(record);
     }
     
-    unsigned currentJSCallIndex() const
-    {
-        return m_jsCalls.size();
-    }
-
     void addJSCall(Call fastCall, Call slowCall, DataLabelPtr targetToCheck, CallLinkInfo* info)
     {
         m_jsCalls.append(JSCallRecord(fastCall, slowCall, targetToCheck, info));
+    }
+    
+    void addJSDirectCall(Call call, Label slowPath, CallLinkInfo* info)
+    {
+        m_jsDirectCalls.append(JSDirectCallRecord(call, slowPath, info));
+    }
+    
+    void addJSDirectTailCall(PatchableJump patchableJump, Call call, Label slowPath, CallLinkInfo* info)
+    {
+        m_jsDirectTailCalls.append(JSDirectTailCallRecord(patchableJump, call, slowPath, info));
     }
     
     void addWeakReference(JSCell* target)
@@ -244,22 +242,12 @@ public:
     }
 
     template<typename T>
-    Jump branchWeakStructure(RelationalCondition cond, T left, Structure* weakStructure)
+    Jump branchWeakStructure(RelationalCondition cond, T left, RegisteredStructure weakStructure)
     {
+        Structure* structure = weakStructure.get();
 #if USE(JSVALUE64)
-        Jump result = branch32(cond, left, TrustedImm32(weakStructure->id()));
-        addWeakReference(weakStructure);
+        Jump result = branch32(cond, left, TrustedImm32(structure->id()));
         return result;
-#else
-        return branchWeakPtr(cond, left, weakStructure);
-#endif
-    }
-
-    template<typename T>
-    Jump branchStructurePtr(RelationalCondition cond, T left, Structure* structure)
-    {
-#if USE(JSVALUE64)
-        return branch32(cond, left, TrustedImm32(structure->id()));
 #else
         return branchPtr(cond, left, TrustedImmPtr(structure));
 #endif
@@ -271,11 +259,17 @@ public:
     
     Vector<Label>& blockHeads() { return m_blockHeads; }
 
+    CallSiteIndex recordCallSiteAndGenerateExceptionHandlingOSRExitIfNeeded(const CodeOrigin&, unsigned eventStreamIndex);
+
+    PCToCodeOriginMapBuilder& pcToCodeOriginMapBuilder() { return m_pcToCodeOriginMapBuilder; }
+
 private:
     friend class OSRExitJumpPlaceholder;
     
     // Internal implementation to compile.
     void compileEntry();
+    void compileSetupRegistersForEntry();
+    void compileEntryExecutionFlag();
     void compileBody();
     void link(LinkBuffer&);
     
@@ -283,7 +277,9 @@ private:
     void compileExceptionHandlers();
     void linkOSRExits();
     void disassemble(LinkBuffer&);
-    
+
+    void appendExceptionHandlingOSRExit(ExitKind, unsigned eventStreamIndex, CodeOrigin, HandlerInfo* exceptionHandler, CallSiteIndex, MacroAssembler::JumpList jumpsToFail = MacroAssembler::JumpList());
+
     // The dataflow graph currently being generated.
     Graph& m_graph;
 
@@ -301,33 +297,69 @@ private:
 
     struct JSCallRecord {
         JSCallRecord(Call fastCall, Call slowCall, DataLabelPtr targetToCheck, CallLinkInfo* info)
-            : m_fastCall(fastCall)
-            , m_slowCall(slowCall)
-            , m_targetToCheck(targetToCheck)
-            , m_info(info)
+            : fastCall(fastCall)
+            , slowCall(slowCall)
+            , targetToCheck(targetToCheck)
+            , info(info)
         {
         }
         
-        Call m_fastCall;
-        Call m_slowCall;
-        DataLabelPtr m_targetToCheck;
-        CallLinkInfo* m_info;
+        Call fastCall;
+        Call slowCall;
+        DataLabelPtr targetToCheck;
+        CallLinkInfo* info;
+    };
+    
+    struct JSDirectCallRecord {
+        JSDirectCallRecord(Call call, Label slowPath, CallLinkInfo* info)
+            : call(call)
+            , slowPath(slowPath)
+            , info(info)
+        {
+        }
+        
+        Call call;
+        Label slowPath;
+        CallLinkInfo* info;
+    };
+    
+    struct JSDirectTailCallRecord {
+        JSDirectTailCallRecord(PatchableJump patchableJump, Call call, Label slowPath, CallLinkInfo* info)
+            : patchableJump(patchableJump)
+            , call(call)
+            , slowPath(slowPath)
+            , info(info)
+        {
+        }
+        
+        PatchableJump patchableJump;
+        Call call;
+        Label slowPath;
+        CallLinkInfo* info;
     };
     
     Vector<InlineCacheWrapper<JITGetByIdGenerator>, 4> m_getByIds;
     Vector<InlineCacheWrapper<JITPutByIdGenerator>, 4> m_putByIds;
     Vector<InRecord, 4> m_ins;
     Vector<JSCallRecord, 4> m_jsCalls;
+    Vector<JSDirectCallRecord, 4> m_jsDirectCalls;
+    Vector<JSDirectTailCallRecord, 4> m_jsDirectTailCalls;
     SegmentedVector<OSRExitCompilationInfo, 4> m_exitCompilationInfo;
     Vector<Vector<Label>> m_exitSiteLabels;
+    
+    struct ExceptionHandlingOSRExitInfo {
+        OSRExitCompilationInfo& exitInfo;
+        HandlerInfo baselineExceptionHandler;
+        CallSiteIndex callSiteIndex;
+    };
+    Vector<ExceptionHandlingOSRExitInfo> m_exceptionHandlerOSRExitCallSites;
     
     Call m_callArityFixup;
     Label m_arityCheck;
     std::unique_ptr<SpeculativeJIT> m_speculative;
+    PCToCodeOriginMapBuilder m_pcToCodeOriginMapBuilder;
 };
 
 } } // namespace JSC::DFG
 
 #endif
-#endif
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2011-2012, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,6 +28,7 @@
 
 #include "JSGlobalObject.h"
 #include "JSCInlines.h"
+#include "PrototypeMapInlines.h"
 
 namespace JSC {
 
@@ -40,14 +41,14 @@ void JSProxy::visitChildren(JSCell* cell, SlotVisitor& visitor)
     JSProxy* thisObject = jsCast<JSProxy*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    visitor.append(&thisObject->m_target);
+    visitor.append(thisObject->m_target);
 }
 
 void JSProxy::setTarget(VM& vm, JSGlobalObject* globalObject)
 {
     ASSERT_ARG(globalObject, globalObject);
     m_target.set(vm, this, globalObject);
-    setPrototype(vm, globalObject->prototype());
+    setPrototypeDirect(vm, globalObject->getPrototypeDirect());
 
     PrototypeMap& prototypeMap = vm.prototypeMap;
     if (!prototypeMap.isPrototype(this))
@@ -78,16 +79,16 @@ bool JSProxy::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsig
     return thisObject->target()->methodTable(exec->vm())->getOwnPropertySlotByIndex(thisObject->target(), exec, propertyName, slot);
 }
 
-void JSProxy::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+bool JSProxy::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     JSProxy* thisObject = jsCast<JSProxy*>(cell);
-    thisObject->target()->methodTable(exec->vm())->put(thisObject->target(), exec, propertyName, value, slot);
+    return thisObject->target()->methodTable(exec->vm())->put(thisObject->target(), exec, propertyName, value, slot);
 }
 
-void JSProxy::putByIndex(JSCell* cell, ExecState* exec, unsigned propertyName, JSValue value, bool shouldThrow)
+bool JSProxy::putByIndex(JSCell* cell, ExecState* exec, unsigned propertyName, JSValue value, bool shouldThrow)
 {
     JSProxy* thisObject = jsCast<JSProxy*>(cell);
-    thisObject->target()->methodTable(exec->vm())->putByIndex(thisObject->target(), exec, propertyName, value, shouldThrow);
+    return thisObject->target()->methodTable(exec->vm())->putByIndex(thisObject->target(), exec, propertyName, value, shouldThrow);
 }
 
 bool JSProxy::defineOwnProperty(JSObject* object, ExecState* exec, PropertyName propertyName, const PropertyDescriptor& descriptor, bool shouldThrow)
@@ -100,6 +101,12 @@ bool JSProxy::deleteProperty(JSCell* cell, ExecState* exec, PropertyName propert
 {
     JSProxy* thisObject = jsCast<JSProxy*>(cell);
     return thisObject->target()->methodTable(exec->vm())->deleteProperty(thisObject->target(), exec, propertyName);
+}
+
+bool JSProxy::preventExtensions(JSObject* object, ExecState* exec)
+{
+    JSProxy* thisObject = jsCast<JSProxy*>(object);
+    return thisObject->target()->methodTable(exec->vm())->preventExtensions(thisObject->target(), exec);
 }
 
 bool JSProxy::deletePropertyByIndex(JSCell* cell, ExecState* exec, unsigned propertyName)
@@ -137,6 +144,19 @@ void JSProxy::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNam
 {
     JSProxy* thisObject = jsCast<JSProxy*>(object);
     thisObject->target()->methodTable(exec->vm())->getOwnPropertyNames(thisObject->target(), exec, propertyNames, mode);
+}
+
+bool JSProxy::setPrototype(JSObject*, ExecState* exec, JSValue, bool shouldThrowIfCantSet)
+{
+    auto scope = DECLARE_THROW_SCOPE(exec->vm());
+
+    return typeError(exec, scope, shouldThrowIfCantSet, ASCIILiteral("Cannot set prototype of this object"));
+}
+
+JSValue JSProxy::getPrototype(JSObject* object, ExecState* exec)
+{
+    JSProxy* thisObject = jsCast<JSProxy*>(object);
+    return thisObject->target()->methodTable(exec->vm())->getPrototype(thisObject->target(), exec);
 }
 
 } // namespace JSC

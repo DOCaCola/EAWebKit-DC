@@ -19,11 +19,12 @@
  *
  */
 
-#ifndef Debugger_h
-#define Debugger_h
+#pragma once
 
 #include "Breakpoint.h"
+#include "CallData.h"
 #include "DebuggerCallFrame.h"
+#include "DebuggerParseData.h"
 #include "DebuggerPrimitives.h"
 #include "JSCJSValue.h"
 #include <wtf/HashMap.h>
@@ -44,10 +45,12 @@ typedef ExecState CallFrame;
 
 class JS_EXPORT_PRIVATE Debugger {
 public:
-    Debugger(bool isInWorkerThread = false);
+    Debugger(VM&);
     virtual ~Debugger();
 
-    JSC::DebuggerCallFrame* currentDebuggerCallFrame() const;
+    VM& vm() { return m_vm; }
+
+    JSC::DebuggerCallFrame* currentDebuggerCallFrame();
     bool hasHandlerForExceptionCallback() const
     {
         ASSERT(m_reasonForPause == PausedForException);
@@ -59,7 +62,8 @@ public:
         return m_currentException;
     }
 
-    bool needsExceptionCallbacks() const { return m_pauseOnExceptionsState != DontPauseOnExceptions; }
+    bool needsExceptionCallbacks() const { return m_breakpointsActivated && m_pauseOnExceptionsState != DontPauseOnExceptions; }
+    bool isInteractivelyDebugging() const { return m_breakpointsActivated; }
 
     enum ReasonForDetach {
         TerminatingDebuggingSession,
@@ -69,12 +73,14 @@ public:
     void detach(JSGlobalObject*, ReasonForDetach);
     bool isAttached(JSGlobalObject*);
 
-    BreakpointID setBreakpoint(Breakpoint, unsigned& actualLine, unsigned& actualColumn);
+    void resolveBreakpoint(Breakpoint&, SourceProvider*);
+    BreakpointID setBreakpoint(Breakpoint&, bool& existing);
     void removeBreakpoint(BreakpointID);
     void clearBreakpoints();
-    void setBreakpointsActivated(bool);
+
     void activateBreakpoints() { setBreakpointsActivated(true); }
     void deactivateBreakpoints() { setBreakpointsActivated(false); }
+    bool breakpointsActive() const { return m_breakpointsActivated; }
 
     enum PauseOnExceptionsState {
         DontPauseOnExceptions,
@@ -88,9 +94,8 @@ public:
         NotPaused,
         PausedForException,
         PausedAtStatement,
-        PausedAfterCall,
+        PausedAtExpression,
         PausedBeforeReturn,
-        PausedAtStartOfProgram,
         PausedAtEndOfProgram,
         PausedForBreakpoint,
         PausedForDebuggerStatement,
@@ -105,25 +110,47 @@ public:
     void stepOverStatement();
     void stepOutOfFunction();
 
+    bool isBlacklisted(SourceID) const;
+    void addToBlacklist(SourceID);
+    void clearBlacklist();
+
     bool isPaused() const { return m_isPaused; }
     bool isStepping() const { return m_steppingMode == SteppingModeEnabled; }
+
+    bool suppressAllPauses() const { return m_suppressAllPauses; }
+    void setSuppressAllPauses(bool suppress) { m_suppressAllPauses = suppress; }
 
     virtual void sourceParsed(ExecState*, SourceProvider*, int errorLineNumber, const WTF::String& errorMessage) = 0;
 
     void exception(CallFrame*, JSValue exceptionValue, bool hasCatchHandler);
     void atStatement(CallFrame*);
+    void atExpression(CallFrame*);
     void callEvent(CallFrame*);
     void returnEvent(CallFrame*);
+    void unwindEvent(CallFrame*);
     void willExecuteProgram(CallFrame*);
     void didExecuteProgram(CallFrame*);
     void didReachBreakpoint(CallFrame*);
 
-    void recompileAllJSFunctions(VM*);
+    virtual void recompileAllJSFunctions();
 
     void registerCodeBlock(CodeBlock*);
 
+    class ProfilingClient {
+    public:
+        virtual ~ProfilingClient();
+        virtual bool isAlreadyProfiling() const = 0;
+        virtual double willEvaluateScript() = 0;
+        virtual void didEvaluateScript(double startTime, ProfilingReason) = 0;
+    };
+
+    void setProfilingClient(ProfilingClient*);
+    bool hasProfilingClient() const { return m_profilingClient != nullptr; }
+    bool isAlreadyProfiling() const { return m_profilingClient && m_profilingClient->isAlreadyProfiling(); }
+    double willEvaluateScript();
+    void didEvaluateScript(double startTime, ProfilingReason);
+
 protected:
-    virtual bool needPauseHandling(JSGlobalObject*) { return false; }
     virtual void handleBreakpointHit(JSGlobalObject*, const Breakpoint&) { }
     virtual void handleExceptionInBreakpointCondition(ExecState*, Exception*) const { }
     virtual void handlePause(JSGlobalObject*, ReasonForPause) { }
@@ -158,6 +185,8 @@ private:
 
     bool hasBreakpoint(SourceID, const TextPosition&, Breakpoint* hitBreakpoint);
 
+    DebuggerParseData& debuggerParseData(SourceID, SourceProvider*);
+
     void updateNeedForOpDebugCallbacks();
 
     // These update functions are only needed because our current breakpoints are
@@ -165,9 +194,11 @@ private:
     // that we don't break on the same line more than once. Once we switch to a
     // bytecode PC key'ed breakpoint, we will not need these anymore and should
     // be able to remove them.
-    void updateCallFrame(JSC::CallFrame*);
-    void updateCallFrameAndPauseIfNeeded(JSC::CallFrame*);
+    enum CallFrameUpdateAction { AttemptPause, NoPause };
+    void updateCallFrame(JSC::CallFrame*, CallFrameUpdateAction);
+    void updateCallFrameInternal(JSC::CallFrame*);
     void pauseIfNeeded(JSC::CallFrame*);
+    void clearNextPauseState();
 
     enum SteppingMode {
         SteppingModeDisabled,
@@ -179,29 +210,33 @@ private:
         BreakpointDisabled,
         BreakpointEnabled
     };
+    void setBreakpointsActivated(bool);
     void toggleBreakpoint(CodeBlock*, Breakpoint&, BreakpointState);
     void applyBreakpoints(CodeBlock*);
     void toggleBreakpoint(Breakpoint&, BreakpointState);
 
     void clearDebuggerRequests(JSGlobalObject*);
+    void clearParsedData();
 
-    template<typename Functor> inline void forEachCodeBlock(Functor&);
-
-    VM* m_vm;
+    VM& m_vm;
     HashSet<JSGlobalObject*> m_globalObjects;
+    HashMap<SourceID, DebuggerParseData, WTF::IntHash<SourceID>, WTF::UnsignedWithZeroKeyHashTraits<SourceID>> m_parseDataMap;
+    HashSet<SourceID, WTF::IntHash<SourceID>, WTF::UnsignedWithZeroKeyHashTraits<SourceID>> m_blacklistedScripts;
 
     PauseOnExceptionsState m_pauseOnExceptionsState;
-    bool m_pauseOnNextStatement : 1;
+    bool m_pauseAtNextOpportunity : 1;
+    bool m_pauseOnStepOut : 1;
+    bool m_pastFirstExpressionInStatement : 1;
     bool m_isPaused : 1;
     bool m_breakpointsActivated : 1;
     bool m_hasHandlerForExceptionCallback : 1;
-    bool m_isInWorkerThread : 1;
+    bool m_suppressAllPauses : 1;
     unsigned m_steppingMode : 1; // SteppingMode
 
     ReasonForPause m_reasonForPause;
     JSValue m_currentException;
-    CallFrame* m_pauseOnCallFrame;
-    CallFrame* m_currentCallFrame;
+    CallFrame* m_pauseOnCallFrame { nullptr };
+    CallFrame* m_currentCallFrame { nullptr };
     unsigned m_lastExecutedLine;
     SourceID m_lastExecutedSourceID;
 
@@ -212,11 +247,11 @@ private:
 
     RefPtr<JSC::DebuggerCallFrame> m_currentDebuggerCallFrame;
 
+    ProfilingClient* m_profilingClient { nullptr };
+
     friend class DebuggerPausedScope;
     friend class TemporaryPausedState;
     friend class LLIntOffsetsExtractor;
 };
 
 } // namespace JSC
-
-#endif // Debugger_h

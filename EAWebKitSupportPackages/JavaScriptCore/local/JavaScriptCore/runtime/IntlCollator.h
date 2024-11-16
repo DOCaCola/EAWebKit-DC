@@ -23,12 +23,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IntlCollator_h
-#define IntlCollator_h
+#pragma once
 
 #if ENABLE(INTL)
 
 #include "JSDestructibleObject.h"
+
+struct UCollator;
 
 namespace JSC {
 
@@ -39,10 +40,14 @@ class IntlCollator : public JSDestructibleObject {
 public:
     typedef JSDestructibleObject Base;
 
-    static IntlCollator* create(VM&, IntlCollatorConstructor*);
+    static IntlCollator* create(VM&, Structure*);
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
 
     DECLARE_INFO;
+
+    void initializeCollator(ExecState&, JSValue locales, JSValue optionsValue);
+    JSValue compareStrings(ExecState&, StringView, StringView);
+    JSObject* resolvedOptions(ExecState&);
 
     JSBoundFunction* boundCompare() const { return m_boundCompare.get(); }
     void setBoundCompare(VM&, JSBoundFunction*);
@@ -54,13 +59,28 @@ protected:
     static void visitChildren(JSCell*, SlotVisitor&);
 
 private:
+    enum class Usage { Sort, Search };
+    enum class Sensitivity { Base, Accent, Case, Variant };
+
+    struct UCollatorDeleter {
+        void operator()(UCollator*) const;
+    };
+
+    void createCollator(ExecState&);
+    static const char* usageString(Usage);
+    static const char* sensitivityString(Sensitivity);
+
+    Usage m_usage;
+    String m_locale;
+    String m_collation;
+    Sensitivity m_sensitivity;
     WriteBarrier<JSBoundFunction> m_boundCompare;
+    std::unique_ptr<UCollator, UCollatorDeleter> m_collator;
+    bool m_numeric;
+    bool m_ignorePunctuation;
+    bool m_initializedCollator { false };
 };
-    
-EncodedJSValue JSC_HOST_CALL IntlCollatorFuncCompare(ExecState*);
 
 } // namespace JSC
 
 #endif // ENABLE(INTL)
-
-#endif // IntlCollator_h

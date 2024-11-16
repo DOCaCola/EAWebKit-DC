@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGArrayifySlowPathGenerator_h
-#define DFGArrayifySlowPathGenerator_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -46,7 +45,7 @@ public:
         : JumpingSlowPathGenerator<MacroAssembler::JumpList>(from, jit)
         , m_op(node->op())
         , m_arrayMode(node->arrayMode())
-        , m_structure(node->op() == ArrayifyToStructure ? node->structure() : 0)
+        , m_structure(node->op() == ArrayifyToStructure ? node->structure() : RegisteredStructure())
         , m_baseGPR(baseGPR)
         , m_propertyGPR(propertyGPR)
         , m_tempGPR(tempGPR)
@@ -71,7 +70,7 @@ public:
     }
     
 protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
+    void generateInternal(SpeculativeJIT* jit) override
     {
         linkFrom(jit);
         
@@ -113,9 +112,10 @@ protected:
         }
         for (unsigned i = m_plans.size(); i--;)
             jit->silentFill(m_plans[i], GPRInfo::regT0);
+        jit->m_jit.exceptionCheck();
         
         if (m_op == ArrayifyToStructure) {
-            ASSERT(m_structure);
+            ASSERT(m_structure.get());
             m_badIndexingTypeJump.fill(
                 jit, jit->m_jit.branchWeakStructure(MacroAssembler::NotEqual, MacroAssembler::Address(m_baseGPR, JSCell::structureIDOffset()), m_structure));
         } else {
@@ -124,7 +124,8 @@ protected:
             // bytecode operation corresponding to this arrayification being reexecuted.
             // That's fine, since arrayification is not user-visible.
             jit->m_jit.load8(
-                MacroAssembler::Address(m_baseGPR, JSCell::indexingTypeOffset()), m_structureGPR);
+                MacroAssembler::Address(m_baseGPR, JSCell::indexingTypeAndMiscOffset()),
+                m_structureGPR);
             m_badIndexingTypeJump.fill(
                 jit, jit->jumpSlowForUnwantedArrayMode(m_structureGPR, m_arrayMode));
         }
@@ -135,7 +136,7 @@ protected:
 private:
     NodeType m_op;
     ArrayMode m_arrayMode;
-    Structure* m_structure;
+    RegisteredStructure m_structure;
     GPRReg m_baseGPR;
     GPRReg m_propertyGPR;
     GPRReg m_tempGPR;
@@ -148,6 +149,3 @@ private:
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGArrayifySlowPathGenerator_h
-

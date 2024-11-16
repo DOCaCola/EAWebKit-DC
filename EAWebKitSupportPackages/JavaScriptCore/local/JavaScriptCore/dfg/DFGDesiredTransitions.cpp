@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,7 +34,7 @@
 
 namespace JSC { namespace DFG {
 
-DesiredTransition::DesiredTransition(CodeBlock* codeBlock, ScriptExecutable* codeOriginOwner, Structure* oldStructure, Structure* newStructure)
+DesiredTransition::DesiredTransition(CodeBlock* codeBlock, CodeBlock* codeOriginOwner, Structure* oldStructure, Structure* newStructure)
     : m_codeBlock(codeBlock)
     , m_codeOriginOwner(codeOriginOwner)
     , m_oldStructure(oldStructure)
@@ -46,16 +46,16 @@ void DesiredTransition::reallyAdd(VM& vm, CommonData* common)
 {
     common->transitions.append(
         WeakReferenceTransition(
-            vm, m_codeBlock->ownerExecutable(),
+            vm, m_codeBlock,
             m_codeOriginOwner,
             m_oldStructure, m_newStructure));
 }
 
 void DesiredTransition::visitChildren(SlotVisitor& visitor)
 {
-    visitor.appendUnbarrieredPointer(&m_codeOriginOwner);
-    visitor.appendUnbarrieredPointer(&m_oldStructure);
-    visitor.appendUnbarrieredPointer(&m_newStructure);
+    visitor.appendUnbarriered(m_codeOriginOwner);
+    visitor.appendUnbarriered(m_oldStructure);
+    visitor.appendUnbarriered(m_newStructure);
 }
 
 DesiredTransitions::DesiredTransitions()
@@ -66,7 +66,7 @@ DesiredTransitions::~DesiredTransitions()
 {
 }
 
-void DesiredTransitions::addLazily(CodeBlock* codeBlock, ScriptExecutable* codeOriginOwner, Structure* oldStructure, Structure* newStructure)
+void DesiredTransitions::addLazily(CodeBlock* codeBlock, CodeBlock* codeOriginOwner, Structure* oldStructure, Structure* newStructure)
 {
     m_transitions.append(DesiredTransition(codeBlock, codeOriginOwner, oldStructure, newStructure));
 }

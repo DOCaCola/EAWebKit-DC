@@ -23,14 +23,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGPrePostNumbering_h
-#define DFGPrePostNumbering_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
-#include "DFGAnalysis.h"
 #include "DFGBasicBlock.h"
 #include "DFGBlockMap.h"
+#include <wtf/FastMalloc.h>
+#include <wtf/Noncopyable.h>
 
 namespace JSC { namespace DFG {
 
@@ -40,13 +40,13 @@ enum EdgeKind {
     BackEdge
 };
 
-class PrePostNumbering : public Analysis<PrePostNumbering> {
+class PrePostNumbering {
+    WTF_MAKE_NONCOPYABLE(PrePostNumbering);
+    WTF_MAKE_FAST_ALLOCATED;
 public:
-    PrePostNumbering();
+    PrePostNumbering(Graph&);
     ~PrePostNumbering();
 
-    void compute(Graph&);
-    
     unsigned preNumber(BasicBlock* block) const { return m_map[block].m_preNumber; }
     unsigned postNumber(BasicBlock* block) const { return m_map[block].m_postNumber; }
     
@@ -90,7 +90,7 @@ private:
         unsigned m_preNumber;
         unsigned m_postNumber;
     };
-    
+
     BlockMap<Numbering> m_map;
 };
 
@@ -103,6 +103,3 @@ void printInternal(PrintStream&, JSC::DFG::EdgeKind);
 } // namespace WTF
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGPrePostNumbering_h
-

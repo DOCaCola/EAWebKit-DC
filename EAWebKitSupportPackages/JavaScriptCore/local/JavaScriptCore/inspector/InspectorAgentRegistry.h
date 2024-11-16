@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2013, 2015 Apple Inc. All rights reserved.
  * Copyright (C) 2011 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorAgentRegistry_h
-#define InspectorAgentRegistry_h
+#pragma once
 
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
@@ -33,7 +32,7 @@
 namespace Inspector {
 
 class BackendDispatcher;
-class FrontendChannel;
+class FrontendRouter;
 class InspectorAgentBase;
 
 enum class DisconnectReason;
@@ -41,12 +40,13 @@ enum class DisconnectReason;
 class JS_EXPORT_PRIVATE AgentRegistry {
 public:
     AgentRegistry();
+    ~AgentRegistry();
 
     void append(std::unique_ptr<InspectorAgentBase>);
 
-    void didCreateFrontendAndBackend(FrontendChannel*, BackendDispatcher*);
+    void didCreateFrontendAndBackend(FrontendRouter*, BackendDispatcher*);
     void willDestroyFrontendAndBackend(DisconnectReason);
-    void discardAgents();
+    void discardValues();
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     void appendExtraAgent(std::unique_ptr<InspectorAgentBase>);
@@ -66,5 +66,3 @@ private:
 };
 
 } // namespace Inspector
-
-#endif // !defined(InspectorAgentRegistry_h)

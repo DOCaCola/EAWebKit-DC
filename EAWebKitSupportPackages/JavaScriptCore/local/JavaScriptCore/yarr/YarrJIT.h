@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef YarrJIT_h
-#define YarrJIT_h
+#pragma once
 
 #if ENABLE(YARR_JIT)
 
@@ -141,6 +140,11 @@ public:
     }
 #endif
 
+    size_t size() const
+    {
+        return m_ref8.size() + m_ref16.size() + m_matchOnly8.size() + m_matchOnly16.size();
+    }
+
     void clear()
     {
         m_ref8 = MacroAssemblerCodeRef();
@@ -167,5 +171,3 @@ void jitCompile(YarrPattern&, YarrCharSize, VM*, YarrCodeBlock& jitObject, YarrJ
 } } // namespace JSC::Yarr
 
 #endif
-
-#endif // YarrJIT_h

@@ -29,8 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InjectedScriptModule_h
-#define InjectedScriptModule_h
+#pragma once
 
 #include "InjectedScriptBase.h"
 #include <wtf/text/WTFString.h>
@@ -49,17 +48,14 @@ public:
     virtual ~InjectedScriptModule();
     virtual String source() const = 0;
     virtual JSC::JSValue host(InjectedScriptManager*, JSC::ExecState*) const = 0;
-    virtual bool returnsObject() const = 0;
 
 protected:
     // Do not expose constructor in the child classes as well. Instead provide
     // a static factory method that would create a new instance of the class
     // and call its ensureInjected() method immediately.
-    InjectedScriptModule(const String& name);
+    explicit InjectedScriptModule(const String& name);
     void ensureInjected(InjectedScriptManager*, JSC::ExecState*);
-    void ensureInjected(InjectedScriptManager*, InjectedScript);
+    void ensureInjected(InjectedScriptManager*, const InjectedScript&);
 };
 
 } // namespace Inspector
-
-#endif // InjectedScriptModule_h

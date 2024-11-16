@@ -23,17 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ExecutableAllocator_h
-#define ExecutableAllocator_h
+#pragma once
+
 #include "JITCompilationEffort.h"
 #include <stddef.h> // for ptrdiff_t
 #include <limits>
 #include <wtf/Assertions.h>
+#include <wtf/Lock.h>
 #include <wtf/MetaAllocatorHandle.h>
 #include <wtf/MetaAllocator.h>
 #include <wtf/PageAllocation.h>
-#include <wtf/RefCounted.h>
-#include <wtf/Vector.h>
 
 #if OS(IOS)
 #include <libkern/OSCacheControl.h>
@@ -47,22 +46,9 @@
 #include <sys/cachectl.h>
 #endif
 
-#if CPU(SH4) && OS(LINUX)
-#include <asm/cachectl.h>
-#include <asm/unistd.h>
-#include <sys/syscall.h>
-#include <unistd.h>
-#endif
-
 #define JIT_ALLOCATOR_LARGE_ALLOC_SIZE (pageSize() * 4)
 
-#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
-#define PROTECTION_FLAGS_RW (PROT_READ | PROT_WRITE)
-#define PROTECTION_FLAGS_RX (PROT_READ | PROT_EXEC)
-#define EXECUTABLE_POOL_WRITABLE false
-#else
 #define EXECUTABLE_POOL_WRITABLE true
-#endif
 
 namespace JSC {
 
@@ -79,7 +65,9 @@ class DemandExecutableAllocator;
 #endif
 
 #if ENABLE(EXECUTABLE_ALLOCATOR_FIXED)
-#if CPU(ARM)
+#if defined(FIXED_EXECUTABLE_MEMORY_POOL_SIZE_IN_MB) && FIXED_EXECUTABLE_MEMORY_POOL_SIZE_IN_MB > 0
+static const size_t fixedExecutableMemoryPoolSize = FIXED_EXECUTABLE_MEMORY_POOL_SIZE_IN_MB * 1024 * 1024;
+#elif CPU(ARM)
 static const size_t fixedExecutableMemoryPoolSize = 16 * 1024 * 1024;
 #elif CPU(ARM64)
 static const size_t fixedExecutableMemoryPoolSize = 32 * 1024 * 1024;
@@ -88,9 +76,37 @@ static const size_t fixedExecutableMemoryPoolSize = 1024 * 1024 * 1024;
 #else
 static const size_t fixedExecutableMemoryPoolSize = 32 * 1024 * 1024;
 #endif
+#if CPU(ARM)
+static const double executablePoolReservationFraction = 0.15;
+#else
 static const double executablePoolReservationFraction = 0.25;
+#endif
 
-extern uintptr_t startOfFixedExecutableMemoryPool;
+extern JS_EXPORTDATA uintptr_t startOfFixedExecutableMemoryPool;
+extern JS_EXPORTDATA uintptr_t endOfFixedExecutableMemoryPool;
+
+typedef void (*JITWriteFunction)(off_t, const void*, size_t);
+extern JS_EXPORTDATA JITWriteFunction jitWriteFunction;
+
+static inline void* performJITMemcpy(void *dst, const void *src, size_t n)
+{
+    // Use execute-only write thunk for writes inside the JIT region. This is a variant of
+    // memcpy that takes an offset into the JIT region as its destination (first) parameter.
+    if (jitWriteFunction && (uintptr_t)dst >= startOfFixedExecutableMemoryPool && (uintptr_t)dst <= endOfFixedExecutableMemoryPool) {
+        off_t offset = (off_t)((uintptr_t)dst - startOfFixedExecutableMemoryPool);
+        jitWriteFunction(offset, src, n);
+        return dst;
+    }
+
+    // Use regular memcpy for writes outside the JIT region.
+    return memcpy(dst, src, n);
+}
+
+#else // ENABLE(EXECUTABLE_ALLOCATOR_FIXED)
+static inline void* performJITMemcpy(void *dst, const void *src, size_t n)
+{
+    return memcpy(dst, src, n);
+}
 #endif
 
 class ExecutableAllocator {
@@ -116,38 +132,13 @@ public:
 
     RefPtr<ExecutableMemoryHandle> allocate(VM&, size_t sizeInBytes, void* ownerUID, JITCompilationEffort);
 
-#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
-    static void makeWritable(void* start, size_t size)
-    {
-        reprotectRegion(start, size, Writable);
-    }
-
-    static void makeExecutable(void* start, size_t size)
-    {
-        reprotectRegion(start, size, Executable);
-    }
-#else
-    static void makeWritable(void*, size_t) {}
-    static void makeExecutable(void*, size_t) {}
-#endif
+    bool isValidExecutableMemory(const LockHolder&, void* address);
 
     static size_t committedByteCount();
 
-private:
-
-#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
-    static void reprotectRegion(void*, size_t, ProtectionSetting);
-#if ENABLE(EXECUTABLE_ALLOCATOR_DEMAND)
-    // We create a MetaAllocator for each JS global object.
-    std::unique_ptr<DemandExecutableAllocator> m_allocator;
-    DemandExecutableAllocator* allocator() { return m_allocator.get(); }
-#endif
-#endif
-
+    Lock& getLock() const;
 };
 
 #endif // ENABLE(JIT) && ENABLE(ASSEMBLER)
 
 } // namespace JSC
-
-#endif // !defined(ExecutableAllocator)

@@ -1,6 +1,5 @@
 /*
  *  Copyright (C) 2008 Apple Inc. All rights reserved.
- *  Copyright (C) 2012 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -26,10 +25,8 @@
 
 namespace WTF {
 
-//+EAWebKitChange
-//10/03/2012 - Disable on EA platforms since don't want static destructors to run and use Log.
-#if PLATFORM(EA) || defined(NDEBUG)
-//-EAWebKitChange
+#ifdef NDEBUG
+
 void RefCountedLeakCounter::suppressMessages(const char*) { }
 void RefCountedLeakCounter::cancelMessageSuppression(const char*) { }
 
@@ -42,7 +39,11 @@ void RefCountedLeakCounter::decrement() { }
 #else
 
 #define LOG_CHANNEL_PREFIX Log
+#if RELEASE_LOG_DISABLED
 static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks" };
+#else
+static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks", LOG_CHANNEL_WEBKIT_SUBSYSTEM, OS_LOG_DEFAULT };
+#endif
 
 typedef HashCountedSet<const char*, PtrHash<const char*>> ReasonSet;
 static ReasonSet* leakMessageSuppressionReasons;

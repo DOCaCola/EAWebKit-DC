@@ -38,12 +38,12 @@ ${includes}
     HeaderPostlude = (
     """""")
 
-    ConversionHelpersPrelude = (
+    TypeConversionsHeaderPrelude = (
     """${includes}
 
 namespace Inspector {""")
 
-    ConversionHelpersPostlude = (
+    TypeConversionsHeaderPostlude = (
     """} // namespace Inspector
 """)
 
@@ -53,7 +53,7 @@ namespace Inspector {""")
     GenericHeaderPostlude = (
     """""")
 
-    ConversionHelpersStandard = (
+    TypeConversionsHeaderStandard = (
     """template<typename ObjCEnumType>
 ObjCEnumType fromProtocolString(const String& value);""")
 
@@ -82,8 +82,7 @@ namespace Inspector {""")
 """)
 
     ImplementationPrelude = (
-    """#import "config.h"
-#import ${primaryInclude}
+    """#import ${primaryInclude}
 
 ${secondaryIncludes}
 
@@ -112,7 +111,8 @@ private:
     """void ObjCInspector${domainName}BackendDispatcher::${commandName}(${parameters})
 {
     id errorCallback = ^(NSString *error) {
-        backendDispatcher()->sendResponse(callId, InspectorObject::create(), error);
+        backendDispatcher()->reportProtocolError(requestId, BackendDispatcher::ServerError, error);
+        backendDispatcher()->sendPendingErrors();
     };
 
 ${successCallback}
@@ -137,8 +137,8 @@ ${invocation}
     _${variableNamePrefix}Handler = [handler retain];
 
     auto alternateDispatcher = std::make_unique<ObjCInspector${domainName}BackendDispatcher>(handler);
-    auto alternateAgent = std::make_unique<AlternateDispatchableAgent<${domainName}BackendDispatcher, Alternate${domainName}BackendDispatcher>>(ASCIILiteral("${domainName}"), WTF::move(alternateDispatcher));
-    _controller->appendExtraAgent(WTF::move(alternateAgent));
+    auto alternateAgent = std::make_unique<AlternateDispatchableAgent<${domainName}BackendDispatcher, Alternate${domainName}BackendDispatcher>>(ASCIILiteral("${domainName}"), *_controller, WTFMove(alternateDispatcher));
+    _controller->appendExtraAgent(WTFMove(alternateAgent));
 }
 
 - (id<${objcPrefix}${domainName}DomainHandler>)${variableNamePrefix}Handler

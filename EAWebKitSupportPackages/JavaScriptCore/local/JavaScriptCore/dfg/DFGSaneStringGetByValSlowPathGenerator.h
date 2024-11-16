@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGSaneStringGetByValSlowPathGenerator_h
-#define DFGSaneStringGetByValSlowPathGenerator_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -50,7 +49,7 @@ public:
     }
     
 protected:
-    virtual void generateInternal(SpeculativeJIT* jit) override
+    void generateInternal(SpeculativeJIT* jit) override
     {
         linkFrom(jit);
         
@@ -76,6 +75,7 @@ protected:
         GPRReg canTrample = SpeculativeJIT::pickCanTrample(extractResult(m_resultRegs));
         for (unsigned i = m_plans.size(); i--;)
             jit->silentFill(m_plans[i], canTrample);
+        jit->m_jit.exceptionCheck();
         
         jumpTo(jit);
     }
@@ -90,6 +90,3 @@ private:
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGSaneStringGetByValSlowPathGenerator_h
-

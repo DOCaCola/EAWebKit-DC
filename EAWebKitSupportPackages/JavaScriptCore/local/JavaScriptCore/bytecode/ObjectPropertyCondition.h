@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ObjectPropertyCondition_h
-#define ObjectPropertyCondition_h
+#pragma once
 
 #include "JSObject.h"
 #include "PropertyCondition.h"
@@ -122,8 +121,8 @@ public:
             vm.heap.writeBarrier(owner);
         return equivalenceWithoutBarrier(object, uid, value);
     }
-    
-    bool operator!() const { return !m_condition; };
+
+    explicit operator bool() const { return !!m_condition; }
     
     JSObject* object() const { return m_object; }
     PropertyCondition condition() const { return m_condition; }
@@ -185,6 +184,11 @@ public:
     // isStillValidAccordingToStructure() returned true.
     bool validityRequiresImpurePropertyWatchpoint(Structure*) const;
     bool validityRequiresImpurePropertyWatchpoint() const;
+
+    // Checks if the condition still holds setting aside the need for an impure property watchpoint.
+    // Validity might still require watchpoints on the object.
+    bool isStillValidAssumingImpurePropertyWatchpoint(Structure*) const;
+    bool isStillValidAssumingImpurePropertyWatchpoint() const;
 
     // Checks if the condition still holds. May conservatively return false, if the object and
     // structure alone don't guarantee the condition. Note that this may return true if the
@@ -263,6 +267,3 @@ template<typename T> struct HashTraits;
 template<> struct HashTraits<JSC::ObjectPropertyCondition> : SimpleClassHashTraits<JSC::ObjectPropertyCondition> { };
 
 } // namespace WTF
-
-#endif // ObjectPropertyCondition_h
-

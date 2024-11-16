@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSGlobalObjectRuntimeAgent_h
-#define JSGlobalObjectRuntimeAgent_h
+#pragma once
 
 #include "InspectorRuntimeAgent.h"
 
@@ -36,18 +35,16 @@ namespace Inspector {
 
 class JSGlobalObjectRuntimeAgent final : public InspectorRuntimeAgent {
 public:
-    JSGlobalObjectRuntimeAgent(InjectedScriptManager*, JSC::JSGlobalObject&);
+    JSGlobalObjectRuntimeAgent(JSAgentContext&);
 
-    virtual void didCreateFrontendAndBackend(FrontendChannel*, BackendDispatcher*) override;
-    virtual void willDestroyFrontendAndBackend(DisconnectReason) override;
+    void didCreateFrontendAndBackend(FrontendRouter*, BackendDispatcher*) override;
 
-    virtual JSC::VM& globalVM() override;
-    virtual InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
+    InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
 
     // NOTE: JavaScript inspector does not yet need to mute a console because no messages
     // are sent to the console outside of the API boundary or console object.
-    virtual void muteConsole() override { }
-    virtual void unmuteConsole() override { }
+    void muteConsole() override { }
+    void unmuteConsole() override { }
 
 private:
     std::unique_ptr<RuntimeFrontendDispatcher> m_frontendDispatcher;
@@ -56,5 +53,3 @@ private:
 };
 
 } // namespace Inspector
-
-#endif // !defined(JSGlobalObjectRuntimeAgent_h)

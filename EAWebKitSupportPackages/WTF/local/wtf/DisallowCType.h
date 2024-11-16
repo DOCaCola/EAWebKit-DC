@@ -48,7 +48,7 @@
 // Update 02/17/2011 - It turns out that inclusion of this file in config.h is rather undesirable for EA port as well. config.h is included in EVERY source file in the 
 // WebCore including the platform specific files. Now if the platform specific files include a platform specific existing library (say an EASTL header 
 // in our case) that uses the functions defined in ctype.h, they will end up with error. This is probably the reason few platforms don't like this header file already.
-#if !(OS(DARWIN) && PLATFORM(GTK)) && !PLATFORM(EFL) && !defined(_LIBCPP_VERSION) && !PLATFORM(EA)
+#if !(OS(DARWIN) && PLATFORM(GTK)) && !PLATFORM(EFL) && !defined(_LIBCPP_VERSION) && !PLATFORM(EA) && defined(__GLIBC__)
 //-EAWebKitChange
 
 #include <ctype.h>

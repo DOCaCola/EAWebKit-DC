@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGFlushFormat_h
-#define DFGFlushFormat_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -90,6 +89,28 @@ inline UseKind useKindFor(FlushFormat format)
     return UntypedUse;
 }
 
+inline UseKind uncheckedUseKindFor(FlushFormat format)
+{
+    switch (format) {
+    case DeadFlush:
+    case FlushedJSValue:
+    case ConflictingFlush:
+        return UntypedUse;
+    case FlushedCell:
+        return KnownCellUse;
+    case FlushedInt32:
+        return KnownInt32Use;
+    case FlushedInt52:
+        return Int52RepUse;
+    case FlushedDouble:
+        return DoubleRepUse;
+    case FlushedBoolean:
+        return KnownBooleanUse;
+    }
+    RELEASE_ASSERT_NOT_REACHED();
+    return UntypedUse;
+}
+
 inline SpeculatedType typeFilterFor(FlushFormat format)
 {
     return typeFilterFor(useKindFor(format));
@@ -148,6 +169,3 @@ inline JSC::DFG::FlushFormat inContext(JSC::DFG::FlushFormat format, JSC::DumpCo
 } // namespace WTF
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGFlushFormat_h
-

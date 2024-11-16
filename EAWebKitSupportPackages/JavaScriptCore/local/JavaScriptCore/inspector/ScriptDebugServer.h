@@ -27,8 +27,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ScriptDebugServer_h
-#define ScriptDebugServer_h
+#pragma once
 
 #include "ScriptBreakpoint.h"
 #include "ScriptDebugListener.h"
@@ -36,14 +35,12 @@
 #include "debugger/Debugger.h"
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
-#include <wtf/RefPtr.h>
-#include <wtf/Vector.h>
-#include <wtf/text/TextPosition.h>
 #include <wtf/text/WTFString.h>
 
 namespace JSC {
 class ExecState;
 class JSGlobalObject;
+class VM;
 }
 
 namespace Inspector {
@@ -52,29 +49,27 @@ class JS_EXPORT_PRIVATE ScriptDebugServer : public JSC::Debugger {
     WTF_MAKE_NONCOPYABLE(ScriptDebugServer);
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    JSC::BreakpointID setBreakpoint(JSC::SourceID, const ScriptBreakpoint&, unsigned* actualLineNumber, unsigned* actualColumnNumber);
-    void removeBreakpoint(JSC::BreakpointID);
-    void clearBreakpoints();
 
-    virtual void recompileAllJSFunctions() = 0;
+    // FIXME: Move BreakpointAction handling into JSC::Debugger or InspectorDebuggerAgent.
+    void setBreakpointActions(JSC::BreakpointID, const ScriptBreakpoint&);
+    void removeBreakpointActions(JSC::BreakpointID);
+    void clearBreakpointActions();
 
     const BreakpointActions& getActionsForBreakpoint(JSC::BreakpointID);
 
-    class Task {
-        WTF_MAKE_FAST_ALLOCATED;
-    public:
-        virtual ~Task() { }
-        virtual void run() = 0;
-    };
+    void addListener(ScriptDebugListener*);
+    void removeListener(ScriptDebugListener*, bool isBeingDestroyed);
 
 protected:
     typedef HashSet<ScriptDebugListener*> ListenerSet;
     typedef void (ScriptDebugServer::*JavaScriptExecutionCallback)(ScriptDebugListener*);
 
-    ScriptDebugServer(bool isInWorkerThread = false);
+    ScriptDebugServer(JSC::VM&);
     ~ScriptDebugServer();
 
-    virtual ListenerSet& getListeners() = 0;
+    virtual void attachDebugger() = 0;
+    virtual void detachDebugger(bool isBeingDestroyed) = 0;
+
     virtual void didPause(JSC::JSGlobalObject*) = 0;
     virtual void didContinue(JSC::JSGlobalObject*) = 0;
     virtual void runEventLoopWhilePaused() = 0;
@@ -91,30 +86,26 @@ protected:
     void dispatchFailedToParseSource(const ListenerSet& listeners, JSC::SourceProvider*, int errorLine, const String& errorMessage);
     void dispatchBreakpointActionLog(JSC::ExecState*, const String&);
     void dispatchBreakpointActionSound(JSC::ExecState*, int breakpointActionIdentifier);
-    void dispatchBreakpointActionProbe(JSC::ExecState*, const ScriptBreakpointAction&, const Deprecated::ScriptValue& sample);
+    void dispatchBreakpointActionProbe(JSC::ExecState*, const ScriptBreakpointAction&, JSC::JSValue sample);
 
-    bool m_doneProcessingDebuggerEvents {true};
+    bool m_doneProcessingDebuggerEvents { true };
 
 private:
     typedef HashMap<JSC::BreakpointID, BreakpointActions> BreakpointIDToActionsMap;
 
-    virtual void sourceParsed(JSC::ExecState*, JSC::SourceProvider*, int errorLine, const String& errorMsg) override final;
-    virtual bool needPauseHandling(JSC::JSGlobalObject*) override final { return true; }
-    virtual void handleBreakpointHit(JSC::JSGlobalObject*, const JSC::Breakpoint&) override final;
-    virtual void handleExceptionInBreakpointCondition(JSC::ExecState*, JSC::Exception*) const override final;
-    virtual void handlePause(JSC::JSGlobalObject*, JSC::Debugger::ReasonForPause) override final;
-    virtual void notifyDoneProcessingDebuggerEvents() override final;
+    void sourceParsed(JSC::ExecState*, JSC::SourceProvider*, int errorLine, const String& errorMsg) final;
+    void handleBreakpointHit(JSC::JSGlobalObject*, const JSC::Breakpoint&) final;
+    void handleExceptionInBreakpointCondition(JSC::ExecState*, JSC::Exception*) const final;
+    void handlePause(JSC::JSGlobalObject*, JSC::Debugger::ReasonForPause) final;
+    void notifyDoneProcessingDebuggerEvents() final;
 
-    Deprecated::ScriptValue exceptionOrCaughtValue(JSC::ExecState*);
-
-    bool m_callingListeners {false};
+    JSC::JSValue exceptionOrCaughtValue(JSC::ExecState*);
 
     BreakpointIDToActionsMap m_breakpointIDToActions;
-
-    unsigned m_nextProbeSampleId {1};
-    unsigned m_currentProbeBatchId {0};
+    ListenerSet m_listeners;
+    bool m_callingListeners { false };
+    unsigned m_nextProbeSampleId { 1 };
+    unsigned m_currentProbeBatchId { 0 };
 };
 
 } // namespace Inspector
-
-#endif // ScriptDebugServer_h

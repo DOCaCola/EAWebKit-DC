@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +23,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef CodeBlockSet_h
-#define CodeBlockSet_h
+#pragma once
 
+#include "CollectionScope.h"
 #include "GCSegmentedArray.h"
-#include "HeapOperation.h"
 #include <wtf/HashSet.h>
+#include <wtf/Lock.h>
 #include <wtf/Noncopyable.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/PrintStream.h>
 #include <wtf/RefPtr.h>
 
@@ -39,7 +38,6 @@ namespace JSC {
 class CodeBlock;
 class Heap;
 class JSCell;
-class SlotVisitor;
 
 // CodeBlockSet tracks all CodeBlocks. Every CodeBlock starts out with one
 // reference coming in from GC. The GC is responsible for freeing CodeBlocks
@@ -51,68 +49,47 @@ class CodeBlockSet {
 public:
     CodeBlockSet();
     ~CodeBlockSet();
+
+    void lastChanceToFinalize();
     
     // Add a CodeBlock. This is only called by CodeBlock constructors.
-    void add(PassRefPtr<CodeBlock>);
+    void add(CodeBlock*);
     
-    // Clear mark bits for certain CodeBlocks depending on the type of collection.
-    void clearMarksForEdenCollection(const Vector<const JSCell*>&);
-
     // Clear all mark bits for all CodeBlocks.
     void clearMarksForFullCollection();
 
     // Mark a pointer that may be a CodeBlock that belongs to the set of DFG
     // blocks. This is defined in CodeBlock.h.
-    void mark(CodeBlock* candidateCodeBlock);
-    void mark(void* candidateCodeBlock);
+private:
+    void mark(const LockHolder&, CodeBlock* candidateCodeBlock);
+public:
+    void mark(const LockHolder&, void* candidateCodeBlock);
     
     // Delete all code blocks that are only referenced by this set (i.e. owned
     // by this set), and that have not been marked.
-    void deleteUnmarkedAndUnreferenced(HeapOperation);
+    void deleteUnmarkedAndUnreferenced(CollectionScope);
     
-    void remove(CodeBlock*);
-    
-    // Trace all marked code blocks. The CodeBlock is free to make use of
-    // mayBeExecuting.
-    void traceMarked(SlotVisitor&);
+    void clearCurrentlyExecuting();
 
-    // Add all currently executing CodeBlocks to the remembered set to be 
-    // re-scanned during the next collection.
-    void rememberCurrentlyExecutingCodeBlocks(Heap*);
+    bool contains(const LockHolder&, void* candidateCodeBlock);
+    Lock& getLock() { return m_lock; }
 
     // Visits each CodeBlock in the heap until the visitor function returns true
     // to indicate that it is done iterating, or until every CodeBlock has been
     // visited.
-    template<typename Functor> void iterate(Functor& functor)
-    {
-        for (auto& codeBlock : m_oldCodeBlocks) {
-            bool done = functor(codeBlock);
-            if (done)
-                return;
-        }
-
-        for (auto& codeBlock : m_newCodeBlocks) {
-            bool done = functor(codeBlock);
-            if (done)
-                return;
-        }
-    }
+    template<typename Functor> void iterate(const Functor&);
+    
+    template<typename Functor> void iterateCurrentlyExecuting(const Functor&);
     
     void dump(PrintStream&) const;
 
 private:
-    void clearMarksForCodeBlocksInRememberedExecutables(const Vector<const JSCell*>&);
-    void promoteYoungCodeBlocks();
+    void promoteYoungCodeBlocks(const LockHolder&);
 
-    // This is not a set of RefPtr<CodeBlock> because we need to be able to find
-    // arbitrary bogus pointers. I could have written a thingy that had peek types
-    // and all, but that seemed like overkill.
     HashSet<CodeBlock*> m_oldCodeBlocks;
     HashSet<CodeBlock*> m_newCodeBlocks;
-    Vector<CodeBlock*> m_currentlyExecuting;
+    HashSet<CodeBlock*> m_currentlyExecuting;
+    Lock m_lock;
 };
 
 } // namespace JSC
-
-#endif // CodeBlockSet_h
-

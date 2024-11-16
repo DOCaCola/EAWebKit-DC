@@ -23,14 +23,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HandleBlock_h
-#define HandleBlock_h
+#pragma once
 
 #include <wtf/DoublyLinkedList.h>
 
 namespace JSC {
 
-class DeadBlock;
 class HandleSet;
 class HandleNode;
 
@@ -73,5 +71,3 @@ inline HandleSet* HandleBlock::handleSet()
 }
 
 } // namespace JSC
-
-#endif // HandleBlock_h

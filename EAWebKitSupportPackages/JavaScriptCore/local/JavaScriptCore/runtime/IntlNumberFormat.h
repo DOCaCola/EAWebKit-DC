@@ -23,12 +23,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IntlNumberFormat_h
-#define IntlNumberFormat_h
+#pragma once
 
 #if ENABLE(INTL)
 
 #include "JSDestructibleObject.h"
+#include <unicode/unum.h>
 
 namespace JSC {
 
@@ -39,10 +39,14 @@ class IntlNumberFormat : public JSDestructibleObject {
 public:
     typedef JSDestructibleObject Base;
 
-    static IntlNumberFormat* create(VM&, IntlNumberFormatConstructor*);
+    static IntlNumberFormat* create(VM&, Structure*);
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
 
     DECLARE_INFO;
+
+    void initializeNumberFormat(ExecState&, JSValue locales, JSValue optionsValue);
+    JSValue formatNumber(ExecState&, double number);
+    JSObject* resolvedOptions(ExecState&);
 
     JSBoundFunction* boundFormat() const { return m_boundFormat.get(); }
     void setBoundFormat(VM&, JSBoundFunction*);
@@ -53,13 +57,34 @@ protected:
     static void destroy(JSCell*);
     static void visitChildren(JSCell*, SlotVisitor&);
 
+private:
+    enum class Style { Decimal, Percent, Currency };
+    enum class CurrencyDisplay { Code, Symbol, Name };
+
+    struct UNumberFormatDeleter {
+        void operator()(UNumberFormat*) const;
+    };
+
+    void createNumberFormat(ExecState&);
+    static const char* styleString(Style);
+    static const char* currencyDisplayString(CurrencyDisplay);
+
+    String m_locale;
+    String m_numberingSystem;
+    Style m_style { Style::Decimal };
+    String m_currency;
+    CurrencyDisplay m_currencyDisplay;
+    unsigned m_minimumIntegerDigits { 1 };
+    unsigned m_minimumFractionDigits { 0 };
+    unsigned m_maximumFractionDigits { 3 };
+    unsigned m_minimumSignificantDigits { 0 };
+    unsigned m_maximumSignificantDigits { 0 };
+    std::unique_ptr<UNumberFormat, UNumberFormatDeleter> m_numberFormat;
     WriteBarrier<JSBoundFunction> m_boundFormat;
+    bool m_useGrouping { true };
+    bool m_initializedNumberFormat { false };
 };
-    
-EncodedJSValue JSC_HOST_CALL IntlNumberFormatFuncFormatNumber(ExecState*);
 
 } // namespace JSC
 
 #endif // ENABLE(INTL)
-
-#endif // IntlNumberFormat_h

@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DFGDesiredTransitions_h
-#define DFGDesiredTransitions_h
+#pragma once
 
 #include <wtf/Vector.h>
 
@@ -44,7 +43,7 @@ class CommonData;
 
 class DesiredTransition {
 public:
-    DesiredTransition(CodeBlock*, ScriptExecutable*, Structure*, Structure*);
+    DesiredTransition(CodeBlock*, CodeBlock* codeOriginOwner, Structure*, Structure*);
 
     void reallyAdd(VM&, CommonData*);
     
@@ -52,7 +51,7 @@ public:
 
 private:
     CodeBlock* m_codeBlock;
-    ScriptExecutable* m_codeOriginOwner;
+    CodeBlock* m_codeOriginOwner;
     Structure* m_oldStructure;
     Structure* m_newStructure;
 };
@@ -62,7 +61,7 @@ public:
     DesiredTransitions();
     ~DesiredTransitions();
 
-    void addLazily(CodeBlock*, ScriptExecutable*, Structure*, Structure*);
+    void addLazily(CodeBlock*, CodeBlock* codeOriginOwner, Structure*, Structure*);
     void reallyAdd(VM&, CommonData*);
     void visitChildren(SlotVisitor&);
 
@@ -73,5 +72,3 @@ private:
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGDesiredTransitions_h

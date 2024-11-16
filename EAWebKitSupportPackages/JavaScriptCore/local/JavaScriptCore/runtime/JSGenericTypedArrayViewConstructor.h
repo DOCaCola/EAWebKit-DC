@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef JSGenericTypedArrayViewConstructor_h
-#define JSGenericTypedArrayViewConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
@@ -37,13 +36,25 @@ public:
 
 protected:
     JSGenericTypedArrayViewConstructor(VM&, Structure*);
-    void finishCreation(VM&, JSObject* prototype, const String& name);
+    void finishCreation(VM&, JSGlobalObject*, JSObject* prototype, const String& name, FunctionExecutable* privateAllocator);
 
 public:
     static JSGenericTypedArrayViewConstructor* create(
-        VM&, Structure*, JSObject* prototype, const String& name);
+        VM&, JSGlobalObject*, Structure*, JSObject* prototype, const String& name, FunctionExecutable* privateAllocator);
 
+    // FIXME: We should fix the warnings for extern-template in JSObject template classes: https://bugs.webkit.org/show_bug.cgi?id=161979
+#if COMPILER(CLANG)
+#if __has_warning("-Wundefined-var-template")
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
+#endif
     DECLARE_INFO;
+#if COMPILER(CLANG)
+#if __has_warning("-Wundefined-var-template")
+#pragma clang diagnostic pop
+#endif
+#endif
     
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue prototype);
 
@@ -53,6 +64,3 @@ protected:
 };
 
 } // namespace JSC
-
-#endif // JSGenericTypedArrayViewConstructor_h
-

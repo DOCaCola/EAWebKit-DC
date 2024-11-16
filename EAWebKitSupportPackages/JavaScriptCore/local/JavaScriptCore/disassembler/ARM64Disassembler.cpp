@@ -23,7 +23,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define __STDC_FORMAT_MACROS
 #include "config.h"
 #include "Disassembler.h"
 
@@ -34,7 +33,7 @@
 
 namespace JSC {
 
-bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out, InstructionSubsetHint)
+bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out)
 {
     A64DOpcode arm64Opcode;
 
@@ -56,17 +55,3 @@ bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const c
 
 #endif // USE(ARM64_DISASSEMBLER)
 
-#if USE(LLVM_DISASSEMBLER) && CPU(ARM64)
-
-#include "LLVMDisassembler.h"
-
-namespace JSC {
-
-bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out, InstructionSubsetHint hint)
-{
-    return tryToDisassembleWithLLVM(codePtr, size, prefix, out, hint);
-}
-
-} // namespace JSC
-
-#endif // USE(LLVM_DISASSEMBLER) && CPU(ARM64)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013 Apple Inc. All rights reserved.
+ *  Copyright (C) 2005-2017 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -31,7 +31,8 @@
 
 namespace WTF {
 
-enum HashTableDeletedValueType { HashTableDeletedValue };
+template<typename T> class RefPtr;
+template<typename T> RefPtr<T> adoptRef(T*);
 
 template<typename T> class RefPtr {
     WTF_MAKE_FAST_ALLOCATED;
@@ -39,13 +40,15 @@ public:
     typedef T ValueType;
     typedef ValueType* PtrType;
 
+    static constexpr bool isRefPtr = true;
+
     ALWAYS_INLINE RefPtr() : m_ptr(nullptr) { }
     ALWAYS_INLINE RefPtr(T* ptr) : m_ptr(ptr) { refIfNotNull(ptr); }
     ALWAYS_INLINE RefPtr(const RefPtr& o) : m_ptr(o.m_ptr) { refIfNotNull(m_ptr); }
     template<typename U> RefPtr(const RefPtr<U>& o) : m_ptr(o.get()) { refIfNotNull(m_ptr); }
 
-    ALWAYS_INLINE RefPtr(RefPtr&& o) : m_ptr(o.release().leakRef()) { }
-    template<typename U> RefPtr(RefPtr<U>&& o) : m_ptr(o.release().leakRef()) { }
+    ALWAYS_INLINE RefPtr(RefPtr&& o) : m_ptr(o.leakRef()) { }
+    template<typename U> RefPtr(RefPtr<U>&& o) : m_ptr(o.leakRef()) { }
 
     // See comments in PassRefPtr.h for an explanation of why this takes a const reference.
     template<typename U> RefPtr(const PassRefPtr<U>&);
@@ -59,15 +62,17 @@ public:
     ALWAYS_INLINE ~RefPtr() { derefIfNotNull(std::exchange(m_ptr, nullptr)); }
 
     T* get() const { return m_ptr; }
-    
-    PassRefPtr<T> release() { PassRefPtr<T> tmp = adoptRef(m_ptr); m_ptr = nullptr; return tmp; }
+
+    // FIXME: Remove release() and change all call sites to call WTFMove().
+    RefPtr<T> release() { RefPtr<T> tmp = adoptRef(m_ptr); m_ptr = nullptr; return tmp; }
     Ref<T> releaseNonNull() { ASSERT(m_ptr); Ref<T> tmp(adoptRef(*m_ptr)); m_ptr = nullptr; return tmp; }
+    Ref<const T> releaseConstNonNull() { ASSERT(m_ptr); Ref<const T> tmp(adoptRef(*m_ptr)); m_ptr = nullptr; return tmp; }
 
     T* leakRef() WARN_UNUSED_RETURN;
 
     T& operator*() const { ASSERT(m_ptr); return *m_ptr; }
     ALWAYS_INLINE T* operator->() const { return m_ptr; }
-    
+
     bool operator!() const { return !m_ptr; }
 
     // This conversion operator allows implicit conversion to bool but not to other integer types.
@@ -96,6 +101,11 @@ public:
 #endif
 
 private:
+    friend RefPtr adoptRef<T>(T*);
+
+    enum AdoptTag { Adopt };
+    RefPtr(T* ptr, AdoptTag) : m_ptr(ptr) { }
+
     T* m_ptr;
 };
 
@@ -158,21 +168,21 @@ template<typename T> template<typename U> inline RefPtr<T>& RefPtr<T>::operator=
 
 template<typename T> inline RefPtr<T>& RefPtr<T>::operator=(RefPtr&& o)
 {
-    RefPtr ptr = WTF::move(o);
+    RefPtr ptr = WTFMove(o);
     swap(ptr);
     return *this;
 }
 
 template<typename T> template<typename U> inline RefPtr<T>& RefPtr<T>::operator=(RefPtr<U>&& o)
 {
-    RefPtr ptr = WTF::move(o);
+    RefPtr ptr = WTFMove(o);
     swap(ptr);
     return *this;
 }
 
 template<typename T> template<typename U> inline RefPtr<T>& RefPtr<T>::operator=(Ref<U>&& reference)
 {
-    RefPtr ptr = WTF::move(reference);
+    RefPtr ptr = WTFMove(reference);
     swap(ptr);
     return *this;
 }
@@ -226,9 +236,27 @@ template <typename T> struct IsSmartPtr<RefPtr<T>> {
     static const bool value = true;
 };
 
+template<typename T> inline RefPtr<T> adoptRef(T* p)
+{
+    adopted(p);
+    return RefPtr<T>(p, RefPtr<T>::Adopt);
+}
+
+template<typename T> inline RefPtr<T> makeRefPtr(T* pointer)
+{
+    return pointer;
+}
+
+template<typename T> inline RefPtr<T> makeRefPtr(T& reference)
+{
+    return &reference;
+}
+
 } // namespace WTF
 
 using WTF::RefPtr;
+using WTF::adoptRef;
+using WTF::makeRefPtr;
 using WTF::static_pointer_cast;
 
 #endif // WTF_RefPtr_h

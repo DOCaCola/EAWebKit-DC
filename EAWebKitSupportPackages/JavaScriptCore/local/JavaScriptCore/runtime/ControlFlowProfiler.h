@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ControlFlowProfiler_h
-#define ControlFlowProfiler_h
+#pragma once
 
 #include "BasicBlockLocation.h"
 #include <wtf/HashMap.h>
@@ -87,6 +86,7 @@ struct BasicBlockRange {
     int m_startOffset;
     int m_endOffset;
     bool m_hasExecuted;
+    size_t m_executionCount;
 };
 
 class ControlFlowProfiler {
@@ -98,7 +98,8 @@ public:
     JS_EXPORT_PRIVATE void dumpData() const;
     Vector<BasicBlockRange> getBasicBlocksForSourceID(intptr_t sourceID, VM&) const;
     BasicBlockLocation* dummyBasicBlock() { return &m_dummyBasicBlock; }
-    JS_EXPORT_PRIVATE bool hasBasicBlockAtTextOffsetBeenExecuted(int, intptr_t, VM&); // This function exists for testing.
+    JS_EXPORT_PRIVATE bool hasBasicBlockAtTextOffsetBeenExecuted(int, intptr_t, VM&);  // This function exists for testing.
+    JS_EXPORT_PRIVATE size_t basicBlockExecutionCountAtTextOffset(int, intptr_t, VM&); // This function exists for testing.
 
 private:
     typedef HashMap<BasicBlockKey, BasicBlockLocation*> BlockLocationCache;
@@ -109,5 +110,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ControlFlowProfiler_h

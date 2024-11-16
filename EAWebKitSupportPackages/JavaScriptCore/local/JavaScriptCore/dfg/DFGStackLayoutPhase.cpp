@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2013, 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,7 +118,7 @@ public:
             
             if (inlineCallFrame->isVarargs()) {
                 usedLocals.set(VirtualRegister(
-                    JSStack::ArgumentCount + inlineCallFrame->stackOffset).toLocal());
+                    CallFrameSlot::argumentCount + inlineCallFrame->stackOffset).toLocal());
             }
             
             for (unsigned argument = inlineCallFrame->arguments.size(); argument-- > 1;) {
@@ -129,7 +129,7 @@ public:
         }
         
         Vector<unsigned> allocation(usedLocals.size());
-        m_graph.m_nextMachineLocal = 0;
+        m_graph.m_nextMachineLocal = codeBlock()->calleeSaveSpaceAsVirtualRegisters();
         for (unsigned i = 0; i < usedLocals.size(); ++i) {
             if (!usedLocals.get(i)) {
                 allocation[i] = UINT_MAX;
@@ -173,9 +173,7 @@ public:
             data->machineLocal = assign(allocation, data->local);
         }
         
-        // This register is never valid for DFG code blocks.
-        codeBlock()->setActivationRegister(VirtualRegister());
-        if (LIKELY(!m_graph.hasDebuggerEnabled()))
+        if (!m_graph.needsScopeRegister())
             codeBlock()->setScopeRegister(VirtualRegister());
         else
             codeBlock()->setScopeRegister(assign(allocation, codeBlock()->scopeRegister()));
@@ -186,7 +184,7 @@ public:
             
             if (inlineCallFrame->isVarargs()) {
                 inlineCallFrame->argumentCountRegister = assign(
-                    allocation, VirtualRegister(inlineCallFrame->stackOffset + JSStack::ArgumentCount));
+                    allocation, VirtualRegister(inlineCallFrame->stackOffset + CallFrameSlot::argumentCount));
             }
             
             for (unsigned argument = inlineCallFrame->arguments.size(); argument-- > 1;) {
@@ -263,7 +261,6 @@ private:
 
 bool performStackLayout(Graph& graph)
 {
-    SamplingRegion samplingRegion("DFG Stack Layout Phase");
     return runPhase<StackLayoutPhase>(graph);
 }
 

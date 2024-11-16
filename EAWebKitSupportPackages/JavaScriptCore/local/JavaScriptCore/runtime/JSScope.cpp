@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2012-2016 Apple Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,10 +26,14 @@
 #include "config.h"
 #include "JSScope.h"
 
+#include "AbstractModuleRecord.h"
+#include "Exception.h"
 #include "JSGlobalObject.h"
 #include "JSLexicalEnvironment.h"
+#include "JSModuleEnvironment.h"
 #include "JSWithScope.h"
 #include "JSCInlines.h"
+#include "VariableEnvironment.h"
 
 namespace JSC {
 
@@ -40,61 +44,131 @@ void JSScope::visitChildren(JSCell* cell, SlotVisitor& visitor)
     JSScope* thisObject = jsCast<JSScope*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    visitor.append(&thisObject->m_next);
+    visitor.append(thisObject->m_next);
 }
 
 // Returns true if we found enough information to terminate optimization.
-static inline bool abstractAccess(ExecState* exec, JSScope* scope, const Identifier& ident, GetOrPut getOrPut, size_t depth, bool& needsVarInjectionChecks, ResolveOp& op)
+static inline bool abstractAccess(ExecState* exec, JSScope* scope, const Identifier& ident, GetOrPut getOrPut, size_t depth, bool& needsVarInjectionChecks, ResolveOp& op, InitializationMode initializationMode)
 {
-    if (JSLexicalEnvironment* lexicalEnvironment = jsDynamicCast<JSLexicalEnvironment*>(scope)) {
+    if (scope->isJSLexicalEnvironment()) {
+        JSLexicalEnvironment* lexicalEnvironment = jsCast<JSLexicalEnvironment*>(scope);
         if (ident == exec->propertyNames().arguments) {
             // We know the property will be at this lexical environment scope, but we don't know how to cache it.
             op = ResolveOp(Dynamic, 0, 0, 0, 0, 0);
             return true;
         }
 
-        SymbolTableEntry entry = lexicalEnvironment->symbolTable()->get(ident.impl());
-        if (entry.isReadOnly() && getOrPut == Put) {
-            // We know the property will be at this lexical environment scope, but we don't know how to cache it.
-            op = ResolveOp(Dynamic, 0, 0, 0, 0, 0);
-            return true;
+        SymbolTable* symbolTable = lexicalEnvironment->symbolTable();
+        {
+            ConcurrentJSLocker locker(symbolTable->m_lock);
+            auto iter = symbolTable->find(locker, ident.impl());
+            if (iter != symbolTable->end(locker)) {
+                SymbolTableEntry& entry = iter->value;
+                ASSERT(!entry.isNull());
+                if (entry.isReadOnly() && getOrPut == Put) {
+                    // We know the property will be at this lexical environment scope, but we don't know how to cache it.
+                    op = ResolveOp(Dynamic, 0, 0, 0, 0, 0);
+                    return true;
+                }
+
+                op = ResolveOp(makeType(ClosureVar, needsVarInjectionChecks), depth, 0, lexicalEnvironment, entry.watchpointSet(), entry.scopeOffset().offset());
+                return true;
+            }
         }
 
-        if (!entry.isNull()) {
-            op = ResolveOp(makeType(ClosureVar, needsVarInjectionChecks), depth, 0, lexicalEnvironment, entry.watchpointSet(), entry.scopeOffset().offset());
-            return true;
+        if (scope->type() == ModuleEnvironmentType) {
+            JSModuleEnvironment* moduleEnvironment = jsCast<JSModuleEnvironment*>(scope);
+            AbstractModuleRecord* moduleRecord = moduleEnvironment->moduleRecord();
+            AbstractModuleRecord::Resolution resolution = moduleRecord->resolveImport(exec, ident);
+            if (resolution.type == AbstractModuleRecord::Resolution::Type::Resolved) {
+                AbstractModuleRecord* importedRecord = resolution.moduleRecord;
+                JSModuleEnvironment* importedEnvironment = importedRecord->moduleEnvironment();
+                SymbolTable* symbolTable = importedEnvironment->symbolTable();
+                ConcurrentJSLocker locker(symbolTable->m_lock);
+                auto iter = symbolTable->find(locker, resolution.localName.impl());
+                ASSERT(iter != symbolTable->end(locker));
+                SymbolTableEntry& entry = iter->value;
+                ASSERT(!entry.isNull());
+                op = ResolveOp(makeType(ModuleVar, needsVarInjectionChecks), depth, 0, importedEnvironment, entry.watchpointSet(), entry.scopeOffset().offset(), resolution.localName.impl());
+                return true;
+            }
         }
 
-        if (lexicalEnvironment->symbolTable()->usesNonStrictEval())
+        if (symbolTable->usesNonStrictEval())
             needsVarInjectionChecks = true;
         return false;
     }
 
-    if (JSGlobalObject* globalObject = jsDynamicCast<JSGlobalObject*>(scope)) {
-        SymbolTableEntry entry = globalObject->symbolTable()->get(ident.impl());
-        if (!entry.isNull()) {
-            if (getOrPut == Put && entry.isReadOnly()) {
-                // We know the property will be at global scope, but we don't know how to cache it.
+    if (scope->isGlobalLexicalEnvironment()) {
+        JSGlobalLexicalEnvironment* globalLexicalEnvironment = jsCast<JSGlobalLexicalEnvironment*>(scope);
+        SymbolTable* symbolTable = globalLexicalEnvironment->symbolTable();
+        ConcurrentJSLocker locker(symbolTable->m_lock);
+        auto iter = symbolTable->find(locker, ident.impl());
+        if (iter != symbolTable->end(locker)) {
+            SymbolTableEntry& entry = iter->value;
+            ASSERT(!entry.isNull());
+            if (getOrPut == Put && entry.isReadOnly() && !isInitialization(initializationMode)) {
+                // We know the property will be at global lexical environment, but we don't know how to cache it.
                 op = ResolveOp(Dynamic, 0, 0, 0, 0, 0);
                 return true;
             }
 
+            // We can force const Initialization to always go down the fast path. It is provably impossible to construct
+            // a program that needs a var injection check here. You can convince yourself of this as follows:
+            // Any other let/const/class would be a duplicate of this in the global scope, so we would never get here in that situation.
+            // Also, if we had an eval in the global scope that defined a const, it would also be a duplicate of this const, and so it would
+            // also throw an error. Therefore, we're *the only* thing that can assign to this "const" slot for the first (and only) time. Also, 
+            // we will never have a Dynamic ResolveType here because if we were inside a "with" statement, that would mean the "const" definition 
+            // isn't a global, it would be a local to the "with" block. 
+            // We still need to make the slow path correct for when we need to fire a watchpoint.
+            ResolveType resolveType = initializationMode == InitializationMode::ConstInitialization ? GlobalLexicalVar : makeType(GlobalLexicalVar, needsVarInjectionChecks);
             op = ResolveOp(
-                makeType(GlobalVar, needsVarInjectionChecks), depth, 0, 0, entry.watchpointSet(),
-                reinterpret_cast<uintptr_t>(globalObject->variableAt(entry.scopeOffset()).slot()));
+                resolveType, depth, 0, 0, entry.watchpointSet(),
+                reinterpret_cast<uintptr_t>(globalLexicalEnvironment->variableAt(entry.scopeOffset()).slot()));
             return true;
         }
 
-        PropertySlot slot(globalObject);
-        if (!globalObject->getOwnPropertySlot(globalObject, exec, ident, slot)
-            || !slot.isCacheableValue()
+        return false;
+    }
+
+    if (scope->isGlobalObject()) {
+        JSGlobalObject* globalObject = jsCast<JSGlobalObject*>(scope);
+        {
+            SymbolTable* symbolTable = globalObject->symbolTable();
+            ConcurrentJSLocker locker(symbolTable->m_lock);
+            auto iter = symbolTable->find(locker, ident.impl());
+            if (iter != symbolTable->end(locker)) {
+                SymbolTableEntry& entry = iter->value;
+                ASSERT(!entry.isNull());
+                if (getOrPut == Put && entry.isReadOnly()) {
+                    // We know the property will be at global scope, but we don't know how to cache it.
+                    op = ResolveOp(Dynamic, 0, 0, 0, 0, 0);
+                    return true;
+                }
+
+                op = ResolveOp(
+                    makeType(GlobalVar, needsVarInjectionChecks), depth, 0, 0, entry.watchpointSet(),
+                    reinterpret_cast<uintptr_t>(globalObject->variableAt(entry.scopeOffset()).slot()));
+                return true;
+            }
+        }
+
+        PropertySlot slot(globalObject, PropertySlot::InternalMethodType::VMInquiry);
+        bool hasOwnProperty = globalObject->getOwnPropertySlot(globalObject, exec, ident, slot);
+        if (!hasOwnProperty) {
+            op = ResolveOp(makeType(UnresolvedProperty, needsVarInjectionChecks), 0, 0, 0, 0, 0);
+            return true;
+        }
+
+        if (!slot.isCacheableValue()
             || !globalObject->structure()->propertyAccessesAreCacheable()
             || (globalObject->structure()->hasReadOnlyOrGetterSetterPropertiesExcludingProto() && getOrPut == Put)) {
             // We know the property will be at global scope, but we don't know how to cache it.
             ASSERT(!scope->next());
-            op = ResolveOp(makeType(GlobalProperty, needsVarInjectionChecks), depth, 0, 0, 0, 0);
+            op = ResolveOp(makeType(GlobalProperty, needsVarInjectionChecks), 0, 0, 0, 0, 0);
             return true;
         }
+
         
         WatchpointState state = globalObject->structure()->ensurePropertyReplacementWatchpointSet(exec->vm(), slot.cachedOffset())->state();
         if (state == IsWatched && getOrPut == Put) {
@@ -127,41 +201,60 @@ JSObject* JSScope::objectAtScope(JSScope* scope)
 // When an exception occurs, the result of isUnscopable becomes false.
 static inline bool isUnscopable(ExecState* exec, JSScope* scope, JSObject* object, const Identifier& ident)
 {
+    VM& vm = exec->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     if (scope->type() != WithScopeType)
         return false;
 
     JSValue unscopables = object->get(exec, exec->propertyNames().unscopablesSymbol);
-    if (exec->hadException())
-        return false;
+    RETURN_IF_EXCEPTION(throwScope, false);
     if (!unscopables.isObject())
         return false;
     JSValue blocked = jsCast<JSObject*>(unscopables)->get(exec, ident);
-    if (exec->hadException())
-        return false;
+    RETURN_IF_EXCEPTION(throwScope, false);
 
     return blocked.toBoolean(exec);
 }
 
-JSValue JSScope::resolve(ExecState* exec, JSScope* scope, const Identifier& ident)
+JSObject* JSScope::resolve(ExecState* exec, JSScope* scope, const Identifier& ident)
 {
+    VM& vm = exec->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     ScopeChainIterator end = scope->end();
     ScopeChainIterator it = scope->begin();
     while (1) {
         JSScope* scope = it.scope();
         JSObject* object = it.get();
 
-        if (++it == end) // Global scope.
+        // Global scope.
+        if (++it == end) {
+            JSScope* globalScopeExtension = scope->globalObject(vm)->globalScopeExtension();
+            if (UNLIKELY(globalScopeExtension)) {
+                bool hasProperty = object->hasProperty(exec, ident);
+                RETURN_IF_EXCEPTION(throwScope, nullptr);
+                if (hasProperty)
+                    return object;
+                JSObject* extensionScopeObject = JSScope::objectAtScope(globalScopeExtension);
+                hasProperty = extensionScopeObject->hasProperty(exec, ident);
+                RETURN_IF_EXCEPTION(throwScope, nullptr);
+                if (hasProperty)
+                    return extensionScopeObject;
+            }
             return object;
+        }
 
-        if (object->hasProperty(exec, ident)) {
-            if (!isUnscopable(exec, scope, object, ident))
+        bool hasProperty = object->hasProperty(exec, ident);
+        RETURN_IF_EXCEPTION(throwScope, nullptr);
+        if (hasProperty) {
+            bool unscopable = isUnscopable(exec, scope, object, ident);
+            ASSERT(!throwScope.exception() || !unscopable);
+            if (!unscopable)
                 return object;
-            ASSERT_WITH_MESSAGE(!exec->hadException(), "When an exception occurs, the result of isUnscopable becomes false");
         }
     }
 }
 
-ResolveOp JSScope::abstractResolve(ExecState* exec, size_t depthOffset, JSScope* scope, const Identifier& ident, GetOrPut getOrPut, ResolveType unlinkedType)
+ResolveOp JSScope::abstractResolve(ExecState* exec, size_t depthOffset, JSScope* scope, const Identifier& ident, GetOrPut getOrPut, ResolveType unlinkedType, InitializationMode initializationMode)
 {
     ResolveOp op(Dynamic, 0, 0, 0, 0, 0);
     if (unlinkedType == Dynamic)
@@ -170,7 +263,7 @@ ResolveOp JSScope::abstractResolve(ExecState* exec, size_t depthOffset, JSScope*
     bool needsVarInjectionChecks = JSC::needsVarInjectionChecks(unlinkedType);
     size_t depth = depthOffset;
     for (; scope; scope = scope->next()) {
-        if (abstractAccess(exec, scope, ident, getOrPut, depth, needsVarInjectionChecks, op))
+        if (abstractAccess(exec, scope, ident, getOrPut, depth, needsVarInjectionChecks, op, initializationMode))
             break;
         ++depth;
     }
@@ -178,66 +271,91 @@ ResolveOp JSScope::abstractResolve(ExecState* exec, size_t depthOffset, JSScope*
     return op;
 }
 
-void JSScope::collectVariablesUnderTDZ(JSScope* scope, VariableEnvironment& result)
+void JSScope::collectClosureVariablesUnderTDZ(JSScope* scope, VariableEnvironment& result)
 {
     for (; scope; scope = scope->next()) {
-        if (!scope->isLexicalScope())
+        if (!scope->isLexicalScope() && !scope->isCatchScope())
             continue;
-        SymbolTable* symbolTable = jsCast<JSLexicalEnvironment*>(scope)->symbolTable();
-        ASSERT(symbolTable->scopeType() == SymbolTable::ScopeType::LexicalScope);
-        ConcurrentJITLocker locker(symbolTable->m_lock);
+
+        if (scope->isModuleScope()) {
+            AbstractModuleRecord* moduleRecord = jsCast<JSModuleEnvironment*>(scope)->moduleRecord();
+            for (const auto& pair : moduleRecord->importEntries())
+                result.add(pair.key);
+        }
+
+        SymbolTable* symbolTable = jsCast<JSSymbolTableObject*>(scope)->symbolTable();
+        ASSERT(symbolTable->scopeType() == SymbolTable::ScopeType::LexicalScope || symbolTable->scopeType() == SymbolTable::ScopeType::CatchScope);
+        ConcurrentJSLocker locker(symbolTable->m_lock);
         for (auto end = symbolTable->end(locker), iter = symbolTable->begin(locker); iter != end; ++iter)
             result.add(iter->key);
     }
 }
 
+bool JSScope::isVarScope()
+{
+    if (type() != LexicalEnvironmentType)
+        return false;
+    return jsCast<JSLexicalEnvironment*>(this)->symbolTable()->scopeType() == SymbolTable::ScopeType::VarScope;
+}
+
 bool JSScope::isLexicalScope()
 {
-    JSLexicalEnvironment* lexicalEnvironment = jsDynamicCast<JSLexicalEnvironment*>(this);
-    if (!lexicalEnvironment) // Global object does not hold any lexical variables so we can ignore it.
+    if (!isJSLexicalEnvironment())
         return false;
+    return jsCast<JSLexicalEnvironment*>(this)->symbolTable()->scopeType() == SymbolTable::ScopeType::LexicalScope;
+}
 
-    return lexicalEnvironment->symbolTable()->scopeType() == SymbolTable::ScopeType::LexicalScope;
+bool JSScope::isModuleScope()
+{
+    return type() == ModuleEnvironmentType;
 }
 
 bool JSScope::isCatchScope()
 {
-    JSLexicalEnvironment* lexicalEnvironment = jsDynamicCast<JSLexicalEnvironment*>(this);
-    if (!lexicalEnvironment)
+    if (type() != LexicalEnvironmentType)
         return false;
-    return lexicalEnvironment->symbolTable()->scopeType() == SymbolTable::ScopeType::CatchScope;
+    return jsCast<JSLexicalEnvironment*>(this)->symbolTable()->scopeType() == SymbolTable::ScopeType::CatchScope;
 }
 
 bool JSScope::isFunctionNameScopeObject()
 {
-    JSLexicalEnvironment* lexicalEnvironment = jsDynamicCast<JSLexicalEnvironment*>(this);
-    if (!lexicalEnvironment)
+    if (type() != LexicalEnvironmentType)
         return false;
-    return lexicalEnvironment->symbolTable()->scopeType() == SymbolTable::ScopeType::FunctionNameScope;
+    return jsCast<JSLexicalEnvironment*>(this)->symbolTable()->scopeType() == SymbolTable::ScopeType::FunctionNameScope;
 }
 
-const char* resolveModeName(ResolveMode mode)
+bool JSScope::isNestedLexicalScope()
 {
-    static const char* const names[] = {
-        "ThrowIfNotFound",
-        "DoNotThrowIfNotFound"
-    };
-    return names[mode];
+    if (!isJSLexicalEnvironment())
+        return false;
+    return jsCast<JSLexicalEnvironment*>(this)->symbolTable()->isNestedLexicalScope();
 }
 
-const char* resolveTypeName(ResolveType type)
+JSScope* JSScope::constantScopeForCodeBlock(ResolveType type, CodeBlock* codeBlock)
 {
-    static const char* const names[] = {
-        "GlobalProperty",
-        "GlobalVar",
-        "ClosureVar",
-        "LocalClosureVar",
-        "GlobalPropertyWithVarInjectionChecks",
-        "GlobalVarWithVarInjectionChecks",
-        "ClosureVarWithVarInjectionChecks",
-        "Dynamic"
-    };
-    return names[type];
+    switch (type) {
+    case GlobalProperty:
+    case GlobalVar:
+    case GlobalPropertyWithVarInjectionChecks:
+    case GlobalVarWithVarInjectionChecks:
+        return codeBlock->globalObject();
+    case GlobalLexicalVarWithVarInjectionChecks:
+    case GlobalLexicalVar:
+        return codeBlock->globalObject()->globalLexicalEnvironment();
+    default:
+        return nullptr;
+    }
+
+    RELEASE_ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+SymbolTable* JSScope::symbolTable()
+{
+    if (JSSymbolTableObject* symbolTableObject = jsDynamicCast<JSSymbolTableObject*>(this))
+        return symbolTableObject->symbolTable();
+
+    return nullptr;
 }
 
 } // namespace JSC

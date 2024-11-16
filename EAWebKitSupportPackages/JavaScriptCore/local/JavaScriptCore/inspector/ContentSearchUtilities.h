@@ -26,8 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ContentSearchUtilities_h
-#define ContentSearchUtilities_h
+#pragma once
 
 #include "InspectorProtocolObjects.h"
 #include <wtf/Vector.h>
@@ -48,12 +47,8 @@ JS_EXPORT_PRIVATE Ref<Inspector::Protocol::Array<Inspector::Protocol::GenericTyp
 JS_EXPORT_PRIVATE TextPosition textPositionFromOffset(size_t offset, const Vector<size_t>& lineEndings);
 JS_EXPORT_PRIVATE std::unique_ptr<Vector<size_t>> lineEndings(const String&);
 
-JS_EXPORT_PRIVATE String findScriptSourceURL(const String& content);
-JS_EXPORT_PRIVATE String findScriptSourceMapURL(const String& content);
 JS_EXPORT_PRIVATE String findStylesheetSourceMapURL(const String& content);
 
 } // namespace ContentSearchUtilities
 
 } // namespace Inspector
-
-#endif // !defined(ContentSearchUtilities_h)

@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
- * Copyright (C) 2013 Electronic Arts, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,13 +25,6 @@
 
 #include <wtf/Platform.h>
 #include <wtf/ExportMacros.h>
-
-//+EAWebKitChange
-//12/12/2013
-#if PLATFORM(EA)
-#include <EABase/eabase.h>
-#endif
-//-EAWebKitChange
 
 #if OS(WINDOWS)
 

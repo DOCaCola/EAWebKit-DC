@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2013, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,15 +118,7 @@ extern "C" inline double wtf_atan2(double x, double y)
     return result;
 }
 
-// Work around a bug in the Microsoft CRT, where fmod(x, +-infinity) yields NaN instead of x.
-extern "C" inline double wtf_fmod(double x, double y) { return (!std::isinf(x) && std::isinf(y)) ? x : fmod(x, y); }
-
-// Work around a bug in the Microsoft CRT, where pow(NaN, 0) yields NaN instead of 1.
-extern "C" inline double wtf_pow(double x, double y) { return y == 0 ? 1 : pow(x, y); }
-
 #define atan2(x, y) wtf_atan2(x, y)
-#define fmod(x, y) wtf_fmod(x, y)
-#define pow(x, y) wtf_pow(x, y)
 
 #endif // COMPILER(MSVC)
 
@@ -189,9 +181,12 @@ inline int clampToInteger(float value)
     return clampTo<int>(value);
 }
 
-inline int clampToInteger(unsigned x)
+template<typename T>
+inline int clampToInteger(T x)
 {
-    const unsigned intMax = static_cast<unsigned>(std::numeric_limits<int>::max());
+    static_assert(std::numeric_limits<T>::is_integer, "T must be an integer.");
+
+    const T intMax = static_cast<unsigned>(std::numeric_limits<int>::max());
 
     if (x >= intMax)
         return std::numeric_limits<int>::max();
@@ -220,9 +215,11 @@ template<typename T> inline bool hasTwoOrMoreBitsSet(T value)
 
 template <typename T> inline unsigned getLSBSet(T value)
 {
+    typedef typename std::make_unsigned<T>::type UnsignedT;
     unsigned result = 0;
 
-    while (value >>= 1)
+    UnsignedT unsignedValue = static_cast<UnsignedT>(value);
+    while (unsignedValue >>= 1)
         ++result;
 
     return result;
@@ -368,6 +365,14 @@ inline unsigned fastLog2(unsigned i)
     return log2;
 }
 
+inline unsigned fastLog2(uint64_t value)
+{
+    unsigned high = static_cast<unsigned>(value >> 32);
+    if (high)
+        return fastLog2(high) + 32;
+    return fastLog2(static_cast<unsigned>(value));
+}
+
 template <typename T>
 inline typename std::enable_if<std::is_floating_point<T>::value, T>::type safeFPDivision(T u, T v)
 {
@@ -395,9 +400,71 @@ inline typename std::enable_if<std::is_floating_point<T>::value, bool>::type are
     return safeFPDivision(delta, std::abs(u)) <= epsilon && safeFPDivision(delta, std::abs(v)) <= epsilon;
 }
 
+// Match behavior of Math.min, where NaN is returned if either argument is NaN.
+template <typename T>
+inline typename std::enable_if<std::is_floating_point<T>::value, T>::type nanPropagatingMin(T a, T b)
+{
+    return std::isnan(a) || std::isnan(b) ? std::numeric_limits<T>::quiet_NaN() : std::min(a, b);
+}
+
+// Match behavior of Math.max, where NaN is returned if either argument is NaN.
+template <typename T>
+inline typename std::enable_if<std::is_floating_point<T>::value, T>::type nanPropagatingMax(T a, T b)
+{
+    return std::isnan(a) || std::isnan(b) ? std::numeric_limits<T>::quiet_NaN() : std::max(a, b);
+}
+
 inline bool isIntegral(float value)
 {
     return static_cast<int>(value) == value;
+}
+
+template<typename T>
+inline void incrementWithSaturation(T& value)
+{
+    if (value != std::numeric_limits<T>::max())
+        value++;
+}
+
+template<typename T>
+inline T leftShiftWithSaturation(T value, unsigned shiftAmount, T max = std::numeric_limits<T>::max())
+{
+    T result = value << shiftAmount;
+    // We will have saturated if shifting right doesn't recover the original value.
+    if (result >> shiftAmount != value)
+        return max;
+    if (result > max)
+        return max;
+    return result;
+}
+
+// Check if two ranges overlap assuming that neither range is empty.
+template<typename T>
+inline bool nonEmptyRangesOverlap(T leftMin, T leftMax, T rightMin, T rightMax)
+{
+    ASSERT(leftMin < leftMax);
+    ASSERT(rightMin < rightMax);
+
+    return leftMax > rightMin && rightMax > leftMin;
+}
+
+// Pass ranges with the min being inclusive and the max being exclusive. For example, this should
+// return false:
+//
+//     rangesOverlap(0, 8, 8, 16)
+template<typename T>
+inline bool rangesOverlap(T leftMin, T leftMax, T rightMin, T rightMax)
+{
+    ASSERT(leftMin <= leftMax);
+    ASSERT(rightMin <= rightMax);
+    
+    // Empty ranges interfere with nothing.
+    if (leftMin == leftMax)
+        return false;
+    if (rightMin == rightMax)
+        return false;
+
+    return nonEmptyRangesOverlap(leftMin, leftMax, rightMin, rightMax);
 }
 
 } // namespace WTF

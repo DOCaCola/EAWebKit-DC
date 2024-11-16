@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef FunctionPrototype_h
-#define FunctionPrototype_h
+#pragma once
 
 #include "InternalFunction.h"
 
@@ -36,7 +35,9 @@ public:
         return prototype;
     }
 
-    void addFunctionProperties(ExecState*, JSGlobalObject*, JSFunction** callFunction, JSFunction** applyFunction);
+    void addFunctionProperties(ExecState*, JSGlobalObject*, JSFunction** callFunction, JSFunction** applyFunction, JSFunction** hasInstanceSymbolFunction);
+
+    void initRestrictedProperties(ExecState*, JSGlobalObject*);
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue proto)
     {
@@ -54,5 +55,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // FunctionPrototype_h

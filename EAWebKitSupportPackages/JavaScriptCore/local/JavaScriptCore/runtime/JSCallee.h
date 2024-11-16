@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSCallee_h
-#define JSCallee_h
+#pragma once
 
 #include "JSGlobalObject.h"
 #include "JSObject.h"
@@ -46,7 +45,7 @@ class JSCallee : public JSNonFinalObject {
 
 public:
     typedef JSNonFinalObject Base;
-    const static unsigned StructureFlags = Base::StructureFlags | ImplementsHasInstance;
+    const static unsigned StructureFlags = Base::StructureFlags | ImplementsHasInstance | ImplementsDefaultHasInstance;
 
     static JSCallee* create(VM& vm, JSGlobalObject* globalObject, JSScope* scope)
     {
@@ -104,5 +103,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // JSCallee_h

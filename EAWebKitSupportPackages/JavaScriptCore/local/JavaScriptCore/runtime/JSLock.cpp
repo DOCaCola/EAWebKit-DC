@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2008, 2012, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2005, 2008, 2012, 2014, 2016 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +26,7 @@
 #include "JSGlobalObject.h"
 #include "JSObject.h"
 #include "JSCInlines.h"
+#include "SamplingProfiler.h"
 #include <thread>
 
 namespace JSC {
@@ -127,19 +128,32 @@ void JSLock::didAcquireLock()
     // FIXME: What should happen to the per-thread identifier table if we don't have a VM?
     if (!m_vm)
         return;
+    
+    WTFThreadData& threadData = wtfThreadData();
+    ASSERT(!m_entryAtomicStringTable);
+    m_entryAtomicStringTable = threadData.setCurrentAtomicStringTable(m_vm->atomicStringTable());
+    ASSERT(m_entryAtomicStringTable);
+
+    if (m_vm->heap.hasAccess())
+        m_shouldReleaseHeapAccess = false;
+    else {
+        m_vm->heap.acquireAccess();
+        m_shouldReleaseHeapAccess = true;
+    }
 
     RELEASE_ASSERT(!m_vm->stackPointerAtVMEntry());
     void* p = &p; // A proxy for the current stack pointer.
     m_vm->setStackPointerAtVMEntry(p);
 
-    WTFThreadData& threadData = wtfThreadData();
     m_vm->setLastStackTop(threadData.savedLastStackTop());
 
-    ASSERT(!m_entryAtomicStringTable);
-    m_entryAtomicStringTable = threadData.setCurrentAtomicStringTable(m_vm->atomicStringTable());
-    ASSERT(m_entryAtomicStringTable);
-
     m_vm->heap.machineThreads().addCurrentThread();
+
+#if ENABLE(SAMPLING_PROFILER)
+    // Note: this must come after addCurrentThread().
+    if (SamplingProfiler* samplingProfiler = m_vm->samplingProfiler())
+        samplingProfiler->noticeJSLockAcquisition();
+#endif
 }
 
 void JSLock::unlock()
@@ -160,7 +174,7 @@ void JSLock::unlock(intptr_t unlockCount)
     m_lockCount -= unlockCount;
 
     if (!m_lockCount) {
-
+        
         if (!m_hasExclusiveThread) {
             m_ownerThreadID = std::thread::id();
             m_lock.unlock();
@@ -170,11 +184,15 @@ void JSLock::unlock(intptr_t unlockCount)
 
 void JSLock::willReleaseLock()
 {
-    if (m_vm) {
-        m_vm->drainMicrotasks();
+    RefPtr<VM> vm = m_vm;
+    if (vm) {
+        vm->drainMicrotasks();
 
-        m_vm->heap.releaseDelayedReleasedObjects();
-        m_vm->setStackPointerAtVMEntry(nullptr);
+        vm->heap.releaseDelayedReleasedObjects();
+        vm->setStackPointerAtVMEntry(nullptr);
+        
+        if (m_shouldReleaseHeapAccess)
+            vm->heap.releaseAccess();
     }
 
     if (m_entryAtomicStringTable) {
@@ -259,8 +277,7 @@ JSLock::DropAllLocks::DropAllLocks(VM* vm)
 {
     if (!m_vm)
         return;
-    wtfThreadData().resetCurrentAtomicStringTable();
-    RELEASE_ASSERT(!m_vm->apiLock().currentThreadIsHoldingLock() || !m_vm->isCollectorBusy());
+    RELEASE_ASSERT(!m_vm->apiLock().currentThreadIsHoldingLock() || !m_vm->isCollectorBusyOnCurrentThread());
     m_droppedLockCount = m_vm->apiLock().dropAllLocks(this);
 }
 
@@ -279,7 +296,6 @@ JSLock::DropAllLocks::~DropAllLocks()
     if (!m_vm)
         return;
     m_vm->apiLock().grabAllLocks(this, m_droppedLockCount);
-    wtfThreadData().setCurrentAtomicStringTable(m_vm->atomicStringTable());
 }
 
 } // namespace JSC

@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012, 2014 Patrick Gansterer <paroga@paroga.com>
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,11 +37,7 @@ namespace WTF {
 
 void GregorianDateTime::setToCurrentLocalTime()
 {
-
-//+EAWebKitChange
-//3/12/2014
-#if OS(WINDOWS) && !PLATFORM(EA)
-//-EAWebKitChange
+#if OS(WINDOWS)
     SYSTEMTIME systemTime;
     GetLocalTime(&systemTime);
     TIME_ZONE_INFORMATION timeZoneInformation;
@@ -72,16 +67,11 @@ void GregorianDateTime::setToCurrentLocalTime()
 #else
     tm localTM;
     time_t localTime = time(0);
-//+EAWebKitChange
-//3/12/2014
-#if defined(EA_PLATFORM_MICROSOFT)
-    localtime_s(&localTM, &localTime);
-#elif defined(EA_PLATFORM_SONY)
-    localtime_s(&localTime, &localTM);
-#else
+#if HAVE(LOCALTIME_R)
     localtime_r(&localTime, &localTM);
+#else
+    localtime_s(&localTime, &localTM);
 #endif
-//-EAWebKitChange
 
     m_year = localTM.tm_year + 1900;
     m_month = localTM.tm_mon;

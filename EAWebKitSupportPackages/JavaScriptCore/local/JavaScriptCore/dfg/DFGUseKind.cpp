@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -49,8 +49,8 @@ void printInternal(PrintStream& out, UseKind useKind)
     case Int52RepUse:
         out.print("Int52Rep");
         return;
-    case MachineIntUse:
-        out.print("MachineInt");
+    case AnyIntUse:
+        out.print("AnyInt");
         return;
     case NumberUse:
         out.print("Number");
@@ -64,11 +64,14 @@ void printInternal(PrintStream& out, UseKind useKind)
     case DoubleRepRealUse:
         out.print("DoubleRepReal");
         return;
-    case DoubleRepMachineIntUse:
-        out.print("DoubleRepMachineInt");
+    case DoubleRepAnyIntUse:
+        out.print("DoubleRepAnyInt");
         return;
     case BooleanUse:
         out.print("Boolean");
+        return;
+    case KnownBooleanUse:
+        out.print("KnownBoolean");
         return;
     case CellUse:
         out.print("Cell");
@@ -76,14 +79,35 @@ void printInternal(PrintStream& out, UseKind useKind)
     case KnownCellUse:
         out.print("KnownCell");
         return;
+    case CellOrOtherUse:
+        out.print("CellOrOther");
+        return;
     case ObjectUse:
         out.print("Object");
+        return;
+    case ArrayUse:
+        out.print("Array");
         return;
     case FunctionUse:
         out.print("Function");
         return;
     case FinalObjectUse:
         out.print("FinalObject");
+        return;
+    case RegExpObjectUse:
+        out.print("RegExpObject");
+        return;
+    case ProxyObjectUse:
+        out.print("ProxyObject");
+        return;
+    case DerivedArrayUse:
+        out.print("DerivedArray");
+        return;
+    case MapObjectUse:
+        out.print("MapObjectUse");
+        return;
+    case SetObjectUse:
+        out.print("SetObjectUse");
         return;
     case ObjectOrOtherUse:
         out.print("ObjectOrOther");
@@ -94,8 +118,14 @@ void printInternal(PrintStream& out, UseKind useKind)
     case StringUse:
         out.print("String");
         return;
+    case StringOrOtherUse:
+        out.print("StringOrOther");
+        return;
     case KnownStringUse:
         out.print("KnownString");
+        return;
+    case KnownPrimitiveUse:
+        out.print("KnownPrimitive");
         return;
     case SymbolUse:
         out.print("Symbol");

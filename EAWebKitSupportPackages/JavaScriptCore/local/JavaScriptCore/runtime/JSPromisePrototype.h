@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSPromisePrototype_h
-#define JSPromisePrototype_h
+#pragma once
 
 #include "JSObject.h"
 
@@ -33,21 +32,19 @@ namespace JSC {
 class JSPromisePrototype : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
-    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot;
+    static const unsigned StructureFlags = Base::StructureFlags | HasStaticPropertyTable;
 
-    static JSPromisePrototype* create(ExecState*, JSGlobalObject*, Structure*);
+    static JSPromisePrototype* create(VM&, JSGlobalObject*, Structure*);
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
 
     DECLARE_INFO;
 
 protected:
     void finishCreation(VM&, Structure*);
+    JSPromisePrototype(VM&, Structure*);
 
 private:
-    JSPromisePrototype(ExecState*, Structure*);
-    static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
+    void addOwnInternalSlots(VM&, JSGlobalObject*);
 };
 
 } // namespace JSC
-
-#endif // JSPromisePrototype_h

@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSJavaScriptCallFrame_h
-#define JSJavaScriptCallFrame_h
+#pragma once
 
 #include "JSDestructibleObject.h"
 #include "JavaScriptCallFrame.h"
@@ -57,8 +56,8 @@ public:
     void releaseImpl();
 
     // Functions.
-    JSC::JSValue evaluate(JSC::ExecState*);
-    JSC::JSValue scopeType(JSC::ExecState*);
+    JSC::JSValue evaluateWithScopeExtension(JSC::ExecState*);
+    JSC::JSValue scopeDescriptions(JSC::ExecState*);
 
     // Attributes.
     JSC::JSValue caller(JSC::ExecState*) const;
@@ -69,14 +68,16 @@ public:
     JSC::JSValue scopeChain(JSC::ExecState*) const;
     JSC::JSValue thisObject(JSC::ExecState*) const;
     JSC::JSValue type(JSC::ExecState*) const;
+    JSC::JSValue isTailDeleted(JSC::ExecState*) const;
 
     // Constants.
     static const unsigned short GLOBAL_SCOPE = 0;
-    static const unsigned short LOCAL_SCOPE = 1;
-    static const unsigned short WITH_SCOPE = 2;
-    static const unsigned short CLOSURE_SCOPE = 3;
-    static const unsigned short CATCH_SCOPE = 4;
-    static const unsigned short FUNCTION_NAME_SCOPE = 5;
+    static const unsigned short WITH_SCOPE = 1;
+    static const unsigned short CLOSURE_SCOPE = 2;
+    static const unsigned short CATCH_SCOPE = 3;
+    static const unsigned short FUNCTION_NAME_SCOPE = 4;
+    static const unsigned short GLOBAL_LEXICAL_ENVIRONMENT_SCOPE = 5;
+    static const unsigned short NESTED_LEXICAL_SCOPE = 6;
 
 protected:
     void finishCreation(JSC::VM&);
@@ -92,5 +93,3 @@ JSC::JSValue toJS(JSC::ExecState*, JSC::JSGlobalObject*, JavaScriptCallFrame*);
 JSJavaScriptCallFrame* toJSJavaScriptCallFrame(JSC::JSValue);
 
 } // namespace Inspector
-
-#endif // !defined(JSJavaScriptCallFrame_h)

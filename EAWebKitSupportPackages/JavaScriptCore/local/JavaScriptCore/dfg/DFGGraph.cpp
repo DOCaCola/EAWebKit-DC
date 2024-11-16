@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2013-2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2013-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,12 +32,24 @@
 #include "BytecodeLivenessAnalysisInlines.h"
 #include "CodeBlock.h"
 #include "CodeBlockWithJITType.h"
+#include "DFGBackwardsCFG.h"
+#include "DFGBackwardsDominators.h"
 #include "DFGBlockWorklist.h"
+#include "DFGCFG.h"
 #include "DFGClobberSet.h"
+#include "DFGClobbersExitState.h"
+#include "DFGControlEquivalenceAnalysis.h"
+#include "DFGDominators.h"
+#include "DFGFlowIndexing.h"
+#include "DFGFlowMap.h"
 #include "DFGJITCode.h"
+#include "DFGMayExit.h"
+#include "DFGNaturalLoops.h"
+#include "DFGPrePostNumbering.h"
 #include "DFGVariableAccessDataDump.h"
 #include "FullBytecodeLiveness.h"
 #include "FunctionExecutableDump.h"
+#include "GetterSetter.h"
 #include "JIT.h"
 #include "JSLexicalEnvironment.h"
 #include "MaxFrameExtentForSlowPathCall.h"
@@ -59,9 +71,10 @@ static const char* dfgOpNames[] = {
 Graph::Graph(VM& vm, Plan& plan, LongLivedState& longLivedState)
     : m_vm(vm)
     , m_plan(plan)
-    , m_codeBlock(m_plan.codeBlock.get())
+    , m_codeBlock(m_plan.codeBlock)
     , m_profiledBlock(m_codeBlock->alternative())
     , m_allocator(longLivedState.m_allocator)
+    , m_cfg(std::make_unique<CFG>(*this))
     , m_nextMachineLocal(0)
     , m_fixpointState(BeforeFixpoint)
     , m_structureRegistrationState(HaveNotStartedRegistering)
@@ -71,8 +84,14 @@ Graph::Graph(VM& vm, Plan& plan, LongLivedState& longLivedState)
 {
     ASSERT(m_profiledBlock);
     
-    m_hasDebuggerEnabled = m_profiledBlock->globalObject()->hasDebugger()
-        || Options::forceDebuggerBytecodeGeneration();
+    m_hasDebuggerEnabled = m_profiledBlock->wasCompiledWithDebuggingOpcodes() || Options::forceDebuggerBytecodeGeneration();
+    
+    m_indexingCache = std::make_unique<FlowIndexing>(*this);
+    m_abstractValuesCache = std::make_unique<FlowMap<AbstractValue>>(*this);
+
+    registerStructure(vm.structureStructure.get());
+    this->stringStructure = registerStructure(vm.stringStructure.get());
+    this->symbolStructure = registerStructure(vm.symbolStructure.get());
 }
 
 Graph::~Graph()
@@ -101,8 +120,14 @@ static void printWhiteSpace(PrintStream& out, unsigned amount)
         out.print(" ");
 }
 
-bool Graph::dumpCodeOrigin(PrintStream& out, const char* prefix, Node* previousNode, Node* currentNode, DumpContext* context)
+bool Graph::dumpCodeOrigin(PrintStream& out, const char* prefix, Node*& previousNodeRef, Node* currentNode, DumpContext* context)
 {
+    if (!currentNode->origin.semantic)
+        return false;
+    
+    Node* previousNode = previousNodeRef;
+    previousNodeRef = currentNode;
+
     if (!previousNode)
         return false;
     
@@ -178,7 +203,7 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
     //         @#   - a NodeIndex referencing a prior node in the graph.
     //         arg# - an argument number.
     //         id#  - the index in the CodeBlock of an identifier { if codeBlock is passed to dump(), the string representation is displayed }.
-    //         var# - the index of a var on the global object, used by GetGlobalVar/PutGlobalVar operations.
+    //         var# - the index of a var on the global object, used by GetGlobalVar/GetGlobalLexicalVariable/PutGlobalVariable operations.
     out.printf("% 4d:<%c%u:", (int)node->index(), mustGenerate ? '!' : ' ', refCount);
     if (node->hasResult() && node->hasVirtualRegister() && node->virtualRegister().isValid())
         out.print(node->virtualRegister());
@@ -209,26 +234,30 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
         out.print(comma, node->arrayMode());
     if (node->hasArithMode())
         out.print(comma, node->arithMode());
+    if (node->hasArithRoundingMode())
+        out.print(comma, "Rounding:", node->arithRoundingMode());
     if (node->hasScopeOffset())
         out.print(comma, node->scopeOffset());
     if (node->hasDirectArgumentsOffset())
         out.print(comma, node->capturedArgumentsOffset());
+    if (node->hasArgumentIndex())
+        out.print(comma, node->argumentIndex());
     if (node->hasRegisterPointer())
-        out.print(comma, "global", globalObjectFor(node->origin.semantic)->findVariableIndex(node->variablePointer()), "(", RawPointer(node->variablePointer()), ")");
+        out.print(comma, "global", "(", RawPointer(node->variablePointer()), ")");
     if (node->hasIdentifier())
         out.print(comma, "id", node->identifierNumber(), "{", identifiers()[node->identifierNumber()], "}");
     if (node->hasPromotedLocationDescriptor())
         out.print(comma, node->promotedLocationDescriptor());
     if (node->hasStructureSet())
-        out.print(comma, inContext(node->structureSet(), context));
+        out.print(comma, inContext(node->structureSet().toStructureSet(), context));
     if (node->hasStructure())
-        out.print(comma, inContext(*node->structure(), context));
+        out.print(comma, inContext(*node->structure().get(), context));
     if (node->hasTransition()) {
         out.print(comma, pointerDumpInContext(node->transition(), context));
 #if USE(JSVALUE64)
         out.print(", ID:", node->transition()->next->id());
 #else
-        out.print(", ID:", RawPointer(node->transition()->next));
+        out.print(", ID:", RawPointer(node->transition()->next.get()));
 #endif
     }
     if (node->hasCellOperand()) {
@@ -249,10 +278,13 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
             }
         }
     }
+    if (node->hasSpeculatedTypeForQuery())
+        out.print(comma, SpeculationDump(node->speculatedTypeForQuery()));
     if (node->hasStorageAccessData()) {
         StorageAccessData& storageAccessData = node->storageAccessData();
         out.print(comma, "id", storageAccessData.identifierNumber, "{", identifiers()[storageAccessData.identifierNumber], "}");
         out.print(", ", static_cast<ptrdiff_t>(storageAccessData.offset));
+        out.print(", inferredType = ", inContext(storageAccessData.inferredType, context));
     }
     if (node->hasMultiGetByOffsetData()) {
         MultiGetByOffsetData& data = node->multiGetByOffsetData();
@@ -266,7 +298,7 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
         for (unsigned i = 0; i < data.variants.size(); ++i)
             out.print(comma, inContext(data.variants[i], context));
     }
-    ASSERT(node->hasVariableAccessData(*this) == node->hasLocal(*this));
+    ASSERT(node->hasVariableAccessData(*this) == node->accessesStack(*this));
     if (node->hasVariableAccessData(*this)) {
         VariableAccessData* variableAccessData = node->tryGetVariableAccessData();
         if (variableAccessData) {
@@ -299,6 +331,8 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
             out.print(anotherComma, pointerDumpInContext(freeze(m_codeBlock->constantBuffer(node->startConstant())[i]), context));
         out.print("]");
     }
+    if (node->hasLazyJSValue())
+        out.print(comma, node->lazyJSValue());
     if (node->hasIndexingType())
         out.print(comma, IndexingTypeDump(node->indexingType()));
     if (node->hasTypedArrayType())
@@ -325,6 +359,11 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
         out.print(", offset = ", data->offset, ", mandatoryMinimum = ", data->mandatoryMinimum);
         out.print(", limit = ", data->limit);
     }
+    if (node->hasCallDOMGetterData()) {
+        CallDOMGetterData* data = node->callDOMGetterData();
+        out.print(comma, "id", data->identifierNumber, "{", identifiers()[data->identifierNumber], "}");
+        out.print(", domJIT = ", RawPointer(data->domJIT));
+    }
     if (node->isConstant())
         out.print(comma, pointerDumpInContext(node->constant(), context));
     if (node->isJump())
@@ -345,15 +384,23 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
         out.print(comma, "R:", sortedListDump(reads.direct(), ","));
     if (!writes.isEmpty())
         out.print(comma, "W:", sortedListDump(writes.direct(), ","));
+    ExitMode exitMode = mayExit(*this, node);
+    if (exitMode != DoesNotExit)
+        out.print(comma, exitMode);
+    if (clobbersExitState(*this, node))
+        out.print(comma, "ClobbersExit");
     if (node->origin.isSet()) {
         out.print(comma, "bc#", node->origin.semantic.bytecodeIndex);
-        if (node->origin.semantic != node->origin.forExit)
+        if (node->origin.semantic != node->origin.forExit && node->origin.forExit.isSet())
             out.print(comma, "exit: ", node->origin.forExit);
     }
-    
+    if (!node->origin.exitOK)
+        out.print(comma, "ExitInvalid");
+    if (node->origin.wasHoisted)
+        out.print(comma, "WasHoisted");
     out.print(")");
 
-    if (node->hasVariableAccessData(*this) && node->tryGetVariableAccessData())
+    if (node->accessesStack(*this) && node->tryGetVariableAccessData())
         out.print("  predicting ", SpeculationDump(node->tryGetVariableAccessData()->prediction()));
     else if (node->hasHeapPrediction())
         out.print("  predicting ", SpeculationDump(node->getHeapPrediction()));
@@ -383,22 +430,34 @@ void Graph::dumpBlockHeader(PrintStream& out, const char* prefix, BasicBlock* bl
     if (block->terminal()) {
         for (BasicBlock* successor : block->successors()) {
             out.print(" ", *successor);
-            if (m_prePostNumbering.isValid())
-                out.print(" (", m_prePostNumbering.edgeKind(block, successor), ")");
+            if (m_prePostNumbering)
+                out.print(" (", m_prePostNumbering->edgeKind(block, successor), ")");
         }
     } else
         out.print(" <invalid>");
     out.print("\n");
-    if (m_dominators.isValid() && terminalsAreValid()) {
-        out.print(prefix, "  Dominated by: ", m_dominators.dominatorsOf(block), "\n");
-        out.print(prefix, "  Dominates: ", m_dominators.blocksDominatedBy(block), "\n");
-        out.print(prefix, "  Dominance Frontier: ", m_dominators.dominanceFrontierOf(block), "\n");
-        out.print(prefix, "  Iterated Dominance Frontier: ", m_dominators.iteratedDominanceFrontierOf(BlockList(1, block)), "\n");
+    if (m_dominators && terminalsAreValid()) {
+        out.print(prefix, "  Dominated by: ", m_dominators->dominatorsOf(block), "\n");
+        out.print(prefix, "  Dominates: ", m_dominators->blocksDominatedBy(block), "\n");
+        out.print(prefix, "  Dominance Frontier: ", m_dominators->dominanceFrontierOf(block), "\n");
+        out.print(prefix, "  Iterated Dominance Frontier: ", m_dominators->iteratedDominanceFrontierOf(BlockList(1, block)), "\n");
     }
-    if (m_prePostNumbering.isValid())
-        out.print(prefix, "  Pre/Post Numbering: ", m_prePostNumbering.preNumber(block), "/", m_prePostNumbering.postNumber(block), "\n");
-    if (m_naturalLoops.isValid()) {
-        if (const NaturalLoop* loop = m_naturalLoops.headerOf(block)) {
+    if (m_backwardsDominators && terminalsAreValid()) {
+        out.print(prefix, "  Backwards dominates by: ", m_backwardsDominators->dominatorsOf(block), "\n");
+        out.print(prefix, "  Backwards dominates: ", m_backwardsDominators->blocksDominatedBy(block), "\n");
+    }
+    if (m_controlEquivalenceAnalysis && terminalsAreValid()) {
+        out.print(prefix, "  Control equivalent to:");
+        for (BasicBlock* otherBlock : blocksInNaturalOrder()) {
+            if (m_controlEquivalenceAnalysis->areEquivalent(block, otherBlock))
+                out.print(" ", *otherBlock);
+        }
+        out.print("\n");
+    }
+    if (m_prePostNumbering)
+        out.print(prefix, "  Pre/Post Numbering: ", m_prePostNumbering->preNumber(block), "/", m_prePostNumbering->postNumber(block), "\n");
+    if (m_naturalLoops) {
+        if (const NaturalLoop* loop = m_naturalLoops->headerOf(block)) {
             out.print(prefix, "  Loop header, contains:");
             Vector<BlockIndex> sortedBlockList;
             for (unsigned i = 0; i < loop->size(); ++i)
@@ -410,7 +469,7 @@ void Graph::dumpBlockHeader(PrintStream& out, const char* prefix, BasicBlock* bl
         }
         
         Vector<const NaturalLoop*> containingLoops =
-            m_naturalLoops.loopsOf(block);
+            m_naturalLoops->loopsOf(block);
         if (!containingLoops.isEmpty()) {
             out.print(prefix, "  Containing loop headers:");
             for (unsigned i = 0; i < containingLoops.size(); ++i)
@@ -455,7 +514,7 @@ void Graph::dump(PrintStream& out, DumpContext* context)
         out.print("  Arguments: ", listDump(m_arguments), "\n");
     out.print("\n");
     
-    Node* lastNode = 0;
+    Node* lastNode = nullptr;
     for (size_t b = 0; b < m_blocks.size(); ++b) {
         BasicBlock* block = m_blocks[b].get();
         if (!block)
@@ -490,13 +549,12 @@ void Graph::dump(PrintStream& out, DumpContext* context)
             RELEASE_ASSERT(block->ssa);
             out.print("  Availability: ", block->ssa->availabilityAtHead, "\n");
             out.print("  Live: ", nodeListDump(block->ssa->liveAtHead), "\n");
-            out.print("  Values: ", nodeMapDump(block->ssa->valuesAtHead, context), "\n");
+            out.print("  Values: ", nodeValuePairListDump(block->ssa->valuesAtHead, context), "\n");
             break;
         } }
         for (size_t i = 0; i < block->size(); ++i) {
             dumpCodeOrigin(out, "", lastNode, block->at(i), context);
             dump(out, "", block->at(i), context);
-            lastNode = block->at(i);
         }
         out.print("  States: ", block->cfaBranchDirection, ", ", block->cfaStructureClobberStateAtTail);
         if (!block->cfaDidFinish)
@@ -519,7 +577,7 @@ void Graph::dump(PrintStream& out, DumpContext* context)
             RELEASE_ASSERT(block->ssa);
             out.print("  Availability: ", block->ssa->availabilityAtTail, "\n");
             out.print("  Live: ", nodeListDump(block->ssa->liveAtTail), "\n");
-            out.print("  Values: ", nodeMapDump(block->ssa->valuesAtTail, context), "\n");
+            out.print("  Values: ", nodeValuePairListDump(block->ssa->valuesAtTail, context), "\n");
             break;
         } }
         out.print("\n");
@@ -539,6 +597,72 @@ void Graph::dump(PrintStream& out, DumpContext* context)
     }
 }
 
+void Graph::addNodeToMapByIndex(Node* node)
+{
+    if (m_nodeIndexFreeList.isEmpty()) {
+        node->m_index = m_nodesByIndex.size();
+        m_nodesByIndex.append(node);
+        return;
+    }
+    unsigned index = m_nodeIndexFreeList.takeLast();
+    node->m_index = index;
+    ASSERT(!m_nodesByIndex[index]);
+    m_nodesByIndex[index] = node;
+}
+
+void Graph::deleteNode(Node* node)
+{
+    if (validationEnabled() && m_form == SSA) {
+        for (BasicBlock* block : blocksInNaturalOrder()) {
+            DFG_ASSERT(*this, node, !block->ssa->liveAtHead.contains(node));
+            DFG_ASSERT(*this, node, !block->ssa->liveAtTail.contains(node));
+        }
+    }
+
+    RELEASE_ASSERT(m_nodesByIndex[node->m_index] == node);
+    unsigned nodeIndex = node->m_index;
+    m_nodesByIndex[nodeIndex] = nullptr;
+    m_nodeIndexFreeList.append(nodeIndex);
+
+    m_allocator.free(node);
+}
+
+void Graph::packNodeIndices()
+{
+    if (m_nodeIndexFreeList.isEmpty())
+        return;
+
+    unsigned holeIndex = 0;
+    unsigned endIndex = m_nodesByIndex.size();
+
+    while (true) {
+        while (holeIndex < endIndex && m_nodesByIndex[holeIndex])
+            ++holeIndex;
+
+        if (holeIndex == endIndex)
+            break;
+        ASSERT(holeIndex < m_nodesByIndex.size());
+        ASSERT(!m_nodesByIndex[holeIndex]);
+
+        do {
+            --endIndex;
+        } while (!m_nodesByIndex[endIndex] && endIndex > holeIndex);
+
+        if (holeIndex == endIndex)
+            break;
+        ASSERT(endIndex > holeIndex);
+        ASSERT(m_nodesByIndex[endIndex]);
+
+        auto& value = m_nodesByIndex[endIndex];
+        value->m_index = holeIndex;
+        m_nodesByIndex[holeIndex] = WTFMove(value);
+        ++holeIndex;
+    }
+
+    m_nodeIndexFreeList.resize(0);
+    m_nodesByIndex.resize(endIndex);
+}
+
 void Graph::dethread()
 {
     if (m_form == LoadStore || m_form == SSA)
@@ -546,8 +670,6 @@ void Graph::dethread()
     
     if (logCompilationChanges())
         dataLog("Dethreading DFG graph.\n");
-    
-    SamplingRegion samplingRegion("DFG Dethreading");
     
     for (BlockIndex blockIndex = m_blocks.size(); blockIndex--;) {
         BasicBlock* block = m_blocks[blockIndex].get();
@@ -706,16 +828,20 @@ void Graph::computeRefCounts()
 
 void Graph::killBlockAndItsContents(BasicBlock* block)
 {
+    if (auto& ssaData = block->ssa)
+        ssaData->invalidate();
     for (unsigned phiIndex = block->phis.size(); phiIndex--;)
-        m_allocator.free(block->phis[phiIndex]);
-    for (unsigned nodeIndex = block->size(); nodeIndex--;)
-        m_allocator.free(block->at(nodeIndex));
+        deleteNode(block->phis[phiIndex]);
+    for (Node* node : *block)
+        deleteNode(node);
     
     killBlock(block);
 }
 
 void Graph::killUnreachableBlocks()
 {
+    invalidateNodeLiveness();
+
     for (BlockIndex blockIndex = 0; blockIndex < numBlocks(); ++blockIndex) {
         BasicBlock* block = this->block(blockIndex);
         if (!block)
@@ -729,9 +855,21 @@ void Graph::killUnreachableBlocks()
 
 void Graph::invalidateCFG()
 {
-    m_dominators.invalidate();
-    m_naturalLoops.invalidate();
-    m_prePostNumbering.invalidate();
+    m_dominators = nullptr;
+    m_naturalLoops = nullptr;
+    m_prePostNumbering = nullptr;
+    m_controlEquivalenceAnalysis = nullptr;
+    m_backwardsDominators = nullptr;
+    m_backwardsCFG = nullptr;
+}
+
+void Graph::invalidateNodeLiveness()
+{
+    if (m_form != SSA)
+        return;
+
+    for (BasicBlock* block : blocksInNaturalOrder())
+        block->ssa->invalidate();
 }
 
 void Graph::substituteGetLocal(BasicBlock& block, unsigned startIndexInBlock, VariableAccessData* variableAccessData, Node* newGetLocal)
@@ -785,13 +923,13 @@ BlockList Graph::blocksInPostOrder()
     worklist.push(block(0));
     while (BlockWithOrder item = worklist.pop()) {
         switch (item.order) {
-        case PreOrder:
-            worklist.pushPost(item.block);
-            for (unsigned i = item.block->numSuccessors(); i--;)
-                worklist.push(item.block->successor(i));
+        case VisitOrder::Pre:
+            worklist.pushPost(item.node);
+            for (unsigned i = item.node->numSuccessors(); i--;)
+                worklist.push(item.node->successor(i));
             break;
-        case PostOrder:
-            result.append(item.block);
+        case VisitOrder::Post:
+            result.append(item.node);
             break;
         }
     }
@@ -869,9 +1007,53 @@ bool Graph::watchCondition(const ObjectPropertyCondition& key)
     return true;
 }
 
+bool Graph::watchConditions(const ObjectPropertyConditionSet& keys)
+{
+    if (!keys.isValid())
+        return false;
+
+    for (const ObjectPropertyCondition& key : keys) {
+        if (!watchCondition(key))
+            return false;
+    }
+    return true;
+}
+
 bool Graph::isSafeToLoad(JSObject* base, PropertyOffset offset)
 {
     return m_safeToLoad.contains(std::make_pair(base, offset));
+}
+
+InferredType::Descriptor Graph::inferredTypeFor(const PropertyTypeKey& key)
+{
+    assertIsRegistered(key.structure());
+    
+    auto iter = m_inferredTypes.find(key);
+    if (iter != m_inferredTypes.end())
+        return iter->value;
+
+    InferredType* typeObject = key.structure()->inferredTypeFor(key.uid());
+    if (!typeObject) {
+        m_inferredTypes.add(key, InferredType::Top);
+        return InferredType::Top;
+    }
+
+    InferredType::Descriptor typeDescriptor = typeObject->descriptor();
+    if (typeDescriptor.kind() == InferredType::Top) {
+        m_inferredTypes.add(key, InferredType::Top);
+        return InferredType::Top;
+    }
+    
+    m_inferredTypes.add(key, typeDescriptor);
+
+    m_plan.weakReferences.addLazily(typeObject);
+    registerInferredType(typeDescriptor);
+
+    // Note that we may already be watching this desired inferred type, because multiple structures may
+    // point to the same InferredType instance.
+    m_plan.watchpoints.addLazily(DesiredInferredType(typeObject, typeDescriptor));
+
+    return typeDescriptor;
 }
 
 FullBytecodeLiveness& Graph::livenessFor(CodeBlock* codeBlock)
@@ -883,7 +1065,7 @@ FullBytecodeLiveness& Graph::livenessFor(CodeBlock* codeBlock)
     std::unique_ptr<FullBytecodeLiveness> liveness = std::make_unique<FullBytecodeLiveness>();
     codeBlock->livenessAnalysis().computeFullLiveness(*liveness);
     FullBytecodeLiveness& result = *liveness;
-    m_bytecodeLiveness.add(codeBlock, WTF::move(liveness));
+    m_bytecodeLiveness.add(codeBlock, WTFMove(liveness));
     return result;
 }
 
@@ -901,7 +1083,7 @@ BytecodeKills& Graph::killsFor(CodeBlock* codeBlock)
     std::unique_ptr<BytecodeKills> kills = std::make_unique<BytecodeKills>();
     codeBlock->livenessAnalysis().computeKills(*kills);
     BytecodeKills& result = *kills;
-    m_bytecodeKills.add(codeBlock, WTF::move(kills));
+    m_bytecodeKills.add(codeBlock, WTFMove(kills));
     return result;
 }
 
@@ -912,43 +1094,72 @@ BytecodeKills& Graph::killsFor(InlineCallFrame* inlineCallFrame)
 
 bool Graph::isLiveInBytecode(VirtualRegister operand, CodeOrigin codeOrigin)
 {
+    static const bool verbose = false;
+    
+    if (verbose)
+        dataLog("Checking of operand is live: ", operand, "\n");
+    CodeOrigin* codeOriginPtr = &codeOrigin;
     for (;;) {
         VirtualRegister reg = VirtualRegister(
-            operand.offset() - codeOrigin.stackOffset());
+            operand.offset() - codeOriginPtr->stackOffset());
         
-        if (operand.offset() < codeOrigin.stackOffset() + JSStack::CallFrameHeaderSize) {
+        if (verbose)
+            dataLog("reg = ", reg, "\n");
+        
+        if (operand.offset() < codeOriginPtr->stackOffset() + CallFrame::headerSizeInRegisters) {
             if (reg.isArgument()) {
-                RELEASE_ASSERT(reg.offset() < JSStack::CallFrameHeaderSize);
+                RELEASE_ASSERT(reg.offset() < CallFrame::headerSizeInRegisters);
                 
-                if (codeOrigin.inlineCallFrame->isClosureCall
-                    && reg.offset() == JSStack::Callee)
+                if (codeOriginPtr->inlineCallFrame->isClosureCall
+                    && reg.offset() == CallFrameSlot::callee) {
+                    if (verbose)
+                        dataLog("Looks like a callee.\n");
                     return true;
+                }
                 
-                if (codeOrigin.inlineCallFrame->isVarargs()
-                    && reg.offset() == JSStack::ArgumentCount)
+                if (codeOriginPtr->inlineCallFrame->isVarargs()
+                    && reg.offset() == CallFrameSlot::argumentCount) {
+                    if (verbose)
+                        dataLog("Looks like the argument count.\n");
                     return true;
+                }
                 
                 return false;
             }
-            
-            return livenessFor(codeOrigin.inlineCallFrame).operandIsLive(
-                reg.offset(), codeOrigin.bytecodeIndex);
+
+            if (verbose)
+                dataLog("Asking the bytecode liveness.\n");
+            return livenessFor(codeOriginPtr->inlineCallFrame).operandIsLive(
+                reg.offset(), codeOriginPtr->bytecodeIndex);
         }
         
-        InlineCallFrame* inlineCallFrame = codeOrigin.inlineCallFrame;
-        if (!inlineCallFrame)
-            break;
+        InlineCallFrame* inlineCallFrame = codeOriginPtr->inlineCallFrame;
+        if (!inlineCallFrame) {
+            if (verbose)
+                dataLog("Ran out of stack, returning true.\n");
+            return true;
+        }
 
         // Arguments are always live. This would be redundant if it wasn't for our
         // op_call_varargs inlining.
         if (reg.isArgument()
-            && static_cast<size_t>(reg.toArgument()) < inlineCallFrame->arguments.size())
+            && static_cast<size_t>(reg.toArgument()) < inlineCallFrame->arguments.size()) {
+            if (verbose)
+                dataLog("Argument is live.\n");
             return true;
+        }
         
-        codeOrigin = inlineCallFrame->caller;
+        codeOriginPtr = inlineCallFrame->getCallerSkippingTailCalls();
+
+        // The first inline call frame could be an inline tail call
+        if (!codeOriginPtr) {
+            if (verbose)
+                dataLog("Dead because of tail inlining.\n");
+            return false;
+        }
     }
     
-    return true;
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
 BitVector Graph::localsLiveInBytecode(CodeOrigin codeOrigin)
@@ -962,6 +1173,13 @@ BitVector Graph::localsLiveInBytecode(CodeOrigin codeOrigin)
             result.quickSet(reg.toLocal());
         });
     return result;
+}
+
+unsigned Graph::parameterSlotsForArgCount(unsigned argCount)
+{
+    size_t frameSize = CallFrame::headerSizeInRegisters + argCount;
+    size_t alignedFrameSize = WTF::roundUpToMultipleOf(stackAlignmentRegisters(), frameSize);
+    return alignedFrameSize - CallerFrameAndPC::sizeInRegisters;
 }
 
 unsigned Graph::frameRegisterCount()
@@ -993,7 +1211,7 @@ unsigned Graph::requiredRegisterCountForExecutionAndExit()
 }
 
 JSValue Graph::tryGetConstantProperty(
-    JSValue base, const StructureSet& structureSet, PropertyOffset offset)
+    JSValue base, const RegisteredStructureSet& structureSet, PropertyOffset offset)
 {
     if (!base || !base.isObject())
         return JSValue();
@@ -1001,8 +1219,7 @@ JSValue Graph::tryGetConstantProperty(
     JSObject* object = asObject(base);
     
     for (unsigned i = structureSet.size(); i--;) {
-        Structure* structure = structureSet[i];
-        assertIsRegistered(structure);
+        RegisteredStructure structure = structureSet[i];
         
         WatchpointSet* set = structure->propertyReplacementWatchpointSet(offset);
         if (!set || !set->isStillValid())
@@ -1034,7 +1251,7 @@ JSValue Graph::tryGetConstantProperty(
     // incompatible with the getDirect we're trying to do. The easiest way to do that is to
     // determine if the structure belongs to the proven set.
     
-    if (!structureSet.contains(object->structure()))
+    if (!structureSet.toStructureSet().contains(object->structure()))
         return JSValue();
     
     return object->getDirect(offset);
@@ -1042,13 +1259,13 @@ JSValue Graph::tryGetConstantProperty(
 
 JSValue Graph::tryGetConstantProperty(JSValue base, Structure* structure, PropertyOffset offset)
 {
-    return tryGetConstantProperty(base, StructureSet(structure), offset);
+    return tryGetConstantProperty(base, RegisteredStructureSet(registerStructure(structure)), offset);
 }
 
 JSValue Graph::tryGetConstantProperty(
     JSValue base, const StructureAbstractValue& structure, PropertyOffset offset)
 {
-    if (structure.isTop() || structure.isClobbered()) {
+    if (structure.isInfinite()) {
         // FIXME: If we just converted the offset to a uid, we could do ObjectPropertyCondition
         // watching to constant-fold the property.
         // https://bugs.webkit.org/show_bug.cgi?id=147271
@@ -1061,6 +1278,37 @@ JSValue Graph::tryGetConstantProperty(
 JSValue Graph::tryGetConstantProperty(const AbstractValue& base, PropertyOffset offset)
 {
     return tryGetConstantProperty(base.m_value, base.m_structure, offset);
+}
+
+AbstractValue Graph::inferredValueForProperty(
+    const RegisteredStructureSet& base, UniquedStringImpl* uid, StructureClobberState clobberState)
+{
+    AbstractValue result;
+    base.forEach(
+        [&] (RegisteredStructure structure) {
+            AbstractValue value;
+            value.set(*this, inferredTypeForProperty(structure.get(), uid));
+            result.merge(value);
+        });
+    if (clobberState == StructuresAreClobbered)
+        result.clobberStructures();
+    return result;
+}
+
+AbstractValue Graph::inferredValueForProperty(
+    const AbstractValue& base, UniquedStringImpl* uid, PropertyOffset offset,
+    StructureClobberState clobberState)
+{
+    if (JSValue value = tryGetConstantProperty(base, offset)) {
+        AbstractValue result;
+        result.set(*this, *freeze(value), clobberState);
+        return result;
+    }
+
+    if (base.m_structure.isFinite())
+        return inferredValueForProperty(base.m_structure.set(), uid, clobberState);
+
+    return AbstractValue::heapTop();
 }
 
 JSValue Graph::tryGetConstantClosureVar(JSValue base, ScopeOffset offset)
@@ -1078,7 +1326,7 @@ JSValue Graph::tryGetConstantClosureVar(JSValue base, ScopeOffset offset)
     JSValue value;
     WatchpointSet* set;
     {
-        ConcurrentJITLocker locker(symbolTable->m_lock);
+        ConcurrentJSLocker locker(symbolTable->m_lock);
         
         SymbolTableEntry* entry = symbolTable->entryFor(locker, offset);
         if (!entry)
@@ -1130,7 +1378,7 @@ JSArrayBufferView* Graph::tryGetFoldableView(JSValue value)
 
 JSArrayBufferView* Graph::tryGetFoldableView(JSValue value, ArrayMode arrayMode)
 {
-    if (arrayMode.typedArrayType() == NotTypedArray)
+    if (arrayMode.type() != Array::AnyTypedArray && arrayMode.typedArrayType() == NotTypedArray)
         return nullptr;
     return tryGetFoldableView(value);
 }
@@ -1165,61 +1413,8 @@ void Graph::registerFrozenValues()
 void Graph::visitChildren(SlotVisitor& visitor)
 {
     for (FrozenValue* value : m_frozenValues) {
-        visitor.appendUnbarrieredReadOnlyValue(value->value());
-        visitor.appendUnbarrieredReadOnlyPointer(value->structure());
-    }
-    
-    for (BlockIndex blockIndex = numBlocks(); blockIndex--;) {
-        BasicBlock* block = this->block(blockIndex);
-        if (!block)
-            continue;
-        
-        for (unsigned nodeIndex = 0; nodeIndex < block->size(); ++nodeIndex) {
-            Node* node = block->at(nodeIndex);
-            
-            switch (node->op()) {
-            case CheckStructure:
-                for (unsigned i = node->structureSet().size(); i--;)
-                    visitor.appendUnbarrieredReadOnlyPointer(node->structureSet()[i]);
-                break;
-                
-            case NewObject:
-            case ArrayifyToStructure:
-            case NewStringObject:
-                visitor.appendUnbarrieredReadOnlyPointer(node->structure());
-                break;
-                
-            case PutStructure:
-            case AllocatePropertyStorage:
-            case ReallocatePropertyStorage:
-                visitor.appendUnbarrieredReadOnlyPointer(
-                    node->transition()->previous);
-                visitor.appendUnbarrieredReadOnlyPointer(
-                    node->transition()->next);
-                break;
-                
-            case MultiGetByOffset:
-                for (const MultiGetByOffsetCase& getCase : node->multiGetByOffsetData().cases) {
-                    for (Structure* structure : getCase.set())
-                        visitor.appendUnbarrieredReadOnlyPointer(structure);
-                }
-                break;
-                    
-            case MultiPutByOffset:
-                for (unsigned i = node->multiPutByOffsetData().variants.size(); i--;) {
-                    PutByIdVariant& variant = node->multiPutByOffsetData().variants[i];
-                    const StructureSet& set = variant.oldStructure();
-                    for (unsigned j = set.size(); j--;)
-                        visitor.appendUnbarrieredReadOnlyPointer(set[j]);
-                    if (variant.kind() == PutByIdVariant::Transition)
-                        visitor.appendUnbarrieredReadOnlyPointer(variant.newStructure());
-                }
-                break;
-                
-            default:
-                break;
-            }
-        }
+        visitor.appendUnbarriered(value->value());
+        visitor.appendUnbarriered(value->structure());
     }
 }
 
@@ -1227,6 +1422,12 @@ FrozenValue* Graph::freeze(JSValue value)
 {
     if (UNLIKELY(!value))
         return FrozenValue::emptySingleton();
+
+    // There are weird relationships in how optimized CodeBlocks
+    // point to other CodeBlocks. We don't want to have them be
+    // part of the weak pointer set. For example, an optimized CodeBlock
+    // having a weak pointer to itself will cause it to get collected.
+    RELEASE_ASSERT(!jsDynamicCast<CodeBlock*>(value));
     
     auto result = m_frozenValueMap.add(JSValue::encode(value), nullptr);
     if (LIKELY(!result.isNewEntry))
@@ -1266,12 +1467,14 @@ void Graph::convertToStrongConstant(Node* node, JSValue value)
     convertToConstant(node, freezeStrong(value));
 }
 
-StructureRegistrationResult Graph::registerStructure(Structure* structure)
+RegisteredStructure Graph::registerStructure(Structure* structure, StructureRegistrationResult& result)
 {
     m_plan.weakReferences.addLazily(structure);
     if (m_plan.watchpoints.consider(structure))
-        return StructureRegisteredAndWatched;
-    return StructureRegisteredNormally;
+        result = StructureRegisteredAndWatched;
+    else
+        result = StructureRegisteredNormally;
+    return RegisteredStructure::createPrivate(structure);
 }
 
 void Graph::assertIsRegistered(Structure* structure)
@@ -1325,49 +1528,199 @@ void Graph::handleAssertionFailure(
     crash(*this, toCString("While handling block ", pointerDump(block), "\n\n"), file, line, function, assertion);
 }
 
-ValueProfile* Graph::valueProfileFor(Node* node)
+Dominators& Graph::ensureDominators()
 {
-    if (!node)
-        return nullptr;
-        
-    CodeBlock* profiledBlock = baselineCodeBlockFor(node->origin.semantic);
-        
-    if (node->hasLocal(*this)) {
-        if (!node->local().isArgument())
-            return nullptr;
-        int argument = node->local().toArgument();
-        Node* argumentNode = m_arguments[argument];
-        if (!argumentNode)
-            return nullptr;
-        if (node->variableAccessData() != argumentNode->variableAccessData())
-            return nullptr;
-        return profiledBlock->valueProfileForArgument(argument);
-    }
-        
-    if (node->hasHeapPrediction())
-        return profiledBlock->valueProfileForBytecodeOffset(node->origin.semantic.bytecodeIndex);
-        
-    return nullptr;
+    if (!m_dominators)
+        m_dominators = std::make_unique<Dominators>(*this);
+    return *m_dominators;
 }
 
-MethodOfGettingAValueProfile Graph::methodOfGettingAValueProfileFor(Node* node)
+PrePostNumbering& Graph::ensurePrePostNumbering()
 {
-    if (!node)
-        return MethodOfGettingAValueProfile();
-    
-    if (ValueProfile* valueProfile = valueProfileFor(node))
-        return MethodOfGettingAValueProfile(valueProfile);
-    
-    if (node->op() == GetLocal) {
-        CodeBlock* profiledBlock = baselineCodeBlockFor(node->origin.semantic);
-        
-        return MethodOfGettingAValueProfile::fromLazyOperand(
-            profiledBlock,
-            LazyOperandValueProfileKey(
-                node->origin.semantic.bytecodeIndex, node->local()));
+    if (!m_prePostNumbering)
+        m_prePostNumbering = std::make_unique<PrePostNumbering>(*this);
+    return *m_prePostNumbering;
+}
+
+NaturalLoops& Graph::ensureNaturalLoops()
+{
+    ensureDominators();
+    if (!m_naturalLoops)
+        m_naturalLoops = std::make_unique<NaturalLoops>(*this);
+    return *m_naturalLoops;
+}
+
+BackwardsCFG& Graph::ensureBackwardsCFG()
+{
+    if (!m_backwardsCFG)
+        m_backwardsCFG = std::make_unique<BackwardsCFG>(*this);
+    return *m_backwardsCFG;
+}
+
+BackwardsDominators& Graph::ensureBackwardsDominators()
+{
+    if (!m_backwardsDominators)
+        m_backwardsDominators = std::make_unique<BackwardsDominators>(*this);
+    return *m_backwardsDominators;
+}
+
+ControlEquivalenceAnalysis& Graph::ensureControlEquivalenceAnalysis()
+{
+    if (!m_controlEquivalenceAnalysis)
+        m_controlEquivalenceAnalysis = std::make_unique<ControlEquivalenceAnalysis>(*this);
+    return *m_controlEquivalenceAnalysis;
+}
+
+MethodOfGettingAValueProfile Graph::methodOfGettingAValueProfileFor(Node* currentNode, Node* operandNode)
+{
+    for (Node* node = operandNode; node;) {
+        // currentNode is null when we're doing speculation checks for checkArgumentTypes().
+        if (!currentNode || node->origin != currentNode->origin) {
+            CodeBlock* profiledBlock = baselineCodeBlockFor(node->origin.semantic);
+
+            if (node->accessesStack(*this)) {
+                ValueProfile* result = [&] () -> ValueProfile* {
+                    if (!node->local().isArgument())
+                        return nullptr;
+                    int argument = node->local().toArgument();
+                    Node* argumentNode = m_arguments[argument];
+                    if (!argumentNode)
+                        return nullptr;
+                    if (node->variableAccessData() != argumentNode->variableAccessData())
+                        return nullptr;
+                    return profiledBlock->valueProfileForArgument(argument);
+                }();
+                if (result)
+                    return result;
+
+                if (node->op() == GetLocal) {
+                    return MethodOfGettingAValueProfile::fromLazyOperand(
+                        profiledBlock,
+                        LazyOperandValueProfileKey(
+                            node->origin.semantic.bytecodeIndex, node->local()));
+                }
+            }
+
+            if (node->hasHeapPrediction())
+                return profiledBlock->valueProfileForBytecodeOffset(node->origin.semantic.bytecodeIndex);
+
+            if (profiledBlock->hasBaselineJITProfiling()) {
+                if (ArithProfile* result = profiledBlock->arithProfileForBytecodeOffset(node->origin.semantic.bytecodeIndex))
+                    return result;
+            }
+        }
+
+        switch (node->op()) {
+        case BooleanToNumber:
+        case Identity:
+        case ValueRep:
+        case DoubleRep:
+        case Int52Rep:
+            node = node->child1().node();
+            break;
+        default:
+            node = nullptr;
+        }
     }
     
     return MethodOfGettingAValueProfile();
+}
+
+bool Graph::getRegExpPrototypeProperty(JSObject* regExpPrototype, Structure* regExpPrototypeStructure, UniquedStringImpl* uid, JSValue& returnJSValue)
+{
+    unsigned attributesUnused;
+    PropertyOffset offset = regExpPrototypeStructure->getConcurrently(uid, attributesUnused);
+    if (!isValidOffset(offset))
+        return false;
+
+    JSValue value = tryGetConstantProperty(regExpPrototype, regExpPrototypeStructure, offset);
+    if (!value)
+        return false;
+
+    // We only care about functions and getters at this point. If you want to access other properties
+    // you'll have to add code for those types.
+    JSFunction* function = jsDynamicCast<JSFunction*>(value);
+    if (!function) {
+        GetterSetter* getterSetter = jsDynamicCast<GetterSetter*>(value);
+
+        if (!getterSetter)
+            return false;
+
+        returnJSValue = JSValue(getterSetter);
+        return true;
+    }
+
+    returnJSValue = value;
+    return true;
+}
+
+bool Graph::isStringPrototypeMethodSane(JSGlobalObject* globalObject, UniquedStringImpl* uid)
+{
+    ObjectPropertyConditionSet conditions = generateConditionsForPrototypeEquivalenceConcurrently(m_vm, globalObject, globalObject->stringObjectStructure(), globalObject->stringPrototype(), uid);
+
+    if (!conditions.isValid())
+        return false;
+
+    ObjectPropertyCondition equivalenceCondition = conditions.slotBaseCondition();
+    RELEASE_ASSERT(equivalenceCondition.hasRequiredValue());
+    JSFunction* function = jsDynamicCast<JSFunction*>(equivalenceCondition.condition().requiredValue());
+    if (!function)
+        return false;
+
+    if (function->executable()->intrinsicFor(CodeForCall) != StringPrototypeValueOfIntrinsic)
+        return false;
+    
+    return watchConditions(conditions);
+}
+
+
+bool Graph::canOptimizeStringObjectAccess(const CodeOrigin& codeOrigin)
+{
+    if (hasExitSite(codeOrigin, NotStringObject))
+        return false;
+
+    JSGlobalObject* globalObject = globalObjectFor(codeOrigin);
+    Structure* stringObjectStructure = globalObjectFor(codeOrigin)->stringObjectStructure();
+    registerStructure(stringObjectStructure);
+    ASSERT(stringObjectStructure->storedPrototype().isObject());
+    ASSERT(stringObjectStructure->storedPrototype().asCell()->classInfo() == StringPrototype::info());
+
+    if (!watchConditions(generateConditionsForPropertyMissConcurrently(m_vm, globalObject, stringObjectStructure, m_vm.propertyNames->toPrimitiveSymbol.impl())))
+        return false;
+
+    // We're being conservative here. We want DFG's ToString on StringObject to be
+    // used in both numeric contexts (that would call valueOf()) and string contexts
+    // (that would call toString()). We don't want the DFG to have to distinguish
+    // between the two, just because that seems like it would get confusing. So we
+    // just require both methods to be sane.
+    if (!isStringPrototypeMethodSane(globalObject, m_vm.propertyNames->valueOf.impl()))
+        return false;
+    return isStringPrototypeMethodSane(globalObject, m_vm.propertyNames->toString.impl());
+}
+
+bool Graph::willCatchExceptionInMachineFrame(CodeOrigin codeOrigin, CodeOrigin& opCatchOriginOut, HandlerInfo*& catchHandlerOut)
+{
+    if (!m_hasExceptionHandlers)
+        return false;
+
+    unsigned bytecodeIndexToCheck = codeOrigin.bytecodeIndex;
+    while (1) {
+        InlineCallFrame* inlineCallFrame = codeOrigin.inlineCallFrame;
+        CodeBlock* codeBlock = baselineCodeBlockFor(inlineCallFrame);
+        if (HandlerInfo* handler = codeBlock->handlerForBytecodeOffset(bytecodeIndexToCheck)) {
+            opCatchOriginOut = CodeOrigin(handler->target, inlineCallFrame);
+            catchHandlerOut = handler;
+            return true;
+        }
+
+        if (!inlineCallFrame)
+            return false;
+
+        bytecodeIndexToCheck = inlineCallFrame->directCaller.bytecodeIndex;
+        codeOrigin = codeOrigin.inlineCallFrame->directCaller;
+    }
+
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
 } } // namespace JSC::DFG

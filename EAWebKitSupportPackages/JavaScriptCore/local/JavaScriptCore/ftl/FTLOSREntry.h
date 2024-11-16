@@ -23,10 +23,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FTLOSREntry_h
-#define FTLOSREntry_h
+#pragma once
 
 #if ENABLE(FTL_JIT)
+
+#include <wtf/Expected.h>
 
 namespace JSC {
 
@@ -35,13 +36,15 @@ class ExecState;
 
 namespace FTL {
 
-void* prepareOSREntry(
+enum class OSREntryFail {
+    WrongBytecode,
+    StackGrowthFailed,
+};
+
+Expected<void*, OSREntryFail> prepareOSREntry(
     ExecState*, CodeBlock* dfgCodeBlock, CodeBlock* entryCodeBlock, unsigned bytecodeIndex,
     unsigned streamIndex);
 
 } } // namespace JSC::FTL
 
 #endif // ENABLE(FTL_JIT)
-
-#endif // FTLOSREntry_h
-

@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 Apple Inc. All rights reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -48,11 +47,7 @@ static const size_t ramSizeGuess = 512 * MB;
 
 static size_t computeRAMSize()
 {
-//+EAWebKitChange
-//3/3/2014
-//EAWebKitTODO
-#if PLATFORM(IOS_SIMULATOR) || PLATFORM(EA)
-//-EAWebKitChange
+#if PLATFORM(IOS_SIMULATOR)
     // Pretend we have 512MB of memory to make cache sizes behave like on device.
     return ramSizeGuess;
 #elif OS(DARWIN)

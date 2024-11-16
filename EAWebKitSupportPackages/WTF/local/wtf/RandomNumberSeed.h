@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
- * Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,18 +43,7 @@ namespace WTF {
 
 inline void initializeRandomNumberGenerator()
 {
-	//+EAWebKitChange
-	//10/17/2011
-#if PLATFORM(EA) 
-	// In our tech, rand_s is not supported when emulating PC code on the Mac. We also "warm" it a bit.
-	srand(static_cast<unsigned>(time(0)));
-	int discardCount = 25;
-	while (discardCount--) 
-	{
-		rand();
-	}
-#elif OS(DARWIN)
-	//-EAWebKitChange
+#if OS(DARWIN)
     // On Darwin we use arc4random which initialises itself.
 #elif COMPILER(MSVC) && defined(_CRT_RAND_S)
     // On Windows we use rand_s which initialises itself

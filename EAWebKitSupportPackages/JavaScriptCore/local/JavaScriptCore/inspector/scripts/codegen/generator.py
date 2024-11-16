@@ -30,7 +30,7 @@ import re
 from string import Template
 
 from generator_templates import GeneratorTemplates as Templates
-from models import PrimitiveType, ObjectType, ArrayType, EnumType, AliasedType, Frameworks
+from models import PrimitiveType, ObjectType, ArrayType, EnumType, AliasedType, Frameworks, Platforms
 
 log = logging.getLogger('global')
 
@@ -38,7 +38,7 @@ log = logging.getLogger('global')
 def ucfirst(str):
     return str[:1].upper() + str[1:]
 
-_ALWAYS_UPPERCASED_ENUM_VALUE_SUBSTRINGS = set(['API', 'CSS', 'DOM', 'HTML', 'XHR', 'XML'])
+_ALWAYS_UPPERCASED_ENUM_VALUE_SUBSTRINGS = set(['API', 'CSS', 'DOM', 'HTML', 'JIT', 'XHR', 'XML'])
 
 # These objects are built manually by creating and setting InspectorValues.
 # Before sending these over the protocol, their shapes are checked against the specification.
@@ -47,6 +47,7 @@ _ALWAYS_UPPERCASED_ENUM_VALUE_SUBSTRINGS = set(['API', 'CSS', 'DOM', 'HTML', 'XH
 
 # FIXME: This should be converted into a property in JSON.
 _TYPES_NEEDING_RUNTIME_CASTS = set([
+    "Runtime.ObjectPreview",
     "Runtime.RemoteObject",
     "Runtime.PropertyDescriptor",
     "Runtime.InternalPropertyDescriptor",
@@ -67,7 +68,7 @@ _TYPES_WITH_OPEN_FIELDS = set([
     "Timeline.TimelineEvent",
     # InspectorStyleSheet not only creates this property but wants to read it and modify it.
     "CSS.CSSProperty",
-    # InspectorResourceAgent needs to update mime-type.
+    # InspectorNetworkAgent needs to update mime-type.
     "Network.Response",
     # For testing purposes only.
     "Test.OpenParameterBundle"
@@ -75,12 +76,36 @@ _TYPES_WITH_OPEN_FIELDS = set([
 
 
 class Generator:
-    def __init__(self, model, input_filepath):
+    def __init__(self, model, platform, input_filepath):
         self._model = model
+        self._platform = platform
         self._input_filepath = input_filepath
+        self._settings = {}
 
     def model(self):
         return self._model
+
+    def platform(self):
+        return self._platform
+
+    def set_generator_setting(self, key, value):
+        self._settings[key] = value
+
+    def can_generate_platform(self, model_platform):
+        return model_platform is Platforms.Generic or self._platform is Platforms.All or model_platform is self._platform
+
+    def type_declarations_for_domain(self, domain):
+        return [type_declaration for type_declaration in domain.all_type_declarations() if self.can_generate_platform(type_declaration.platform)]
+
+    def commands_for_domain(self, domain):
+        return [command for command in domain.all_commands() if self.can_generate_platform(command.platform)]
+
+    def events_for_domain(self, domain):
+        return [event for event in domain.all_events() if self.can_generate_platform(event.platform)]
+
+    # The goofy name is to disambiguate generator settings from framework settings.
+    def get_generator_setting(self, key, default=None):
+        return self._settings.get(key, default)
 
     def generate_license(self):
         return Template(Templates.CopyrightBlock).substitute(None, inputFilename=os.path.basename(self._input_filepath))
@@ -152,7 +177,7 @@ class Generator:
 
         found_types = set()
         for domain in domains:
-            for declaration in domain.type_declarations:
+            for declaration in self.type_declarations_for_domain(domain):
                 if declaration.type.qualified_name() in _TYPES_NEEDING_RUNTIME_CASTS:
                     log.debug("> Gathering types referenced by %s to generate shape assertions." % declaration.type.qualified_name())
                     gather_transitively_referenced_types(declaration.type, found_types)
@@ -168,17 +193,17 @@ class Generator:
         domains = self.non_supplemental_domains()
 
         for domain in domains:
-            for type_declaration in domain.type_declarations:
+            for type_declaration in self.type_declarations_for_domain(domain):
                 all_types.append(type_declaration.type)
                 for type_member in type_declaration.type_members:
                     all_types.append(type_member.type)
 
         for domain in domains:
-            for event in domain.events:
+            for event in self.events_for_domain(domain):
                 all_types.extend([parameter.type for parameter in event.event_parameters])
 
         for domain in domains:
-            for command in domain.commands:
+            for command in self.commands_for_domain(domain):
                 all_types.extend([parameter.type for parameter in command.call_parameters])
                 all_types.extend([parameter.type for parameter in command.return_parameters])
 
@@ -239,3 +264,10 @@ class Generator:
                 return 'number'
             else:
                 return _type.qualified_name()
+
+    @staticmethod
+    def string_for_file_include(filename, file_framework, target_framework):
+        if file_framework is target_framework:
+            return '"%s"' % filename
+        else:
+            return '<%s/%s>' % (file_framework.name, filename)

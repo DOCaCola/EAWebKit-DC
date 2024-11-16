@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2008, 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,10 +39,12 @@
 #include "JSLock.h"
 #include "LLIntData.h"
 #include "StructureIDTable.h"
+#include "SuperSampler.h"
 #include "WriteBarrier.h"
 #include <mutex>
-#include <wtf/dtoa.h>
+#include <wtf/MainThread.h>
 #include <wtf/Threading.h>
+#include <wtf/dtoa.h>
 #include <wtf/dtoa/cached-powers.h>
 
 using namespace WTF;
@@ -56,6 +58,7 @@ void initializeThreading()
     std::call_once(initializeThreadingOnceFlag, []{
         WTF::double_conversion::initialize();
         WTF::initializeThreading();
+        WTF::initializeGCThreads();
         Options::initialize();
         if (Options::recordGCPauseTimes())
             HeapStatistics::initialize();
@@ -69,6 +72,7 @@ void initializeThreading()
 #ifndef NDEBUG
         DisallowGC::initialize();
 #endif
+        initializeSuperSampler();
         WTFThreadData& threadData = wtfThreadData();
         threadData.setSavedLastStackTop(threadData.stack().origin());
     });

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,9 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StructureIDBlob_h
-#define StructureIDBlob_h
+#pragma once
 
+#include "CellState.h"
 #include "IndexingType.h"
 #include "JSTypeInfo.h"
 #include "StructureIDTable.h"
@@ -40,20 +40,20 @@ public:
         u.doubleWord = 0xbbadbeef;
     }
 
-    StructureIDBlob(StructureID structureID, IndexingType indexingType, const TypeInfo& typeInfo)
+    StructureIDBlob(StructureID structureID, IndexingType indexingTypeIncludingHistory, const TypeInfo& typeInfo)
     {
         u.fields.structureID = structureID;
-        u.fields.indexingType = indexingType;
+        u.fields.indexingTypeIncludingHistory = indexingTypeIncludingHistory;
         u.fields.type = typeInfo.type();
         u.fields.inlineTypeFlags = typeInfo.inlineTypeFlags();
-        u.fields.defaultGCData = JSCell::NotMarked;
+        u.fields.defaultCellState = CellState::DefinitelyWhite;
     }
 
     void operator=(const StructureIDBlob& other) { u.doubleWord = other.u.doubleWord; }
     
     StructureID structureID() const { return u.fields.structureID; }
-    IndexingType indexingType() const { return u.fields.indexingType; }
-    void setIndexingType(IndexingType indexingType) { u.fields.indexingType = indexingType; }
+    IndexingType indexingTypeIncludingHistory() const { return u.fields.indexingTypeIncludingHistory; }
+    void setIndexingTypeIncludingHistory(IndexingType indexingTypeIncludingHistory) { u.fields.indexingTypeIncludingHistory = indexingTypeIncludingHistory; }
     JSType type() const { return u.fields.type; }
     TypeInfo::InlineTypeFlags inlineTypeFlags() const { return u.fields.inlineTypeFlags; }
     
@@ -67,19 +67,19 @@ public:
         return OBJECT_OFFSETOF(StructureIDBlob, u.fields.structureID);
     }
 
-    static ptrdiff_t indexingTypeOffset()
+    static ptrdiff_t indexingTypeIncludingHistoryOffset()
     {
-        return OBJECT_OFFSETOF(StructureIDBlob, u.fields.indexingType);
+        return OBJECT_OFFSETOF(StructureIDBlob, u.fields.indexingTypeIncludingHistory);
     }
 
 private:
     union {
         struct {
             StructureID structureID;
-            IndexingType indexingType;
+            IndexingType indexingTypeIncludingHistory;
             JSType type;
             TypeInfo::InlineTypeFlags inlineTypeFlags;
-            JSCell::GCData defaultGCData;
+            CellState defaultCellState;
         } fields;
         struct {
             int32_t word1;
@@ -90,5 +90,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // StructureIDBlob_h

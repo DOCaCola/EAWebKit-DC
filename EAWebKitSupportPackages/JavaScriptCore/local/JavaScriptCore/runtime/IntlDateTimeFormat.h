@@ -23,12 +23,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IntlDateTimeFormat_h
-#define IntlDateTimeFormat_h
+#pragma once
 
 #if ENABLE(INTL)
 
 #include "JSDestructibleObject.h"
+#include <unicode/udat.h>
 
 namespace JSC {
 
@@ -39,10 +39,14 @@ class IntlDateTimeFormat : public JSDestructibleObject {
 public:
     typedef JSDestructibleObject Base;
 
-    static IntlDateTimeFormat* create(VM&, IntlDateTimeFormatConstructor*);
+    static IntlDateTimeFormat* create(VM&, Structure*);
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
 
     DECLARE_INFO;
+
+    void initializeDateTimeFormat(ExecState&, JSValue locales, JSValue options);
+    JSValue format(ExecState&, double value);
+    JSObject* resolvedOptions(ExecState&);
 
     JSBoundFunction* boundFormat() const { return m_boundFormat.get(); }
     void setBoundFormat(VM&, JSBoundFunction*);
@@ -53,13 +57,52 @@ protected:
     static void destroy(JSCell*);
     static void visitChildren(JSCell*, SlotVisitor&);
 
+private:
+    enum class Weekday { None, Narrow, Short, Long };
+    enum class Era { None, Narrow, Short, Long };
+    enum class Year { None, TwoDigit, Numeric };
+    enum class Month { None, TwoDigit, Numeric, Narrow, Short, Long };
+    enum class Day { None, TwoDigit, Numeric };
+    enum class Hour { None, TwoDigit, Numeric };
+    enum class Minute { None, TwoDigit, Numeric };
+    enum class Second { None, TwoDigit, Numeric };
+    enum class TimeZoneName { None, Short, Long };
+
+    struct UDateFormatDeleter {
+        void operator()(UDateFormat*) const;
+    };
+
+    void setFormatsFromPattern(const StringView&);
+    static const char* weekdayString(Weekday);
+    static const char* eraString(Era);
+    static const char* yearString(Year);
+    static const char* monthString(Month);
+    static const char* dayString(Day);
+    static const char* hourString(Hour);
+    static const char* minuteString(Minute);
+    static const char* secondString(Second);
+    static const char* timeZoneNameString(TimeZoneName);
+
+    bool m_initializedDateTimeFormat { false };
     WriteBarrier<JSBoundFunction> m_boundFormat;
+    std::unique_ptr<UDateFormat, UDateFormatDeleter> m_dateFormat;
+
+    String m_locale;
+    String m_calendar;
+    String m_numberingSystem;
+    String m_timeZone;
+    bool m_hour12 { true };
+    Weekday m_weekday { Weekday::None };
+    Era m_era { Era::None };
+    Year m_year { Year::None };
+    Month m_month { Month::None };
+    Day m_day { Day::None };
+    Hour m_hour { Hour::None };
+    Minute m_minute { Minute::None };
+    Second m_second { Second::None };
+    TimeZoneName m_timeZoneName { TimeZoneName::None };
 };
-    
-EncodedJSValue JSC_HOST_CALL IntlDateTimeFormatFuncFormatDateTime(ExecState*);
 
 } // namespace JSC
 
 #endif // ENABLE(INTL)
-
-#endif // IntlDateTimeFormat_h

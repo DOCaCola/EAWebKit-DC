@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WriteBarrierInlines_h
-#define WriteBarrierInlines_h
+#pragma once
 
 #include "VM.h"
 #include "WriteBarrier.h"
@@ -35,7 +34,7 @@ template <typename T>
 inline void WriteBarrierBase<T>::set(VM& vm, const JSCell* owner, T* value)
 {
     ASSERT(value);
-    ASSERT(!Options::enableConcurrentJIT() || !isCompilationThread());
+    ASSERT(!Options::useConcurrentJIT() || !isCompilationThread());
     validateCell(value);
     setEarlyValue(vm, owner, value);
 }
@@ -57,11 +56,9 @@ inline void WriteBarrierBase<T>::setEarlyValue(VM& vm, const JSCell* owner, T* v
 
 inline void WriteBarrierBase<Unknown>::set(VM& vm, const JSCell* owner, JSValue value)
 {
-    ASSERT(!Options::enableConcurrentJIT() || !isCompilationThread());
+    ASSERT(!Options::useConcurrentJIT() || !isCompilationThread());
     m_value = JSValue::encode(value);
     vm.heap.writeBarrier(owner, value);
 }
 
 } // namespace JSC 
-
-#endif // WriteBarrierInlines_h

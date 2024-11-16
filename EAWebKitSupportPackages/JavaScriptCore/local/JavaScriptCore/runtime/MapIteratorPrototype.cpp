@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple, Inc. All rights reserved.
+ * Copyright (C) 2013, 2016 Apple, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,10 +27,8 @@
 #include "MapIteratorPrototype.h"
 
 #include "IteratorOperations.h"
-#include "JSCJSValueInlines.h"
-#include "JSCellInlines.h"
+#include "JSCInlines.h"
 #include "JSMapIterator.h"
-#include "StructureInlines.h"
 
 namespace JSC {
 
@@ -44,19 +42,25 @@ void MapIteratorPrototype::finishCreation(VM& vm, JSGlobalObject* globalObject)
     ASSERT(inherits(info()));
     vm.prototypeMap.addPrototype(this);
 
-    JSC_NATIVE_FUNCTION(vm.propertyNames->next, MapIteratorPrototypeFuncNext, DontEnum, 0);
+    JSC_NATIVE_FUNCTION_WITHOUT_TRANSITION(vm.propertyNames->next, MapIteratorPrototypeFuncNext, DontEnum, 0);
+    putDirectWithoutTransition(vm, vm.propertyNames->toStringTagSymbol, jsString(&vm, "Map Iterator"), DontEnum | ReadOnly);
 }
 
 EncodedJSValue JSC_HOST_CALL MapIteratorPrototypeFuncNext(CallFrame* callFrame)
 {
+    VM& vm = callFrame->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     JSMapIterator* iterator = jsDynamicCast<JSMapIterator*>(callFrame->thisValue());
     if (!iterator)
-        return JSValue::encode(throwTypeError(callFrame, ASCIILiteral("Cannot call MapIterator.next() on a non-MapIterator object")));
+        return JSValue::encode(throwTypeError(callFrame, scope, ASCIILiteral("Cannot call MapIterator.next() on a non-MapIterator object")));
 
     JSValue result;
-    if (iterator->next(callFrame, result))
+    if (iterator->next(callFrame, result)) {
+        scope.release();
         return JSValue::encode(createIteratorResultObject(callFrame, result, false));
-    iterator->finish();
+    }
+    scope.release();
     return JSValue::encode(createIteratorResultObject(callFrame, jsUndefined(), true));
 }
 

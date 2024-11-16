@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PutByIdVariant_h
-#define PutByIdVariant_h
+#pragma once
 
 #include "ObjectPropertyConditionSet.h"
 #include "PropertyOffset.h"
@@ -53,11 +52,11 @@ public:
     PutByIdVariant(const PutByIdVariant&);
     PutByIdVariant& operator=(const PutByIdVariant&);
 
-    static PutByIdVariant replace(const StructureSet&, PropertyOffset);
+    static PutByIdVariant replace(const StructureSet&, PropertyOffset, const InferredType::Descriptor&);
     
     static PutByIdVariant transition(
         const StructureSet& oldStructure, Structure* newStructure,
-        const ObjectPropertyConditionSet&, PropertyOffset);
+        const ObjectPropertyConditionSet&, PropertyOffset, const InferredType::Descriptor&);
     
     static PutByIdVariant setter(
         const StructureSet&, PropertyOffset, const ObjectPropertyConditionSet&,
@@ -99,12 +98,23 @@ public:
         return m_newStructure;
     }
 
+    InferredType::Descriptor requiredType() const
+    {
+        return m_requiredType;
+    }
+
     bool writesStructures() const;
     bool reallocatesStorage() const;
     bool makesCalls() const;
     
     const ObjectPropertyConditionSet& conditionSet() const { return m_conditionSet; }
     
+    // We don't support intrinsics for Setters (it would be sweet if we did) but we need this for templated helpers.
+    Intrinsic intrinsic() const { return NoIntrinsic; }
+
+    // This is needed for templated helpers.
+    bool isPropertyUnset() const { return false; }
+
     PropertyOffset offset() const
     {
         ASSERT(isSet());
@@ -130,10 +140,8 @@ private:
     Structure* m_newStructure;
     ObjectPropertyConditionSet m_conditionSet;
     PropertyOffset m_offset;
+    InferredType::Descriptor m_requiredType;
     std::unique_ptr<CallLinkStatus> m_callLinkStatus;
 };
 
 } // namespace JSC
-
-#endif // PutByIdVariant_h
-

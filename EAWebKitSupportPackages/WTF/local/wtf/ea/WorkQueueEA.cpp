@@ -36,13 +36,3 @@ void WorkQueue::platformInitialize(const char* name, Type, QOS)
 void WorkQueue::platformInvalidate()
 {
 }
-
-void WorkQueue::dispatch(std::function<void ()> function)
-{
-	ASSERT(false);
-}
-
-void WorkQueue::dispatchAfter(std::chrono::nanoseconds duration, std::function<void ()> function)
-{
-	ASSERT(false);
-}

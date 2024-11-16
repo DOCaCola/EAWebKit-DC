@@ -1,7 +1,6 @@
 /*
  *  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
- *  Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -45,72 +44,9 @@
 
 #endif
 
-//+EAWebKitChange
-//10/17/2011 - Added PLATFORM(EA)
-// Bug 26276 - Need a mechanism to determine stack extent
-//
-// These platforms should now be working correctly:
-//     DARWIN, QNX, UNIX, SYMBIAN
-// These platforms are not:
-//     WINDOWS, SOLARIS, OPENBSD, HAIKU, WINCE
-//
-// FIXME: remove this! - this code unsafely guesses at stack sizes!
-#if PLATFORM(EA)
-// Based on the current limit used by the JSC parser, guess the stack size.
-static const ptrdiff_t estimatedStackSize = 128 * sizeof(void*) * 1024;
-// This method assumes the stack is growing downwards.
-static void* estimateStackBound(void* origin)
-{
-    return static_cast<char*>(origin) - estimatedStackSize;
-}
-#endif
-//-EAWebKitChange
-
-//+EAWebKitChange
-//10/17/2011
-#if PLATFORM(EA)
-namespace EA { namespace WebKit {
-	extern void *(*gpStackBaseCallback)(void);
-	extern void* gpCollectorStackBase;
-}}
-#endif
-//-EAWebKitChange
-
 namespace WTF {
 
-//+EAWebKitChange
-//10/17/2011
-#if PLATFORM(EA)
-void StackBounds::initialize()
-{
-	if(EA::WebKit::gpStackBaseCallback)
-	{
-		m_origin = EA::WebKit::gpStackBaseCallback();
-	}
-	else
-	{
-		// Getting this assert would mean that the stack base 
-		// was not set so some JS script is slipping by the AutoCollectorStackBase calls. 
-		ASSERT(EA::WebKit::gpCollectorStackBase); 
-		m_origin = EA::WebKit::gpCollectorStackBase;
-	}
-
-    // Going to leave this estimate which is about 1 MB. This seems like a safeguard for OS thread stack against poorly written/unduly complex/malicious JavaScript. 
-	// Currently, JSC interpreter logic continues to parse JavaScript unless stack position overflows beyond this size so as to not thrash OS thread stack.
-	// This situation is highly unlikely as most OS stack are not that large in practice. It should be noted however that most of the stack thrash we have seen with WebKit are in the Render layer code which can recurse pretty deep.
-	// Our experience has been that 384k of stack space has been sufficient for WebKit needs.
-
-	// This stack size is different from the RegisterFile size which manages stack size of JS VM. For example, writing a function like below will easily cause the JS VM stack to exhaust but will have no side effect on OS thread stack.
-	// function callSelf()
-	// {
-	//		callSelf();
-	// }
-	//
-	m_bound = estimateStackBound(m_origin);
-
-}
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
 
 void StackBounds::initialize()
 {

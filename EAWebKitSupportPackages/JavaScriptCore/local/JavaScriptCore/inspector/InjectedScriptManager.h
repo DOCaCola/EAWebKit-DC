@@ -27,8 +27,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InjectedScriptManager_h
-#define InjectedScriptManager_h
+#pragma once
 
 #include "InjectedScript.h"
 #include "InjectedScriptHost.h"
@@ -54,6 +53,7 @@ public:
     virtual ~InjectedScriptManager();
 
     virtual void disconnect();
+    virtual void discardInjectedScripts();
 
     InjectedScriptHost* injectedScriptHost();
     InspectorEnvironment& inspectorEnvironment() const { return m_environment; }
@@ -62,19 +62,18 @@ public:
     InjectedScript injectedScriptForId(int);
     int injectedScriptIdFor(JSC::ExecState*);
     InjectedScript injectedScriptForObjectId(const String& objectId);
-    void discardInjectedScripts();
     void releaseObjectGroup(const String& objectGroup);
     void clearExceptionValue();
 
 protected:
-    virtual void didCreateInjectedScript(InjectedScript);
+    virtual void didCreateInjectedScript(const InjectedScript&);
 
     HashMap<int, InjectedScript> m_idToInjectedScript;
     HashMap<JSC::ExecState*, int> m_scriptStateToId;
 
 private:
     String injectedScriptSource();
-    Deprecated::ScriptObject createInjectedScript(const String& source, JSC::ExecState*, int id);
+    JSC::JSObject* createInjectedScript(const String& source, JSC::ExecState*, int id);
 
     InspectorEnvironment& m_environment;
     RefPtr<InjectedScriptHost> m_injectedScriptHost;
@@ -82,5 +81,3 @@ private:
 };
 
 } // namespace Inspector
-
-#endif // !defined(InjectedScriptManager_h)

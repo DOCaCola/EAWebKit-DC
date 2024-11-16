@@ -23,11 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ThunkGenerators_h
-#define ThunkGenerators_h
+#pragma once
 
 #include "CodeSpecializationKind.h"
-#include "RegisterPreservationMode.h"
 #include "ThunkGenerator.h"
 
 #if ENABLE(JIT)
@@ -37,6 +35,7 @@ class CallLinkInfo;
 
 MacroAssemblerCodeRef throwExceptionFromCallSlowPathGenerator(VM*);
 
+MacroAssemblerCodeRef linkCallThunk(VM*, CallLinkInfo&, CodeSpecializationKind);
 MacroAssemblerCodeRef linkCallThunkGenerator(VM*);
 MacroAssemblerCodeRef linkPolymorphicCallThunkGenerator(VM*);
 
@@ -45,10 +44,9 @@ MacroAssemblerCodeRef virtualThunkFor(VM*, CallLinkInfo&);
 MacroAssemblerCodeRef nativeCallGenerator(VM*);
 MacroAssemblerCodeRef nativeConstructGenerator(VM*);
 MacroAssemblerCodeRef nativeTailCallGenerator(VM*);
+MacroAssemblerCodeRef nativeTailCallWithoutSavedTagsGenerator(VM*);
 MacroAssemblerCodeRef arityFixupGenerator(VM*);
-
-MacroAssemblerCodeRef baselineGetterReturnThunkGenerator(VM* vm);
-MacroAssemblerCodeRef baselineSetterReturnThunkGenerator(VM* vm);
+MacroAssemblerCodeRef unreachableGenerator(VM*);
 
 MacroAssemblerCodeRef charCodeAtThunkGenerator(VM*);
 MacroAssemblerCodeRef charAtThunkGenerator(VM*);
@@ -61,10 +59,15 @@ MacroAssemblerCodeRef floorThunkGenerator(VM*);
 MacroAssemblerCodeRef logThunkGenerator(VM*);
 MacroAssemblerCodeRef roundThunkGenerator(VM*);
 MacroAssemblerCodeRef sqrtThunkGenerator(VM*);
-MacroAssemblerCodeRef powThunkGenerator(VM*);
 MacroAssemblerCodeRef imulThunkGenerator(VM*);
+MacroAssemblerCodeRef randomThunkGenerator(VM*);
+MacroAssemblerCodeRef truncThunkGenerator(VM*);
+
+MacroAssemblerCodeRef boundThisNoArgsFunctionCallGenerator(VM*);
+
+#if ENABLE(WEBASSEMBLY)
+MacroAssemblerCodeRef throwExceptionFromWasmThunkGenerator(VM*);
+#endif
 
 }
 #endif // ENABLE(JIT)
-
-#endif // ThunkGenerator_h

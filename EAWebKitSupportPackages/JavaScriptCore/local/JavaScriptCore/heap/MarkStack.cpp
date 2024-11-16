@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2009-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,6 +26,7 @@
 #include "config.h"
 #include "MarkStack.h"
 
+#include "GCSegmentedArrayInlines.h"
 #include "JSCInlines.h"
 
 namespace JSC {
@@ -33,6 +34,34 @@ namespace JSC {
 MarkStackArray::MarkStackArray()
     : GCSegmentedArray<const JSCell*>()
 {
+}
+
+void MarkStackArray::transferTo(MarkStackArray& other)
+{
+    RELEASE_ASSERT(this != &other);
+    
+    // Remove our head and the head of the other list.
+    GCArraySegment<const JSCell*>* myHead = m_segments.removeHead();
+    GCArraySegment<const JSCell*>* otherHead = other.m_segments.removeHead();
+    m_numberOfSegments--;
+    other.m_numberOfSegments--;
+    
+    other.m_segments.append(m_segments);
+    
+    other.m_numberOfSegments += m_numberOfSegments;
+    m_numberOfSegments = 0;
+    
+    // Put the original heads back in their places.
+    m_segments.push(myHead);
+    other.m_segments.push(otherHead);
+    m_numberOfSegments++;
+    other.m_numberOfSegments++;
+    
+    while (!isEmpty()) {
+        refill();
+        while (canRemoveLast())
+            other.append(removeLast());
+    }
 }
 
 void MarkStackArray::donateSomeCellsTo(MarkStackArray& other)
@@ -107,7 +136,8 @@ void MarkStackArray::stealSomeCellsFrom(MarkStackArray& other, size_t idleThread
         return;
     }
 
-    size_t numberOfCellsToSteal = (other.size() + idleThreadCount - 1) / idleThreadCount; // Round up to steal 1 / 1.
+    // Steal ceil(other.size() / idleThreadCount) things.
+    size_t numberOfCellsToSteal = (other.size() + idleThreadCount - 1) / idleThreadCount;
     while (numberOfCellsToSteal-- > 0 && other.canRemoveLast())
         append(other.removeLast());
 }

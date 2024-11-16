@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef ErrorConstructor_h
-#define ErrorConstructor_h
+#pragma once
 
 #include "ErrorInstance.h"
 #include "InternalFunction.h"
@@ -27,12 +26,13 @@
 namespace JSC {
 
 class ErrorPrototype;
+class GetterSetter;
 
 class ErrorConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
 
-    static ErrorConstructor* create(VM& vm, Structure* structure, ErrorPrototype* errorPrototype)
+    static ErrorConstructor* create(VM& vm, Structure* structure, ErrorPrototype* errorPrototype, GetterSetter*)
     {
         ErrorConstructor* constructor = new (NotNull, allocateCell<ErrorConstructor>(vm.heap)) ErrorConstructor(vm, structure);
         constructor->finishCreation(vm, errorPrototype);
@@ -56,5 +56,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ErrorConstructor_h

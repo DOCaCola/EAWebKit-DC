@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGStaticExecutionCountEstimationPhase_h
-#define DFGStaticExecutionCountEstimationPhase_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -38,16 +37,9 @@ class Graph;
 // ability to do accurate static estimations. Hence we lock in the estimates early.
 // Ideally, we would have dynamic information, but we don't right now, so this is as
 // good as it gets.
-//
-// It's worth noting that if we didn't have this phase, then the static estimation
-// would be perfomed by LLVM instead. It's worth trying to make this phase perform
-// the estimates using the same heuristics that LLVM would use.
 
 bool performStaticExecutionCountEstimation(Graph&);
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGStaticExecutionCountEstimationPhase_h
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple, Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,11 +26,8 @@
 #include "config.h"
 #include "JSWeakSet.h"
 
-#include "JSCJSValueInlines.h"
-#include "SlotVisitorInlines.h"
-#include "StructureInlines.h"
+#include "JSCInlines.h"
 #include "WeakMapData.h"
-#include "WriteBarrierInlines.h"
 
 namespace JSC {
 
@@ -46,7 +43,12 @@ void JSWeakSet::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
     Base::visitChildren(cell, visitor);
     JSWeakSet* thisObj = jsCast<JSWeakSet*>(cell);
-    visitor.append(&thisObj->m_weakMapData);
+    visitor.append(thisObj->m_weakMapData);
+}
+
+String JSWeakSet::toStringName(const JSC::JSObject*, ExecState*)
+{
+    return ASCIILiteral("Object");
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,49 +23,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WASMModuleParser_h
-#define WASMModuleParser_h
+#pragma once
 
 #if ENABLE(WEBASSEMBLY)
 
-#include "Strong.h"
-#include "WASMReader.h"
-#include <wtf/text/WTFString.h>
+#include "WasmFormat.h"
+#include "WasmOps.h"
+#include "WasmParser.h"
+#include <wtf/Vector.h>
 
-namespace JSC {
+namespace JSC { namespace Wasm {
 
-class ExecState;
-class JSGlobalObject;
-class JSWASMModule;
-class SourceCode;
-class VM;
-
-class WASMModuleParser {
-public:
-    WASMModuleParser(const SourceCode&);
-    JSWASMModule* parse(VM&, JSGlobalObject*, String& errorMessage);
-
-private:
-    void parseModule();
-    void parseConstantPoolSection();
-    void parseSignatureSection();
-    void parseFunctionImportSection();
-    void parseGlobalSection();
-    void parseFunctionDeclarationSection();
-    void parseFunctionPointerTableSection();
-    void parseFunctionDefinitionSection();
-    void parseFunctionDefinition();
-    void parseExportSection();
-
-    WASMReader m_reader;
-    Strong<JSWASMModule> m_module;
-    String m_errorMessage;
+struct ModuleParserResult {
+    std::unique_ptr<ModuleInformation> module;
+    Vector<FunctionLocationInBinary> functionLocationInBinary;
+    Vector<SignatureIndex> moduleSignatureIndicesToUniquedSignatureIndices;
 };
 
-JS_EXPORT_PRIVATE JSWASMModule* parseWebAssembly(ExecState*, const SourceCode&, String& errorMessage);
+class ModuleParser : public Parser<ModuleParserResult> {
+public:
 
-} // namespace JSC
+    ModuleParser(VM* vm, const uint8_t* sourceBuffer, size_t sourceLength)
+        : Parser(vm, sourceBuffer, sourceLength)
+    {
+    }
+    ModuleParser(VM* vm, const Vector<uint8_t>& sourceBuffer)
+        : ModuleParser(vm, sourceBuffer.data(), sourceBuffer.size())
+    {
+    }
+
+    Result WARN_UNUSED_RETURN parse();
+
+private:
+
+#define WASM_SECTION_DECLARE_PARSER(NAME, ID, DESCRIPTION) PartialResult WARN_UNUSED_RETURN parse ## NAME();
+    FOR_EACH_WASM_SECTION(WASM_SECTION_DECLARE_PARSER)
+#undef WASM_SECTION_DECLARE_PARSER
+
+    PartialResult WARN_UNUSED_RETURN parseCustom(uint32_t);
+    PartialResult WARN_UNUSED_RETURN parseGlobalType(Global&);
+    PartialResult WARN_UNUSED_RETURN parseMemoryHelper(bool isImport);
+    PartialResult WARN_UNUSED_RETURN parseTableHelper(bool isImport);
+    PartialResult WARN_UNUSED_RETURN parseResizableLimits(uint32_t& initial, std::optional<uint32_t>& maximum);
+    PartialResult WARN_UNUSED_RETURN parseInitExpr(uint8_t&, uint64_t&, Type& initExprType);
+
+    ModuleParserResult m_result;
+    bool m_hasTable { false };
+};
+
+} } // namespace JSC::Wasm
 
 #endif // ENABLE(WEBASSEMBLY)
-
-#endif // WASMModuleParser_h

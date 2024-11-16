@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2011 Google Inc. All rights reserved.
- * Copyright (C) 2014, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,14 +40,9 @@
 #include <wincrypt.h> // windows.h must be included before wincrypt.h.
 #endif
 
-//+EAWebKitChange
-//2/28/2014
-#if PLATFORM(EA)
-namespace EA { namespace WebKit {
-    extern bool (*gpCryptographicallyRandomValueCallback)(unsigned char *buffer, size_t length);
-}}
+#if OS(DARWIN)
+#include "CommonCryptoSPI.h"
 #endif
-//-EAWebKitChange
 
 namespace WTF {
 
@@ -67,23 +61,7 @@ NEVER_INLINE NO_RETURN_DUE_TO_CRASH static void crashUnableToReadFromURandom()
 void cryptographicallyRandomValuesFromOS(unsigned char* buffer, size_t length)
 {
 #if OS(DARWIN)
-    return arc4random_buf(buffer, length);
-//+EAWebKitChange
-//2/28/2014
-//5/04/2015
-#elif PLATFORM(EA)
-	bool bResult = true;
-	if (!EA::WebKit::gpCryptographicallyRandomValueCallback || !(bResult = EA::WebKit::gpCryptographicallyRandomValueCallback(buffer, length)))
-    {
-		if (bResult)
-			ASSERT_WITH_MESSAGE(false, "WARNING : Missing an application-supplied Crypto function!!");
-
-		ASSERT_WITH_MESSAGE(false, "Using a default Crypto Implementation");
-		for (size_t i = 0; i < length; ++i) {
-			buffer[i] = rand() % 255;
-		}
-    }
-//-EAWebKitChange
+    RELEASE_ASSERT(!CCRandomCopyBytes(kCCRandomDefault, buffer, length));
 #elif OS(UNIX)
     int fd = open("/dev/urandom", O_RDONLY, 0);
     if (fd < 0)

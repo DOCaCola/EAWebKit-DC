@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FTLValueRange_h
-#define FTLValueRange_h
+#pragma once
 
 #if ENABLE(FTL_JIT)
 
@@ -37,31 +36,25 @@ public:
     ValueRange()
         : m_begin(0)
         , m_end(0)
-        , m_rangeMetadata(0)
     {
     }
     
     ValueRange(LValue begin, LValue end)
         : m_begin(begin)
         , m_end(end)
-        , m_rangeMetadata(0)
     {
     }
     
     LValue begin() const { return m_begin; }
     LValue end() const { return m_end; }
     
-    void decorateInstruction(LContext, LValue loadInstruction, unsigned rangeKind) const;
+    void decorateInstruction(LValue loadInstruction, unsigned rangeKind) const;
     
 private:
     LValue m_begin;
     LValue m_end;
-    mutable LValue m_rangeMetadata;
 };
 
 } } // namespace JSC::FTL
 
 #endif // ENABLE(FTL_JIT)
-
-#endif // FTLValueRange_h
-

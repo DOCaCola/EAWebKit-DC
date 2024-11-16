@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DeferredCompilationCallback_h
-#define DeferredCompilationCallback_h
+#pragma once
 
 #include "CompilationResult.h"
 #include "DeferredSourceDump.h"
@@ -42,8 +41,8 @@ protected:
 public:
     virtual ~DeferredCompilationCallback();
 
-    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*) = 0;
-    virtual void compilationDidComplete(CodeBlock*, CompilationResult);
+    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*, CodeBlock* profiledDFGCodeBlock) = 0;
+    virtual void compilationDidComplete(CodeBlock*, CodeBlock* profiledDFGCodeBlock, CompilationResult);
 
     Vector<DeferredSourceDump>& ensureDeferredSourceDump();
 
@@ -54,6 +53,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // DeferredCompilationCallback_h
-

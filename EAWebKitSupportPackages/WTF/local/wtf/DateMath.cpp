@@ -4,7 +4,6 @@
  * Copyright (C) 2009 Google Inc. All rights reserved.
  * Copyright (C) 2007-2009 Torch Mobile, Inc.
  * Copyright (C) 2010 &yet, LLC. (nate@andyet.net)
- * Copyright (C) 2014, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
@@ -122,21 +121,16 @@ static const int firstDayOfMonth[2][12] = {
     {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335}
 };
 
-//+EAWebKitChange
-//3/3/2014
 static inline void getLocalTime(const time_t* localTime, struct tm* localTM)
 {
-#if COMPILER(MINGW)
-    *localTM = *localtime(localTime);
-#elif COMPILER(MSVC)
+#if COMPILER(MSVC)
     localtime_s(localTM, localTime);
-#elif defined(EA_PLATFORM_SONY)
-    localtime_s(localTime, localTM);
-#else
+#elif HAVE(LOCALTIME_R)
     localtime_r(localTime, localTM);
+#else
+    localtime_s(localTime, localTM);
 #endif
 }
-//-EAWebKitChange
 
 bool isLeapYear(int year)
 {
@@ -170,7 +164,7 @@ static inline double daysFrom1970ToYear(int year)
     const double yearsToExcludeBy100Rule = floor(yearMinusOne / 100.0) - excludedLeapDaysBefore1971By100Rule;
     const double yearsToAddBy400Rule = floor(yearMinusOne / 400.0) - leapDaysBefore1971By400Rule;
 
-    return 365.0 * (year - 1970) + yearsToAddBy4Rule - yearsToExcludeBy100Rule + yearsToAddBy400Rule;
+    return 365.0 * (year - 1970.0) + yearsToAddBy4Rule - yearsToExcludeBy100Rule + yearsToAddBy400Rule;
 }
 
 double msToDays(double ms)
@@ -363,7 +357,6 @@ int equivalentYearForDST(int year)
     int product = (quotient) * 28;
 
     year += product;
-    ASSERT((year >= minYear && year <= maxYear) || (product - year == static_cast<int>(std::numeric_limits<double>::quiet_NaN())));
     return year;
 }
 
@@ -389,10 +382,7 @@ static callGetTimeZoneInformationForYear_t timeZoneInformationForYearFunction()
 
 static int32_t calculateUTCOffset()
 {
-	//+EAWebKitChange
-	//4/2/2014
-#if OS(WINDOWS) && !PLATFORM(EA)
-	//-EAWebKitChange
+#if OS(WINDOWS)
     TIME_ZONE_INFORMATION timeZoneInformation;
     DWORD rc = 0;
 
@@ -454,10 +444,7 @@ static int32_t calculateUTCOffset()
 
 #if !HAVE(TM_GMTOFF)
 
-//+EAWebKitChange
-//4/28/2015
-#if OS(WINDOWS) && !PLATFORM(EA)
-//-EAWebKitChange
+#if OS(WINDOWS)
 // Code taken from http://support.microsoft.com/kb/167296
 static void UnixTimeToFileTime(time_t t, LPFILETIME pft)
 {
@@ -475,10 +462,7 @@ static void UnixTimeToFileTime(time_t t, LPFILETIME pft)
  */
 static double calculateDSTOffset(time_t localTime, double utcOffset)
 {
-	//+EAWebKitChange
-	//4/28/2015
-#if OS(WINDOWS) && !PLATFORM(EA)
-	//-EAWebKitChange
+#if OS(WINDOWS)
     FILETIME utcFileTime;
     UnixTimeToFileTime(localTime, &utcFileTime);
     SYSTEMTIME utcSystemTime, localSystemTime;

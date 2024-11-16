@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef GenericTypedArrayView_h
-#define GenericTypedArrayView_h
+#pragma once
 
 #include "ArrayBuffer.h"
 #include "ArrayBufferView.h"
@@ -72,7 +71,7 @@ public:
         return m_length;
     }
     
-    virtual unsigned byteLength() const override
+    unsigned byteLength() const override
     {
         return length() * sizeof(typename Adaptor::Type);
     }
@@ -101,18 +100,15 @@ public:
     RefPtr<GenericTypedArrayView> subarray(int start) const;
     RefPtr<GenericTypedArrayView> subarray(int start, int end) const;
     
-    virtual TypedArrayType getType() const override
+    TypedArrayType getType() const override
     {
         return Adaptor::typeValue;
     }
 
-    virtual JSArrayBufferView* wrap(ExecState*, JSGlobalObject*) override;
+    JSArrayBufferView* wrap(ExecState*, JSGlobalObject*) override;
 
 private:
     unsigned m_length;
 };
 
 } // namespace JSC
-
-#endif // GenericTypedArrayView_h
-

@@ -23,20 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WeakMapConstructor_h
-#define WeakMapConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
 namespace JSC {
 
 class WeakMapPrototype;
+class GetterSetter;
 
 class WeakMapConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
 
-    static WeakMapConstructor* create(VM& vm, Structure* structure, WeakMapPrototype* prototype)
+    static WeakMapConstructor* create(VM& vm, Structure* structure, WeakMapPrototype* prototype, GetterSetter*)
     {
         WeakMapConstructor* constructor = new (NotNull, allocateCell<WeakMapConstructor>(vm.heap)) WeakMapConstructor(vm, structure);
         constructor->finishCreation(vm, prototype);
@@ -60,6 +60,4 @@ private:
     static CallType getCallData(JSCell*, CallData&);
 };
 
-}
-
-#endif // !defined(WeakMapConstructor_h)
+} // namespace JSC

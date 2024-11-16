@@ -34,7 +34,7 @@ ComplexGetStatus ComplexGetStatus::computeFor(
     Structure* headStructure, const ObjectPropertyConditionSet& conditionSet, UniquedStringImpl* uid)
 {
     // FIXME: We should assert that we never see a structure that
-    // hasImpureGetOwnPropertySlot() but for which we don't
+    // getOwnPropertySlotIsImpure() but for which we don't
     // newImpurePropertyFiresWatchpoints(). We're not at a point where we can do
     // that, yet.
     // https://bugs.webkit.org/show_bug.cgi?id=131810
@@ -57,13 +57,12 @@ ComplexGetStatus ComplexGetStatus::computeFor(
             result.m_conditionSet.numberOfConditionsWithKind(PropertyCondition::Presence);
         RELEASE_ASSERT(numberOfSlotBases <= 1);
         if (!numberOfSlotBases) {
-            // Currently we don't support misses. That's a bummer.
-            // FIXME: https://bugs.webkit.org/show_bug.cgi?id=133052
-            return takesSlowPath();
+            ASSERT(result.m_offset == invalidOffset);
+            return result;
         }
         ObjectPropertyCondition base = result.m_conditionSet.slotBaseCondition();
         ASSERT(base.kind() == PropertyCondition::Presence);
-        
+
         result.m_offset = base.offset();
     } else
         result.m_offset = headStructure->getConcurrently(uid);

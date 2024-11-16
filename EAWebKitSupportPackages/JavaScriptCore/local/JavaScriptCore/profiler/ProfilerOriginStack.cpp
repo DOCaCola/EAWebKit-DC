@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2012, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +27,7 @@
 #include "ProfilerOriginStack.h"
 
 #include "CodeOrigin.h"
+#include "InlineCallFrame.h"
 #include "JSGlobalObject.h"
 #include "JSCInlines.h"
 #include "ProfilerDatabase.h"
@@ -51,7 +52,7 @@ OriginStack::OriginStack(Database& database, CodeBlock* codeBlock, const CodeOri
     
     for (unsigned i = 1; i < stack.size(); ++i) {
         append(Origin(
-            database.ensureBytecodesFor(stack[i].inlineCallFrame->baselineCodeBlock()),
+            database.ensureBytecodesFor(stack[i].inlineCallFrame->baselineCodeBlock.get()),
             stack[i].bytecodeIndex));
     }
 }
@@ -99,10 +100,15 @@ void OriginStack::dump(PrintStream& out) const
 
 JSValue OriginStack::toJS(ExecState* exec) const
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
     JSArray* result = constructEmptyArray(exec, 0);
+    RETURN_IF_EXCEPTION(scope, { });
     
-    for (unsigned i = 0; i < m_stack.size(); ++i)
+    for (unsigned i = 0; i < m_stack.size(); ++i) {
         result->putDirectIndex(exec, i, m_stack[i].toJS(exec));
+        RETURN_IF_EXCEPTION(scope, { });
+    }
     
     return result;
 }

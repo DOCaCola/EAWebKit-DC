@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2015 Apple Inc. All rights reserved.
+ *  Copyright (C) 2006-2011, 2015-2016 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef JSType_h
-#define JSType_h
+#pragma once
 
 namespace JSC {
 
@@ -35,18 +34,24 @@ enum JSType : uint8_t {
     StringType,
     SymbolType,
 
-    GetterSetterType,
     CustomGetterSetterType,
     APIValueWrapperType,
 
     EvalExecutableType,
     ProgramExecutableType,
+    ModuleProgramExecutableType,
     FunctionExecutableType,
+    WebAssemblyExecutableType,
 
     UnlinkedFunctionExecutableType,
     UnlinkedProgramCodeBlockType,
+    UnlinkedModuleProgramCodeBlockType,
     UnlinkedEvalCodeBlockType,
     UnlinkedFunctionCodeBlockType,
+
+    JSFixedArrayType,
+    JSSourceCodeType,
+    JSScriptFetcherType,
 
     // The ObjectType value must come before any JSType that is a subclass of JSObject.
     ObjectType,
@@ -61,6 +66,9 @@ enum JSType : uint8_t {
     DirectArgumentsType,
     ScopedArgumentsType,
 
+    ArrayType,
+    DerivedArrayType,
+
     Int8ArrayType,
     Int16ArrayType,
     Int32ArrayType,
@@ -72,16 +80,28 @@ enum JSType : uint8_t {
     Float64ArrayType,
     DataViewType,
 
-    NameScopeObjectType,
+    GetterSetterType,
 
+    // Start environment record types.
     GlobalObjectType,
-    ActivationObjectType,
+    LexicalEnvironmentType,
+    GlobalLexicalEnvironmentType,
+    ModuleEnvironmentType,
+    StrictEvalActivationType,
+    // End environment record types.
 
-    LastJSCObjectType = ActivationObjectType,
+    RegExpObjectType,
+    ProxyObjectType,
+    JSMapType,
+    JSSetType,
+
+    WebAssemblyFunctionType,
+
+    LastJSCObjectType = JSSetType,
+    MaxJSType = 0b11111111,
 };
 
-COMPILE_ASSERT(sizeof(JSType) == sizeof(uint8_t), sizeof_jstype_is_one_byte);
+static_assert(sizeof(JSType) == sizeof(uint8_t), "sizeof(JSType) is one byte.");
+static_assert(LastJSCObjectType < 128, "The highest bit is reserved for embedder's extension.");
 
 } // namespace JSC
-
-#endif

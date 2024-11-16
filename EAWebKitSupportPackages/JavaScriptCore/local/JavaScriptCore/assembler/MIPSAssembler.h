@@ -26,8 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MIPSAssembler_h
-#define MIPSAssembler_h
+#pragma once
 
 #if ENABLE(ASSEMBLER) && CPU(MIPS)
 
@@ -151,11 +150,11 @@ public:
     typedef MIPSRegisters::FPRegisterID FPRegisterID;
     typedef SegmentedVector<AssemblerLabel, 64> Jumps;
 
-    static RegisterID firstRegister() { return MIPSRegisters::r0; }
-    static RegisterID lastRegister() { return MIPSRegisters::r31; }
+    static constexpr RegisterID firstRegister() { return MIPSRegisters::r0; }
+    static constexpr RegisterID lastRegister() { return MIPSRegisters::r31; }
 
-    static FPRegisterID firstFPRegister() { return MIPSRegisters::f0; }
-    static FPRegisterID lastFPRegister() { return MIPSRegisters::f31; }
+    static constexpr FPRegisterID firstFPRegister() { return MIPSRegisters::f0; }
+    static constexpr FPRegisterID lastFPRegister() { return MIPSRegisters::f31; }
 
     MIPSAssembler()
         : m_indexOfLastWatchpoint(INT_MIN)
@@ -238,6 +237,11 @@ public:
     void lui(RegisterID rt, int imm)
     {
         emitInst(0x3c000000 | (rt << OP_SH_RT) | (imm & 0xffff));
+    }
+
+    void clz(RegisterID rd, RegisterID rs)
+    {
+        emitInst(0x70000020 | (rd << OP_SH_RD) | (rs << OP_SH_RS) | (rd << OP_SH_RT));
     }
 
     void addiu(RegisterID rt, RegisterID rs, int imm)
@@ -540,6 +544,11 @@ public:
     void sqrtd(FPRegisterID fd, FPRegisterID fs)
     {
         emitInst(0x46200004 | (fd << OP_SH_FD) | (fs << OP_SH_FS));
+    }
+
+    void absd(FPRegisterID fd, FPRegisterID fs)
+    {
+        emitInst(0x46200005 | (fd << OP_SH_FD) | (fs << OP_SH_FS));
     }
 
     void movd(FPRegisterID fd, FPRegisterID fs)
@@ -1086,5 +1095,3 @@ private:
 } // namespace JSC
 
 #endif // ENABLE(ASSEMBLER) && CPU(MIPS)
-
-#endif // MIPSAssembler_h

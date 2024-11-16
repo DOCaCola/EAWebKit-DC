@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FTLThunks_h
-#define FTLThunks_h
+#pragma once
 
 #if ENABLE(FTL_JIT)
 
@@ -40,6 +39,7 @@ class VM;
 namespace FTL {
 
 MacroAssemblerCodeRef osrExitGenerationThunkGenerator(VM*);
+MacroAssemblerCodeRef lazySlowPathGenerationThunkGenerator(VM*);
 MacroAssemblerCodeRef slowPathCallThunkGenerator(VM&, const SlowPathCallKey&);
 
 template<typename KeyTypeArgument>
@@ -94,5 +94,3 @@ private:
 } } // namespace JSC::FTL
 
 #endif // ENABLE(FTL_JIT)
-
-#endif // FTLTHunks_h

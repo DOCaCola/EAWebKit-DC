@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2010, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,16 +23,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SpecializedThunkJIT_h
-#define SpecializedThunkJIT_h
+#pragma once
 
 #if ENABLE(JIT)
 
-#include "Executable.h"
 #include "JIT.h"
 #include "JITInlines.h"
 #include "JSInterfaceJIT.h"
-#include "JSStack.h"
 #include "LinkBuffer.h"
 
 namespace JSC {
@@ -44,14 +41,16 @@ namespace JSC {
             : JSInterfaceJIT(vm)
         {
             emitFunctionPrologue();
+            emitSaveThenMaterializeTagRegisters();
             // Check that we have the expected number of arguments
-            m_failures.append(branch32(NotEqual, payloadFor(JSStack::ArgumentCount), TrustedImm32(expectedArgCount + 1)));
+            m_failures.append(branch32(NotEqual, payloadFor(CallFrameSlot::argumentCount), TrustedImm32(expectedArgCount + 1)));
         }
         
         explicit SpecializedThunkJIT(VM* vm)
             : JSInterfaceJIT(vm)
         {
             emitFunctionPrologue();
+            emitSaveThenMaterializeTagRegisters();
         }
         
         void loadDoubleArgument(int argument, FPRegisterID dst, RegisterID scratch)
@@ -69,7 +68,7 @@ namespace JSC {
         void loadJSStringArgument(VM& vm, int argument, RegisterID dst)
         {
             loadCellArgument(argument, dst);
-            m_failures.append(branchStructure(*this, NotEqual, 
+            m_failures.append(branchStructure(NotEqual, 
                 Address(dst, JSCell::structureIDOffset()), 
                 vm.stringStructure.get()));
         }
@@ -105,6 +104,8 @@ namespace JSC {
         {
             if (src != regT0)
                 move(src, regT0);
+            
+            emitRestoreSavedTagRegisters();
             emitFunctionEpilogue();
             ret();
         }
@@ -113,6 +114,7 @@ namespace JSC {
         {
             ASSERT_UNUSED(payload, payload == regT0);
             ASSERT_UNUSED(tag, tag == regT1);
+            emitRestoreSavedTagRegisters();
             emitFunctionEpilogue();
             ret();
         }
@@ -137,6 +139,7 @@ namespace JSC {
             lowNonZero.link(this);
             highNonZero.link(this);
 #endif
+            emitRestoreSavedTagRegisters();
             emitFunctionEpilogue();
             ret();
         }
@@ -146,6 +149,7 @@ namespace JSC {
             if (src != regT0)
                 move(src, regT0);
             tagReturnAsInt32();
+            emitRestoreSavedTagRegisters();
             emitFunctionEpilogue();
             ret();
         }
@@ -155,6 +159,7 @@ namespace JSC {
             if (src != regT0)
                 move(src, regT0);
             tagReturnAsJSCell();
+            emitRestoreSavedTagRegisters();
             emitFunctionEpilogue();
             ret();
         }
@@ -185,7 +190,6 @@ namespace JSC {
         }
 
     private:
-
         void tagReturnAsInt32()
         {
 #if USE(JSVALUE64)
@@ -209,5 +213,3 @@ namespace JSC {
 }
 
 #endif // ENABLE(JIT)
-
-#endif // SpecializedThunkJIT_h

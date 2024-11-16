@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008 Apple Inc. All Rights Reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,10 +34,8 @@
 #include <wtf/StackStats.h>
 #include <wtf/text/StringHash.h>
 
-#if OS(DARWIN)
-#if defined(__has_include) && __has_include(<System/pthread_machdep.h>)
+#if USE(APPLE_INTERNAL_SDK)
 #include <System/pthread_machdep.h>
-#endif
 #endif
 
 #if defined(__PTK_FRAMEWORK_JAVASCRIPTCORE_KEY1)
@@ -74,19 +71,11 @@ public:
         return oldAtomicStringTable;
     }
 
-    void resetCurrentAtomicStringTable()
-    {
-        m_currentAtomicStringTable = m_defaultAtomicStringTable;
-    }
-
     const StackBounds& stack()
     {
         // We need to always get a fresh StackBounds from the OS due to how fibers work.
         // See https://bugs.webkit.org/show_bug.cgi?id=102411
-		//+EAWebKitChange
-		//4/2/2014
-#if OS(WINDOWS) && !PLATFORM(EA)
-		//-EAWebKitChange
+#if OS(WINDOWS)
         m_stackBounds = StackBounds::currentThreadStackBounds();
 #endif
         return m_stackBounds;

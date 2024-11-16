@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2013-2014, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,10 @@
 #include "TestRunnerUtils.h"
 
 #include "CodeBlock.h"
+#include "FunctionCodeBlock.h"
+#include "HeapStatistics.h"
 #include "JSCInlines.h"
+#include "LLIntData.h"
 
 namespace JSC {
 
@@ -83,6 +86,14 @@ JSValue setNeverInline(JSValue theFunctionValue)
     return jsUndefined();
 }
 
+JSValue setNeverOptimize(JSValue theFunctionValue)
+{
+    if (FunctionExecutable* executable = getExecutableForFunction(theFunctionValue))
+        executable->setNeverOptimize(true);
+    
+    return jsUndefined();
+}
+
 JSValue optimizeNextInvocation(JSValue theFunctionValue)
 {
 #if ENABLE(JIT)
@@ -91,6 +102,13 @@ JSValue optimizeNextInvocation(JSValue theFunctionValue)
 #else
     UNUSED_PARAM(theFunctionValue);
 #endif
+
+    return jsUndefined();
+}
+
+JSValue failNextNewCodeBlock(ExecState* exec)
+{
+    exec->vm().setFailNextNewCodeBlock();
 
     return jsUndefined();
 }
@@ -109,11 +127,39 @@ JSValue setNeverInline(ExecState* exec)
     return setNeverInline(exec->uncheckedArgument(0));
 }
 
+JSValue setNeverOptimize(ExecState* exec)
+{
+    if (exec->argumentCount() < 1)
+        return jsUndefined();
+    return setNeverOptimize(exec->uncheckedArgument(0));
+}
+
+JSValue setCannotUseOSRExitFuzzing(ExecState* exec)
+{
+    if (exec->argumentCount() < 1)
+        return jsUndefined();
+
+    JSValue theFunctionValue = exec->uncheckedArgument(0);
+    if (FunctionExecutable* executable = getExecutableForFunction(theFunctionValue))
+        executable->setCanUseOSRExitFuzzing(false);
+
+    return jsUndefined();
+}
+
 JSValue optimizeNextInvocation(ExecState* exec)
 {
     if (exec->argumentCount() < 1)
         return jsUndefined();
     return optimizeNextInvocation(exec->uncheckedArgument(0));
+}
+
+// This is a hook called at the bitter end of some of our tests.
+void finalizeStatsAtEndOfTesting()
+{
+    if (Options::logHeapStatisticsAtExit())
+        HeapStatistics::reportSuccess();
+    if (Options::reportLLIntStats())
+        LLInt::Data::finalizeStats();
 }
 
 } // namespace JSC

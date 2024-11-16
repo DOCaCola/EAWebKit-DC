@@ -33,7 +33,6 @@
 #include "DFGGraph.h"
 #include "DFGPhase.h"
 #include "JSCInlines.h"
-#include <wtf/HashMap.h>
 
 namespace JSC { namespace DFG {
 
@@ -73,11 +72,9 @@ public:
 private:
     void breakCriticalEdge(BasicBlock* predecessor, BasicBlock** successor)
     {
-        // Note that we pass NaN for the count of the critical edge block, because we honestly
-        // don't know its execution frequency.
-        BasicBlock* pad = m_insertionSet.insertBefore(*successor, PNaN);
+        BasicBlock* pad = m_insertionSet.insertBefore(*successor, (*successor)->executionCount);
         pad->appendNode(
-            m_graph, SpecNone, Jump, (*successor)->firstOrigin(), OpInfo(*successor));
+            m_graph, SpecNone, Jump, (*successor)->at(0)->origin, OpInfo(*successor));
         pad->predecessors.append(predecessor);
         (*successor)->replacePredecessor(predecessor, pad);
         
@@ -89,7 +86,6 @@ private:
 
 bool performCriticalEdgeBreaking(Graph& graph)
 {
-    SamplingRegion samplingRegion("DFG Critical Edge Breaking Phase");
     return runPhase<CriticalEdgeBreakingPhase>(graph);
 }
 

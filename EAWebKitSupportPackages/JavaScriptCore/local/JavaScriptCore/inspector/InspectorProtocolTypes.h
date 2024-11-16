@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorProtocolTypes_h
-#define InspectorProtocolTypes_h
+#pragma once
 
 #include "InspectorValues.h"
 #include <wtf/Assertions.h>
@@ -81,7 +80,7 @@ public:
 
     void addItem(RefPtr<T>&& value)
     {
-        openAccessors().pushValue(WTF::move(value));
+        openAccessors().pushValue(WTFMove(value));
     }
     
     void addItem(const String& value)
@@ -93,7 +92,12 @@ public:
     {
         openAccessors().pushInteger(value);
     }
-    
+
+    void addItem(double value)
+    {
+        openAccessors().pushDouble(value);
+    }
+
     static Ref<Array<T>> create()
     {
         return adoptRef(*new Array<T>());
@@ -174,5 +178,3 @@ template<> struct BindingTraits<int> : public PrimitiveBindingTraits<InspectorVa
 using Protocol::BindingTraits;
 
 } // namespace Inspector
-
-#endif // !defined(InspectorProtocolTypes_h)

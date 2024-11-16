@@ -88,7 +88,7 @@ public:
     bool run()
     {
         ASSERT(m_graph.m_form == ThreadedCPS);
-
+        
         clearVariableVotes();
         identifyRedundantStructureChecks();
         disableHoistingForVariablesWithInsufficientVotes<StructureTypeCheck>();
@@ -108,8 +108,16 @@ public:
             BasicBlock* block = m_graph.block(blockIndex);
             if (!block)
                 continue;
+            unsigned indexForChecks = UINT_MAX;
+            NodeOrigin originForChecks;
             for (unsigned indexInBlock = 0; indexInBlock < block->size(); ++indexInBlock) {
                 Node* node = block->at(indexInBlock);
+                
+                if (node->origin.exitOK) {
+                    indexForChecks = indexInBlock;
+                    originForChecks = node->origin;
+                }
+                
                 // Be careful not to use 'node' after appending to the graph. In those switch
                 // cases where we need to append, we first carefully extract everything we need
                 // from the node, before doing any appending.
@@ -170,13 +178,15 @@ public:
                     
                     if (iter->value.m_structure) {
                         insertionSet.insertNode(
-                            indexInBlock, SpecNone, CheckStructure, origin,
+                            indexForChecks, SpecNone, CheckStructure,
+                            originForChecks.withSemantic(origin.semantic),
                             OpInfo(m_graph.addStructureSet(iter->value.m_structure)),
                             Edge(child1.node(), CellUse));
                     } else if (iter->value.m_arrayModeIsValid) {
                         ASSERT(iter->value.m_arrayModeHoistingOkay);
                         insertionSet.insertNode(
-                            indexInBlock, SpecNone, CheckArray, origin,
+                            indexForChecks, SpecNone, CheckArray,
+                            originForChecks.withSemantic(origin.semantic),
                             OpInfo(iter->value.m_arrayMode.asWord()),
                             Edge(child1.node(), CellUse));
                     } else
@@ -236,6 +246,7 @@ private:
                 case PutStructure:
                 case AllocatePropertyStorage:
                 case ReallocatePropertyStorage:
+                case NukeStructureAndSetButterfly:
                 case GetButterfly:
                 case GetByVal:
                 case PutByValDirect:
@@ -261,8 +272,7 @@ private:
                     if (!shouldConsiderForHoisting<StructureTypeCheck>(variable))
                         break;
                     Node* source = node->child1().node();
-                    for (unsigned subIndexInBlock = 0; subIndexInBlock < block->size(); ++subIndexInBlock) {
-                        Node* subNode = block->at(subIndexInBlock);
+                    for (auto* subNode : *block) {
                         switch (subNode->op()) {
                         case CheckStructure: {
                             if (subNode->child1() != source)
@@ -294,8 +304,7 @@ private:
             BasicBlock* block = m_graph.block(blockIndex);
             if (!block)
                 continue;
-            for (unsigned indexInBlock = 0; indexInBlock < block->size(); ++indexInBlock) {
-                Node* node = block->at(indexInBlock);
+            for (auto* node : *block) {
                 switch (node->op()) {
                 case CheckArray: {
                     Node* child = node->child1().node();
@@ -353,8 +362,7 @@ private:
                     if (!shouldConsiderForHoisting<ArrayTypeCheck>(variable))
                         break;
                     Node* source = node->child1().node();
-                    for (unsigned subIndexInBlock = 0; subIndexInBlock < block->size(); ++subIndexInBlock) {
-                        Node* subNode = block->at(subIndexInBlock);
+                    for (auto subNode : *block) {
                         switch (subNode->op()) {
                         case CheckStructure: {
                             if (subNode->child1() != source)
@@ -457,23 +465,23 @@ private:
         return true;
     }
     
-    void noticeStructureCheck(VariableAccessData* variable, Structure* structure)
+    void noticeStructureCheck(VariableAccessData* variable, RegisteredStructure structure)
     {
-        HashMap<VariableAccessData*, CheckData>::AddResult result = m_map.add(variable, CheckData(structure));
+        HashMap<VariableAccessData*, CheckData>::AddResult result = m_map.add(variable, CheckData(structure.get()));
         if (result.isNewEntry)
             return;
-        if (result.iterator->value.m_structure == structure)
+        if (result.iterator->value.m_structure == structure.get())
             return;
         result.iterator->value.m_structure = 0;
     }
     
-    void noticeStructureCheck(VariableAccessData* variable, const StructureSet& set)
+    void noticeStructureCheck(VariableAccessData* variable, RegisteredStructureSet set)
     {
         if (set.size() != 1) {
-            noticeStructureCheck(variable, 0);
+            noticeStructureCheck(variable, RegisteredStructure());
             return;
         }
-        noticeStructureCheck(variable, set.onlyStructure());
+        noticeStructureCheck(variable, set.at(0));
     }
 
     void noticeCheckArray(VariableAccessData* variable, ArrayMode arrayMode)
@@ -493,22 +501,22 @@ private:
         result.iterator->value.disableCheckArrayHoisting();
     }
 
-    void noticeStructureCheckAccountingForArrayMode(VariableAccessData* variable, Structure* structure)
+    void noticeStructureCheckAccountingForArrayMode(VariableAccessData* variable, RegisteredStructure structure)
     {
         HashMap<VariableAccessData*, CheckData>::iterator result = m_map.find(variable);
         if (result == m_map.end())
             return;
         if (!result->value.m_arrayModeHoistingOkay || !result->value.m_arrayModeIsValid)
             return;
-        if (result->value.m_arrayMode.structureWouldPassArrayModeFiltering(structure))
+        if (result->value.m_arrayMode.structureWouldPassArrayModeFiltering(structure.get()))
             return;
         result->value.disableCheckArrayHoisting();
     }
 
-    void noticeStructureCheckAccountingForArrayMode(VariableAccessData* variable, const StructureSet& set)
+    void noticeStructureCheckAccountingForArrayMode(VariableAccessData* variable, RegisteredStructureSet set)
     {
         for (unsigned i = 0; i < set.size(); i++)
-            noticeStructureCheckAccountingForArrayMode(variable, set[i]);
+            noticeStructureCheckAccountingForArrayMode(variable, set.at(i));
     }
 
     HashMap<VariableAccessData*, CheckData> m_map;
@@ -516,7 +524,6 @@ private:
 
 bool performTypeCheckHoisting(Graph& graph)
 {
-    SamplingRegion samplingRegion("DFG Type Check Hoisting Phase");
     return runPhase<TypeCheckHoistingPhase>(graph);
 }
 

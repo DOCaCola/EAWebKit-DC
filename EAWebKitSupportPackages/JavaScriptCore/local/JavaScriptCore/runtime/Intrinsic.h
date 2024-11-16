@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,12 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef Intrinsic_h
-#define Intrinsic_h
+#pragma once
 
 namespace JSC {
 
-enum Intrinsic {
+enum JS_EXPORT_PRIVATE Intrinsic {
+    // Call intrinsics.
     NoIntrinsic,
     AbsIntrinsic,
     MinIntrinsic,
@@ -37,8 +37,10 @@ enum Intrinsic {
     SinIntrinsic,
     Clz32Intrinsic,
     CosIntrinsic,
+    TanIntrinsic,
     ArrayPushIntrinsic,
     ArrayPopIntrinsic,
+    ArraySliceIntrinsic,
     CharCodeAtIntrinsic,
     CharAtIntrinsic,
     FromCharCodeIntrinsic,
@@ -50,9 +52,38 @@ enum Intrinsic {
     LogIntrinsic,
     RegExpExecIntrinsic,
     RegExpTestIntrinsic,
+    RegExpTestFastIntrinsic,
     StringPrototypeValueOfIntrinsic,
+    StringPrototypeReplaceIntrinsic,
+    StringPrototypeReplaceRegExpIntrinsic,
     IMulIntrinsic,
+    RandomIntrinsic,
     FRoundIntrinsic,
+    TruncIntrinsic,
+    IsTypedArrayViewIntrinsic,
+    BoundThisNoArgsFunctionCallIntrinsic,
+    JSMapGetIntrinsic,
+    JSMapHasIntrinsic,
+    JSSetHasIntrinsic,
+    HasOwnPropertyIntrinsic,
+    AtomicsAddIntrinsic,
+    AtomicsAndIntrinsic,
+    AtomicsCompareExchangeIntrinsic,
+    AtomicsExchangeIntrinsic,
+    AtomicsIsLockFreeIntrinsic,
+    AtomicsLoadIntrinsic,
+    AtomicsOrIntrinsic,
+    AtomicsStoreIntrinsic,
+    AtomicsSubIntrinsic,
+    AtomicsWaitIntrinsic,
+    AtomicsWakeIntrinsic,
+    AtomicsXorIntrinsic,
+    ToLowerCaseIntrinsic,
+
+    // Getter intrinsics.
+    TypedArrayLengthIntrinsic,
+    TypedArrayByteLengthIntrinsic,
+    TypedArrayByteOffsetIntrinsic,
 
     // Debugging intrinsics. These are meant to be used as testing hacks within
     // jsc.cpp and should never be exposed to users.
@@ -65,5 +96,3 @@ enum Intrinsic {
 };
 
 } // namespace JSC
-
-#endif // Intrinsic_h

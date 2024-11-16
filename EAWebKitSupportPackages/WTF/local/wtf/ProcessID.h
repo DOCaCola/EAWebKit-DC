@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2013 Apple Inc. All rights reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,17 +26,11 @@
 #ifndef ProcessID_h
 #define ProcessID_h
 
-//+EAWebKitChange
-//3/10/2014
-#if OS(UNIX) || defined(EA_PLATFORM_SONY) || defined(EA_PLATFORM_OSX)
-//-EAWebKitChange
+#if OS(UNIX)
 #include <unistd.h>
 #endif
 
-//+EAWebKitChange
-//3/11/2014
-#if OS(WINDOWS) || defined(EA_PLATFORM_MICROSOFT)
-//-EAWebKitChange
+#if OS(WINDOWS)
 #include <windows.h>
 #endif
 
@@ -45,10 +38,7 @@ namespace WTF {
 
 inline int getCurrentProcessID()
 {
-//+EAWebKitChange
-//3/11/2014
-#if OS(WINDOWS) || defined(EA_PLATFORM_MICROSOFT)
-//-EAWebKitChange
+#if OS(WINDOWS)
     return GetCurrentProcessId();
 #else
     return getpid();

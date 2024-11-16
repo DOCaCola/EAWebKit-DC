@@ -23,15 +23,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSPromiseDeferred_h
-#define JSPromiseDeferred_h
+#pragma once
 
 #include "JSCell.h"
 #include "Structure.h"
 
 namespace JSC {
 
-class JSPromiseDeferred final : public JSCell {
+class JSPromiseConstructor;
+
+class JSPromiseDeferred : public JSCell {
 public:
     typedef JSCell Base;
     static const unsigned StructureFlags = Base::StructureFlags | StructureIsImmortal;
@@ -50,16 +51,22 @@ public:
     JSValue resolve() const { return m_resolve.get(); }
     JSValue reject() const { return m_reject.get(); }
 
-private:
-    JSPromiseDeferred(VM&);
+    JS_EXPORT_PRIVATE void resolve(ExecState*, JSValue);
+    JS_EXPORT_PRIVATE void reject(ExecState*, JSValue);
+
+protected:
+    JSPromiseDeferred(VM&, Structure*);
     void finishCreation(VM&, JSObject*, JSValue, JSValue);
     static void visitChildren(JSCell*, SlotVisitor&);
+
+private:
+    JSPromiseDeferred(VM&);
 
     WriteBarrier<JSObject> m_promise;
     WriteBarrier<Unknown> m_resolve;
     WriteBarrier<Unknown> m_reject;
 };
 
-} // namespace JSC
+JSValue newPromiseCapability(ExecState*, JSGlobalObject*, JSPromiseConstructor*);
 
-#endif // JSPromiseDeferred_h
+} // namespace JSC

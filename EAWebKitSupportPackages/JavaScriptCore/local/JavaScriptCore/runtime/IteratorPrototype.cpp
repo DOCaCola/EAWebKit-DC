@@ -27,11 +27,9 @@
 #include "IteratorPrototype.h"
 
 #include "JSCBuiltins.h"
-#include "JSCJSValueInlines.h"
-#include "JSCellInlines.h"
+#include "JSCInlines.h"
 #include "JSGlobalObject.h"
 #include "ObjectConstructor.h"
-#include "StructureInlines.h"
 
 namespace JSC {
 
@@ -43,7 +41,7 @@ void IteratorPrototype::finishCreation(VM& vm, JSGlobalObject* globalObject)
     ASSERT(inherits(info()));
     vm.prototypeMap.addPrototype(this);
 
-    JSFunction* iteratorPrototypeFunction = JSFunction::createBuiltinFunction(vm, iteratorPrototypeSymbolIteratorCodeGenerator(vm), globalObject, "[Symbol.iterator]");
+    JSFunction* iteratorPrototypeFunction = JSFunction::createBuiltinFunction(vm, iteratorPrototypeSymbolIteratorGetterCodeGenerator(vm), globalObject, "[Symbol.iterator]");
     putDirectWithoutTransition(vm, vm.propertyNames->iteratorSymbol, iteratorPrototypeFunction, DontEnum);
 }
 

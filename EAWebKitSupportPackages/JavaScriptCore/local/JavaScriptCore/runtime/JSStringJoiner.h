@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2012-2016 Apple Inc. All rights reserved.
  * Copyright (c) 2016 Electronic Arts Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSStringJoiner_h
-#define JSStringJoiner_h
+#pragma once
 
 #include "ExceptionHelpers.h"
 #include "JSCJSValue.h"
@@ -36,6 +35,7 @@ class JSStringJoiner {
 public:
     JSStringJoiner(ExecState&, LChar separator, unsigned stringCount);
     JSStringJoiner(ExecState&, StringView separator, unsigned stringCount);
+    ~JSStringJoiner();
 
     void append(ExecState&, JSValue);
     bool appendWithoutSideEffects(ExecState&, JSValue);
@@ -60,23 +60,27 @@ inline JSStringJoiner::JSStringJoiner(ExecState& state, StringView separator, un
     : m_separator(separator)
     , m_isAll8Bit(m_separator.is8Bit())
 {
-    if (!m_strings.tryReserveCapacity(stringCount))
-        throwOutOfMemoryError(&state);
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+    if (UNLIKELY(!m_strings.tryReserveCapacity(stringCount)))
+        throwOutOfMemoryError(&state, scope);
 }
 
 inline JSStringJoiner::JSStringJoiner(ExecState& state, LChar separator, unsigned stringCount)
     : m_singleCharacterSeparator(separator)
     , m_separator { &m_singleCharacterSeparator, 1 }
 {
-    if (!m_strings.tryReserveCapacity(stringCount))
-        throwOutOfMemoryError(&state);
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+    if (UNLIKELY(!m_strings.tryReserveCapacity(stringCount)))
+        throwOutOfMemoryError(&state, scope);
 }
 
 ALWAYS_INLINE void JSStringJoiner::append(StringViewWithUnderlyingString&& string)
 {
     m_accumulatedStringsLength += string.view.length();
     m_isAll8Bit = m_isAll8Bit && string.view.is8Bit();
-    m_strings.uncheckedAppend(WTF::move(string));
+    m_strings.uncheckedAppend(WTFMove(string));
 }
 
 ALWAYS_INLINE void JSStringJoiner::append8Bit(const String& string)
@@ -106,29 +110,15 @@ ALWAYS_INLINE bool JSStringJoiner::appendWithoutSideEffects(ExecState& state, JS
     // 3) It doesn't create a JSString for numbers, true, or false.
     // 4) It turns undefined and null into the empty string instead of "undefined" and "null".
     // 5) It uses optimized code paths for all the cases known to be 8-bit and for the empty string.
-	// If we might make an effectful calls, return false. Otherwise return true. 
+    // If we might make an effectful calls, return false. Otherwise return true.
 
-	//+EAWebKitChange
-	//05/09/2017
-	// Worked upon a security fix - CVE-2016-1857 from http://trac.webkit.org/changeset/198592 
-	// Handling values of string and non-string types, which fixes carousals in  
-	// http://answers.ea.com/t5/Answer-HQ-English/ct-p/AHQ-English and controller js evaluation in nucleus login flow.
     if (value.isCell()) {
-		//-EAWebKitChange
-		JSString* jsString;
-		if (value.asCell()->isString()) {
-			jsString = asString(value);
-			append(jsString->viewWithUnderlyingString(state));
-			return true;
-		}
-		//+EAWebKitChange
-		//05/09/2017
-		// Worked upon a security fix - CVE-2016-1857 from http://trac.webkit.org/changeset/198592 
-		// Handling values of string and non-string types, which fixes carousals in  
-		// http://answers.ea.com/t5/Answer-HQ-English/ct-p/AHQ-English and controller js evaluation in nucleus login flow.
-		append(value.toString(&state)->viewWithUnderlyingString(state));
-		return true;
-		//-EAWebKitChange
+        JSString* jsString;
+        if (!value.asCell()->isString())
+            return false;
+        jsString = asString(value);
+        append(jsString->viewWithUnderlyingString(state));
+        return true;
     }
 
     if (value.isInt32()) {
@@ -155,10 +145,9 @@ ALWAYS_INLINE bool JSStringJoiner::appendWithoutSideEffects(ExecState& state, JS
 ALWAYS_INLINE void JSStringJoiner::append(ExecState& state, JSValue value)
 {
     if (!appendWithoutSideEffects(state, value)) {
-	    JSString* jsString = value.toString(&state);
-	    append(jsString->viewWithUnderlyingString(state));
-	}
-}
+        JSString* jsString = value.toString(&state);
+        append(jsString->viewWithUnderlyingString(state));
+    }
 }
 
-#endif
+} // namespace JSC

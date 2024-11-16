@@ -17,15 +17,12 @@
  *
  */
 
-#ifndef WeakReferenceHarvester_h
-#define WeakReferenceHarvester_h
+#pragma once
 
 #include "ListableHandler.h"
 
 namespace JSC {
 
-class MarkStack;
-class MarkStackSharedData;
 class SlotVisitor;
 
 class WeakReferenceHarvester : public ListableHandler<WeakReferenceHarvester> {
@@ -41,5 +38,3 @@ protected:
 };
 
 } // namespace JSC
-
-#endif // WeakReferenceHarvester_h

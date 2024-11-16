@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Andy VanWagoner (thetalecrafter@gmail.com)
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,18 +29,14 @@
 
 #if ENABLE(INTL)
 
+#include "BuiltinNames.h"
 #include "Error.h"
 #include "IntlNumberFormat.h"
 #include "JSBoundFunction.h"
-#include "JSCJSValueInlines.h"
-#include "JSCellInlines.h"
-#include "JSObject.h"
-#include "ObjectConstructor.h"
-#include "StructureInlines.h"
+#include "JSCInlines.h"
+#include "JSObjectInlines.h"
 
 namespace JSC {
-
-STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(IntlNumberFormatPrototype);
 
 static EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeGetterFormat(ExecState*);
 static EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeFuncResolvedOptions(ExecState*);
@@ -81,33 +78,56 @@ void IntlNumberFormatPrototype::finishCreation(VM& vm, Structure*)
     Base::finishCreation(vm);
 }
 
-bool IntlNumberFormatPrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static EncodedJSValue JSC_HOST_CALL IntlNumberFormatFuncFormatNumber(ExecState* state)
 {
-    return getStaticFunctionSlot<JSObject>(exec, numberFormatPrototypeTable, jsCast<IntlNumberFormatPrototype*>(object), propertyName, slot);
+    VM& vm = state->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+    // 11.3.4 Format Number Functions (ECMA-402 2.0)
+    // 1. Let nf be the this value.
+    // 2. Assert: Type(nf) is Object and nf has an [[initializedNumberFormat]] internal slot whose value  true.
+    IntlNumberFormat* numberFormat = jsCast<IntlNumberFormat*>(state->thisValue());
+
+    // 3. If value is not provided, let value be undefined.
+    // 4. Let x be ToNumber(value).
+    double number = state->argument(0).toNumber(state);
+    // 5. ReturnIfAbrupt(x).
+    RETURN_IF_EXCEPTION(scope, encodedJSValue());
+
+    // 6. Return FormatNumber(nf, x).
+    scope.release();
+    return JSValue::encode(numberFormat->formatNumber(*state, number));
 }
 
-EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeGetterFormat(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeGetterFormat(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     // 11.3.3 Intl.NumberFormat.prototype.format (ECMA-402 2.0)
     // 1. Let nf be this NumberFormat object.
-    IntlNumberFormat* nf = jsDynamicCast<IntlNumberFormat*>(exec->thisValue());
+    IntlNumberFormat* nf = jsDynamicCast<IntlNumberFormat*>(state->thisValue());
+
+    // FIXME: Workaround to provide compatibility with ECMA-402 1.0 call/apply patterns.
+    // https://bugs.webkit.org/show_bug.cgi?id=153679
+    if (!nf) {
+        JSValue value = state->thisValue().get(state, vm.propertyNames->builtinNames().intlSubstituteValuePrivateName());
+        RETURN_IF_EXCEPTION(scope, encodedJSValue());
+        nf = jsDynamicCast<IntlNumberFormat*>(value);
+    }
+
     if (!nf)
-        return JSValue::encode(throwTypeError(exec, ASCIILiteral("Intl.NumberFormat.prototype.format called on value that's not an object initialized as a NumberFormat")));
+        return JSValue::encode(throwTypeError(state, scope, ASCIILiteral("Intl.NumberFormat.prototype.format called on value that's not an object initialized as a NumberFormat")));
     
     JSBoundFunction* boundFormat = nf->boundFormat();
     // 2. If nf.[[boundFormat]] is undefined,
     if (!boundFormat) {
-        VM& vm = exec->vm();
         JSGlobalObject* globalObject = nf->globalObject();
         // a. Let F be a new built-in function object as defined in 11.3.4.
         // b. The value of F’s length property is 1.
         JSFunction* targetObject = JSFunction::create(vm, globalObject, 1, ASCIILiteral("format"), IntlNumberFormatFuncFormatNumber, NoIntrinsic);
-        JSArray* boundArgs = JSArray::tryCreateUninitialized(vm, globalObject->arrayStructureForIndexingTypeDuringAllocation(ArrayWithUndecided), 0);
-        if (!boundArgs)
-            return JSValue::encode(throwOutOfMemoryError(exec));
-
         // c. Let bf be BoundFunctionCreate(F, «this value»).
-        boundFormat = JSBoundFunction::create(vm, globalObject, targetObject, nf, boundArgs, 1, ASCIILiteral("format"));
+        boundFormat = JSBoundFunction::create(vm, state, globalObject, targetObject, nf, nullptr, 1, ASCIILiteral("format"));
+        RETURN_IF_EXCEPTION(scope, encodedJSValue());
         // d. Set nf.[[boundFormat]] to bf.
         nf->setBoundFormat(vm, boundFormat);
     }
@@ -115,20 +135,27 @@ EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeGetterFormat(ExecState* ex
     return JSValue::encode(boundFormat);
 }
 
-EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeFuncResolvedOptions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL IntlNumberFormatPrototypeFuncResolvedOptions(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     // 11.3.5 Intl.NumberFormat.prototype.resolvedOptions() (ECMA-402 2.0)
-    IntlNumberFormat* nf = jsDynamicCast<IntlNumberFormat*>(exec->thisValue());
-    if (!nf)
-        return JSValue::encode(throwTypeError(exec, ASCIILiteral("Intl.NumberFormat.prototype.resolvedOptions called on value that's not an object initialized as a NumberFormat")));
+    IntlNumberFormat* numberFormat = jsDynamicCast<IntlNumberFormat*>(state->thisValue());
 
-    // The function returns a new object whose properties and attributes are set as if constructed by an object literal assigning to each of the following properties the value of the corresponding internal slot of this NumberFormat object (see 11.4): locale, numberingSystem, style, currency, currencyDisplay, minimumIntegerDigits, minimumFractionDigits, maximumFractionDigits, minimumSignificantDigits, maximumSignificantDigits, and useGrouping. Properties whose corresponding internal slots are not present are not assigned.
+    // FIXME: Workaround to provide compatibility with ECMA-402 1.0 call/apply patterns.
+    // https://bugs.webkit.org/show_bug.cgi?id=153679
+    if (!numberFormat) {
+        JSValue value = state->thisValue().get(state, vm.propertyNames->builtinNames().intlSubstituteValuePrivateName());
+        RETURN_IF_EXCEPTION(scope, encodedJSValue());
+        numberFormat = jsDynamicCast<IntlNumberFormat*>(value);
+    }
 
-    JSObject* options = constructEmptyObject(exec);
+    if (!numberFormat)
+        return JSValue::encode(throwTypeError(state, scope, ASCIILiteral("Intl.NumberFormat.prototype.resolvedOptions called on value that's not an object initialized as a NumberFormat")));
 
-    // FIXME: Populate object from internal slots.
-
-    return JSValue::encode(options);
+    scope.release();
+    return JSValue::encode(numberFormat->resolvedOptions(*state));
 }
 
 } // namespace JSC

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2012-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +23,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef CallLinkStatus_h
-#define CallLinkStatus_h
+#pragma once
 
 #include "CallLinkInfo.h"
 #include "CallVariant.h"
 #include "CodeOrigin.h"
 #include "CodeSpecializationKind.h"
-#include "ConcurrentJITLock.h"
+#include "ConcurrentJSLock.h"
 #include "ExitingJITType.h"
 #include "Intrinsic.h"
 #include "JSCJSValue.h"
@@ -38,7 +37,6 @@
 namespace JSC {
 
 class CodeBlock;
-class ExecutableBase;
 class InternalFunction;
 class JSFunction;
 class Structure;
@@ -48,8 +46,6 @@ class CallLinkStatus {
     WTF_MAKE_FAST_ALLOCATED;
 public:
     CallLinkStatus()
-        : m_couldTakeSlowPath(false)
-        , m_isProved(false)
     {
     }
     
@@ -64,8 +60,6 @@ public:
     
     CallLinkStatus(CallVariant variant)
         : m_variants(1, variant)
-        , m_couldTakeSlowPath(false)
-        , m_isProved(false)
     {
     }
     
@@ -73,23 +67,17 @@ public:
         CodeBlock*, unsigned bytecodeIndex, const CallLinkInfoMap&);
 
     struct ExitSiteData {
-        ExitSiteData()
-            : m_takesSlowPath(false)
-            , m_badFunction(false)
-        {
-        }
-        
-        bool m_takesSlowPath;
-        bool m_badFunction;
+        bool takesSlowPath { false };
+        bool badFunction { false };
     };
-    static ExitSiteData computeExitSiteData(const ConcurrentJITLocker&, CodeBlock*, unsigned bytecodeIndex);
+    static ExitSiteData computeExitSiteData(const ConcurrentJSLocker&, CodeBlock*, unsigned bytecodeIndex);
     
 #if ENABLE(JIT)
     // Computes the status assuming that we never took slow path and never previously
     // exited.
-    static CallLinkStatus computeFor(const ConcurrentJITLocker&, CodeBlock*, CallLinkInfo&);
+    static CallLinkStatus computeFor(const ConcurrentJSLocker&, CodeBlock*, CallLinkInfo&);
     static CallLinkStatus computeFor(
-        const ConcurrentJITLocker&, CodeBlock*, CallLinkInfo&, ExitSiteData);
+        const ConcurrentJSLocker&, CodeBlock*, CallLinkInfo&, ExitSiteData);
 #endif
     
     typedef HashMap<CodeOrigin, CallLinkStatus, CodeOriginApproximateHash> ContextMap;
@@ -111,13 +99,16 @@ public:
     
     bool couldTakeSlowPath() const { return m_couldTakeSlowPath; }
     
+    void setCouldTakeSlowPath(bool value) { m_couldTakeSlowPath = value; }
+    
     CallVariantList variants() const { return m_variants; }
     unsigned size() const { return m_variants.size(); }
     CallVariant at(unsigned i) const { return m_variants[i]; }
     CallVariant operator[](unsigned i) const { return at(i); }
     bool isProved() const { return m_isProved; }
+    bool isBasedOnStub() const { return m_isBasedOnStub; }
     bool canOptimize() const { return !m_variants.isEmpty(); }
-    
+
     bool isClosureCall() const; // Returns true if any callee is a closure call.
     
     unsigned maxNumArguments() const { return m_maxNumArguments; }
@@ -127,19 +118,17 @@ public:
 private:
     void makeClosureCall();
     
-    static CallLinkStatus computeFromLLInt(const ConcurrentJITLocker&, CodeBlock*, unsigned bytecodeIndex);
+    static CallLinkStatus computeFromLLInt(const ConcurrentJSLocker&, CodeBlock*, unsigned bytecodeIndex);
 #if ENABLE(JIT)
     static CallLinkStatus computeFromCallLinkInfo(
-        const ConcurrentJITLocker&, CallLinkInfo&);
+        const ConcurrentJSLocker&, CallLinkInfo&);
 #endif
     
     CallVariantList m_variants;
-    bool m_couldTakeSlowPath;
-    bool m_isProved;
-    unsigned m_maxNumArguments;
+    bool m_couldTakeSlowPath { false };
+    bool m_isProved { false };
+    bool m_isBasedOnStub { false };
+    unsigned m_maxNumArguments { 0 };
 };
 
 } // namespace JSC
-
-#endif // CallLinkStatus_h
-

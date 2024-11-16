@@ -28,8 +28,7 @@
  * properly on all platforms and compilers that WebKit builds under.
  */
 
-#ifndef JSExportMacros_h
-#define JSExportMacros_h
+#pragma once
 
 #include <wtf/ExportMacros.h>
 
@@ -72,5 +71,3 @@
 #define JS_EXPORT_HIDDEN
 
 #endif // USE(EXPORT_MACROS)
-
-#endif // JSExportMacros_h

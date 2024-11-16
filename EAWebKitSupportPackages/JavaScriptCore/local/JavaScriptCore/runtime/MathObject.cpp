@@ -1,6 +1,6 @@
 /*
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2007, 2008, 2013 Apple Inc. All Rights Reserved.
+ *  Copyright (C) 2007-2008, 2013, 2015-2016 Apple Inc. All Rights Reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,15 +21,12 @@
 #include "config.h"
 #include "MathObject.h"
 
-#include "Lookup.h"
+#include "JSCInlines.h"
 #include "MathCommon.h"
 #include "ObjectPrototype.h"
-#include "JSCInlines.h"
 #include <time.h>
 #include <wtf/Assertions.h>
 #include <wtf/MathExtras.h>
-#include <wtf/RandomNumber.h>
-#include <wtf/RandomNumberSeed.h>
 #include <wtf/Vector.h>
 
 namespace JSC {
@@ -67,12 +64,7 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncSinh(ExecState*);
 EncodedJSValue JSC_HOST_CALL mathProtoFuncSqrt(ExecState*);
 EncodedJSValue JSC_HOST_CALL mathProtoFuncTan(ExecState*);
 EncodedJSValue JSC_HOST_CALL mathProtoFuncTanh(ExecState*);
-EncodedJSValue JSC_HOST_CALL mathProtoFuncTrunc(ExecState*);
 EncodedJSValue JSC_HOST_CALL mathProtoFuncIMul(ExecState*);
-
-}
-
-namespace JSC {
 
 const ClassInfo MathObject::s_info = { "Math", &Base::s_info, 0, CREATE_METHOD_TABLE(MathObject) };
 
@@ -94,42 +86,43 @@ void MathObject::finishCreation(VM& vm, JSGlobalObject* globalObject)
     putDirectWithoutTransition(vm, Identifier::fromString(&vm, "PI"), jsNumber(piDouble), DontDelete | DontEnum | ReadOnly);
     putDirectWithoutTransition(vm, Identifier::fromString(&vm, "SQRT1_2"), jsNumber(sqrt(0.5)), DontDelete | DontEnum | ReadOnly);
     putDirectWithoutTransition(vm, Identifier::fromString(&vm, "SQRT2"), jsNumber(sqrt(2.0)), DontDelete | DontEnum | ReadOnly);
+    putDirectWithoutTransition(vm, vm.propertyNames->toStringTagSymbol, jsString(&vm, "Math"), DontEnum | ReadOnly);
 
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "abs"), 1, mathProtoFuncAbs, AbsIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "acos"), 1, mathProtoFuncACos, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "asin"), 1, mathProtoFuncASin, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atan"), 1, mathProtoFuncATan, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "acosh"), 1, mathProtoFuncACosh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "asinh"), 1, mathProtoFuncASinh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atanh"), 1, mathProtoFuncATanh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atan2"), 2, mathProtoFuncATan2, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cbrt"), 1, mathProtoFuncCbrt, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "ceil"), 1, mathProtoFuncCeil, CeilIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "clz32"), 1, mathProtoFuncClz32, Clz32Intrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cos"), 1, mathProtoFuncCos, CosIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cosh"), 1, mathProtoFuncCosh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "exp"), 1, mathProtoFuncExp, ExpIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "expm1"), 1, mathProtoFuncExpm1, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "floor"), 1, mathProtoFuncFloor, FloorIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "fround"), 1, mathProtoFuncFround, FRoundIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "hypot"), 2, mathProtoFuncHypot, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log"), 1, mathProtoFuncLog, LogIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log10"), 1, mathProtoFuncLog10, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log1p"), 1, mathProtoFuncLog1p, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log2"), 1, mathProtoFuncLog2, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "max"), 2, mathProtoFuncMax, MaxIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "min"), 2, mathProtoFuncMin, MinIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "pow"), 2, mathProtoFuncPow, PowIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "random"), 0, mathProtoFuncRandom, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "round"), 1, mathProtoFuncRound, RoundIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sign"), 1, mathProtoFuncSign, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sin"), 1, mathProtoFuncSin, SinIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sinh"), 1, mathProtoFuncSinh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sqrt"), 1, mathProtoFuncSqrt, SqrtIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "tan"), 1, mathProtoFuncTan, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "tanh"), 1, mathProtoFuncTanh, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "trunc"), 1, mathProtoFuncTrunc, NoIntrinsic, DontEnum | Function);
-    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "imul"), 2, mathProtoFuncIMul, IMulIntrinsic, DontEnum | Function);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "abs"), 1, mathProtoFuncAbs, AbsIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "acos"), 1, mathProtoFuncACos, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "asin"), 1, mathProtoFuncASin, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atan"), 1, mathProtoFuncATan, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "acosh"), 1, mathProtoFuncACosh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "asinh"), 1, mathProtoFuncASinh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atanh"), 1, mathProtoFuncATanh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "atan2"), 2, mathProtoFuncATan2, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cbrt"), 1, mathProtoFuncCbrt, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "ceil"), 1, mathProtoFuncCeil, CeilIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "clz32"), 1, mathProtoFuncClz32, Clz32Intrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cos"), 1, mathProtoFuncCos, CosIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "cosh"), 1, mathProtoFuncCosh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "exp"), 1, mathProtoFuncExp, ExpIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "expm1"), 1, mathProtoFuncExpm1, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "floor"), 1, mathProtoFuncFloor, FloorIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "fround"), 1, mathProtoFuncFround, FRoundIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "hypot"), 2, mathProtoFuncHypot, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log"), 1, mathProtoFuncLog, LogIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log10"), 1, mathProtoFuncLog10, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log1p"), 1, mathProtoFuncLog1p, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "log2"), 1, mathProtoFuncLog2, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "max"), 2, mathProtoFuncMax, MaxIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "min"), 2, mathProtoFuncMin, MinIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "pow"), 2, mathProtoFuncPow, PowIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "random"), 0, mathProtoFuncRandom, RandomIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "round"), 1, mathProtoFuncRound, RoundIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sign"), 1, mathProtoFuncSign, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sin"), 1, mathProtoFuncSin, SinIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sinh"), 1, mathProtoFuncSinh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "sqrt"), 1, mathProtoFuncSqrt, SqrtIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "tan"), 1, mathProtoFuncTan, TanIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "tanh"), 1, mathProtoFuncTanh, NoIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "trunc"), 1, mathProtoFuncTrunc, TruncIntrinsic, DontEnum);
+    putDirectNativeFunctionWithoutTransition(vm, globalObject, Identifier::fromString(&vm, "imul"), 2, mathProtoFuncIMul, IMulIntrinsic, DontEnum);
 }
 
 // ------------------------------ Functions --------------------------------
@@ -168,9 +161,10 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncClz32(ExecState* exec)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
     uint32_t value = exec->argument(0).toUInt32(exec);
-    if (exec->hadException())
-        return JSValue::encode(jsNull());
+    RETURN_IF_EXCEPTION(scope, encodedJSValue());
     return JSValue::encode(JSValue(clz32(value)));
 }
 
@@ -191,14 +185,15 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncHypot(ExecState* exec)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
     unsigned argsCount = exec->argumentCount();
     double max = 0;
     Vector<double, 8> args;
     args.reserveInitialCapacity(argsCount);
     for (unsigned i = 0; i < argsCount; ++i) {
         args.uncheckedAppend(exec->uncheckedArgument(i).toNumber(exec));
-        if (exec->hadException())
-            return JSValue::encode(jsNull());
+        RETURN_IF_EXCEPTION(scope, encodedJSValue());
         if (std::isinf(args[i]))
             return JSValue::encode(jsDoubleNumber(+std::numeric_limits<double>::infinity()));
         max = std::max(fabs(args[i]), max);
@@ -298,9 +293,11 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncTan(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncIMul(ExecState* exec)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
     int32_t left = exec->argument(0).toInt32(exec);
-    if (exec->hadException())
-        return JSValue::encode(jsNull());
+    RETURN_IF_EXCEPTION(scope, encodedJSValue());
+    scope.release();
     int32_t right = exec->argument(1).toInt32(exec);
     return JSValue::encode(jsNumber(left * right));
 }

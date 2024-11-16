@@ -18,21 +18,21 @@
  *
  */
 
-#ifndef NumberConstructor_h
-#define NumberConstructor_h
+#pragma once
 
 #include "InternalFunction.h"
 
 namespace JSC {
 
 class NumberPrototype;
+class GetterSetter;
 
 class NumberConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
-    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot | ImplementsHasInstance;
+    static const unsigned StructureFlags = Base::StructureFlags | ImplementsHasInstance | HasStaticPropertyTable;
 
-    static NumberConstructor* create(VM& vm, Structure* structure, NumberPrototype* numberPrototype)
+    static NumberConstructor* create(VM& vm, Structure* structure, NumberPrototype* numberPrototype, GetterSetter*)
     {
         NumberConstructor* constructor = new (NotNull, allocateCell<NumberConstructor>(vm.heap)) NumberConstructor(vm, structure);
         constructor->finishCreation(vm, numberPrototype);
@@ -56,5 +56,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // NumberConstructor_h

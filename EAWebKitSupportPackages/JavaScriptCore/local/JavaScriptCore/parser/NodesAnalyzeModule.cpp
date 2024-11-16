@@ -27,8 +27,9 @@
 #include "Nodes.h"
 #include "NodeConstructors.h"
 
+#include "JSCJSValueInlines.h"
+#include "JSModuleRecord.h"
 #include "ModuleAnalyzer.h"
-#include "ModuleRecord.h"
 
 namespace JSC {
 
@@ -48,9 +49,9 @@ void SourceElements::analyzeModule(ModuleAnalyzer& analyzer)
 
 void ImportDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
 {
-    analyzer.moduleRecord().appendRequestedModule(m_moduleName->moduleName());
+    analyzer.moduleRecord()->appendRequestedModule(m_moduleName->moduleName());
     for (auto* specifier : m_specifierList->specifiers()) {
-        analyzer.moduleRecord().addImportEntry(ModuleRecord::ImportEntry {
+        analyzer.moduleRecord()->addImportEntry(JSModuleRecord::ImportEntry {
             m_moduleName->moduleName(),
             specifier->importedName(),
             specifier->localName()
@@ -60,13 +61,12 @@ void ImportDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
 
 void ExportAllDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
 {
-    analyzer.moduleRecord().appendRequestedModule(m_moduleName->moduleName());
-    analyzer.moduleRecord().addStarExportEntry(m_moduleName->moduleName());
+    analyzer.moduleRecord()->appendRequestedModule(m_moduleName->moduleName());
+    analyzer.moduleRecord()->addStarExportEntry(m_moduleName->moduleName());
 }
 
-void ExportDefaultDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
+void ExportDefaultDeclarationNode::analyzeModule(ModuleAnalyzer&)
 {
-    analyzer.declareExportAlias(m_localName, analyzer.vm().propertyNames->defaultKeyword);
 }
 
 void ExportLocalDeclarationNode::analyzeModule(ModuleAnalyzer&)
@@ -76,7 +76,7 @@ void ExportLocalDeclarationNode::analyzeModule(ModuleAnalyzer&)
 void ExportNamedDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
 {
     if (m_moduleName)
-        analyzer.moduleRecord().appendRequestedModule(m_moduleName->moduleName());
+        analyzer.moduleRecord()->appendRequestedModule(m_moduleName->moduleName());
 
     for (auto* specifier : m_specifierList->specifiers()) {
         if (m_moduleName) {
@@ -84,12 +84,8 @@ void ExportNamedDeclarationNode::analyzeModule(ModuleAnalyzer& analyzer)
             //
             // In this case, no local variable names are imported into the current module.
             // "v" indirectly points the binding in "mod".
-            analyzer.moduleRecord().addExportEntry(ModuleRecord::ExportEntry::createIndirect(specifier->exportedName(), specifier->localName(), m_moduleName->moduleName()));
-            continue;
+            analyzer.moduleRecord()->addExportEntry(JSModuleRecord::ExportEntry::createIndirect(specifier->exportedName(), specifier->localName(), m_moduleName->moduleName()));
         }
-
-        if (specifier->localName() != specifier->exportedName())
-            analyzer.declareExportAlias(specifier->localName(), specifier->exportedName());
     }
 }
 

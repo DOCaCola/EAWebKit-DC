@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ByValInfo_h
-#define ByValInfo_h
+#pragma once
 
 #include "ClassInfo.h"
 #include "CodeLocation.h"
@@ -32,11 +31,14 @@
 #include "IndexingType.h"
 #include "JITStubRoutine.h"
 #include "Structure.h"
-#include "StructureStubInfo.h"
 
 namespace JSC {
 
+class Symbol;
+
 #if ENABLE(JIT)
+
+class StructureStubInfo;
 
 enum JITArrayMode {
     JITInt32,
@@ -204,10 +206,11 @@ inline JITArrayMode jitArrayModeForStructure(Structure* structure)
 struct ByValInfo {
     ByValInfo() { }
 
-    ByValInfo(unsigned bytecodeIndex, CodeLocationJump notIndexJump, CodeLocationJump badTypeJump, JITArrayMode arrayMode, ArrayProfile* arrayProfile, int16_t badTypeJumpToDone, int16_t badTypeJumpToNextHotPath, int16_t returnAddressToSlowPath)
+    ByValInfo(unsigned bytecodeIndex, CodeLocationJump notIndexJump, CodeLocationJump badTypeJump, CodeLocationLabel exceptionHandler, JITArrayMode arrayMode, ArrayProfile* arrayProfile, int16_t badTypeJumpToDone, int16_t badTypeJumpToNextHotPath, int16_t returnAddressToSlowPath)
         : bytecodeIndex(bytecodeIndex)
         , notIndexJump(notIndexJump)
         , badTypeJump(badTypeJump)
+        , exceptionHandler(exceptionHandler)
         , arrayMode(arrayMode)
         , arrayProfile(arrayProfile)
         , badTypeJumpToDone(badTypeJumpToDone)
@@ -216,12 +219,14 @@ struct ByValInfo {
         , slowPathCount(0)
         , stubInfo(nullptr)
         , tookSlowPath(false)
+        , seen(false)
     {
     }
 
     unsigned bytecodeIndex;
     CodeLocationJump notIndexJump;
     CodeLocationJump badTypeJump;
+    CodeLocationLabel exceptionHandler;
     JITArrayMode arrayMode; // The array mode that was baked into the inline JIT code.
     ArrayProfile* arrayProfile;
     int16_t badTypeJumpToDone;
@@ -230,8 +235,10 @@ struct ByValInfo {
     unsigned slowPathCount;
     RefPtr<JITStubRoutine> stubRoutine;
     Identifier cachedId;
+    WriteBarrier<Symbol> cachedSymbol;
     StructureStubInfo* stubInfo;
-    bool tookSlowPath;
+    bool tookSlowPath : 1;
+    bool seen : 1;
 };
 
 inline unsigned getByValInfoBytecodeIndex(ByValInfo* info)
@@ -248,6 +255,3 @@ typedef HashMap<int, void*> ByValInfoMap;
 #endif // ENABLE(JIT)
 
 } // namespace JSC
-
-#endif // ByValInfo_h
-

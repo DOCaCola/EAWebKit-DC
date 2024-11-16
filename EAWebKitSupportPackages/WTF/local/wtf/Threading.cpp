@@ -26,7 +26,10 @@
 #include "config.h"
 #include "Threading.h"
 
-#include <string.h>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <wtf/text/StringView.h>
 
 namespace WTF {
 
@@ -37,6 +40,33 @@ public:
     std::function<void()> entryPoint;
     Mutex creationMutex;
 };
+
+const char* normalizeThreadName(const char* threadName)
+{
+#if HAVE(PTHREAD_SETNAME_NP)
+    return threadName;
+#else
+    // This name can be com.apple.WebKit.ProcessLauncher or com.apple.CoreIPC.ReceiveQueue.
+    // We are using those names for the thread name, but both are longer than the limit of
+    // the platform thread name length, 32 for Windows and 16 for Linux.
+    StringView result(threadName);
+    size_t size = result.reverseFind('.');
+    if (size != notFound)
+        result = result.substring(size + 1);
+
+#if OS(WINDOWS)
+    constexpr const size_t kVisualStudioThreadNameLimit = 32 - 1;
+    if (result.length() > kVisualStudioThreadNameLimit)
+        result = result.right(kVisualStudioThreadNameLimit);
+#elif OS(LINUX)
+    constexpr const size_t kLinuxThreadNameLimit = 16 - 1;
+    if (result.length() > kLinuxThreadNameLimit)
+        result = result.right(kLinuxThreadNameLimit);
+#endif
+    ASSERT(result.characters8()[result.length()] == '\0');
+    return reinterpret_cast<const char*>(result.characters8());
+#endif
+}
 
 static void threadEntryPoint(void* contextData)
 {
@@ -50,7 +80,7 @@ static void threadEntryPoint(void* contextData)
 
     initializeCurrentThreadInternal(context->name);
 
-    auto entryPoint = WTF::move(context->entryPoint);
+    auto entryPoint = WTFMove(context->entryPoint);
 
     // Delete the context before starting the thread.
     delete context;
@@ -60,14 +90,7 @@ static void threadEntryPoint(void* contextData)
 
 ThreadIdentifier createThread(const char* name, std::function<void()> entryPoint)
 {
-    // Visual Studio has a 31-character limit on thread names. Longer names will
-    // be truncated silently, but we'd like callers to know about the limit.
-#if !LOG_DISABLED && PLATFORM(WIN)
-    if (name && strlen(name) > 31)
-        LOG_ERROR("Thread name \"%s\" is longer than 31 characters and will be truncated by Visual Studio", name);
-#endif
-
-    NewThreadContext* context = new NewThreadContext { name, WTF::move(entryPoint), { } };
+    NewThreadContext* context = new NewThreadContext { name, WTFMove(entryPoint), { } };
 
     // Prevent the thread body from executing until we've established the thread identifier.
     MutexLocker locker(context->creationMutex);
@@ -82,17 +105,25 @@ ThreadIdentifier createThread(ThreadFunction entryPoint, void* data, const char*
     });
 }
 
-void setCurrentThreadIsUserInteractive()
+void setCurrentThreadIsUserInteractive(int relativePriority)
 {
 #if HAVE(QOS_CLASSES)
-    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+    ASSERT(relativePriority <= 0);
+    ASSERT(relativePriority >= QOS_MIN_RELATIVE_PRIORITY);
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, relativePriority);
+#else
+    UNUSED_PARAM(relativePriority);
 #endif
 }
 
-void setCurrentThreadIsUserInitiated()
+void setCurrentThreadIsUserInitiated(int relativePriority)
 {
 #if HAVE(QOS_CLASSES)
-    pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+    ASSERT(relativePriority <= 0);
+    ASSERT(relativePriority >= QOS_MIN_RELATIVE_PRIORITY);
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, relativePriority);
+#else
+    UNUSED_PARAM(relativePriority);
 #endif
 }
 

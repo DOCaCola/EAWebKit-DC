@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ExecutableAllocationFuzz_h
-#define ExecutableAllocationFuzz_h
+#pragma once
 
 #include "Options.h"
 
@@ -39,13 +38,10 @@ ExecutableAllocationFuzzResult doExecutableAllocationFuzzing();
 
 inline ExecutableAllocationFuzzResult doExecutableAllocationFuzzingIfEnabled()
 {
-    if (LIKELY(!Options::enableExecutableAllocationFuzz()))
+    if (LIKELY(!Options::useExecutableAllocationFuzz()))
         return AllowNormalExecutableAllocation;
     
     return doExecutableAllocationFuzzing();
 }
 
 } // namespace JSC
-
-#endif // ExecutableAllocationFuzz_h
-

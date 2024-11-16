@@ -23,11 +23,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HeapStatistics_h
-#define HeapStatistics_h
+#pragma once
 
 #include "JSExportMacros.h"
-#include <wtf/Deque.h>
+#include <wtf/Vector.h>
 
 namespace JSC {
 
@@ -40,13 +39,8 @@ public:
 
     static void initialize();
     static void recordGCPauseTime(double start, double end);
-    static size_t parseMemoryAmount(char*);
 
-    static void showObjectStatistics(Heap*);
-
-    static const size_t KB = 1024;
-    static const size_t MB = 1024 * KB;
-    static const size_t GB = 1024 * MB;
+    static void dumpObjectStatistics(Heap*);
 
 private:
     static void logStatistics();
@@ -57,5 +51,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif

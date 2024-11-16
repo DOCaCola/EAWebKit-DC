@@ -1,6 +1,6 @@
 /*
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
- *  Copyright (C) 2003, 2007, 2008, 2009 Apple Inc. All rights reserved.
+ *  Copyright (C) 2003, 2007, 2008, 2009, 2016 Apple Inc. All rights reserved.
  *  Copyright (C) 2015 Electronic Arts Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
@@ -20,17 +20,12 @@
  *
  */
 
-#ifndef ArgList_h
-#define ArgList_h
+#pragma once
 
 #include "CallFrame.h"
-#include "Register.h"
 #include <wtf/HashSet.h>
-#include <wtf/Vector.h>
 
 namespace JSC {
-
-class SlotVisitor;
 
 class MarkedArgumentBuffer {
     WTF_MAKE_NONCOPYABLE(MarkedArgumentBuffer);
@@ -58,7 +53,7 @@ public:
             m_markSet->remove(this);
 
         if (EncodedJSValue* base = mallocBase())
-            delete [] base;
+            fastFree(base);
     }
 
     size_t size() const { return m_size; }
@@ -98,7 +93,7 @@ public:
         return JSValue::decode(slotFor(m_size - 1));
     }
         
-    static void markLists(HeapRootVisitor&, ListSet&);
+    static void markLists(SlotVisitor&, ListSet&);
 
 private:
     void expandCapacity();
@@ -124,43 +119,6 @@ private:
     EncodedJSValue m_inlineBuffer[inlineCapacity];
     EncodedJSValue* m_buffer;
     ListSet* m_markSet;
-
-private:
-    // Prohibits new / delete, which would break GC.
-    void* operator new(size_t size)
-    {
-        return fastMalloc(size);
-    }
-    
-    void operator delete(void* p)
-    {
-        fastFree(p);
-    }
-
-//+EAWebKitChange
-//08/27/2015 added implimentations of the below methods for vs2015 support
-/*
-    void* operator new[](size_t)
-    {
-        ASSERT_NOT_REACHED();
-    }
-
-    void operator delete[](void*)
-    {
-        ASSERT_NOT_REACHED();
-    }
-
-    void* operator new(size_t, void*)
-    {
-        ASSERT_NOT_REACHED();
-    }
-
-    void operator delete(void * p, size_t)
-    {
-		ASSERT_NOT_REACHED();
-    }
- */
-//-EAWebKitChange
 };
 
 class ArgList {
@@ -205,5 +163,3 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ArgList_h

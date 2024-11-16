@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PropertyCondition_h
-#define PropertyCondition_h
+#pragma once
 
 #include "JSObject.h"
 #include <wtf/HashMap.h>
@@ -125,8 +124,8 @@ public:
             vm.heap.writeBarrier(owner);
         return equivalenceWithoutBarrier(uid, value);
     }
-        
-    bool operator!() const { return !m_uid && m_kind == Presence; };
+    
+    explicit operator bool() const { return m_uid || m_kind != Presence; }
     
     Kind kind() const { return m_kind; }
     UniquedStringImpl* uid() const { return m_uid; }
@@ -333,6 +332,3 @@ template<typename T> struct HashTraits;
 template<> struct HashTraits<JSC::PropertyCondition> : SimpleClassHashTraits<JSC::PropertyCondition> { };
 
 } // namespace WTF
-
-#endif // PropertyCondition_h
-

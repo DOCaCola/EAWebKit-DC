@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2009 Apple Inc. All rights reserved.
+ *  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2009, 2016 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -21,7 +21,6 @@
 #include "config.h"
 #include "ArgList.h"
 
-#include "HeapRootVisitor.h"
 #include "JSCJSValue.h"
 #include "JSObject.h"
 #include "JSCInlines.h"
@@ -54,41 +53,41 @@ void ArgList::getSlice(int startIndex, ArgList& result) const
     result.m_argCount =  m_argCount - startIndex;
 }
 
-void MarkedArgumentBuffer::markLists(HeapRootVisitor& heapRootVisitor, ListSet& markSet)
+void MarkedArgumentBuffer::markLists(SlotVisitor& visitor, ListSet& markSet)
 {
     ListSet::iterator end = markSet.end();
     for (ListSet::iterator it = markSet.begin(); it != end; ++it) {
         MarkedArgumentBuffer* list = *it;
         for (int i = 0; i < list->m_size; ++i)
-            heapRootVisitor.visit(reinterpret_cast<JSValue*>(&list->slotFor(i)));
+            visitor.appendUnbarriered(JSValue::decode(list->slotFor(i)));
     }
 }
 
 void MarkedArgumentBuffer::expandCapacity()
 {
-	int newCapacity = m_capacity * 4;
-	EncodedJSValue* newBuffer = new EncodedJSValue[newCapacity];
-	for (int i = 0; i < m_capacity; ++i) {
-		newBuffer[i] = m_buffer[i];
-		addMarkSet(JSValue::decode(m_buffer[i]));
-	}
+    int newCapacity = (Checked<int>(m_capacity) * 2).unsafeGet();
+    size_t size = (Checked<size_t>(newCapacity) * sizeof(EncodedJSValue)).unsafeGet();
+    EncodedJSValue* newBuffer = static_cast<EncodedJSValue*>(fastMalloc(size));
+    for (int i = 0; i < m_capacity; ++i) {
+        newBuffer[i] = m_buffer[i];
+        addMarkSet(JSValue::decode(m_buffer[i]));
+    }
 
-	if (EncodedJSValue* base = mallocBase())
-		delete[] base;
+    if (EncodedJSValue* base = mallocBase())
+        fastFree(base);
 
-	m_buffer = newBuffer;
-	m_capacity = newCapacity;
+    m_buffer = newBuffer;
+    m_capacity = newCapacity;
 }
 
-void MarkedArgumentBuffer::slowAppend(JSValue v) 
+void MarkedArgumentBuffer::slowAppend(JSValue v)
 {
-	if (m_size >= m_capacity)
-		expandCapacity();
+    if (m_size >= m_capacity)
+        expandCapacity();
 
     slotFor(m_size) = JSValue::encode(v);
     ++m_size;
-
-	addMarkSet(v);
+    addMarkSet(v);
 }
 
 } // namespace JSC

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2013, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,10 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef JSGenericTypedArrayView_h
-#define JSGenericTypedArrayView_h
+#pragma once
 
 #include "JSArrayBufferView.h"
+#include "ThrowScope.h"
 #include "ToNativeFromValue.h"
 
 namespace JSC {
@@ -83,10 +83,19 @@ JS_EXPORT_PRIVATE const ClassInfo* getFloat64ArrayClassInfo();
 //     template<T> static T::Type convertTo(uint8_t);
 // };
 
+enum class CopyType {
+    LeftToRight,
+    Unobservable,
+};
+
+static const char* const typedArrayBufferHasBeenDetachedErrorMessage = "Underlying ArrayBuffer has been detached from the view";
+
 template<typename Adaptor>
 class JSGenericTypedArrayView : public JSArrayBufferView {
 public:
     typedef JSArrayBufferView Base;
+    typedef typename Adaptor::Type ElementType;
+
     static const unsigned StructureFlags = Base::StructureFlags | OverridesGetPropertyNames | OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero;
 
     static const unsigned elementSize = sizeof(typename Adaptor::Type);
@@ -96,6 +105,7 @@ protected:
     
 public:
     static JSGenericTypedArrayView* create(ExecState*, Structure*, unsigned length);
+    static JSGenericTypedArrayView* createWithFastVector(ExecState*, Structure*, unsigned length, void* vector);
     static JSGenericTypedArrayView* createUninitialized(ExecState*, Structure*, unsigned length);
     static JSGenericTypedArrayView* create(ExecState*, Structure*, PassRefPtr<ArrayBuffer>, unsigned byteOffset, unsigned length);
     static JSGenericTypedArrayView* create(VM&, Structure*, PassRefPtr<typename Adaptor::ViewType> impl);
@@ -106,11 +116,11 @@ public:
     
     const typename Adaptor::Type* typedVector() const
     {
-        return static_cast<const typename Adaptor::Type*>(m_vector);
+        return bitwise_cast<const typename Adaptor::Type*>(vector());
     }
     typename Adaptor::Type* typedVector()
     {
-        return static_cast<typename Adaptor::Type*>(m_vector);
+        return bitwise_cast<typename Adaptor::Type*>(vector());
     }
 
     // These methods are meant to match indexed access methods that JSObject
@@ -148,19 +158,27 @@ public:
     
     void setIndexQuicklyToDouble(unsigned i, double value)
     {
-        setIndexQuicklyToNativeValue(i, toNativeFromValue<Adaptor>(value));
+        setIndexQuicklyToNativeValue(i, toNativeFromValue<Adaptor>(jsNumber(value)));
     }
     
     void setIndexQuickly(unsigned i, JSValue value)
     {
+        ASSERT(!value.isObject());
         setIndexQuicklyToNativeValue(i, toNativeFromValue<Adaptor>(value));
     }
     
     bool setIndex(ExecState* exec, unsigned i, JSValue jsValue)
     {
+        VM& vm = exec->vm();
+        auto scope = DECLARE_THROW_SCOPE(vm);
+
         typename Adaptor::Type value = toNativeFromValue<Adaptor>(exec, jsValue);
-        if (exec->hadException())
+        RETURN_IF_EXCEPTION(scope, false);
+
+        if (isNeutered()) {
+            throwTypeError(exec, scope, ASCIILiteral(typedArrayBufferHasBeenDetachedErrorMessage));
             return false;
+        }
 
         if (i >= m_length)
             return false;
@@ -168,7 +186,29 @@ public:
         setIndexQuicklyToNativeValue(i, value);
         return true;
     }
-    
+
+    static ElementType toAdaptorNativeFromValue(ExecState* exec, JSValue jsValue) { return toNativeFromValue<Adaptor>(exec, jsValue); }
+
+    static std::optional<ElementType> toAdaptorNativeFromValueWithoutCoercion(JSValue jsValue) { return toNativeFromValueWithoutCoercion<Adaptor>(jsValue); }
+
+    void sort()
+    {
+        RELEASE_ASSERT(!isNeutered());
+        switch (Adaptor::typeValue) {
+        case TypeFloat32:
+            sortFloat<int32_t>();
+            break;
+        case TypeFloat64:
+            sortFloat<int64_t>();
+            break;
+        default: {
+            ElementType* array = typedVector();
+            std::sort(array, array + m_length);
+            break;
+        }
+        }
+    }
+
     bool canAccessRangeQuickly(unsigned offset, unsigned length)
     {
         return offset <= m_length
@@ -180,16 +220,14 @@ public:
     // Like canSetQuickly, except: if it returns false, it will throw the
     // appropriate exception.
     bool validateRange(ExecState*, unsigned offset, unsigned length);
-    
+
     // Returns true if successful, and false on error; if it returns false
     // then it will have thrown an exception.
-    bool set(ExecState*, JSObject*, unsigned offset, unsigned length);
+    bool set(ExecState*, unsigned offset, JSObject*, unsigned objectOffset, unsigned length, CopyType type = CopyType::Unobservable);
     
-    PassRefPtr<typename Adaptor::ViewType> typedImpl()
-    {
-        return Adaptor::ViewType::create(buffer(), byteOffset(), length());
-    }
-    
+    PassRefPtr<typename Adaptor::ViewType> possiblySharedTypedImpl();
+    PassRefPtr<typename Adaptor::ViewType> unsharedTypedImpl();
+
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
     {
         return Structure::create(vm, globalObject, prototype, TypeInfo(typeForTypedArrayType(Adaptor::typeValue), StructureFlags), info(), NonArray);
@@ -227,24 +265,28 @@ public:
     ArrayBuffer* existingBuffer();
 
     static const TypedArrayType TypedArrayStorageType = Adaptor::typeValue;
+
+    // This is the default DOM unwrapping. It calls toUnsharedNativeTypedView().
+    static RefPtr<typename Adaptor::ViewType> toWrapped(JSValue);
     
 protected:
     friend struct TypedArrayClassInfos;
 
+    static EncodedJSValue throwNeuteredTypedArrayTypeError(ExecState*, EncodedJSValue, PropertyName);
+
     static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
-    static void put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&);
+    static bool put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&);
     static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
     static bool deleteProperty(JSCell*, ExecState*, PropertyName);
 
     static bool getOwnPropertySlotByIndex(JSObject*, ExecState*, unsigned propertyName, PropertySlot&);
-    static void putByIndex(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
+    static bool putByIndex(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
     static bool deletePropertyByIndex(JSCell*, ExecState*, unsigned propertyName);
     
-    static void getOwnNonIndexPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
     static void getOwnPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
-    
+
+    static size_t estimatedSize(JSCell*);
     static void visitChildren(JSCell*, SlotVisitor&);
-    static void copyBackingStore(JSCell*, CopyVisitor&, CopyToken);
 
     // Allocates the full-on native buffer and moves data into the C heap if
     // necessary. Note that this never allocates in the GC heap.
@@ -255,20 +297,90 @@ private:
     // Returns true if successful, and false on error; it will throw on error.
     template<typename OtherAdaptor>
     bool setWithSpecificType(
-        ExecState*, JSGenericTypedArrayView<OtherAdaptor>*,
-        unsigned offset, unsigned length);
+        ExecState*, unsigned offset, JSGenericTypedArrayView<OtherAdaptor>*,
+        unsigned objectOffset, unsigned length, CopyType);
+
+    // The ECMA 6 spec states that floating point Typed Arrays should have the following ordering:
+    //
+    // -Inifinity < negative finite numbers < -0.0 < 0.0 < positive finite numbers < Infinity < NaN
+    // Note: regardless of the sign or exact representation of a NaN it is greater than all other values.
+    //
+    // An interesting fact about IEEE 754 floating point numbers is that have an adjacent representation
+    // i.e. for any finite floating point x there does not exist a finite floating point y such that
+    // ((float) ((int) x + 1)) > y > x (where int represents a signed bit integer with the same number
+    // of bits as float). Thus, if we have an array of floating points if we view it as an
+    // array of signed bit integers it will sort in the format we desire. Note, denormal
+    // numbers fit this property as they are floating point numbers with a exponent field of all
+    // zeros so they will be closer to the signed zeros than any normalized number.
+    //
+    // All the processors we support, however, use twos complement. Fortunately, if you compare a signed
+    // bit number as if it were twos complement the result will be correct assuming both numbers are not
+    // negative. e.g.
+    //
+    //    - <=> - = reversed (-30 > -20 = true)
+    //    + <=> + = ordered (30 > 20 = true)
+    //    - <=> + = ordered (-30 > 20 = false)
+    //    + <=> - = ordered (30 > -20 = true)
+    //
+    // For NaN, we normalize the NaN to a peticular representation; the sign bit is 0, all exponential bits
+    // are 1 and only the MSB of the mantissa is 1. So, NaN is recognized as the largest integral numbers.
+
+    void purifyArray()
+    {
+        ElementType* array = typedVector();
+        for (unsigned i = 0; i < m_length; i++)
+            array[i] = purifyNaN(array[i]);
+    }
+
+    template<typename IntegralType>
+    static bool ALWAYS_INLINE sortComparison(IntegralType a, IntegralType b)
+    {
+        if (a >= 0 || b >= 0)
+            return a < b;
+        return a > b;
+    }
+
+    template<typename IntegralType>
+    void sortFloat()
+    {
+        ASSERT(sizeof(IntegralType) == sizeof(ElementType));
+
+        // Since there might be another view that sets the bits of
+        // our floats to NaNs with negative sign bits we need to
+        // purify the array.
+        // We use a separate function here to avoid the strict aliasing rule.
+        // We could use a union but ASAN seems to frown upon that.
+        purifyArray();
+
+        IntegralType* array = reinterpret_cast_ptr<IntegralType*>(typedVector());
+        std::sort(array, array + m_length, sortComparison<IntegralType>);
+
+    }
+
 };
 
 template<typename Adaptor>
-inline RefPtr<typename Adaptor::ViewType> toNativeTypedView(JSValue value)
+inline RefPtr<typename Adaptor::ViewType> toPossiblySharedNativeTypedView(JSValue value)
 {
     typename Adaptor::JSViewType* wrapper = jsDynamicCast<typename Adaptor::JSViewType*>(value);
     if (!wrapper)
         return nullptr;
-    return wrapper->typedImpl();
+    return wrapper->possiblySharedTypedImpl();
+}
+
+template<typename Adaptor>
+inline RefPtr<typename Adaptor::ViewType> toUnsharedNativeTypedView(JSValue value)
+{
+    RefPtr<typename Adaptor::ViewType> result = toPossiblySharedNativeTypedView<Adaptor>(value);
+    if (!result || result->isShared())
+        return nullptr;
+    return result;
+}
+
+template<typename Adaptor>
+RefPtr<typename Adaptor::ViewType> JSGenericTypedArrayView<Adaptor>::toWrapped(JSValue value)
+{
+    return JSC::toUnsharedNativeTypedView<Adaptor>(value);
 }
 
 } // namespace JSC
-
-#endif // JSGenericTypedArrayView_h
-

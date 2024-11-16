@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef TempRegisterSet_h
-#define TempRegisterSet_h
+#pragma once
 
 #if ENABLE(JIT)
 
@@ -115,6 +114,16 @@ public:
         return getBit(GPRInfo::numberOfRegisters + index);
     }
     
+    // Return the index'th free FPR.
+    FPRReg getFreeFPR(unsigned index = 0) const
+    {
+        for (unsigned i = FPRInfo::numberOfRegisters; i--;) {
+            if (!getFPRByIndex(i) && !index--)
+                return FPRInfo::toRegister(i);
+        }
+        return InvalidFPRReg;
+    }
+
     template<typename BankInfo>
     void setByIndex(unsigned index)
     {
@@ -208,6 +217,3 @@ struct TempRegisterSet { };
 } // namespace JSC
 
 #endif // ENABLE(JIT)
-
-#endif // TempRegisterSet_h
-

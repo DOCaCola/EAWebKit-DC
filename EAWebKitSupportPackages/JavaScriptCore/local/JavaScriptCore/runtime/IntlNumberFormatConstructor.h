@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IntlNumberFormatConstructor_h
-#define IntlNumberFormatConstructor_h
+#pragma once
 
 #if ENABLE(INTL)
 
@@ -38,7 +37,7 @@ class IntlNumberFormatPrototype;
 class IntlNumberFormatConstructor : public InternalFunction {
 public:
     typedef InternalFunction Base;
-    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot;
+    static const unsigned StructureFlags = Base::StructureFlags | HasStaticPropertyTable;
 
     static IntlNumberFormatConstructor* create(VM&, Structure*, IntlNumberFormatPrototype*, Structure*);
     static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
@@ -54,17 +53,11 @@ private:
     IntlNumberFormatConstructor(VM&, Structure*);
     static ConstructType getConstructData(JSCell*, ConstructData&);
     static CallType getCallData(JSCell*, CallData&);
-    static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
     static void visitChildren(JSCell*, SlotVisitor&);
     
     WriteBarrier<Structure> m_numberFormatStructure;
 };
 
-EncodedJSValue JSC_HOST_CALL constructIntlNumberFormat(ExecState*);
-EncodedJSValue JSC_HOST_CALL callIntlNumberFormat(ExecState*);
-
 } // namespace JSC
 
 #endif // ENABLE(INTL)
-
-#endif // IntlNumberFormatConstructor_h

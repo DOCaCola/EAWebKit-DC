@@ -23,40 +23,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ModuleAnalyzer_h
-#define ModuleAnalyzer_h
+#pragma once
 
-#include "ModuleRecord.h"
 #include "Nodes.h"
 
 namespace JSC {
 
-class ModuleAnalyzer {
-public:
-    ModuleAnalyzer(VM&, const VariableEnvironment& declaredVariables, const VariableEnvironment& lexicalVariables);
+class JSModuleRecord;
+class SourceCode;
 
-    Ref<ModuleRecord> analyze(ModuleProgramNode&);
+class ModuleAnalyzer {
+    WTF_MAKE_NONCOPYABLE(ModuleAnalyzer);
+public:
+    ModuleAnalyzer(ExecState*, const Identifier& moduleKey, const SourceCode&, const VariableEnvironment& declaredVariables, const VariableEnvironment& lexicalVariables);
+
+    JSModuleRecord* analyze(ModuleProgramNode&);
 
     VM& vm() { return *m_vm; }
 
-    ModuleRecord& moduleRecord() { return *m_moduleRecord; }
-
-    void declareExportAlias(const Identifier& localName, const Identifier& exportName);
+    JSModuleRecord* moduleRecord() { return m_moduleRecord.get(); }
 
 private:
-    typedef HashMap<RefPtr<UniquedStringImpl>, Identifier, IdentifierRepHash, HashTraits<RefPtr<UniquedStringImpl>>> IdentifierAliasMap;
-
-    void exportVariable(const RefPtr<UniquedStringImpl>&, const VariableEnvironmentEntry&);
-
-    Identifier exportedBinding(const RefPtr<UniquedStringImpl>& ident);
+    void exportVariable(ModuleProgramNode&, const RefPtr<UniquedStringImpl>&, const VariableEnvironmentEntry&);
 
     VM* m_vm;
-    RefPtr<ModuleRecord> m_moduleRecord;
-    VariableEnvironment m_declaredVariables;
-    VariableEnvironment m_lexicalVariables;
-    IdentifierAliasMap m_aliasMap;
+    Strong<JSModuleRecord> m_moduleRecord;
 };
 
 } // namespace JSC
-
-#endif // ModuleAnalyzer_h

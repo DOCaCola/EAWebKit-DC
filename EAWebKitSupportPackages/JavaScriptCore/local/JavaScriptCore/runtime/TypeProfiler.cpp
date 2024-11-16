@@ -108,7 +108,7 @@ String TypeProfiler::typeInformationForExpressionAtOffset(TypeProfilerSearchDesc
 
 TypeLocation* TypeProfiler::findLocation(unsigned divot, intptr_t sourceID, TypeProfilerSearchDescriptor descriptor, VM& vm)
 {
-    QueryKey queryKey(sourceID, divot);
+    QueryKey queryKey(sourceID, divot, descriptor);
     auto iter = m_queryCache.find(queryKey);
     if (iter != m_queryCache.end())
         return iter->value;
@@ -122,14 +122,13 @@ TypeLocation* TypeProfiler::findLocation(unsigned divot, intptr_t sourceID, Type
     Vector<TypeLocation*>& bucket = m_bucketMap.find(sourceID)->value;
     TypeLocation* bestMatch = nullptr;
     unsigned distance = UINT_MAX; // Because assignments may be nested, make sure we find the closest enclosing assignment to this character offset.
-    for (size_t i = 0, size = bucket.size(); i < size; i++) {
-        TypeLocation* location = bucket.at(i);
+    for (auto* location : bucket) {
         // We found the type location that correlates to the convergence of all return statements in a function.
         // This text offset is the offset of the opening brace in a function declaration.
         if (descriptor == TypeProfilerSearchDescriptorFunctionReturn && location->m_globalVariableID == TypeProfilerReturnStatement && location->m_divotForFunctionOffsetIfReturnStatement == divot)
             return location;
 
-        if (descriptor != TypeProfilerSearchDescriptorFunctionReturn && location->m_divotStart <= divot && divot <= location->m_divotEnd && location->m_divotEnd - location->m_divotStart <= distance) {
+        if (descriptor != TypeProfilerSearchDescriptorFunctionReturn && location->m_globalVariableID != TypeProfilerReturnStatement && location->m_divotStart <= divot && divot <= location->m_divotEnd && location->m_divotEnd - location->m_divotStart <= distance) {
             distance = location->m_divotEnd - location->m_divotStart;
             bestMatch = location;
         }

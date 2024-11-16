@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2008, 2016 Apple Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,29 +26,43 @@
 #include "config.h"
 #include "CallData.h"
 
-#include "Executable.h"
 #include "Interpreter.h"
-#include "JSFunction.h"
 #include "JSCInlines.h"
+#include "JSFunction.h"
+#include "ScriptProfilingScope.h"
 
 namespace JSC {
 
 JSValue call(ExecState* exec, JSValue functionObject, CallType callType, const CallData& callData, JSValue thisValue, const ArgList& args)
 {
-    ASSERT(callType == CallTypeJS || callType == CallTypeHost);
+    ASSERT(callType == CallType::JS || callType == CallType::Host);
     return exec->interpreter()->executeCall(exec, asObject(functionObject), callType, callData, thisValue, args);
 }
 
 JSValue call(ExecState* exec, JSValue functionObject, CallType callType, const CallData& callData, JSValue thisValue, const ArgList& args, NakedPtr<Exception>& returnedException)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_CATCH_SCOPE(vm);
     JSValue result = call(exec, functionObject, callType, callData, thisValue, args);
-    if (exec->hadException()) {
-        returnedException = exec->exception();
-        exec->clearException();
+    if (UNLIKELY(scope.exception())) {
+        returnedException = scope.exception();
+        scope.clearException();
         return jsUndefined();
     }
     RELEASE_ASSERT(result);
     return result;
+}
+
+JSValue profiledCall(ExecState* exec, ProfilingReason reason, JSValue functionObject, CallType callType, const CallData& callData, JSValue thisValue, const ArgList& args)
+{
+    ScriptProfilingScope profilingScope(exec->vmEntryGlobalObject(), reason);
+    return call(exec, functionObject, callType, callData, thisValue, args);
+}
+
+JSValue profiledCall(ExecState* exec, ProfilingReason reason, JSValue functionObject, CallType callType, const CallData& callData, JSValue thisValue, const ArgList& args, NakedPtr<Exception>& returnedException)
+{
+    ScriptProfilingScope profilingScope(exec->vmEntryGlobalObject(), reason);
+    return call(exec, functionObject, callType, callData, thisValue, args, returnedException);
 }
 
 } // namespace JSC

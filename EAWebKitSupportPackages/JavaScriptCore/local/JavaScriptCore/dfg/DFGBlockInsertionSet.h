@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGBlockInsertionSet_h
-#define DFGBlockInsertionSet_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -45,7 +44,7 @@ public:
     void insert(size_t index, PassRefPtr<BasicBlock>);
     BasicBlock* insert(size_t index, float executionCount);
     BasicBlock* insertBefore(BasicBlock* before, float executionCount);
-    
+
     bool execute();
 
 private:
@@ -56,6 +55,3 @@ private:
 } } // namespace JSC::DFG
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGBlockInsertionSet_h
-

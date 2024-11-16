@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef NumberPrototype_h
-#define NumberPrototype_h
+#pragma once
 
 #include "NumberObject.h"
 
@@ -28,7 +27,7 @@ namespace JSC {
 class NumberPrototype : public NumberObject {
 public:
     typedef NumberObject Base;
-    static const unsigned StructureFlags = Base::StructureFlags | OverridesGetOwnPropertySlot;
+    static const unsigned StructureFlags = Base::StructureFlags | HasStaticPropertyTable;
 
     static NumberPrototype* create(VM& vm, JSGlobalObject* globalObject, Structure* structure)
     {
@@ -49,9 +48,8 @@ protected:
 
 private:
     NumberPrototype(VM&, Structure*);
-    static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
 };
 
-} // namespace JSC
+EncodedJSValue JSC_HOST_CALL numberProtoFuncValueOf(ExecState*);
 
-#endif // NumberPrototype_h
+} // namespace JSC

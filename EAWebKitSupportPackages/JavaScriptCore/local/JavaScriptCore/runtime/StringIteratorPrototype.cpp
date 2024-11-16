@@ -27,16 +27,10 @@
 #include "config.h"
 #include "StringIteratorPrototype.h"
 
-#include "JSCJSValueInlines.h"
-#include "JSCellInlines.h"
+#include "JSCInlines.h"
 #include "JSGlobalObject.h"
 #include "JSStringIterator.h"
 #include "ObjectConstructor.h"
-#include "StructureInlines.h"
-
-namespace JSC {
-
-}
 
 #include "StringIteratorPrototype.lut.h"
 
@@ -46,7 +40,7 @@ const ClassInfo StringIteratorPrototype::s_info = { "String Iterator", &Base::s_
 
 /* Source for StringIteratorPrototype.lut.h
 @begin stringIteratorPrototypeTable
-  next      stringIteratorPrototypeFuncNext  DontEnum|Function 0
+  next      JSBuiltin    DontEnum|Function 0
 @end
 */
 
@@ -54,12 +48,8 @@ void StringIteratorPrototype::finishCreation(VM& vm, JSGlobalObject*)
 {
     Base::finishCreation(vm);
     ASSERT(inherits(info()));
+    putDirectWithoutTransition(vm, vm.propertyNames->toStringTagSymbol, jsString(&vm, "String Iterator"), DontEnum | ReadOnly);
     vm.prototypeMap.addPrototype(this);
-}
-
-bool StringIteratorPrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
-{
-    return getStaticFunctionSlot<Base>(exec, stringIteratorPrototypeTable, jsCast<StringIteratorPrototype*>(object), propertyName, slot);
 }
 
 } // namespace JSC

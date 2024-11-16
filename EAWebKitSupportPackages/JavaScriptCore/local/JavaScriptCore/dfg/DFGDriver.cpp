@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012, 2013, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2011-2014, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,17 +30,17 @@
 #include "JSString.h"
 
 #include "CodeBlock.h"
-#include "DFGFunctionWhitelist.h"
 #include "DFGJITCode.h"
 #include "DFGPlan.h"
 #include "DFGThunks.h"
 #include "DFGWorklist.h"
+#include "FunctionWhitelist.h"
 #include "JITCode.h"
 #include "JSCInlines.h"
 #include "Options.h"
-#include "SamplingTool.h"
 #include "TypeProfilerLog.h"
 #include <wtf/Atomics.h>
+#include <wtf/NeverDestroyed.h>
 
 #if ENABLE(FTL_JIT)
 #include "FTLThunks.h"
@@ -56,15 +56,24 @@ unsigned getNumCompilations()
 }
 
 #if ENABLE(DFG_JIT)
+static FunctionWhitelist& ensureGlobalDFGWhitelist()
+{
+    static LazyNeverDestroyed<FunctionWhitelist> dfgWhitelist;
+    static std::once_flag initializeWhitelistFlag;
+    std::call_once(initializeWhitelistFlag, [] {
+        const char* functionWhitelistFile = Options::dfgWhitelist();
+        dfgWhitelist.construct(functionWhitelistFile);
+    });
+    return dfgWhitelist;
+}
+
 static CompilationResult compileImpl(
     VM& vm, CodeBlock* codeBlock, CodeBlock* profiledDFGCodeBlock, CompilationMode mode,
     unsigned osrEntryBytecodeIndex, const Operands<JSValue>& mustHandleValues,
     PassRefPtr<DeferredCompilationCallback> callback)
 {
-    SamplingRegion samplingRegion("DFG Compilation (Driver)");
-    
     if (!Options::bytecodeRangeToDFGCompile().isInRange(codeBlock->instructionCount())
-        || !FunctionWhitelist::ensureGlobalWhitelist().contains(codeBlock))
+        || !ensureGlobalDFGWhitelist().contains(codeBlock))
         return CompilationFailed;
     
     numCompilations++;
@@ -91,11 +100,11 @@ static CompilationResult compileImpl(
         new Plan(codeBlock, profiledDFGCodeBlock, mode, osrEntryBytecodeIndex, mustHandleValues));
     
     plan->callback = callback;
-    if (Options::enableConcurrentJIT()) {
-        Worklist* worklist = ensureGlobalWorklistFor(mode);
+    if (Options::useConcurrentJIT()) {
+        Worklist& worklist = ensureGlobalWorklistFor(mode);
         if (logCompilationChanges(mode))
-            dataLog("Deferring DFG compilation of ", *codeBlock, " with queue length ", worklist->queueLength(), ".\n");
-        worklist->enqueue(plan);
+            dataLog("Deferring DFG compilation of ", *codeBlock, " with queue length ", worklist.queueLength(), ".\n");
+        worklist.enqueue(plan);
         return CompilationDeferred;
     }
     
@@ -121,7 +130,7 @@ CompilationResult compile(
         vm, codeBlock, profiledDFGCodeBlock, mode, osrEntryBytecodeIndex, mustHandleValues,
         callback);
     if (result != CompilationDeferred)
-        callback->compilationDidComplete(codeBlock, result);
+        callback->compilationDidComplete(codeBlock, profiledDFGCodeBlock, result);
     return result;
 }
 

@@ -44,13 +44,17 @@
 #include "Assertions.h"
 
 #include "Compiler.h"
+#include <mutex>
+#include <stdio.h>
+#include <string.h>
+#include <wtf/Lock.h>
+#include <wtf/Locker.h>
+#include <wtf/LoggingAccumulator.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/StringExtras.h>
 #include <wtf/text/CString.h>
+#include <wtf/text/StringBuilder.h>
 #include <wtf/text/WTFString.h>
-
-#include <stdio.h>
-#include <string.h>
 
 #if HAVE(SIGNAL_H)
 #include <signal.h>
@@ -82,7 +86,7 @@
 #include <unistd.h>
 #endif
 
-#if OS(DARWIN) || (OS(LINUX) && !defined(__UCLIBC__))
+#if OS(DARWIN) || (OS(LINUX) && defined(__GLIBC__) && !defined(__UCLIBC__))
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <execinfo.h>
@@ -102,6 +106,17 @@ namespace WebKit
 //-EAWebKitChange
 
 extern "C" {
+
+static void logToStderr(const char* buffer)
+{
+#if USE(APPLE_SYSTEM_LOG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    asl_log(0, 0, ASL_LEVEL_NOTICE, "%s", buffer);
+#pragma clang diagnostic pop
+#endif
+    fputs(buffer, stderr);
+}
 
 //+EAWebKitChange
 //10/17/2011
@@ -126,10 +141,7 @@ static void vprintf_stderr_common(bool shouldAssert, const char* format, va_list
 
         CFStringGetCString(str, buffer, length, kCFStringEncodingUTF8);
 
-#if USE(APPLE_SYSTEM_LOG)
-        asl_log(0, 0, ASL_LEVEL_NOTICE, "%s", buffer);
-#endif
-        fputs(buffer, stderr);
+        logToStderr(buffer);
 
         free(buffer);
         CFRelease(str);
@@ -138,10 +150,13 @@ static void vprintf_stderr_common(bool shouldAssert, const char* format, va_list
     }
 
 #if USE(APPLE_SYSTEM_LOG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     va_list copyOfArgs;
     va_copy(copyOfArgs, args);
     asl_vlog(0, 0, ASL_LEVEL_NOTICE, format, copyOfArgs);
     va_end(copyOfArgs);
+#pragma clang diagnostic pop
 #endif
 
     // Fall through to write to stderr in the same manner as other platforms.
@@ -317,24 +332,10 @@ void WTFReportArgumentAssertionFailure(const char* file, int line, const char* f
 
 void WTFGetBacktrace(void** stack, int* size)
 {
-#if OS(DARWIN) || (OS(LINUX) && !defined(__UCLIBC__))
+#if OS(DARWIN) || (OS(LINUX) && defined(__GLIBC__) && !defined(__UCLIBC__))
     *size = backtrace(stack, *size);
 #elif OS(WINDOWS)
-    // The CaptureStackBackTrace function is available in XP, but it is not defined
-    // in the Windows Server 2003 R2 Platform SDK. So, we'll grab the function
-    // through GetProcAddress.
-    typedef WORD (NTAPI* RtlCaptureStackBackTraceFunc)(DWORD, DWORD, PVOID*, PDWORD);
-    HMODULE kernel32 = ::GetModuleHandleW(L"Kernel32.dll");
-    if (!kernel32) {
-        *size = 0;
-        return;
-    }
-    RtlCaptureStackBackTraceFunc captureStackBackTraceFunc = reinterpret_cast<RtlCaptureStackBackTraceFunc>(
-        ::GetProcAddress(kernel32, "RtlCaptureStackBackTrace"));
-    if (captureStackBackTraceFunc)
-        *size = captureStackBackTraceFunc(0, *size, stack, 0);
-    else
-        *size = 0;
+    *size = RtlCaptureStackBackTrace(0, *size, stack, 0);
 #else
     *size = 0;
 #endif
@@ -411,6 +412,7 @@ void WTFSetCrashHook(WTFCrashHookFunction function)
     globalHook = function;
 }
 
+#if !defined(NDEBUG) || !OS(DARWIN)
 void WTFCrash()
 {
 	//+EAWebKitChange
@@ -433,7 +435,16 @@ void WTFCrash()
     ((void(*)())0)();
 #endif
 }
-    
+#else
+// We need to keep WTFCrash() around (even on non-debug OS(DARWIN) builds) as a workaround
+// for presently shipping (circa early 2016) SafariForWebKitDevelopment binaries which still
+// expects to link to it.
+void WTFCrash()
+{
+    CRASH();
+}
+#endif // !defined(NDEBUG) || !OS(DARWIN)
+
 void WTFCrashWithSecurityImplication()
 {
 	//+EAWebKitChange
@@ -444,16 +455,7 @@ void WTFCrashWithSecurityImplication()
 #endif
 	//-EAWebKitChange
     
-    if (globalHook)
-        globalHook();
-    WTFReportBacktrace();
-    *(int *)(uintptr_t)0xfbadbeef = 0;
-    // More reliable, but doesn't say fbadbeef.
-#if COMPILER(GCC_OR_CLANG)
-    __builtin_trap();
-#else
-    ((void(*)())0)();
-#endif
+    CRASH();
 }
 
 #if HAVE(SIGNAL_H)
@@ -532,15 +534,83 @@ void WTFReportError(const char* file, int line, const char* function, const char
 //-EAWebKitChange
 }
 
+class WTFLoggingAccumulator {
+public:
+    void accumulate(const String&);
+    void resetAccumulatedLogs();
+    String getAndResetAccumulatedLogs();
+
+private:
+    Lock accumulatorLock;
+    StringBuilder loggingAccumulator;
+};
+
+void WTFLoggingAccumulator::accumulate(const String& log)
+{
+    Locker<Lock> locker(accumulatorLock);
+    loggingAccumulator.append(log);
+}
+
+void WTFLoggingAccumulator::resetAccumulatedLogs()
+{
+    Locker<Lock> locker(accumulatorLock);
+    loggingAccumulator.clear();
+}
+
+String WTFLoggingAccumulator::getAndResetAccumulatedLogs()
+{
+    Locker<Lock> locker(accumulatorLock);
+    String result = loggingAccumulator.toString();
+    loggingAccumulator.clear();
+    return result;
+}
+
+static WTFLoggingAccumulator& loggingAccumulator()
+{
+    static WTFLoggingAccumulator* accumulator;
+    static std::once_flag initializeAccumulatorOnce;
+    std::call_once(initializeAccumulatorOnce, [] {
+        accumulator = new WTFLoggingAccumulator;
+    });
+
+    return *accumulator;
+}
+
 void WTFLog(WTFLogChannel* channel, const char* format, ...)
 {
-    if (channel->state != WTFLogChannelOn)
+    if (channel->state == WTFLogChannelOff)
         return;
+
+    if (channel->state == WTFLogChannelOn) {
+        va_list args;
+        va_start(args, format);
+        vprintf_stderr_with_trailing_newline(format, args);
+        va_end(args);
+        return;
+    }
+
+    ASSERT(channel->state == WTFLogChannelOnWithAccumulation);
 
     va_list args;
     va_start(args, format);
-    vprintf_stderr_with_trailing_newline(format, args);
+
+#if COMPILER(CLANG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
+    String loggingString = String::format(format, args);
+#if COMPILER(CLANG)
+#pragma clang diagnostic pop
+#endif
+
     va_end(args);
+
+    if (!loggingString.endsWith('\n'))
+        loggingString.append('\n');
+
+    loggingAccumulator().accumulate(loggingString);
+
+    logToStderr(loggingString.utf8().data());
 }
 
 void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChannel* channel, const char* format, ...)
@@ -550,7 +620,16 @@ void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChann
 
     va_list args;
     va_start(args, format);
-    vprintf_stderr_with_trailing_newline(format, args);
+
+#if COMPILER(CLANG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
+    WTFLog(channel, format, args);
+#if COMPILER(CLANG)
+#pragma clang diagnostic pop
+#endif
+
     va_end(args);
 
 //+EAWebKitChange
@@ -578,7 +657,7 @@ void WTFLogAlwaysAndCrash(const char* format, ...)
     va_start(args, format);
     WTFLogAlwaysV(format, args);
     va_end(args);
-    WTFCrash();
+    CRASH();
 }
 
 WTFLogChannel* WTFLogChannelByName(WTFLogChannel* channels[], size_t count, const char* name)
@@ -600,6 +679,13 @@ static void setStateOfAllChannels(WTFLogChannel* channels[], size_t channelCount
 
 void WTFInitializeLogChannelStatesFromString(WTFLogChannel* channels[], size_t count, const char* logLevel)
 {
+#if !RELEASE_LOG_DISABLED
+    for (size_t i = 0; i < count; ++i) {
+        WTFLogChannel* channel = channels[i];
+        channel->osLogChannel = os_log_create(channel->subsystem, channel->name);
+    }
+#endif
+
     String logLevelString = logLevel;
     Vector<String> components;
     logLevelString.split(',', components);
@@ -613,7 +699,7 @@ void WTFInitializeLogChannelStatesFromString(WTFLogChannel* channels[], size_t c
             component = component.substring(1);
         }
 
-        if (equalIgnoringCase(component, "all")) {
+        if (equalLettersIgnoringASCIICase(component, "all")) {
             setStateOfAllChannels(channels, count, logChannelState);
             continue;
         }
@@ -626,3 +712,17 @@ void WTFInitializeLogChannelStatesFromString(WTFLogChannel* channels[], size_t c
 }
 
 } // extern "C"
+
+namespace WTF {
+
+void resetAccumulatedLogs()
+{
+    loggingAccumulator().resetAccumulatedLogs();
+}
+
+String getAndResetAccumulatedLogs()
+{
+    return loggingAccumulator().getAndResetAccumulatedLogs();
+}
+
+} // namespace WTF

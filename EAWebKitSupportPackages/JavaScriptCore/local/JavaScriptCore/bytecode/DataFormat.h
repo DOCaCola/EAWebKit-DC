@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DataFormat_h
-#define DataFormat_h
+#pragma once
 
 #include <wtf/Assertions.h>
 
@@ -121,6 +120,11 @@ inline bool isJSBoolean(DataFormat format)
     return isJSFormat(format, DataFormatJSBoolean);
 }
 
-}
+} // namespace JSC
 
-#endif // DataFormat_h
+namespace WTF {
+
+class PrintStream;
+void printInternal(PrintStream&, JSC::DataFormat);
+
+} // namespace WTF

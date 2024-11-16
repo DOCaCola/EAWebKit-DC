@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SetPrototype_h
-#define SetPrototype_h
+#pragma once
 
 #include "JSObject.h"
 
@@ -33,6 +32,8 @@ namespace JSC {
 class SetPrototype : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
+
+    static const unsigned StructureFlags = HasStaticPropertyTable | Base::StructureFlags;
 
     static SetPrototype* create(VM& vm, JSGlobalObject* globalObject, Structure* structure)
     {
@@ -56,6 +57,7 @@ private:
     void finishCreation(VM&, JSGlobalObject*);
 };
 
-}
+EncodedJSValue JSC_HOST_CALL privateFuncSetIterator(ExecState*);
+EncodedJSValue JSC_HOST_CALL privateFuncSetIteratorNext(ExecState*);
 
-#endif // !defined(SetPrototype_h)
+} // namespace JSC

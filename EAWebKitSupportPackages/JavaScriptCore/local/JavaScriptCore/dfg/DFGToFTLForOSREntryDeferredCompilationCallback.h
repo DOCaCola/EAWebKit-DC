@@ -23,13 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGToFTLForOSREntryDeferredCompilationCallback_h
-#define DFGToFTLForOSREntryDeferredCompilationCallback_h
+#pragma once
 
 #if ENABLE(FTL_JIT)
 
+#include "DFGTierUpEntryTrigger.h"
 #include "DeferredCompilationCallback.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 
 namespace JSC {
@@ -40,23 +39,20 @@ namespace DFG {
 
 class ToFTLForOSREntryDeferredCompilationCallback : public DeferredCompilationCallback {
 protected:
-    ToFTLForOSREntryDeferredCompilationCallback(PassRefPtr<CodeBlock> dfgCodeBlock);
+    ToFTLForOSREntryDeferredCompilationCallback(TierUpEntryTrigger* forcedOSREntryTrigger);
 
 public:
     virtual ~ToFTLForOSREntryDeferredCompilationCallback();
 
-    static Ref<ToFTLForOSREntryDeferredCompilationCallback> create(PassRefPtr<CodeBlock> dfgCodeBlock);
+    static Ref<ToFTLForOSREntryDeferredCompilationCallback> create(TierUpEntryTrigger* forcedOSREntryTrigger);
     
-    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*);
-    virtual void compilationDidComplete(CodeBlock*, CompilationResult);
+    virtual void compilationDidBecomeReadyAsynchronously(CodeBlock*, CodeBlock* profiledDFGCodeBlock);
+    virtual void compilationDidComplete(CodeBlock*, CodeBlock* profiledDFGCodeBlock, CompilationResult);
 
 private:
-    RefPtr<CodeBlock> m_dfgCodeBlock;
+    TierUpEntryTrigger* m_forcedOSREntryTrigger;
 };
 
 } } // namespace JSC::DFG
 
 #endif // ENABLE(FTL_JIT)
-
-#endif // DFGToFTLForOSREntryDeferredCompilationCallback_h
-

@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PolymorphicCallStubRoutine_h
-#define PolymorphicCallStubRoutine_h
+#pragma once
 
 #if ENABLE(JIT)
 
@@ -50,7 +49,7 @@ public:
     
     ~PolymorphicCallNode();
     
-    void unlink(RepatchBuffer&);
+    void unlink(VM&);
 
     bool hasCallLinkInfo(CallLinkInfo* info) { return m_callLinkInfo == info; }
     void clearCallLinkInfo();
@@ -96,10 +95,10 @@ public:
 
     void clearCallNodesFor(CallLinkInfo*);
     
-    bool visitWeak(RepatchBuffer&) override;
+    bool visitWeak(VM&) override;
 
 protected:
-    virtual void markRequiredObjectsInternal(SlotVisitor&) override;
+    void markRequiredObjectsInternal(SlotVisitor&) override;
 
 private:
     Vector<WriteBarrier<JSCell>, 2> m_variants;
@@ -110,6 +109,3 @@ private:
 } // namespace JSC
 
 #endif // ENABLE(JIT)
-
-#endif // PolymorphicCallStubRoutine_h
-

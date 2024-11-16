@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DFGArrayMode_h
-#define DFGArrayMode_h
+#pragma once
 
 #if ENABLE(DFG_JIT)
 
@@ -77,7 +76,8 @@ enum Type {
     Uint16Array,
     Uint32Array,
     Float32Array,
-    Float64Array
+    Float64Array,
+    AnyTypedArray
 };
 
 enum Class {
@@ -110,6 +110,7 @@ IndexingType toIndexingShape(Array::Type);
 
 TypedArrayType toTypedArrayType(Array::Type);
 Array::Type toArrayType(TypedArrayType);
+Array::Type refineTypedArrayType(Array::Type, TypedArrayType);
 
 bool permitsBoundsCheckLowering(Array::Type);
 
@@ -167,7 +168,7 @@ public:
         return ArrayMode(word);
     }
     
-    static ArrayMode fromObserved(const ConcurrentJITLocker&, ArrayProfile*, Array::Action, bool makeSafe);
+    static ArrayMode fromObserved(const ConcurrentJSLocker&, ArrayProfile*, Array::Action, bool makeSafe);
     
     ArrayMode withSpeculation(Array::Speculation speculation) const
     {
@@ -179,7 +180,7 @@ public:
         return ArrayMode(type(), arrayClass, speculation(), conversion());
     }
     
-    ArrayMode withSpeculationFromProfile(const ConcurrentJITLocker& locker, ArrayProfile* profile, bool makeSafe) const
+    ArrayMode withSpeculationFromProfile(const ConcurrentJSLocker& locker, ArrayProfile* profile, bool makeSafe) const
     {
         Array::Speculation mySpeculation;
 
@@ -193,7 +194,7 @@ public:
         return withSpeculation(mySpeculation);
     }
     
-    ArrayMode withProfile(const ConcurrentJITLocker& locker, ArrayProfile* profile, bool makeSafe) const
+    ArrayMode withProfile(const ConcurrentJSLocker& locker, ArrayProfile* profile, bool makeSafe) const
     {
         Array::Class myArrayClass;
 
@@ -232,6 +233,7 @@ public:
     bool usesButterfly() const
     {
         switch (type()) {
+        case Array::Undecided:
         case Array::Int32:
         case Array::Double:
         case Array::Contiguous:
@@ -310,6 +312,7 @@ public:
     bool lengthNeedsStorage() const
     {
         switch (type()) {
+        case Array::Undecided:
         case Array::Int32:
         case Array::Double:
         case Array::Contiguous:
@@ -347,13 +350,23 @@ public:
         }
     }
     
-    bool supportsLength() const
+    bool supportsSelfLength() const
     {
         switch (type()) {
         case Array::SelectUsingPredictions:
         case Array::Unprofiled:
         case Array::ForceExit:
         case Array::Generic:
+        // TypedArrays do not have a self length property as of ES6.
+        case Array::Int8Array:
+        case Array::Int16Array:
+        case Array::Int32Array:
+        case Array::Uint8Array:
+        case Array::Uint8ClampedArray:
+        case Array::Uint16Array:
+        case Array::Uint32Array:
+        case Array::Float32Array:
+        case Array::Float64Array:
             return false;
         case Array::Int32:
         case Array::Double:
@@ -429,6 +442,11 @@ public:
     TypedArrayType typedArrayType() const
     {
         return toTypedArrayType(type());
+    }
+
+    bool isSomeTypedArrayView() const
+    {
+        return type() == Array::AnyTypedArray || isTypedView(typedArrayType());
     }
     
     bool operator==(const ArrayMode& other) const
@@ -514,6 +532,3 @@ void printInternal(PrintStream&, JSC::DFG::Array::Conversion);
 } // namespace WTF
 
 #endif // ENABLE(DFG_JIT)
-
-#endif // DFGArrayMode_h
-

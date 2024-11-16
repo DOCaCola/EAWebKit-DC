@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003, 2007, 2009 Apple Inc. All rights reserved.
+ *  Copyright (C) 2003, 2007, 2009, 2016 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -18,44 +18,99 @@
  *
  */
 
-#ifndef CommonIdentifiers_h
-#define CommonIdentifiers_h
+#pragma once
 
-#include "BytecodeIntrinsicRegistry.h"
 #include "Identifier.h"
 #include <wtf/Noncopyable.h>
 
 // MarkedArgumentBuffer of property names, passed to a macro so we can do set them up various
 // ways without repeating the list.
 #define JSC_COMMON_IDENTIFIERS_EACH_PROPERTY_NAME(macro) \
+    macro(Animation) \
+    macro(AnimationEffectReadOnly) \
+    macro(AnimationTimeline) \
     macro(Array) \
     macro(ArrayBuffer) \
     macro(ArrayIterator) \
+    macro(Audio) \
     macro(BYTES_PER_ELEMENT) \
     macro(Boolean) \
     macro(Collator) \
+    macro(CustomElementRegistry) \
     macro(Date) \
     macro(DateTimeFormat) \
+    macro(DocumentTimeline) \
     macro(Error) \
     macro(EvalError) \
     macro(Function) \
+    macro(Gamepad) \
+    macro(GamepadButton) \
+    macro(GamepadEvent) \
+    macro(GeneratorFunction) \
+    macro(Headers) \
+    macro(HTMLAudioElement) \
+    macro(HTMLSlotElement) \
+    macro(IDBCursor) \
+    macro(IDBCursorWithValue) \
+    macro(IDBDatabase) \
+    macro(IDBFactory) \
+    macro(IDBIndex) \
+    macro(IDBKeyRange) \
+    macro(IDBObjectStore) \
+    macro(IDBOpenDBRequest) \
+    macro(IDBRequest) \
+    macro(IDBTransaction) \
+    macro(IDBVersionChangeEvent) \
     macro(Infinity) \
+    macro(InputEvent) \
+    macro(IntersectionObserver) \
+    macro(IntersectionObserverEntry) \
     macro(Intl) \
     macro(JSON) \
+    macro(Loader) \
     macro(Map)\
     macro(MapIterator)\
     macro(Math) \
+    macro(MediaEncryptedEvent) \
+    macro(MediaKeyMessageEvent) \
+    macro(MediaKeySession) \
+    macro(MediaKeyStatusMap) \
+    macro(MediaKeySystemAccess) \
+    macro(MediaKeys) \
+    macro(MediaStreamEvent) \
+    macro(ModernMediaControls) \
     macro(NaN) \
+    macro(NavigatorMediaDevices) \
+    macro(NavigatorUserMedia) \
     macro(Number) \
     macro(NumberFormat) \
     macro(Object) \
+    macro(PerformanceEntry) \
+    macro(PerformanceEntryList) \
+    macro(PerformanceMark) \
+    macro(PerformanceMeasure) \
+    macro(PerformanceResourceTiming) \
     macro(Promise) \
+    macro(Proxy) \
     macro(RangeError) \
     macro(ReferenceError) \
     macro(Reflect) \
     macro(RegExp) \
+    macro(Response) \
+    macro(Request) \
+    macro(RTCDTMFToneChangeEvent) \
+    macro(RTCIceCandidate) \
+    macro(RTCPeerConnection) \
+    macro(RTCRtpReceiver) \
+    macro(RTCRtpSender) \
+    macro(RTCRtpTransceiver) \
+    macro(RTCSessionDescription) \
+    macro(RTCTrackEvent) \
     macro(Set)\
     macro(SetIterator)\
+    macro(ShadowRoot) \
+    macro(SharedArrayBuffer) \
+    macro(StaticRange) \
     macro(String) \
     macro(Symbol) \
     macro(SyntaxError) \
@@ -64,6 +119,9 @@
     macro(UTC) \
     macro(WeakMap)\
     macro(WeakSet)\
+    macro(WebGL2RenderingContext) \
+    macro(WebGLVertexArrayObject) \
+    macro(WebSocket) \
     macro(__defineGetter__) \
     macro(__defineSetter__) \
     macro(__lookupGetter__) \
@@ -84,35 +142,46 @@
     macro(bytecodeIndex) \
     macro(bytecodes) \
     macro(bytecodesID) \
+    macro(calendar) \
     macro(callee) \
     macro(caller) \
+    macro(caseFirst) \
     macro(clear) \
     macro(close) \
     macro(closed) \
+    macro(collation) \
     macro(column) \
     macro(compilationKind) \
+    macro(compilationUID) \
     macro(compilations) \
     macro(compile) \
     macro(configurable) \
     macro(constructor) \
     macro(count) \
     macro(counters) \
+    macro(customElements) \
+    macro(day) \
     macro(defineProperty) \
     macro(description) \
     macro(descriptions) \
+    macro(detail) \
     macro(displayName) \
     macro(document) \
     macro(done) \
-    macro(entries) \
     macro(enumerable) \
+    macro(era) \
     macro(eval) \
+    macro(events) \
     macro(exec) \
     macro(executionCount) \
     macro(exitKind) \
+    macro(fetch) \
     macro(flags) \
     macro(focus) \
     macro(forEach) \
+    macro(formatMatcher) \
     macro(forward) \
+    macro(frames) \
     macro(from) \
     macro(fromCharCode) \
     macro(get) \
@@ -122,9 +191,12 @@
     macro(hasOwnProperty) \
     macro(hash) \
     macro(header) \
+    macro(hour) \
+    macro(hour12) \
     macro(href) \
     macro(id) \
     macro(ignoreCase) \
+    macro(ignorePunctuation) \
     macro(index) \
     macro(indexedDB) \
     macro(inferredName) \
@@ -137,11 +209,16 @@
     macro(isWatchpoint) \
     macro(jettisonReason) \
     macro(join) \
-    macro(keys) \
+    macro(KeyframeEffect) \
     macro(lastIndex) \
     macro(length) \
     macro(line) \
+    macro(locale) \
+    macro(localeMatcher) \
+    macro(location) \
     macro(message) \
+    macro(minute) \
+    macro(month) \
     macro(multiline) \
     macro(name) \
     macro(next) \
@@ -149,11 +226,15 @@
     macro(numInlinedCalls) \
     macro(numInlinedGetByIds) \
     macro(numInlinedPutByIds) \
+    macro(numberingSystem) \
+    macro(numeric) \
     macro(of) \
     macro(opcode) \
+    macro(opener) \
     macro(origin) \
     macro(osrExitSites) \
     macro(osrExits) \
+    macro(parent) \
     macro(parse) \
     macro(parseInt) \
     macro(postMessage) \
@@ -164,18 +245,26 @@
     macro(reload) \
     macro(replace) \
     macro(resolve) \
+    macro(second) \
+    macro(self) \
+    macro(sensitivity) \
     macro(set) \
     macro(showModalDialog) \
     macro(size) \
     macro(slice) \
     macro(source) \
-    macro(sourceURL) \
     macro(sourceCode) \
+    macro(sourceURL) \
     macro(stack) \
+    macro(sticky) \
     macro(subarray) \
+    macro(summary) \
     macro(target) \
     macro(test) \
     macro(then) \
+    macro(time) \
+    macro(timeZone) \
+    macro(timeZoneName) \
     macro(toExponential) \
     macro(toFixed) \
     macro(toISOString) \
@@ -183,15 +272,32 @@
     macro(toLocaleString) \
     macro(toPrecision) \
     macro(toString) \
+    macro(top) \
+    macro(uid) \
+    macro(unicode) \
+    macro(usage) \
     macro(value) \
     macro(valueOf) \
-    macro(values) \
     macro(webkit) \
+    macro(collectMatchingElementsInFlatTree) \
+    macro(matchingElementInFlatTree) \
+    macro(webkitIDBCursor) \
+    macro(webkitIDBDatabase) \
+    macro(webkitIDBFactory) \
+    macro(webkitIDBIndex) \
+    macro(webkitIDBKeyRange) \
+    macro(webkitIDBObjectStore) \
+    macro(webkitIDBRequest) \
+    macro(webkitIDBTransaction) \
     macro(webkitIndexedDB) \
+    macro(weekday) \
     macro(window) \
-    macro(writable)
+    macro(writable) \
+    macro(year)
 
 #define JSC_COMMON_IDENTIFIERS_EACH_KEYWORD(macro) \
+    macro(async) \
+    macro(await) \
     macro(break) \
     macro(case) \
     macro(catch) \
@@ -239,70 +345,18 @@
     macro(with) \
     macro(yield)
 
-#define JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_WELL_KNOWN_SYMBOL_NOT_IMPLEMENTED_YET(macro)\
+#define JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_WELL_KNOWN_SYMBOL(macro) \
     macro(hasInstance) \
     macro(isConcatSpreadable) \
+    macro(iterator) \
     macro(match) \
     macro(replace) \
     macro(search) \
     macro(species) \
     macro(split) \
     macro(toPrimitive) \
-    macro(toStringTag)
-
-#define JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_WELL_KNOWN_SYMBOL(macro) \
-    macro(iterator) \
+    macro(toStringTag) \
     macro(unscopables)
-
-#define JSC_COMMON_BYTECODE_INTRINSICS_EACH_NAME(macro) \
-    macro(putByValDirect) \
-    macro(toString)
-
-#define JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_PROPERTY_NAME(macro) \
-    JSC_COMMON_BYTECODE_INTRINSICS_EACH_NAME(macro) \
-    macro(iteratedObject) \
-    macro(arrayIteratorNextIndex) \
-    macro(arrayIterationKind) \
-    macro(arrayIterationKindKey) \
-    macro(arrayIterationKindValue) \
-    macro(arrayIterationKindKeyValue) \
-    macro(charCodeAt) \
-    macro(iteratedString) \
-    macro(stringIteratorNextIndex) \
-    macro(promise) \
-    macro(fulfillmentHandler) \
-    macro(rejectionHandler) \
-    macro(index) \
-    macro(values) \
-    macro(deferred) \
-    macro(countdownHolder) \
-    macro(Object) \
-    macro(ownEnumerablePropertyKeys) \
-    macro(Number) \
-    macro(Array) \
-    macro(String) \
-    macro(Promise) \
-    macro(abs) \
-    macro(floor) \
-    macro(isFinite) \
-    macro(getPrototypeOf) \
-    macro(getOwnPropertyNames) \
-    macro(TypeError) \
-    macro(undefined) \
-    macro(BuiltinLog) \
-    macro(homeObject) \
-    macro(getTemplateObject) \
-    macro(enqueueJob) \
-    macro(handler) \
-    macro(promiseState) \
-    macro(promisePending) \
-    macro(promiseFulfillReactions) \
-    macro(promiseRejectReactions) \
-    macro(promiseResult) \
-    macro(capabilities) \
-    macro(starDefault) \
-    macro(InspectorInstrumentation) \
-
 
 namespace JSC {
     
@@ -336,10 +390,6 @@ namespace JSC {
         JSC_COMMON_IDENTIFIERS_EACH_PROPERTY_NAME(JSC_IDENTIFIER_DECLARE_PROPERTY_NAME_GLOBAL)
 #undef JSC_IDENTIFIER_DECLARE_PROPERTY_NAME_GLOBAL
 
-#define JSC_IDENTIFIER_DECLARE_PRIVATE_PROPERTY_NAME_GLOBAL(name) const Identifier name##PrivateName;
-        JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_PROPERTY_NAME(JSC_IDENTIFIER_DECLARE_PRIVATE_PROPERTY_NAME_GLOBAL)
-#undef JSC_IDENTIFIER_DECLARE_PRIVATE_PROPERTY_NAME_GLOBAL
-
 #define JSC_IDENTIFIER_DECLARE_PRIVATE_WELL_KNOWN_SYMBOL_GLOBAL(name) const Identifier name##Symbol;
         JSC_COMMON_PRIVATE_IDENTIFIERS_EACH_WELL_KNOWN_SYMBOL(JSC_IDENTIFIER_DECLARE_PRIVATE_WELL_KNOWN_SYMBOL_GLOBAL)
 #undef JSC_IDENTIFIER_DECLARE_PRIVATE_WELL_KNOWN_SYMBOL_GLOBAL
@@ -348,15 +398,12 @@ namespace JSC {
         bool isPrivateName(UniquedStringImpl& uid) const;
         bool isPrivateName(const Identifier&) const;
 
-        const Identifier* getPrivateName(const Identifier&) const;
-        Identifier getPublicName(const Identifier&) const;
+        const Identifier* lookUpPrivateName(const Identifier&) const;
+        Identifier lookUpPublicName(const Identifier&) const;
 
-        const BytecodeIntrinsicRegistry& bytecodeIntrinsicRegistry() const { return m_bytecodeIntrinsicRegistry; }
-
-    private:
-        BytecodeIntrinsicRegistry m_bytecodeIntrinsicRegistry;
+        // Callers of this method should make sure that identifiers given to this method 
+        // survive the lifetime of CommonIdentifiers and related VM.
+        JS_EXPORT_PRIVATE void appendExternalName(const Identifier& publicName, const Identifier& privateName);
     };
 
 } // namespace JSC
-
-#endif // CommonIdentifiers_h
