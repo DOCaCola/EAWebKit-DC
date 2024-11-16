@@ -213,10 +213,15 @@ void JavascriptValue::SetStringValue(const char16_t *v)
 	SET_AUTOFPUPRECISION(EA::WebKit::kFPUPrecisionExtended);
 	EAWEBKIT_THREAD_CHECK();
     EAWWBKIT_INIT_CHECK(); 
-    
-	EAW_ASSERT_MSG(v && v[0], "String is NULL.");
+
+    // DOCA-EDIT: String is fine to be NULL
+	//EAW_ASSERT_MSG(v && v[0], "String is NULL.");
+    // DOCA-EDIT
     
 	WTF::String s(v);
+	// DOCA-EDIT: A JSC Assert tells us, that this needs to be locked
+    JSC::JSLockHolder lock(mExecState);
+	// DOCA-EDIT
     JSC::JSValue jsVal = JSC::jsString(mExecState, s);
     Assign(&jsVal);
 }
