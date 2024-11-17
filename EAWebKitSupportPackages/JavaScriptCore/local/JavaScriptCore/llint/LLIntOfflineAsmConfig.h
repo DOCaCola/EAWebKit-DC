@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -48,19 +47,13 @@
 
 #define OFFLINE_ASM_C_LOOP 0
 
-//+EAWebKitChange
-//4/5/2015
-#if CPU(X86) && (!PLATFORM(WIN) && !defined(EA_PLATFORM_MICROSOFT))
-//-EAWebKitChange
+#if CPU(X86) && !PLATFORM(WIN)
 #define OFFLINE_ASM_X86 1
 #else
 #define OFFLINE_ASM_X86 0
 #endif
 
-//+EAWebKitChange
-//4/5/2015
-#if CPU(X86) && (PLATFORM(WIN) || defined(EA_PLATFORM_MICROSOFT))
-//-EAWebKitChange
+#if CPU(X86) && PLATFORM(WIN)
 #define OFFLINE_ASM_X86_WIN 1
 #else
 #define OFFLINE_ASM_X86_WIN 0
@@ -97,19 +90,13 @@
 #define OFFLINE_ASM_ARM 0
 #endif
 
-//+EAWebKitChange
-//4/5/2015
-#if CPU(X86_64) && (!PLATFORM(WIN) && !defined(EA_PLATFORM_MICROSOFT))
-//-EAWebKitChange
+#if CPU(X86_64) && !PLATFORM(WIN)
 #define OFFLINE_ASM_X86_64 1
 #else
 #define OFFLINE_ASM_X86_64 0
 #endif
 
-//+EAWebKitChange
-//4/5/2015
-#if CPU(X86_64) && (PLATFORM(WIN) || defined(EA_PLATFORM_MICROSOFT))
-//-EAWebKitChange
+#if CPU(X86_64) && PLATFORM(WIN)
 #define OFFLINE_ASM_X86_64_WIN 1
 #else
 #define OFFLINE_ASM_X86_64_WIN 0

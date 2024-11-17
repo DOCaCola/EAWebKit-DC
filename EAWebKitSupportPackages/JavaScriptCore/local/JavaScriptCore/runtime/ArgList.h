@@ -1,7 +1,6 @@
 /*
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
  *  Copyright (C) 2003, 2007, 2008, 2009, 2016 Apple Inc. All rights reserved.
- *  Copyright (C) 2015 Electronic Arts Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public

@@ -1,7 +1,6 @@
 /*
  *  Copyright (C) 2003-2017 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
- *  Copyright (C) 2016 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -435,12 +434,8 @@ void Heap::reportAbandonedObjectGraph()
 void Heap::protect(JSValue k)
 {
     ASSERT(k);
-    //+EAWebKitChange
-    //07/13/2016 - silence an assert in DestroyJavascriptValue after EvaluateJavaScript 
-    //added to condition  || (m_vm->hasExclusiveThread() && m_vm->exclusiveThread() == std::this_thread::get_id())
-    ASSERT(m_vm->currentThreadIsHoldingAPILock() || (m_vm->hasExclusiveThread() && m_vm->exclusiveThread() == std::this_thread::get_id()));
-    //-EAWebKitChange
-    
+    ASSERT(m_vm->currentThreadIsHoldingAPILock());
+
     if (!k.isCell())
         return;
 
@@ -450,12 +445,8 @@ void Heap::protect(JSValue k)
 bool Heap::unprotect(JSValue k)
 {
     ASSERT(k);
-    //+EAWebKitChange
-    //07/13/2016 - silence an assert in DestroyJavascriptValue after EvaluateJavaScript 
-    //added to condition  || (m_vm->hasExclusiveThread() && m_vm->exclusiveThread() == std::this_thread::get_id())
-    ASSERT(m_vm->currentThreadIsHoldingAPILock() || (m_vm->hasExclusiveThread() && m_vm->exclusiveThread() == std::this_thread::get_id()));
-    //-EAWebKitChange
-    
+    ASSERT(m_vm->currentThreadIsHoldingAPILock());
+
     if (!k.isCell())
         return false;
 

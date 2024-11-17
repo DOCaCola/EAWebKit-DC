@@ -1,6 +1,5 @@
 /*
  *  Copyright (C) 2003, 2007, 2009, 2012, 2016 Apple Inc. All rights reserved.
- * Copyright (C) 2016 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -21,31 +20,11 @@
 
 #include "config.h"
 #include "CommonIdentifiers.h"
-//+EAWebKitChange
-//04/14/2016  this provides a definition for BytecodeIntrinsicNode, which is necissary for the MSVC compiler to get the right size of the member function pointer if not using the /vmg compiler flag (see validation below)
-#include "Nodes.h"  
-//-EAWebKitChange
 
 #include "BuiltinNames.h"
 #include "IdentifierInlines.h"
 #include "JSCBuiltins.h"
 #include "PrivateName.h"
-
-//+EAWebKitChange
-//04/14/2016 added some validation regarding sizeof member function pointers, which MSVC can get wrong
-//issue is described here https://social.msdn.microsoft.com/Forums/vstudio/en-US/72343dd4-3a43-46e8-889e-73dc4d8e9432/discrepancy-with-sizeof-in-template?forum=vcgeneral
-#if defined(EA_PLATFORM_WIN64)
-//pc64 these are the values if we have a proper definition of the member function pointer JSC::RegisterID * (__cdecl JSC::BytecodeIntrinsicNode::*)(JSC::BytecodeGenerator &, JSC::RegisterID *)
-//static_assert(sizeof(WTF::KeyValuePair<WTF::RefPtr<WTF::UniquedStringImpl>, JSC::RegisterID * (__cdecl JSC::BytecodeIntrinsicNode::*)(JSC::BytecodeGenerator &, JSC::RegisterID *)>) == 24, "Size not expected");
-//static_assert(sizeof(WTF::RefPtr<WTF::UniquedStringImpl>) == 8, "Size not expected");
-//static_assert(sizeof(JSC::RegisterID * (__cdecl JSC::BytecodeIntrinsicNode::*)(JSC::BytecodeGenerator &, JSC::RegisterID *)) == 16, "Size not expected");
-
-//pc64 these are the values we will have if compiling with /vmg which is the current plan
-static_assert(sizeof(WTF::KeyValuePair<WTF::RefPtr<WTF::UniquedStringImpl>, JSC::RegisterID * (__cdecl JSC::BytecodeIntrinsicNode::*)(JSC::BytecodeGenerator &, JSC::RegisterID *)>) == 32, "Size not expected");
-static_assert(sizeof(WTF::RefPtr<WTF::UniquedStringImpl>) == 8, "Size not expected");
-static_assert(sizeof(JSC::RegisterID * (__cdecl JSC::BytecodeIntrinsicNode::*)(JSC::BytecodeGenerator &, JSC::RegisterID *)) == 24, "Size not expected");
-#endif
-//-EAWebKitChange
 
 namespace JSC {
 

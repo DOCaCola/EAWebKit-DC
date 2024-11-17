@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012, 2013, 2015 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -132,14 +131,7 @@ void disassembleAsynchronously(
     const CString& header, const MacroAssemblerCodeRef& codeRef, size_t size, const char* prefix)
 {
     std::unique_ptr<DisassemblyTask> task = std::make_unique<DisassemblyTask>();
-    //+EAWebKitChange
-    //10/06/2015 linker fix for MS added underscore _strdup
-#if defined(EA_PLATFORM_MICROSOFT)    
-    task->header = _strdup(header.data()); // Yuck! We need this because CString does racy refcounting.
-#else
     task->header = strdup(header.data()); // Yuck! We need this because CString does racy refcounting.
-#endif
-    //-EAWebKitChange
     task->codeRef = codeRef;
     task->size = size;
     task->prefix = prefix;

@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008-2017 Apple Inc. All rights reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -384,17 +383,9 @@ VM::~VM()
     
     // Clear this first to ensure that nobody tries to remove themselves from it.
     m_perBytecodeProfiler = nullptr;
-    
-	//+EAWebKitChange
-	//3/24/2014 - We skip the assert if called from the main thread. The common VM is "leaked" by default (check out JSDOMWindowBase::commonVM at the time of
-	// writing) so this assert isn't fired for other ports. We forcefully delete common/main VM in order to shutdown (and potentially reload) the dll .  
-	if(!WTF::isMainThread())
-	{
-		ASSERT(m_apiLock->currentThreadIsHoldingLock());
-	}
-	//-EAWebKitChange
-    
-	m_apiLock->willDestroyVM(this);
+
+    ASSERT(m_apiLock->currentThreadIsHoldingLock());
+    m_apiLock->willDestroyVM(this);
     heap.lastChanceToFinalize();
 
     delete interpreter;
@@ -625,10 +616,7 @@ void VM::throwException(ExecState* exec, Exception* exception)
 
     ASSERT(exec == topCallFrame || exec == exec->lexicalGlobalObject()->globalExec() || exec == exec->vmEntryGlobalObject()->globalExec());
 
-    //interpreter->notifyDebuggerOfExceptionToBeThrown(exec, exception);
-    //4/28/2014
-    interpreter->reportAssertToEAWebkit(topCallFrame);
-    //-EAWebKitChange
+    interpreter->notifyDebuggerOfExceptionToBeThrown(exec, exception);
 
     setException(exception);
 }

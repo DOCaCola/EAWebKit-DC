@@ -3,7 +3,6 @@
  *  Copyright (C) 2004-2008, 2016 Apple Inc. All rights reserved.
  *  Copyright (C) 2008, 2009 Torch Mobile, Inc. All rights reserved.
  *  Copyright (C) 2010 Torch Mobile (Beijing) Co. Ltd. All rights reserved.
- *  Copyright (C) 2014, 2015 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -172,10 +171,7 @@ static JSCell* formatLocaleDate(ExecState* exec, DateInstance*, double timeInMil
     return jsNontrivialString(exec, adoptCF(CFDateFormatterCreateStringWithAbsoluteTime(kCFAllocatorDefault, formatter.get(), absoluteTime)).get());
 }
 
-//+EAWebKitChange
-//3/22/2015
-#elif !UCONFIG_NO_FORMATTING && !PLATFORM(EA)
-//-EAWebKitChange
+#elif !UCONFIG_NO_FORMATTING
 
 static JSCell* formatLocaleDate(ExecState* exec, DateInstance*, double timeInMilliseconds, LocaleDateTimeFormat format)
 {
@@ -201,10 +197,7 @@ static JSCell* formatLocaleDate(ExecState* exec, DateInstance*, double timeInMil
 
 static JSCell* formatLocaleDate(ExecState* exec, const GregorianDateTime& gdt, LocaleDateTimeFormat format)
 {
-	//+EAWebKitChange
-	//4/2/2014
-#if OS(WINDOWS) && !PLATFORM(EA)
-	//-EAWebKitChange
+#if OS(WINDOWS)
     SYSTEMTIME systemTime;
     memset(&systemTime, 0, sizeof(systemTime));
     systemTime.wYear = gdt.year();

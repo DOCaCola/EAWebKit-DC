@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2011 Apple Inc.  All rights reserved.
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -47,10 +46,7 @@
 
 #else // !USE(EXPORT_MACROS)
 
-//+EAWebKitChange
-//1/15/2014
-#if OS(WINDOWS) && !COMPILER(GCC_OR_CLANG) && !PLATFORM(EA)
-//-EAWebKitChange
+#if OS(WINDOWS) && !COMPILER(GCC_OR_CLANG)
 
 #if defined(BUILDING_JavaScriptCore) || defined(STATICALLY_LINKED_WITH_JavaScriptCore)
 #define JS_EXPORTDATA __declspec(dllexport)

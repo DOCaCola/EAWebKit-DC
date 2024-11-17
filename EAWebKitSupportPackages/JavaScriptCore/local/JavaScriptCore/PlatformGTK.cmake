@@ -20,6 +20,7 @@ install(FILES API/JavaScript.h
               API/JSContextRef.h
               API/JSObjectRef.h
               API/JSStringRef.h
+              API/JSTypedArray.h
               API/JSValueRef.h
               API/WebKitAvailability.h
         DESTINATION "${WEBKITGTK_HEADER_INSTALL_DIR}/JavaScriptCore"
@@ -35,6 +36,7 @@ if (ENABLE_INTROSPECTION)
 endif ()
 
 add_definitions(-DSTATICALLY_LINKED_WITH_WTF)
+add_definitions(-DLIBDIR="${LIB_INSTALL_DIR}")
 
 list(APPEND JavaScriptCore_LIBRARIES
     ${GLIB_LIBRARIES}

@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2008-2010, 2012-2016 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -86,18 +85,6 @@
 #endif
 
 using namespace std;
-
-//+EAWebKitChange
-//4/7/2014
-namespace EA
-{
-	namespace WebKit
-	{
-		bool CanDoJSCallstack();
-		void ReportJSCallstack(char8_t * message, uint32_t depth, char8_t **nameArray, char8_t **urlArray, uint32_t *lineArray, uint32_t *columnArray);
-	}
-}
-//-EAWebKitChange
 
 namespace JSC {
 
@@ -461,34 +448,6 @@ bool Interpreter::isOpcode(Opcode opcode)
 #endif
 }
 
-//+EAWebKitChange
-//4/28/2014
-bool StackFrame::isEAWebKitAssert(CallFrame* callFrame)
-{
-    String wtfStr = friendlyFunctionName(callFrame);
-    if (wtfStr == "EAWebKitAssert")
-    {
-        return true;
-    }
-    return false;
-}
-
-void StackFrame::createStackFameData(CallFrame* callFrame, char8_t ** functionName, char8_t ** url, uint32_t &line, uint32_t &column)
-{
-    String wtfStr = friendlyFunctionName(callFrame);
-    CString cstring = wtfStr.ascii();
-    *functionName = new char8_t[cstring.length() + 1];
-    strncpy(*functionName, cstring.data(), cstring.length() + 1);
-
-    wtfStr = friendlySourceURL();
-    cstring = wtfStr.ascii();
-    *url = new char8_t[cstring.length() + 1];
-    strncpy(*url, cstring.data(), cstring.length() + 1);
-
-    computeLineAndColumn(line, column);
-}
-//-EAWebKitChange
-
 class GetStackTraceFunctor {
 public:
     GetStackTraceFunctor(VM& vm, Vector<StackFrame>& results, size_t framesToSkip, size_t capacity)
@@ -553,48 +512,6 @@ void Interpreter::getStackTrace(Vector<StackFrame>& results, size_t framesToSkip
     callFrame->iterate(functor);
     ASSERT(results.size() == results.capacity());
 }
-
-//+EAWebKitChange
-//4/28/2014
-void Interpreter::reportAssertToEAWebkit(ExecState* exec)
-{
-    if (EA::WebKit::CanDoJSCallstack())
-    {
-        Vector<StackFrame> stackTrace;
-        getStackTrace(stackTrace);
-
-        if (!stackTrace.isEmpty() && stackTrace[0].isEAWebKitAssert(exec))
-        {
-            //allocate memory to hold the stack
-            char8_t **nameArray = new char8_t*[stackTrace.size()];
-            char8_t **urlArray = new char8_t*[stackTrace.size()];
-            uint32_t *lineArray = new uint32_t[stackTrace.size()];
-            uint32_t *columnArray = new uint32_t[stackTrace.size()];
-
-            for (uint32_t i = 0; i < stackTrace.size(); i++) 
-            {
-                //this allocates space for the functionName and url strings too
-                stackTrace[i].createStackFameData(exec, &nameArray[i], &urlArray[i], lineArray[i], columnArray[i]);
-            }
-
-            EA::WebKit::ReportJSCallstack((char8_t*)"EAWebKitAssert", stackTrace.size(), nameArray, urlArray, lineArray, columnArray);
-
-            // delete all the allocated function name, and url strings
-            for (uint32_t i = 0; i < stackTrace.size(); i++)
-            {
-                delete[] nameArray[i];
-                delete[] urlArray[i];
-            }
-
-            // delete the pointer arrays
-            delete[] nameArray;
-            delete[] lineArray;
-            delete[] columnArray;
-            delete[] urlArray;
-        }
-    }
-}
-//-EAWebKitChange
 
 JSString* Interpreter::stackTraceAsString(VM& vm, const Vector<StackFrame>& stackTrace)
 {
@@ -712,7 +629,7 @@ private:
         if (!currentCalleeSaves)
             return;
 
-    VMEntryFrame*& m_vmEntryFrame;
+        VM& vm = m_callFrame->vm();
         RegisterAtOffsetList* allCalleeSaves = vm.getAllCalleeSaveRegisterOffsets();
         RegisterSet dontCopyRegisters = RegisterSet::stackRegisters();
         intptr_t* frame = reinterpret_cast<intptr_t*>(m_callFrame->registers());
@@ -769,14 +686,13 @@ NEVER_INLINE HandlerInfo* Interpreter::unwind(VM& vm, CallFrame*& callFrame, Exc
     if (!handler)
         return nullptr;
 
-    ASSERT(callFrame->vm().exception() && callFrame->vm().exception()->stack().size());
+    return handler;
 }
 
 void Interpreter::notifyDebuggerOfExceptionToBeThrown(CallFrame* callFrame, Exception* exception)
 {
     Debugger* debugger = callFrame->vmEntryGlobalObject()->debugger();
     if (debugger && debugger->needsExceptionCallbacks() && !exception->didNotifyInspectorOfThrow()) {
-        SuspendExceptionScope scope(&callFrame->vm());
         // This code assumes that if the debugger is enabled then there is no inlining.
         // If that assumption turns out to be false then we'll ignore the inlined call
         // frames.
@@ -797,9 +713,6 @@ void Interpreter::notifyDebuggerOfExceptionToBeThrown(CallFrame* callFrame, Exce
         debugger->exception(callFrame, exception->value(), hasCatchHandler);
     }
     exception->setDidNotifyInspectorOfThrow();
-    HandlerInfo* handler = 0;
-    UnwindFunctor functor(vmEntryFrame, callFrame, isTermination, codeBlock, handler);
-        return 0;
 }
 
 static inline JSValue checkedReturn(JSValue returnValue)

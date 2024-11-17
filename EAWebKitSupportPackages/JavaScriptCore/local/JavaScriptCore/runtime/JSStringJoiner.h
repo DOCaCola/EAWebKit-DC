@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012-2016 Apple Inc. All rights reserved.
- * Copyright (c) 2016 Electronic Arts Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -139,7 +138,7 @@ ALWAYS_INLINE bool JSStringJoiner::appendWithoutSideEffects(ExecState& state, JS
     }
     ASSERT(value.isUndefinedOrNull());
     appendEmptyString();
-	return true;
+    return true;
 }
 
 ALWAYS_INLINE void JSStringJoiner::append(ExecState& state, JSValue value)

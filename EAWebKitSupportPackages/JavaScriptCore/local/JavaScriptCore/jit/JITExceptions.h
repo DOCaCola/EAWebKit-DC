@@ -33,6 +33,6 @@ class ExecState;
 class VM;
 
 void genericUnwind(VM*, ExecState*, UnwindStart);
-void genericUnwind(VM*, ExecState*, UnwindStart = UnwindFromCurrentFrame);
+void genericUnwind(VM*, ExecState*);
 
 } // namespace JSC

@@ -2,7 +2,6 @@
  *  Copyright (C) 2003-2009, 2015-2016 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
  *  Copyright (C) 2009 Acision BV. All rights reserved.
- *  Copyright (C) 2016 Electronic Arts, Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -68,12 +67,6 @@
 #include <signal.h>
 
 // We use SIGUSR2 to suspend and resume machine threads in JavaScriptCore.
-
-//04/14/2016
-#if PLATFORM(EA)
-typedef EA::WebKit::ThreadId PlatformThread;
-#if OS(DARWIN)
-//-EAWebKitChange
 static const int SigThreadSuspendResume = SIGUSR2;
 static StaticLock globalSignalLock;
 thread_local static std::atomic<JSC::MachineThreads::Thread*> threadLocalCurrentThread;
@@ -188,12 +181,7 @@ static ActiveMachineThreadsManager& activeMachineThreadsManager()
     
 static inline PlatformThread getCurrentPlatformThread()
 {
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    return EA::WebKit::GetThreadSystem()->CurrentThreadId();
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
     return pthread_mach_thread_np(pthread_self());
 #elif OS(WINDOWS)
     return GetCurrentThreadId();
@@ -202,24 +190,6 @@ static inline PlatformThread getCurrentPlatformThread()
 #endif
 }
 
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-// do nothing
-#if USE(PTHREADS) && !OS(WINDOWS) && !OS(DARWIN) && defined(SA_RESTART)
-//+EAWebKitChange
-//04/14/2016    
-#if PLATFORM(EA)
-        // do nothing
-#if OS(WINDOWS)
-//-EAWebKitChange
-        
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-        typedef int32_t PlatformRegisters; //not used
-#if OS(DARWIN)
-//-EAWebKitChange
 MachineThreads::MachineThreads(Heap* heap)
     : m_registeredThreads(0)
     , m_threadSpecificForMachineThreads(0)
@@ -253,12 +223,7 @@ Thread* MachineThreads::Thread::createForCurrentThread()
 
 bool MachineThreads::Thread::operator==(const PlatformThread& other) const
 {
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    return EA::WebKit::GetThreadSystem()->CurrentThreadId() == other;
-#elif OS(DARWIN) || OS(WINDOWS)
-//-EAWebKitChange
+#if OS(DARWIN) || OS(WINDOWS)
     return platformThread == other;
 #elif USE(PTHREADS)
     return !!pthread_equal(platformThread, other);
@@ -396,14 +361,7 @@ MachineThreads::Thread::~Thread()
 
 bool MachineThreads::Thread::suspend()
 {
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    //EA::WebKit::GetThreadSystem()->
-    ASSERT(false);  //not used
-    return true;
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
     kern_return_t result = thread_suspend(platformThread);
     return result == KERN_SUCCESS;
 #elif OS(WINDOWS)
@@ -440,13 +398,7 @@ bool MachineThreads::Thread::suspend()
 
 void MachineThreads::Thread::resume()
 {
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    //EA::WebKit::GetThreadSystem()->
-    ASSERT(false);  //not used
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
     thread_resume(platformThread);
 #elif OS(WINDOWS)
     ResumeThread(platformThreadHandle);
@@ -478,14 +430,7 @@ void MachineThreads::Thread::resume()
 size_t MachineThreads::Thread::getRegisters(Thread::Registers& registers)
 {
     Thread::Registers::PlatformRegisters& regs = registers.regs;
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    //EA::WebKit::GetThreadSystem()->
-    ASSERT(false);  //not used
-    return 0;
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
 #if CPU(X86)
     unsigned user_count = sizeof(regs)/sizeof(int);
     thread_state_flavor_t flavor = i386_THREAD_STATE;
@@ -541,14 +486,8 @@ size_t MachineThreads::Thread::getRegisters(Thread::Registers& registers)
 
 void* MachineThreads::Thread::Registers::stackPointer() const
 {
-//+EAWebKitChange
-//04/14/2016
-#if PLATFORM(EA)
-    //EA::WebKit::GetThreadSystem()->
-    ASSERT(false);  //not used
-    return NULL;
-#elif OS(DARWIN)
-//-EAWebKitChange
+#if OS(DARWIN)
+
 #if __DARWIN_UNIX03
 
 #if CPU(X86)

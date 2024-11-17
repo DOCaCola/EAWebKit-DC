@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2006 Apple Inc.  All rights reserved.
- * Copyright (C) 2014, 2017 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,58 +37,19 @@
 extern "C" {
 #endif
 
-//+EAWebKitChange
-//10/17/2011
-//Updated 10/18/2012
-//Updated on 09/25/2017 : Not needed to support OSX. Probably not needed for other platforms too, as wcharis 2 bytes anyways, still keeping it here for sanity.
-#if !defined(EA_PLATFORM_OSX)
-// Note by Arpit Baldeva: What WebKit wants to do here is to make sure that JSChar is defined as wchar_t if and only if
-// wchar_t is 2 bytes(True on Windows, true/false on Unix depending on the compiler settings). Otherwise, define JSChar to be unsigned short (which is also 2 bytes). 
-// The reasoning behind it is that port should be able to take advantage of Platform/OS specific calls if wchar_t is 2 bytes. 
-// There has been a discussion about it https://lists.webkit.org/pipermail/webkit-dev/2007-July/002228.html
-// The assumption here is that Platform/OS API is written in terms of wchar_t which is simply not the case for us. Our API is written in terms of char16_t
-// so we define JSChar to be char16_t instead of wchar_t.
-// Copied and slightly modified from EABase by Paul Pedriana
-#ifndef U_SIZEOF_WCHAR_T // If the user hasn't specified that it is a given size...
-	#if defined(__WCHAR_MAX__) // GCC defines this for most platforms.
-		#if (__WCHAR_MAX__ == 2147483647) || (__WCHAR_MAX__ == 4294967295)
-			#define U_SIZEOF_WCHAR_T 4
-		#elif (__WCHAR_MAX__ == 32767) || (__WCHAR_MAX__ == 65535)
-			#define U_SIZEOF_WCHAR_T 2
-		#elif (__WCHAR_MAX__ == 127) || (__WCHAR_MAX__ == 255)
-			#define U_SIZEOF_WCHAR_T 1
-		#else
-			#define U_SIZEOF_WCHAR_T 4
-	#endif
-	#elif defined(WCHAR_MAX) // The SN compiler defines this.
-		#if (WCHAR_MAX == 2147483647) || (WCHAR_MAX == 4294967295)
-			#define U_SIZEOF_WCHAR_T 4
-		#elif (WCHAR_MAX == 32767) || (WCHAR_MAX == 65535)
-			#define U_SIZEOF_WCHAR_T 2
-		#elif (WCHAR_MAX == 127) || (WCHAR_MAX == 255)
-			#define U_SIZEOF_WCHAR_T 1
-		#else
-			#define U_SIZEOF_WCHAR_T 4
-		#endif
-	#elif defined(_MSC_VER)
-		#define U_SIZEOF_WCHAR_T 2
-	#else
-		#define U_SIZEOF_WCHAR_T 4
-	#endif
-#endif
-#endif
-
-#if U_SIZEOF_WCHAR_T == 4
+#if !defined(_NATIVE_WCHAR_T_DEFINED) /* MSVC */ \
+    && (!defined(__WCHAR_MAX__) || (__WCHAR_MAX__ > 0xffffU)) /* ISO C/C++ */ \
+    && (!defined(WCHAR_MAX) || (WCHAR_MAX > 0xffffU)) /* RVCT */
 /*!
 @typedef JSChar
-@abstract A Unicode character.
+@abstract A UTF-16 code unit. One, or a sequence of two, can encode any Unicode
+ character. As with all scalar types, endianness depends on the underlying
+ architecture.
 */
-    //typedef unsigned short JSChar;
-    typedef char16_t JSChar;
+    typedef unsigned short JSChar;
 #else
-    typedef char16_t JSChar;
+    typedef wchar_t JSChar;
 #endif
-//-EAWebKitChange
 
 /*!
 @function

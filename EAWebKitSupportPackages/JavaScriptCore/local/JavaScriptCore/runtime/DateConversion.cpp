@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 Patrick Gansterer <paroga@paroga.com>
- * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -105,10 +104,7 @@ String formatDateTime(const GregorianDateTime& t, DateTimeFormat format, bool as
             appendNumber<2>(builder, offset / 60);
             appendNumber<2>(builder, offset % 60);
 
-			//+EAWebKitChange
-			//4/2/2014
-#if OS(WINDOWS) && !PLATFORM(EA)
-			//-EAWebKitChange
+#if OS(WINDOWS)
             TIME_ZONE_INFORMATION timeZoneInformation;
             GetTimeZoneInformation(&timeZoneInformation);
             const WCHAR* timeZoneName = t.isDST() ? timeZoneInformation.DaylightName : timeZoneInformation.StandardName;

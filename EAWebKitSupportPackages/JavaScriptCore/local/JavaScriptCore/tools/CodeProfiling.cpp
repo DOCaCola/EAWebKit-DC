@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -142,10 +141,7 @@ void CodeProfiling::begin(const SourceCode& source)
     if (alreadyProfiling)
         return;
 
-//+EAWebKitChange
-//3/31/2015
-#if ((OS(DARWIN) && !PLATFORM(EFL) && !PLATFORM(GTK) && CPU(X86_64)) || (OS(LINUX) && CPU(X86))) && !PLATFORM(EA)
-//-EAWebKitChange
+#if (OS(DARWIN) && !PLATFORM(EFL) && !PLATFORM(GTK) && CPU(X86_64)) || (OS(LINUX) && CPU(X86))
     // Regsiter a signal handler & itimer.
     struct sigaction action;
     action.sa_sigaction = reinterpret_cast<void (*)(int, siginfo_t *, void *)>(profilingTimer);

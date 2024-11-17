@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2006, 2007, 2008, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
- * Copyright (C) 2013, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,15 +28,6 @@
 #if !defined(BUILDING_WTF)
 #include "JSExportMacros.h"
 #endif
-
-//+EAWebKitChange
-//12/12/2013
-#if PLATFORM(EA)
-#include <EABase/eabase.h>
-//Note: <tuple> is included here to make std::tuple available to FunctionHasExecutedCache.cpp
-#include <tuple>
-#endif
-//-EAWebKitChange
 
 #if OS(WINDOWS)
 

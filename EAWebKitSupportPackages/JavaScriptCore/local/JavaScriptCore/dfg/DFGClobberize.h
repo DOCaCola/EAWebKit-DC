@@ -1263,7 +1263,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
                     LazyNode(graph.freeze(data[index]), op));
             }
         } else {
-			Vector<uint32_t> possibleIndices;
+            Vector<uint32_t> possibleIndices;
             for (uint32_t index : graph.m_uint32ValuesInUse) {
                 if (index >= numElements)
                     continue;

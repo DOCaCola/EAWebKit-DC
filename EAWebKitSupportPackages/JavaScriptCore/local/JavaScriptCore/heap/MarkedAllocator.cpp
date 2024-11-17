@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012-2017 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -243,14 +242,7 @@ static size_t blockHeaderSize()
 size_t MarkedAllocator::blockSizeForBytes(size_t bytes)
 {
     size_t minBlockSize = MarkedBlock::blockSize;
-
-	//+EAWebKitChange
-	// 11/03/2015 - integrate change from open source https://trac.webkit.org/changeset/189012/trunk/Source/JavaScriptCore/heap/MarkedAllocator.cpp
-	// If we end up with an allocation that is perfectly aligned to the page size, then we will be short 8 bytes.
-	size_t minAllocationSize = WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(sizeof(MarkedBlock)) + WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(bytes);
-    size_t minAllocationSize = WTF::roundUpToMultipleOf(WTF::pageSize(), sizeof(MarkedBlock) + bytes);
-	//-EAWebKitChange
-
+    size_t minAllocationSize = blockHeaderSize() + WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(bytes);
     minAllocationSize = WTF::roundUpToMultipleOf(WTF::pageSize(), minAllocationSize);
     return std::max(minBlockSize, minAllocationSize);
 }

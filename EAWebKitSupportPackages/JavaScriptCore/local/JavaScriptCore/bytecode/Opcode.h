@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2008, 2009, 2013, 2014 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
- * Copyright (C) 2014, 2015 Electronic Arts Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -103,10 +102,7 @@ inline const char* padOpcodeName(OpcodeID op, unsigned width)
 {
     unsigned pad = width - strlen(opcodeNames[op]);
     pad = std::min(pad, PADDING_STRING_LENGTH);
-//+EAWebKitChange
-//08/27/2015
-    return reinterpret_cast<const char*>(PADDING_STRING) + (PADDING_STRING_LENGTH - pad);
-//-EAWebKitChange
+    return PADDING_STRING + PADDING_STRING_LENGTH - pad;
 }
 
 #undef PADDING_STRING_LENGTH

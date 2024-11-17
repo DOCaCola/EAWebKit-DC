@@ -45,10 +45,6 @@
 #include <windows.h>
 #endif
 
-namespace JSC {
-WTF_IMPORT extern const struct HashTable globalObjectTable;
-}
-
 const int MaxLineLength = 100 * 1024;
 
 using namespace JSC;
@@ -116,7 +112,6 @@ public:
     static GlobalObject* create(VM& vm, Structure* structure, const Vector<String>& arguments)
     {
         GlobalObject* globalObject = new (NotNull, allocateCell<GlobalObject>(vm.heap)) GlobalObject(vm, structure, arguments);
-        vm.heap.addFinalizer(globalObject, destroy);
         return globalObject;
     }
 
@@ -137,7 +132,7 @@ protected:
     }
 };
 
-const ClassInfo GlobalObject::s_info = { "global", &JSGlobalObject::s_info, &globalObjectTable, CREATE_METHOD_TABLE(GlobalObject) };
+const ClassInfo GlobalObject::s_info = { "global", &JSGlobalObject::s_info, nullptr, CREATE_METHOD_TABLE(GlobalObject) };
 
 GlobalObject::GlobalObject(VM& vm, Structure* structure, const Vector<String>& arguments)
     : JSGlobalObject(vm, structure)
@@ -163,15 +158,6 @@ int realMain(int argc, char** argv);
 int main(int argc, char** argv)
 {
 #if OS(WINDOWS)
-#if defined(_M_X64) || defined(__x86_64__)
-    // The VS2013 runtime has a bug where it mis-detects AVX-capable processors
-    // if the feature has been disabled in firmware. This causes us to crash
-    // in some of the math functions. For now, we disable those optimizations
-    // because Microsoft is not going to fix the problem in VS2013.
-    // FIXME: http://webkit.org/b/141449: Remove this workaround when we switch to VS2015+.
-    _set_FMA3_enable(0);
-#endif
-
     // Cygwin calls ::SetErrorMode(SEM_FAILCRITICALERRORS), which we will inherit. This is bad for
     // testing/debugging, as it causes the post-mortem debugger not to be invoked. We reset the
     // error mode here to work around Cygwin's behavior. See <http://webkit.org/b/55222>.
@@ -204,7 +190,7 @@ int main(int argc, char** argv)
 static bool testOneRegExp(VM& vm, RegExp* regexp, RegExpTest* regExpTest, bool verbose, unsigned int lineNumber)
 {
     bool result = true;
-    Vector<int, 32> outVector;
+    Vector<int> outVector;
     outVector.resize(regExpTest->expectVector.size());
     int matchResult = regexp->match(vm, regExpTest->subject, regExpTest->offset, outVector);
 
@@ -343,7 +329,10 @@ static RegExp* parseRegExpLine(VM& vm, char* line, int lineLength)
 
     ++i;
 
-    return RegExp::create(vm, pattern.toString(), regExpFlags(line + i));
+    RegExp* r = RegExp::create(vm, pattern.toString(), regExpFlags(line + i));
+    if (r->isValid())
+        return r;
+    return nullptr;
 }
 
 static RegExpTest* parseTestLine(char* line, int lineLength)
@@ -469,6 +458,14 @@ static bool runFromFiles(GlobalObject* globalObject, const Vector<String>& files
                 
                 if (regExpTest)
                     delete regExpTest;
+            } else if (linePtr[0] == '-') {
+                tests++;
+                regexp = 0; // Reset the live regexp to avoid confusing other subsequent tests
+                bool successfullyParsed = parseRegExpLine(vm, linePtr + 1, lineLength - 1);
+                if (successfullyParsed) {
+                    failures++;
+                    fprintf(stderr, "Failure on line %u. '%s' is not a valid regexp\n", lineNumber, linePtr + 1);
+                }
             }
         }
         
@@ -482,7 +479,6 @@ static bool runFromFiles(GlobalObject* globalObject, const Vector<String>& files
 
     delete[] lineBuffer;
 
-    vm.dumpSampleData(globalObject->globalExec());
 #if ENABLE(REGEXP_TRACING)
     vm.dumpRegExpTrace();
 #endif
