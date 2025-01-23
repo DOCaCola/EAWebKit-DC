@@ -148,15 +148,11 @@ namespace WebCore {
 
 #if !PLATFORM(IOS)
         WEBCORE_EXPORT Cursor(Image*, const IntPoint& hotSpot);
-        WEBCORE_EXPORT Cursor(const Cursor&);
 
 #if ENABLE(MOUSE_CURSOR_SCALE)
         // Hot spot is in image pixels.
         WEBCORE_EXPORT Cursor(Image*, const IntPoint& hotSpot, float imageScaleFactor);
 #endif
-
-        WEBCORE_EXPORT ~Cursor();
-        WEBCORE_EXPORT Cursor& operator=(const Cursor&);
 
         explicit Cursor(Type);
         Type type() const

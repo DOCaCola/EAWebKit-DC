@@ -1335,6 +1335,24 @@ void View::ForceInvalidateFullView()
 	}
 #endif
 }
+
+void View::GetCustomCursorDataBuffer(const char*& bufferData, unsigned int& bufferSize)
+{
+	auto frame = GetFrame();
+	if (frame)
+	{
+		const WebCore::Cursor& currentCursor = frame->eventHandler().currentMouseCursor();
+		if (currentCursor.type() == WebCore::Cursor::Custom && !currentCursor.image()->isNull())
+		{
+			bufferSize = currentCursor.image()->data()->size();
+			bufferData = currentCursor.image()->data()->data();
+			return;
+		}
+	}
+	bufferData = nullptr;
+	bufferSize = 0;
+}
+
 // Constructors for the metrics callback system
 ViewProcessInfo::ViewProcessInfo(void)
 : mpView(0),
@@ -1474,6 +1492,9 @@ void View::RebindJSBoundObjects(void)
 
 JSC::ExecState* View::GetJSExecState(void) 
 {
+	SET_AUTOFPUPRECISION(EA::WebKit::kFPUPrecisionExtended);
+    EAWEBKIT_THREAD_CHECK();
+    EAWWBKIT_INIT_CHECK(); 
     return d->page->mainFrame()->GetExec();
 }
 
