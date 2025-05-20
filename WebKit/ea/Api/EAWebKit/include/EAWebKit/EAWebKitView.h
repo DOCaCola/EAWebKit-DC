@@ -195,7 +195,7 @@ public:
 	// In hardware rendering, memory usage may slightly increase because of the additional surfaces being created for drawing texture boundaries.
 	virtual void SetDrawDebugVisuals(bool on);   
     virtual void ForceInvalidateFullView(); // This call is normally not needed but can be used to manually force the view to be repainted.  
-
+    virtual void GetCustomCursorDataBuffer(const char*& bufferData, unsigned int& bufferSize);
 
     //
     // Internal Functions - These should not be called outside the DLL (and therefore should not be virtual)

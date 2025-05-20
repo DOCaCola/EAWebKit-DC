@@ -82,12 +82,6 @@ COMPILE_ASSERT( (int)EA::WebKit::kCursorIdGrab						== (int) Cursor::Grab,						
 COMPILE_ASSERT( (int)EA::WebKit::kCursorIdGrabbing					== (int) Cursor::Grabbing,					CursorTypeOutOfSync);
 COMPILE_ASSERT( (int)EA::WebKit::kCursorIdCustom					== (int) Cursor::Custom,					CursorTypeOutOfSync);
 
-Cursor::Cursor(const Cursor& other)
-    : m_type(other.m_type),
-      m_platformCursor(other.m_platformCursor)
-{
-}
-
 Cursor::Cursor(Image* image, const IntPoint& hotSpot)
     : m_type(Pointer),
       m_platformCursor(0)
@@ -104,17 +98,6 @@ Cursor::Cursor(Image* image, const IntPoint& hotSpot, float scale)
 {
 }
 #endif
-
-Cursor::~Cursor()
-{
-}
-
-Cursor& Cursor::operator=(const Cursor& other)
-{
-    m_platformCursor = other.m_platformCursor;
-    m_type = other.m_type;
-    return *this;
-}
 
 Cursor* Cursor::m_spCursorArray = NULL;
 Cursor* Cursor::GetCursorArray()

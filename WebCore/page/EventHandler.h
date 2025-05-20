@@ -66,6 +66,8 @@ class NSView;
 #include <wtf/Vector.h>
 #endif
 
+#include <optional>
+
 namespace WebCore {
 
 class AutoscrollController;
@@ -78,13 +80,13 @@ class EventTarget;
 class FloatPoint;
 class FloatQuad;
 class Frame;
+class FrameView;
 class HTMLFrameSetElement;
 class HitTestRequest;
 class HitTestResult;
 class KeyboardEvent;
 class MouseEventWithHitTestResults;
 class Node;
-class OptionalCursor;
 class PlatformKeyboardEvent;
 class PlatformTouchEvent;
 class PlatformWheelEvent;
@@ -341,7 +343,8 @@ private:
 #endif
     WEBCORE_EXPORT bool handleMouseReleaseEvent(const MouseEventWithHitTestResults&);
 
-    OptionalCursor selectCursor(const HitTestResult&, bool shiftKey);
+    std::optional<Cursor> selectCursor(const HitTestResult&, bool shiftKey);
+    void updateCursor(FrameView&, const HitTestResult&, bool shiftKey);
 
     void hoverTimerFired();
 #if ENABLE(CURSOR_SUPPORT)

@@ -174,21 +174,6 @@ const int maximumCursorSize = 128;
 const double minimumCursorScale = 0.001;
 #endif
 
-enum NoCursorChangeType { NoCursorChange };
-
-class OptionalCursor {
-public:
-    OptionalCursor(NoCursorChangeType) : m_isCursorChange(false) { }
-    OptionalCursor(const Cursor& cursor) : m_isCursorChange(true), m_cursor(cursor) { }
-
-    bool isCursorChange() const { return m_isCursorChange; }
-    const Cursor& cursor() const { ASSERT(m_isCursorChange); return m_cursor; }
-
-private:
-    bool m_isCursorChange;
-    Cursor m_cursor;
-};
-
 class MaximumDurationTracker {
 public:
     explicit MaximumDurationTracker(double *maxDuration)
@@ -1394,29 +1379,33 @@ void EventHandler::updateCursor()
     HitTestResult result(view->windowToContents(m_lastKnownMousePosition));
     renderView->hitTest(request, result);
 
-    OptionalCursor optionalCursor = selectCursor(result, shiftKey);
-    if (optionalCursor.isCursorChange()) {
-        m_currentMouseCursor = optionalCursor.cursor();
-        view->setCursor(m_currentMouseCursor);
+    updateCursor(*view, result, shiftKey);
+}
+
+void EventHandler::updateCursor(FrameView& view, const HitTestResult& result, bool shiftKey)
+{
+    if (auto optionalCursor = selectCursor(result, shiftKey)) {
+        m_currentMouseCursor = WTF::move(optionalCursor.value());
+        view.setCursor(m_currentMouseCursor);
     }
 }
 
-OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shiftKey)
+std::optional<Cursor> EventHandler::selectCursor(const HitTestResult& result, bool shiftKey)
 {
     if (m_resizeLayer && m_resizeLayer->inResizeMode())
-        return NoCursorChange;
+        return std::nullopt;
 
     if (!m_frame.page())
-        return NoCursorChange;
+        return std::nullopt;
 
 #if ENABLE(PAN_SCROLLING)
     if (m_frame.mainFrame().eventHandler().panScrollInProgress())
-        return NoCursorChange;
+        return std::nullopt;
 #endif
 
     Node* node = result.targetNode();
     if (!node)
-        return NoCursorChange;
+        return std::nullopt;
 
     auto renderer = node->renderer();
     RenderStyle* style = renderer ? &renderer->style() : nullptr;
@@ -1438,7 +1427,7 @@ OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shif
         case SetCursor:
             return overrideCursor;
         case DoNotSetCursor:
-            return NoCursorChange;
+            return std::nullopt;
         }
     }
 
@@ -2012,15 +2001,10 @@ bool EventHandler::handleMouseMoveEvent(const PlatformMouseEvent& platformMouseE
         // node to be detached from its FrameView, in which case the event should not be passed.
         if (newSubframe->view())
             swallowEvent |= passMouseMoveEventToSubframe(mouseEvent, newSubframe.get(), hoveredNode);
-#if ENABLE(CURSOR_SUPPORT)
     } else {
-        if (FrameView* view = m_frame.view()) {
-            OptionalCursor optionalCursor = selectCursor(mouseEvent.hitTestResult(), platformMouseEvent.shiftKey());
-            if (optionalCursor.isCursorChange()) {
-                m_currentMouseCursor = optionalCursor.cursor();
-                view->setCursor(m_currentMouseCursor);
-            }
-        }
+#if ENABLE(CURSOR_SUPPORT)
+        if (auto* view = m_frame.view())
+            updateCursor(*view, mouseEvent.hitTestResult(), platformMouseEvent.shiftKey());
 #endif
     }
     
