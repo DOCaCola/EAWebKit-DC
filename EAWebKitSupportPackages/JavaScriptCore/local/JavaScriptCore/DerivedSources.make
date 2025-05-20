@@ -76,7 +76,7 @@ all : \
 # builtin functions
 .PHONY: JSCBuiltins
 
-PYTHON = python
+PYTHON = /c/Python27/python
 PERL = perl
 
 ifeq ($(OS),Windows_NT)
