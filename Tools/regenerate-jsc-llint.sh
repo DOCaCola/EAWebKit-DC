@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# === Set directories (edit these to match your environment) ===
+# Creates LowLevelInterpreterWin.asm
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Root directory of JavaScriptCore source
-XSRCROOT="../EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore"
+XSRCROOT="$(cd "${SCRIPT_DIR}/../EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore" && pwd)"
 
 # Root of the destination/build output directory (first ARGV)
 XDSTROOT="/c/tmp/BuildOutput"
@@ -21,6 +23,7 @@ OFFLINE_ASM="${XSRCROOT}/offlineasm/asm.rb"
 LLINT_ASM="${XSRCROOT}/llint/LowLevelInterpreter.asm"
 OFFSETS_EXTRACTOR="${BUILD_PRODUCTS_DIR}/LLIntOffsetsExtractor/LLIntOffsetsExtractor${ARCH_SUFFIX}.exe"
 OUTPUT_FILE="${DERIVED_SOURCES_DIR}/LowLevelInterpreterWin.asm"
+OFFLINE_ASM_ARGS="--assembler=MASM"
 
 # === Create DerivedSources dir if it doesn't exist ===
 mkdir -p "${DERIVED_SOURCES_DIR}"
@@ -29,7 +32,7 @@ mkdir -p "${DERIVED_SOURCES_DIR}"
 echo "END" > "${OUTPUT_FILE}"
 
 # === Run the Ruby offline assembler ===
-ruby "${OFFLINE_ASM}" -I. "${LLINT_ASM}" "${OFFSETS_EXTRACTOR}" "${OUTPUT_FILE}"
+ruby "${OFFLINE_ASM}" -I"${DERIVED_SOURCES_DIR}/" "${LLINT_ASM}" "${OFFSETS_EXTRACTOR}" "${OUTPUT_FILE}" "$OFFLINE_ASM_ARGS"
 
 # === Check success ===
 if [ $? -ne 0 ]; then

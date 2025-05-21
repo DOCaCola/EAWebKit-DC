@@ -17,8 +17,11 @@ endif()
 get_filename_component (LOCAL_DIR_NAME ${LOCAL_DIR} NAME)
 
 # Add source files
-
-set (DerivedSourcesConfig $<$<CONFIG:DEBUG>:dev-debug>$<$<CONFIG:RELEASE>:dev-opt>)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DerivedSourcesConfig "dev-debug")
+else()
+    set(DerivedSourcesConfig "dev-opt")
+endif()
 
 if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
   #Windows 64bit
@@ -35,6 +38,10 @@ file(GLOB JAVASCRIPTCORE_SOURCES
   #"${LOCAL_DIR}/JavaScriptCore/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/API/*.h"
   "${LOCAL_DIR}/JavaScriptCore/API/*.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/b3/*.h"
+  "${LOCAL_DIR}/JavaScriptCore/b3/*.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/b3/air/*.h"
+  "${LOCAL_DIR}/JavaScriptCore/b3/air/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/bindings/*.h"
   "${LOCAL_DIR}/JavaScriptCore/bindings/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/builtins/*.h"
@@ -45,6 +52,8 @@ file(GLOB JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/bytecompiler/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/debugger/*.h"
   "${LOCAL_DIR}/JavaScriptCore/debugger/*.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/domjit/*.h"
+  "${LOCAL_DIR}/JavaScriptCore/domjit/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/dfg/*.h"
   "${LOCAL_DIR}/JavaScriptCore/dfg/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/ftl/*.h"
@@ -71,6 +80,8 @@ file(GLOB JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/tools/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/wasm/*.h"
   "${LOCAL_DIR}/JavaScriptCore/wasm/*.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/wasm/js/*.h"
+  "${LOCAL_DIR}/JavaScriptCore/wasm/js/*.cpp"
   "${LOCAL_DIR}/JavaScriptCore/yarr/*.h"
   "${LOCAL_DIR}/JavaScriptCore/yarr/*.cpp"
   )
@@ -90,9 +101,9 @@ list(APPEND JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/disassembler/Disassembler.cpp"
   "${LOCAL_DIR}/JavaScriptCore/disassembler/X86Disassembler.cpp"
 
-  "${DerivedSourcesDir}/InspectorBackendDispatchers.cpp"
-  "${DerivedSourcesDir}/InspectorFrontendDispatchers.cpp"
-  "${DerivedSourcesDir}/InspectorProtocolObjects.cpp"
+  "${DerivedSourcesDir}/inspector/InspectorBackendDispatchers.cpp"
+  "${DerivedSourcesDir}/inspector/InspectorFrontendDispatchers.cpp"
+  "${DerivedSourcesDir}/inspector/InspectorProtocolObjects.cpp"
   "${DerivedSourcesDir}/JSCBuiltins.cpp"
 
   "${LOCAL_DIR}/JavaScriptCore/jit/JITStubsMSVC64.asm"
@@ -104,6 +115,8 @@ list(REMOVE_ITEM JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/API/JSProfilerPrivate.cpp"
   "${LOCAL_DIR}/JavaScriptCore/API/JSStringRefBSTR.cpp"
   "${LOCAL_DIR}/JavaScriptCore/API/JSStringRefCF.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/b3/testb3.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/b3/air/testair.cpp"
   "${LOCAL_DIR}/JavaScriptCore/bytecode/SamplingTool.cpp"
   "${LOCAL_DIR}/JavaScriptCore/inspector/EventLoop.cpp"
   "${LOCAL_DIR}/JavaScriptCore/inspector/JSGlobalObjectConsoleClient.cpp"
@@ -122,7 +135,6 @@ list(REMOVE_ITEM JAVASCRIPTCORE_SOURCES
 
 
 #list(SORT JAVASCRIPTCORE_SOURCES COMPARE NATURAL)
-#message(FATAL_ERROR ${JAVASCRIPTCORE_SOURCES})
 add_library(JavaScriptCore ${JAVASCRIPTCORE_SOURCES})
 
 set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX 
@@ -132,6 +144,8 @@ set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX
   "${LOCAL_DIR}/JavaScriptCore/ForwardingHeaders/"
   "${LOCAL_DIR}/JavaScriptCore/ForwardingHeaders/JavaScriptCore"
   "${LOCAL_DIR}/JavaScriptCore/assembler"
+  "${LOCAL_DIR}/JavaScriptCore/b3"
+  "${LOCAL_DIR}/JavaScriptCore/b3/air"
   "${LOCAL_DIR}/JavaScriptCore/bindings"
   "${LOCAL_DIR}/JavaScriptCore/builtins"
   "${LOCAL_DIR}/JavaScriptCore/bytecode"
@@ -139,6 +153,7 @@ set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX
   "${LOCAL_DIR}/JavaScriptCore/debugger"
   "${LOCAL_DIR}/JavaScriptCore/dfg"
   "${LOCAL_DIR}/JavaScriptCore/disassembler"
+  "${LOCAL_DIR}/JavaScriptCore/domjit"
   "${LOCAL_DIR}/JavaScriptCore/ftl"
   "${LOCAL_DIR}/JavaScriptCore/heap"
   "${LOCAL_DIR}/JavaScriptCore/inspector"
@@ -152,6 +167,7 @@ set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX
   "${LOCAL_DIR}/JavaScriptCore/runtime"
   "${LOCAL_DIR}/JavaScriptCore/tools"
   "${LOCAL_DIR}/JavaScriptCore/wasm"
+  "${LOCAL_DIR}/JavaScriptCore/wasm/js"
   "${LOCAL_DIR}/JavaScriptCore/yarr"
   "${DerivedSourcesDir}"
   )

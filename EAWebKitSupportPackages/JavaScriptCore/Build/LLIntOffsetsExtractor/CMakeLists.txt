@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 project(LLIntOffsetsExtractor LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -33,7 +33,7 @@ if (NOT TARGET EABase)
 endif()
 
 if (NOT TARGET JavaScriptCore)
-    add_subdirectory(../../ JavaScriptCore_Build)
+#    add_subdirectory(../../ JavaScriptCore_Build)
 endif()
 
 if (NOT TARGET WTF)
