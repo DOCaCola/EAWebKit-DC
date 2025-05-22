@@ -26,19 +26,7 @@
 #include "config.h"
 #include "WebKitTransitionEvent.h"
 
-#include "EventNames.h"
-
 namespace WebCore {
-
-WebKitTransitionEventInit::WebKitTransitionEventInit()
-    : elapsedTime(0)
-{
-}
-
-WebKitTransitionEvent::WebKitTransitionEvent()
-    : m_elapsedTime(0)
-{
-}
 
 WebKitTransitionEvent::WebKitTransitionEvent(const AtomicString& type, const String& propertyName, double elapsedTime, const String& pseudoElement)
     : Event(type, true, true)
@@ -48,8 +36,8 @@ WebKitTransitionEvent::WebKitTransitionEvent(const AtomicString& type, const Str
 {
 }
 
-WebKitTransitionEvent::WebKitTransitionEvent(const AtomicString& type, const WebKitTransitionEventInit& initializer)
-    : Event(type, initializer)
+WebKitTransitionEvent::WebKitTransitionEvent(const AtomicString& type, const Init& initializer, IsTrusted isTrusted)
+    : Event(type, initializer, isTrusted)
     , m_propertyName(initializer.propertyName)
     , m_elapsedTime(initializer.elapsedTime)
     , m_pseudoElement(initializer.pseudoElement)

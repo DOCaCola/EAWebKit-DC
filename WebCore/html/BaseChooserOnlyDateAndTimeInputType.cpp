@@ -24,16 +24,17 @@
  */
 
 #include "config.h"
-#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
 #include "BaseChooserOnlyDateAndTimeInputType.h"
 
-#include "Chrome.h"
+#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
+
 #include "HTMLDivElement.h"
 #include "HTMLInputElement.h"
 #include "Page.h"
 #include "RenderElement.h"
 #include "ScriptController.h"
 #include "ShadowRoot.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
@@ -42,7 +43,7 @@ BaseChooserOnlyDateAndTimeInputType::~BaseChooserOnlyDateAndTimeInputType()
     closeDateTimeChooser();
 }
 
-void BaseChooserOnlyDateAndTimeInputType::handleDOMActivateEvent(Event*)
+void BaseChooserOnlyDateAndTimeInputType::handleDOMActivateEvent(Event&)
 {
     if (element().isDisabledOrReadOnly() || !element().renderer() || !ScriptController::processingUserGesture())
         return;
@@ -58,11 +59,11 @@ void BaseChooserOnlyDateAndTimeInputType::handleDOMActivateEvent(Event*)
 
 void BaseChooserOnlyDateAndTimeInputType::createShadowSubtree()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(AtomicString, valueContainerPseudo, ("-webkit-date-and-time-value", AtomicString::ConstructFromLiteral));
+    static NeverDestroyed<AtomicString> valueContainerPseudo("-webkit-date-and-time-value", AtomicString::ConstructFromLiteral);
 
-    RefPtr<HTMLDivElement> valueContainer = HTMLDivElement::create(element().document());
+    auto valueContainer = HTMLDivElement::create(element().document());
     valueContainer->setPseudo(valueContainerPseudo);
-    element().userAgentShadowRoot()->appendChild(valueContainer.get());
+    element().userAgentShadowRoot()->appendChild(valueContainer);
     updateAppearance();
 }
 
@@ -76,7 +77,7 @@ void BaseChooserOnlyDateAndTimeInputType::updateAppearance()
         // Need to put something to keep text baseline.
         displayValue = ASCIILiteral(" ");
     }
-    downcast<HTMLElement>(*node).setInnerText(displayValue, ASSERT_NO_EXCEPTION);
+    downcast<HTMLElement>(*node).setInnerText(displayValue);
 }
 
 void BaseChooserOnlyDateAndTimeInputType::setValue(const String& value, bool valueChanged, TextFieldEventBehavior eventBehavior)
@@ -107,17 +108,17 @@ void BaseChooserOnlyDateAndTimeInputType::closeDateTimeChooser()
         m_dateTimeChooser->endChooser();
 }
 
-void BaseChooserOnlyDateAndTimeInputType::handleKeydownEvent(KeyboardEvent* event)
+void BaseChooserOnlyDateAndTimeInputType::handleKeydownEvent(KeyboardEvent& event)
 {
     BaseClickableWithKeyInputType::handleKeydownEvent(element(), event);
 }
 
-void BaseChooserOnlyDateAndTimeInputType::handleKeypressEvent(KeyboardEvent* event)
+void BaseChooserOnlyDateAndTimeInputType::handleKeypressEvent(KeyboardEvent& event)
 {
     BaseClickableWithKeyInputType::handleKeypressEvent(element(), event);
 }
 
-void BaseChooserOnlyDateAndTimeInputType::handleKeyupEvent(KeyboardEvent* event)
+void BaseChooserOnlyDateAndTimeInputType::handleKeyupEvent(KeyboardEvent& event)
 {
     BaseClickableWithKeyInputType::handleKeyupEvent(*this, event);
 }

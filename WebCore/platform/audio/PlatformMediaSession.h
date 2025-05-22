@@ -55,6 +55,7 @@ public:
     enum MediaType {
         None = 0,
         Video,
+        VideoAudio,
         Audio,
         WebAudio,
     };
@@ -63,6 +64,7 @@ public:
 
     enum State {
         Idle,
+        Autoplaying,
         Playing,
         Paused,
         Interrupted,
@@ -71,35 +73,51 @@ public:
     void setState(State);
 
     enum InterruptionType {
+        NoInterruption,
         SystemSleep,
         EnteringBackground,
         SystemInterruption,
+        SuspendedUnderLock,
+        InvisibleAutoplay,
     };
+    InterruptionType interruptionType() const { return m_interruptionType; }
+
     enum EndInterruptionFlags {
         NoFlags = 0,
         MayResumePlaying = 1 << 0,
     };
 
-    void doInterruption();
-    bool shouldDoInterruption(InterruptionType);
+    enum Characteristics {
+        HasNothing = 0,
+        HasAudio = 1 << 0,
+        HasVideo = 1 << 1,
+    };
+    typedef unsigned CharacteristicsFlags;
+
+    CharacteristicsFlags characteristics() const;
+    void clientCharacteristicsChanged();
+
     void beginInterruption(InterruptionType);
-    void forceInterruption(InterruptionType);
     void endInterruption(EndInterruptionFlags);
 
-    void applicationWillEnterForeground() const;
-    void applicationWillEnterBackground() const;
-    void applicationDidEnterBackground(bool isSuspendedUnderLock) const;
-
+    void clientWillBeginAutoplaying();
     bool clientWillBeginPlayback();
     bool clientWillPausePlayback();
 
     void pauseSession();
+    void stopSession();
     
     void visibilityChanged();
 
+#if ENABLE(VIDEO)
     String title() const;
     double duration() const;
     double currentTime() const;
+#endif
+
+    typedef union {
+        double asDouble;
+    } RemoteCommandArgument;
 
     enum RemoteControlCommandType {
         NoCommand,
@@ -111,9 +129,11 @@ public:
         EndSeekingBackwardCommand,
         BeginSeekingForwardCommand,
         EndSeekingForwardCommand,
+        SeekToPlaybackPositionCommand,
     };
     bool canReceiveRemoteControlCommands() const;
-    void didReceiveRemoteControlCommand(RemoteControlCommandType);
+    void didReceiveRemoteControlCommand(RemoteControlCommandType, const RemoteCommandArgument* argument = nullptr);
+    bool supportsSeeking() const;
 
     enum DisplayType {
         Normal,
@@ -124,19 +144,32 @@ public:
 
     bool isHidden() const;
 
+    bool shouldOverrideBackgroundLoadingRestriction() const;
+
     virtual bool canPlayToWirelessPlaybackTarget() const { return false; }
-    virtual bool isPlayingToWirelessPlaybackTarget() const { return false; }
+    virtual bool isPlayingToWirelessPlaybackTarget() const { return m_isPlayingToWirelessPlaybackTarget; }
+    void isPlayingToWirelessPlaybackTargetChanged(bool);
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
     // MediaPlaybackTargetClient
-    virtual void setPlaybackTarget(Ref<MediaPlaybackTarget>&&) override { }
-    virtual void externalOutputDeviceAvailableDidChange(bool) override { }
-    virtual void setShouldPlayToPlaybackTarget(bool) override { }
+    void setPlaybackTarget(Ref<MediaPlaybackTarget>&&) override { }
+    void externalOutputDeviceAvailableDidChange(bool) override { }
+    void setShouldPlayToPlaybackTarget(bool) override { }
 #endif
 
 #if PLATFORM(IOS)
     virtual bool requiresPlaybackTargetRouteMonitoring() const { return false; }
 #endif
+
+    bool activeAudioSessionRequired();
+    bool canProduceAudio() const { return m_canProduceAudio; }
+    void setCanProduceAudio(bool);
+
+    void scheduleClientDataBufferingCheck();
+    virtual void resetPlaybackSessionState() { }
+    String sourceApplicationIdentifier() const;
+
+    virtual bool allowsNowPlayingControlsVisibility() const { return false; }
 
 protected:
     PlatformMediaSessionClient& client() const { return m_client; }
@@ -149,8 +182,11 @@ private:
     Timer m_clientDataBufferingTimer;
     State m_state;
     State m_stateToRestore;
+    InterruptionType m_interruptionType { NoInterruption };
     int m_interruptionCount { 0 };
     bool m_notifyingClient;
+    bool m_isPlayingToWirelessPlaybackTarget { false };
+    bool m_canProduceAudio { false };
 
     friend class PlatformMediaSessionManager;
 };
@@ -163,21 +199,27 @@ public:
     virtual PlatformMediaSession::MediaType mediaType() const = 0;
     virtual PlatformMediaSession::MediaType presentationType() const = 0;
     virtual PlatformMediaSession::DisplayType displayType() const { return PlatformMediaSession::Normal; }
+    virtual PlatformMediaSession::CharacteristicsFlags characteristics() const = 0;
 
+    virtual void resumeAutoplaying() { }
     virtual void mayResumePlayback(bool shouldResume) = 0;
     virtual void suspendPlayback() = 0;
 
+#if ENABLE(VIDEO)
     virtual String mediaSessionTitle() const;
     virtual double mediaSessionDuration() const;
     virtual double mediaSessionCurrentTime() const;
+#endif
     
     virtual bool canReceiveRemoteControlCommands() const = 0;
-    virtual void didReceiveRemoteControlCommand(PlatformMediaSession::RemoteControlCommandType) = 0;
+    virtual void didReceiveRemoteControlCommand(PlatformMediaSession::RemoteControlCommandType, const PlatformMediaSession::RemoteCommandArgument*) = 0;
+    virtual bool supportsSeeking() const = 0;
 
     virtual void setShouldBufferData(bool) { }
     virtual bool elementIsHidden() const { return false; }
 
-    virtual bool overrideBackgroundPlaybackRestriction() const = 0;
+    virtual bool shouldOverrideBackgroundPlaybackRestriction(PlatformMediaSession::InterruptionType) const = 0;
+    virtual bool shouldOverrideBackgroundLoadingRestriction() const { return false; }
 
     virtual void wirelessRoutesAvailableDidChange() { }
     virtual void setWirelessPlaybackTarget(Ref<MediaPlaybackTarget>&&) { }
@@ -186,6 +228,7 @@ public:
     virtual void setShouldPlayToPlaybackTarget(bool) { }
 
     virtual const Document* hostingDocument() const = 0;
+    virtual String sourceApplicationIdentifier() const = 0;
 
 protected:
     virtual ~PlatformMediaSessionClient() { }

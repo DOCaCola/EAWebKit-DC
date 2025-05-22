@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DeviceMotionEvent_h
-#define DeviceMotionEvent_h
+#pragma once
 
 #include "Event.h"
 
@@ -35,28 +34,45 @@ class DeviceMotionData;
 class DeviceMotionEvent final : public Event {
 public:
     virtual ~DeviceMotionEvent();
-    static Ref<DeviceMotionEvent> create()
-    {
-        return adoptRef(*new DeviceMotionEvent);
-    }
+
+    // FIXME: Merge this with DeviceMotionData::Acceleration
+    struct Acceleration {
+        std::optional<double> x;
+        std::optional<double> y;
+        std::optional<double> z;
+    };
+
+    // FIXME: Merge this with DeviceMotionData::RotationRate
+    struct RotationRate {
+        std::optional<double> alpha;
+        std::optional<double> beta;
+        std::optional<double> gamma;
+    };
+
     static Ref<DeviceMotionEvent> create(const AtomicString& eventType, DeviceMotionData* deviceMotionData)
     {
         return adoptRef(*new DeviceMotionEvent(eventType, deviceMotionData));
     }
 
-    void initDeviceMotionEvent(const AtomicString& type, bool bubbles, bool cancelable, DeviceMotionData*);
+    static Ref<DeviceMotionEvent> createForBindings()
+    {
+        return adoptRef(*new DeviceMotionEvent);
+    }
 
-    DeviceMotionData* deviceMotionData() const { return m_deviceMotionData.get(); }
+    std::optional<Acceleration> acceleration() const;
+    std::optional<Acceleration> accelerationIncludingGravity() const;
+    std::optional<RotationRate> rotationRate() const;
+    std::optional<double> interval() const;
 
-    virtual EventInterface eventInterface() const override;
+    void initDeviceMotionEvent(const AtomicString& type, bool bubbles, bool cancelable, std::optional<Acceleration>&&, std::optional<Acceleration>&&, std::optional<RotationRate>&&, std::optional<double>);
 
 private:
     DeviceMotionEvent();
     DeviceMotionEvent(const AtomicString& eventType, DeviceMotionData*);
 
+    EventInterface eventInterface() const override;
+
     RefPtr<DeviceMotionData> m_deviceMotionData;
 };
 
 } // namespace WebCore
-
-#endif // DeviceMotionEvent_h

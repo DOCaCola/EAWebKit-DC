@@ -34,7 +34,14 @@ namespace WebCore {
 
 CGColorSpaceRef deviceRGBColorSpaceRef();
 WEBCORE_EXPORT CGColorSpaceRef sRGBColorSpaceRef();
+WEBCORE_EXPORT CGColorSpaceRef extendedSRGBColorSpaceRef();
+WEBCORE_EXPORT CGColorSpaceRef displayP3ColorSpaceRef();
 CGColorSpaceRef linearRGBColorSpaceRef();
+
+inline CGAffineTransform getUserToBaseCTM(CGContextRef context)
+{
+    return CGAffineTransformConcat(CGContextGetCTM(context), CGAffineTransformInvert(CGContextGetBaseCTM(context)));
+}
 
 static inline CGColorSpaceRef cachedCGColorSpace(ColorSpace colorSpace)
 {
@@ -45,10 +52,52 @@ static inline CGColorSpaceRef cachedCGColorSpace(ColorSpace colorSpace)
         return sRGBColorSpaceRef();
     case ColorSpaceLinearRGB:
         return linearRGBColorSpaceRef();
+    case ColorSpaceDisplayP3:
+        return displayP3ColorSpaceRef();
     }
     ASSERT_NOT_REACHED();
     return deviceRGBColorSpaceRef();
 }
+
+class CGContextStateSaver {
+public:
+    CGContextStateSaver(CGContextRef context, bool saveAndRestore = true)
+        : m_context(context)
+        , m_saveAndRestore(saveAndRestore)
+    {
+        if (m_saveAndRestore)
+            CGContextSaveGState(m_context);
+    }
+    
+    ~CGContextStateSaver()
+    {
+        if (m_saveAndRestore)
+            CGContextRestoreGState(m_context);
+    }
+    
+    void save()
+    {
+        ASSERT(!m_saveAndRestore);
+        CGContextSaveGState(m_context);
+        m_saveAndRestore = true;
+    }
+
+    void restore()
+    {
+        ASSERT(m_saveAndRestore);
+        CGContextRestoreGState(m_context);
+        m_saveAndRestore = false;
+    }
+    
+    bool didSave() const
+    {
+        return m_saveAndRestore;
+    }
+    
+private:
+    CGContextRef m_context;
+    bool m_saveAndRestore;
+};
 
 }
 

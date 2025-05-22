@@ -33,6 +33,7 @@
 #include "InputTypeNames.h"
 #include "MouseEvent.h"
 #include "RenderImage.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
@@ -64,10 +65,10 @@ bool ImageInputType::appendFormData(FormDataList& encoding, bool) const
         return true;
     }
 
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, dotXString, (ASCIILiteral(".x")));
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, dotYString, (ASCIILiteral(".y")));
-    encoding.appendData(name + dotXString, m_clickLocation.x());
-    encoding.appendData(name + dotYString, m_clickLocation.y());
+    static NeverDestroyed<String> dotXString(ASCIILiteral(".x"));
+    static NeverDestroyed<String> dotYString(ASCIILiteral(".y"));
+    encoding.appendData(name + dotXString.get(), m_clickLocation.x());
+    encoding.appendData(name + dotYString.get(), m_clickLocation.y());
 
     if (!element().value().isEmpty())
         encoding.appendData(name, element().value());
@@ -79,7 +80,7 @@ bool ImageInputType::supportsValidation() const
     return false;
 }
 
-void ImageInputType::handleDOMActivateEvent(Event* event)
+void ImageInputType::handleDOMActivateEvent(Event& event)
 {
     Ref<HTMLInputElement> element(this->element());
     if (element->isDisabledFormControl() || !element->form())
@@ -87,8 +88,8 @@ void ImageInputType::handleDOMActivateEvent(Event* event)
     element->setActivatedSubmit(true);
 
     m_clickLocation = IntPoint();
-    if (event->underlyingEvent()) {
-        Event& underlyingEvent = *event->underlyingEvent();
+    if (event.underlyingEvent()) {
+        Event& underlyingEvent = *event.underlyingEvent();
         if (is<MouseEvent>(underlyingEvent)) {
             MouseEvent& mouseEvent = downcast<MouseEvent>(underlyingEvent);
             if (!mouseEvent.isSimulated())
@@ -98,16 +99,19 @@ void ImageInputType::handleDOMActivateEvent(Event* event)
 
     element->form()->prepareForSubmission(event); // Event handlers can run.
     element->setActivatedSubmit(false);
-    event->setDefaultHandled();
+    event.setDefaultHandled();
 }
 
-RenderPtr<RenderElement> ImageInputType::createInputRenderer(Ref<RenderStyle>&& style)
+RenderPtr<RenderElement> ImageInputType::createInputRenderer(RenderStyle&& style)
 {
-    return createRenderer<RenderImage>(element(), WTF::move(style));
+    return createRenderer<RenderImage>(element(), WTFMove(style));
 }
 
 void ImageInputType::altAttributeChanged()
 {
+    if (!is<RenderImage>(element().renderer()))
+        return;
+
     auto* renderer = downcast<RenderImage>(element().renderer());
     if (!renderer)
         return;
@@ -175,14 +179,13 @@ unsigned ImageInputType::height() const
 
     if (!element->renderer()) {
         // Check the attribute first for an explicit pixel value.
-        unsigned height;
-        if (parseHTMLNonNegativeInteger(element->fastGetAttribute(heightAttr), height))
-            return height;
+        if (std::optional<unsigned> height = parseHTMLNonNegativeInteger(element->attributeWithoutSynchronization(heightAttr)))
+            return height.value();
 
         // If the image is available, use its height.
         HTMLImageLoader* imageLoader = element->imageLoader();
         if (imageLoader && imageLoader->image())
-            return imageLoader->image()->imageSizeForRenderer(element->renderer(), 1).height();
+            return imageLoader->image()->imageSizeForRenderer(element->renderer(), 1).height().toUnsigned();
     }
 
     element->document().updateLayout();
@@ -197,14 +200,13 @@ unsigned ImageInputType::width() const
 
     if (!element->renderer()) {
         // Check the attribute first for an explicit pixel value.
-        unsigned width;
-        if (parseHTMLNonNegativeInteger(element->fastGetAttribute(widthAttr), width))
-            return width;
+        if (std::optional<unsigned> width = parseHTMLNonNegativeInteger(element->attributeWithoutSynchronization(widthAttr)))
+            return width.value();
 
         // If the image is available, use its width.
         HTMLImageLoader* imageLoader = element->imageLoader();
         if (imageLoader && imageLoader->image())
-            return imageLoader->image()->imageSizeForRenderer(element->renderer(), 1).width();
+            return imageLoader->image()->imageSizeForRenderer(element->renderer(), 1).width().toUnsigned();
     }
 
     element->document().updateLayout();

@@ -67,6 +67,15 @@ AccessibilityRole AccessibilityTree::determineAccessibilityRole()
     return isTreeValid() ? TreeRole : GroupRole;
 }
 
+bool AccessibilityTree::nodeHasTreeItemChild(Node& node) const
+{
+    for (auto* child = node.firstChild(); child; child = child->nextSibling()) {
+        if (nodeHasRole(child, "treeitem"))
+            return true;
+    }
+    return false;
+}
+
 bool AccessibilityTree::isTreeValid() const
 {
     // A valid tree can only have treeitem or group of treeitems as a child
@@ -77,7 +86,7 @@ bool AccessibilityTree::isTreeValid() const
         return false;
     
     Deque<Node*> queue;
-    for (auto child = node->firstChild(); child; child = child->nextSibling())
+    for (auto* child = node->firstChild(); child; child = child->nextSibling())
         queue.append(child);
 
     while (!queue.isEmpty()) {
@@ -87,10 +96,15 @@ bool AccessibilityTree::isTreeValid() const
             continue;
         if (nodeHasRole(child, "treeitem"))
             continue;
+        if (nodeHasRole(child, "presentation")) {
+            if (!nodeHasTreeItemChild(*child))
+                return false;
+            continue;
+        }
         if (!nodeHasRole(child, "group"))
             return false;
 
-        for (auto groupChild = child->firstChild(); groupChild; groupChild = groupChild->nextSibling())
+        for (auto* groupChild = child->firstChild(); groupChild; groupChild = groupChild->nextSibling())
             queue.append(groupChild);
     }
     return true;

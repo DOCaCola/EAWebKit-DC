@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef TextEvent_h
-#define TextEvent_h
+#pragma once
 
 #include "DictationAlternative.h"
 #include "TextEventInputType.h"
@@ -39,21 +38,20 @@ namespace WebCore {
 
     class TextEvent final : public UIEvent {
     public:
-
-        static Ref<TextEvent> create();
-        static Ref<TextEvent> create(PassRefPtr<AbstractView>, const String& data, TextEventInputType = TextEventInputKeyboard);
-        static Ref<TextEvent> createForPlainTextPaste(PassRefPtr<AbstractView>, const String& data, bool shouldSmartReplace);
-        static Ref<TextEvent> createForFragmentPaste(PassRefPtr<AbstractView>, PassRefPtr<DocumentFragment> data, bool shouldSmartReplace, bool shouldMatchStyle, MailBlockquoteHandling);
-        static Ref<TextEvent> createForDrop(PassRefPtr<AbstractView>, const String& data);
-        static Ref<TextEvent> createForDictation(PassRefPtr<AbstractView>, const String& data, const Vector<DictationAlternative>& dictationAlternatives);
+        static Ref<TextEvent> create(DOMWindow*, const String& data, TextEventInputType = TextEventInputKeyboard);
+        static Ref<TextEvent> createForBindings();
+        static Ref<TextEvent> createForPlainTextPaste(DOMWindow*, const String& data, bool shouldSmartReplace);
+        static Ref<TextEvent> createForFragmentPaste(DOMWindow*, RefPtr<DocumentFragment>&& data, bool shouldSmartReplace, bool shouldMatchStyle, MailBlockquoteHandling);
+        static Ref<TextEvent> createForDrop(DOMWindow*, const String& data);
+        static Ref<TextEvent> createForDictation(DOMWindow*, const String& data, const Vector<DictationAlternative>& dictationAlternatives);
 
         virtual ~TextEvent();
     
-        void initTextEvent(const AtomicString& type, bool canBubble, bool cancelable, PassRefPtr<AbstractView>, const String& data);
+        WEBCORE_EXPORT void initTextEvent(const AtomicString& type, bool canBubble, bool cancelable, DOMWindow*, const String& data);
     
         String data() const { return m_data; }
 
-        virtual EventInterface eventInterface() const override;
+        EventInterface eventInterface() const override;
 
         bool isLineBreak() const { return m_inputType == TextEventInputLineBreak; }
         bool isComposition() const { return m_inputType == TextEventInputComposition; }
@@ -61,6 +59,8 @@ namespace WebCore {
         bool isPaste() const { return m_inputType == TextEventInputPaste; }
         bool isDrop() const { return m_inputType == TextEventInputDrop; }
         bool isDictation() const { return m_inputType == TextEventInputDictation; }
+        bool isAutocompletion() const { return m_inputType == TextEventInputAutocompletion; }
+        bool isKeyboard() const { return m_inputType == TextEventInputKeyboard; }
 
         bool shouldSmartReplace() const { return m_shouldSmartReplace; }
         bool shouldMatchStyle() const { return m_shouldMatchStyle; }
@@ -71,11 +71,11 @@ namespace WebCore {
     private:
         TextEvent();
 
-        TextEvent(PassRefPtr<AbstractView>, const String& data, TextEventInputType = TextEventInputKeyboard);
-        TextEvent(PassRefPtr<AbstractView>, const String& data, PassRefPtr<DocumentFragment>, bool shouldSmartReplace, bool shouldMatchStyle, MailBlockquoteHandling);
-        TextEvent(PassRefPtr<AbstractView>, const String& data, const Vector<DictationAlternative>& dictationAlternatives);
+        TextEvent(DOMWindow*, const String& data, TextEventInputType = TextEventInputKeyboard);
+        TextEvent(DOMWindow*, const String& data, RefPtr<DocumentFragment>&&, bool shouldSmartReplace, bool shouldMatchStyle, MailBlockquoteHandling);
+        TextEvent(DOMWindow*, const String& data, const Vector<DictationAlternative>& dictationAlternatives);
 
-        virtual bool isTextEvent() const override;
+        bool isTextEvent() const override;
 
         TextEventInputType m_inputType;
         String m_data;
@@ -90,5 +90,3 @@ namespace WebCore {
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_EVENT(TextEvent)
-
-#endif // TextEvent_h

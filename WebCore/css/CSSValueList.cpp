@@ -21,7 +21,10 @@
 #include "config.h"
 #include "CSSValueList.h"
 
-#include "CSSParserValues.h"
+#include "CSSCustomPropertyValue.h"
+#include "CSSFunctionValue.h"
+#include "CSSPrimitiveValue.h"
+#include "DeprecatedCSSOMValue.h"
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
@@ -38,25 +41,13 @@ CSSValueList::CSSValueList(ValueListSeparator listSeparator)
     m_valueListSeparator = listSeparator;
 }
 
-CSSValueList::CSSValueList(CSSParserValueList& parserValues)
-    : CSSValue(ValueListClass)
-{
-    m_valueListSeparator = SpaceSeparator;
-    m_values.reserveInitialCapacity(parserValues.size());
-    for (unsigned i = 0, size = parserValues.size(); i < size; ++i) {
-        RefPtr<CSSValue> value = parserValues.valueAt(i)->createCSSValue();
-        ASSERT(value);
-        m_values.uncheckedAppend(value.releaseNonNull());
-    }
-}
-
 bool CSSValueList::removeAll(CSSValue* value)
 {
     // FIXME: Why even take a pointer?
     if (!value)
         return false;
 
-    return m_values.removeAllMatching([value] (const Ref<CSSValue>& current) {
+    return m_values.removeAllMatching([value](auto& current) {
         return current->equals(*value);
     }) > 0;
 }
@@ -74,7 +65,7 @@ bool CSSValueList::hasValue(CSSValue* val) const
     return false;
 }
 
-PassRefPtr<CSSValueList> CSSValueList::copy()
+Ref<CSSValueList> CSSValueList::copy()
 {
     RefPtr<CSSValueList> newList;
     switch (m_valueListSeparator) {
@@ -92,7 +83,7 @@ PassRefPtr<CSSValueList> CSSValueList::copy()
     }
     for (auto& value : m_values)
         newList->append(value.get());
-    return newList.release();
+    return newList.releaseNonNull();
 }
 
 String CSSValueList::customCSSText() const
@@ -145,12 +136,6 @@ bool CSSValueList::equals(const CSSValue& other) const
     return m_values[0].get().equals(other);
 }
 
-void CSSValueList::addSubresourceStyleURLs(ListHashSet<URL>& urls, const StyleSheetContents* styleSheet) const
-{
-    for (unsigned i = 0, size = m_values.size(); i < size; ++i)
-        m_values[i].get().addSubresourceStyleURLs(urls, styleSheet);
-}
-
 bool CSSValueList::traverseSubresources(const std::function<bool (const CachedResource&)>& handler) const
 {
     for (unsigned i = 0; i < m_values.size(); ++i) {
@@ -158,20 +143,6 @@ bool CSSValueList::traverseSubresources(const std::function<bool (const CachedRe
             return true;
     }
     return false;
-}
-
-CSSValueList::CSSValueList(const CSSValueList& cloneFrom)
-    : CSSValue(cloneFrom.classType(), /* isCSSOMSafe */ true)
-{
-    m_valueListSeparator = cloneFrom.m_valueListSeparator;
-    m_values.reserveInitialCapacity(cloneFrom.m_values.size());
-    for (unsigned i = 0, size = cloneFrom.m_values.size(); i < size; ++i)
-        m_values.uncheckedAppend(*cloneFrom.m_values[i]->cloneForCSSOM());
-}
-
-Ref<CSSValueList> CSSValueList::cloneForCSSOM() const
-{
-    return adoptRef(*new CSSValueList(*this));
 }
 
 } // namespace WebCore

@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MediaProducer_h
-#define MediaProducer_h
+#pragma once
 
 namespace WebCore {
 
@@ -41,16 +40,26 @@ public:
         IsSourceElementPlaying = 1 << 6,
         IsNextTrackControlEnabled = 1 << 7,
         IsPreviousTrackControlEnabled = 1 << 8,
+        HasPlaybackTargetAvailabilityListener = 1 << 9,
+        HasAudioOrVideo = 1 << 10,
+        HasActiveAudioCaptureDevice = 1 << 11,
+        HasActiveVideoCaptureDevice = 1 << 12,
     };
     typedef unsigned MediaStateFlags;
 
     virtual MediaStateFlags mediaState() const = 0;
+
+    enum MutedState {
+        NoneMuted = 0,
+        AudioIsMuted = 1 << 0,
+        CaptureDevicesAreMuted = 1 << 1,
+    };
+    typedef unsigned MutedStateFlags;
+
     virtual void pageMutedStateDidChange() = 0;
 
 protected:
     virtual ~MediaProducer() { }
 };
 
-}
-
-#endif
+} // namespace WebCore

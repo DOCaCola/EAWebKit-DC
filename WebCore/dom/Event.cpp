@@ -23,79 +23,47 @@
 #include "config.h"
 #include "Event.h"
 
+#include "EventNames.h"
+#include "EventPath.h"
 #include "EventTarget.h"
 #include "UserGestureIndicator.h"
 #include <wtf/CurrentTime.h>
 
 namespace WebCore {
 
-EventInit::EventInit()
-    : bubbles(false)
-    , cancelable(false)
-{
-}
-
-EventInit::EventInit(bool b, bool c)
-    : bubbles(b)
-    , cancelable(c)
-{
-}
-
-Event::Event()
-    : m_canBubble(false)
-    , m_cancelable(false)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_defaultPrevented(false)
-    , m_defaultHandled(false)
-    , m_cancelBubble(false)
-    , m_eventPhase(0)
-    , m_currentTarget(0)
+Event::Event(IsTrusted isTrusted)
+    : m_isTrusted(isTrusted == IsTrusted::Yes)
     , m_createTime(convertSecondsToDOMTimeStamp(currentTime()))
 {
 }
 
 Event::Event(const AtomicString& eventType, bool canBubbleArg, bool cancelableArg)
     : m_type(eventType)
+    , m_isInitialized(true)
     , m_canBubble(canBubbleArg)
     , m_cancelable(cancelableArg)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_defaultPrevented(false)
-    , m_defaultHandled(false)
-    , m_cancelBubble(false)
-    , m_eventPhase(0)
-    , m_currentTarget(0)
+    , m_isTrusted(true)
     , m_createTime(convertSecondsToDOMTimeStamp(currentTime()))
 {
 }
 
 Event::Event(const AtomicString& eventType, bool canBubbleArg, bool cancelableArg, double timestamp)
     : m_type(eventType)
+    , m_isInitialized(true)
     , m_canBubble(canBubbleArg)
     , m_cancelable(cancelableArg)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_defaultPrevented(false)
-    , m_defaultHandled(false)
-    , m_cancelBubble(false)
-    , m_eventPhase(0)
-    , m_currentTarget(0)
+    , m_isTrusted(true)
     , m_createTime(convertSecondsToDOMTimeStamp(timestamp))
 {
 }
 
-Event::Event(const AtomicString& eventType, const EventInit& initializer)
+Event::Event(const AtomicString& eventType, const EventInit& initializer, IsTrusted isTrusted)
     : m_type(eventType)
+    , m_isInitialized(true)
     , m_canBubble(initializer.bubbles)
     , m_cancelable(initializer.cancelable)
-    , m_propagationStopped(false)
-    , m_immediatePropagationStopped(false)
-    , m_defaultPrevented(false)
-    , m_defaultHandled(false)
-    , m_cancelBubble(false)
-    , m_eventPhase(0)
-    , m_currentTarget(0)
+    , m_composed(initializer.composed)
+    , m_isTrusted(isTrusted == IsTrusted::Yes)
     , m_createTime(convertSecondsToDOMTimeStamp(currentTime()))
 {
 }
@@ -106,16 +74,40 @@ Event::~Event()
 
 void Event::initEvent(const AtomicString& eventTypeArg, bool canBubbleArg, bool cancelableArg)
 {
-    if (dispatched())
+    if (isBeingDispatched())
         return;
 
+    m_isInitialized = true;
     m_propagationStopped = false;
     m_immediatePropagationStopped = false;
     m_defaultPrevented = false;
+    m_isTrusted = false;
+    m_target = nullptr;
 
     m_type = eventTypeArg;
     m_canBubble = canBubbleArg;
     m_cancelable = cancelableArg;
+}
+
+bool Event::composed() const
+{
+    if (m_composed)
+        return true;
+
+    // http://w3c.github.io/webcomponents/spec/shadow/#scoped-flag
+    if (!isTrusted())
+        return false;
+
+    return m_type == eventNames().inputEvent
+        || m_type == eventNames().textInputEvent
+        || m_type == eventNames().DOMActivateEvent
+        || isCompositionEvent()
+        || isClipboardEvent()
+        || isFocusEvent()
+        || isKeyboardEvent()
+        || isMouseEvent()
+        || isTouchEvent()
+        || isInputEvent();
 }
 
 EventInterface Event::eventInterface() const
@@ -143,12 +135,17 @@ bool Event::isKeyboardEvent() const
     return false;
 }
 
-bool Event::isTouchEvent() const
+bool Event::isInputEvent() const
 {
     return false;
 }
 
-bool Event::isDragEvent() const
+bool Event::isCompositionEvent() const
+{
+    return false;
+}
+
+bool Event::isTouchEvent() const
 {
     return false;
 }
@@ -183,32 +180,35 @@ bool Event::isWheelEvent() const
     return false;
 }
 
-PassRefPtr<Event> Event::cloneFor(HTMLIFrameElement*) const
-{
-    return Event::create(type(), bubbles(), cancelable());
-}
-
-void Event::setTarget(PassRefPtr<EventTarget> target)
+void Event::setTarget(RefPtr<EventTarget>&& target)
 {
     if (m_target == target)
         return;
 
-    m_target = target;
+    m_target = WTFMove(target);
     if (m_target)
         receivedTarget();
+}
+
+Vector<EventTarget*> Event::composedPath() const
+{
+    if (!m_eventPath)
+        return Vector<EventTarget*>();
+    return m_eventPath->computePathUnclosedToTarget(*m_currentTarget);
 }
 
 void Event::receivedTarget()
 {
 }
 
-void Event::setUnderlyingEvent(PassRefPtr<Event> ue)
+void Event::setUnderlyingEvent(Event* underlyingEvent)
 {
     // Prohibit creation of a cycle -- just do nothing in that case.
-    for (Event* e = ue.get(); e; e = e->underlyingEvent())
-        if (e == this)
+    for (Event* event = underlyingEvent; event; event = event->underlyingEvent()) {
+        if (event == this)
             return;
-    m_underlyingEvent = ue;
+    }
+    m_underlyingEvent = underlyingEvent;
 }
 
 } // namespace WebCore

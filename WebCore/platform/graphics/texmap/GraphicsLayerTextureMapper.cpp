@@ -27,7 +27,7 @@
 #include "TextureMapperAnimation.h"
 #include <wtf/CurrentTime.h>
 
-#if USE(TEXTURE_MAPPER)
+#if !USE(COORDINATED_GRAPHICS)
 
 //+EAWebKitChange
 //2/10/2015
@@ -306,6 +306,7 @@ void GraphicsLayerTextureMapper::setContentsToImage(Image* image)
         if (!m_compositedImage)
             m_compositedImage = TextureMapperTiledBackingStore::create();
         m_compositedImage->setContentsToImage(image);
+        m_compositedImage->updateContentsScale(pageScaleFactor() * deviceScaleFactor());
     } else {
         m_compositedNativeImagePtr = nullptr;
         m_compositedImage = nullptr;
@@ -369,7 +370,7 @@ void GraphicsLayerTextureMapper::setIsScrollable(bool isScrollable)
     notifyChange(IsScrollableChange);
 }
 
-void GraphicsLayerTextureMapper::flushCompositingStateForThisLayerOnly(bool)
+void GraphicsLayerTextureMapper::flushCompositingStateForThisLayerOnly()
 {
     prepareBackingStoreIfNeeded();
     commitLayerChanges();
@@ -502,19 +503,19 @@ void GraphicsLayerTextureMapper::commitLayerChanges()
     m_changeMask = NoChanges;
 }
 
-void GraphicsLayerTextureMapper::flushCompositingState(const FloatRect& rect, bool viewportIsStable)
+void GraphicsLayerTextureMapper::flushCompositingState(const FloatRect& rect)
 {
     if (!m_layer.textureMapper())
         return;
 
-    flushCompositingStateForThisLayerOnly(viewportIsStable);
+    flushCompositingStateForThisLayerOnly();
 
     if (maskLayer())
-        maskLayer()->flushCompositingState(rect, viewportIsStable);
+        maskLayer()->flushCompositingState(rect);
     if (replicaLayer())
-        replicaLayer()->flushCompositingState(rect, viewportIsStable);
+        replicaLayer()->flushCompositingState(rect);
     for (auto* child : children())
-        child->flushCompositingState(rect, viewportIsStable);
+        child->flushCompositingState(rect);
 }
 
 void GraphicsLayerTextureMapper::updateBackingStoreIncludingSubLayers()
@@ -551,8 +552,10 @@ void GraphicsLayerTextureMapper::updateBackingStoreIfNeeded()
         return;
 
     TextureMapperTiledBackingStore* backingStore = static_cast<TextureMapperTiledBackingStore*>(m_backingStore.get());
+    backingStore->updateContentsScale(pageScaleFactor() * deviceScaleFactor());
 
-    backingStore->updateContents(textureMapper, this, m_size, dirtyRect, BitmapTexture::UpdateCanModifyOriginalImageData);
+    dirtyRect.scale(pageScaleFactor() * deviceScaleFactor());
+    backingStore->updateContents(*textureMapper, this, m_size, dirtyRect, BitmapTexture::UpdateCanModifyOriginalImageData);
 
     m_needsDisplay = false;
     m_needsDisplayRect = IntRect();
@@ -563,12 +566,35 @@ bool GraphicsLayerTextureMapper::shouldHaveBackingStore() const
     return drawsContent() && contentsAreVisible() && !m_size.isEmpty();
 }
 
+bool GraphicsLayerTextureMapper::filtersCanBeComposited(const FilterOperations& filters) const
+{
+    if (!filters.size())
+        return false;
+
+    for (const auto& filterOperation : filters.operations()) {
+        if (filterOperation->type() == FilterOperation::REFERENCE)
+            return false;
+    }
+
+    return true;
+}
+
 bool GraphicsLayerTextureMapper::addAnimation(const KeyframeValueList& valueList, const FloatSize& boxSize, const Animation* anim, const String& keyframesName, double timeOffset)
 {
     ASSERT(!keyframesName.isEmpty());
 
     if (!anim || anim->isEmptyOrZeroDuration() || valueList.size() < 2 || (valueList.property() != AnimatedPropertyTransform && valueList.property() != AnimatedPropertyOpacity))
         return false;
+
+    if (valueList.property() == AnimatedPropertyFilter) {
+        int listIndex = validateFilterOperations(valueList);
+        if (listIndex < 0)
+            return false;
+
+        const auto& filters = static_cast<const FilterAnimationValue&>(valueList.at(listIndex)).value();
+        if (!filtersCanBeComposited(filters))
+            return false;
+    }
 
     bool listsMatch = false;
     bool hasBigRotation;
@@ -577,7 +603,7 @@ bool GraphicsLayerTextureMapper::addAnimation(const KeyframeValueList& valueList
         listsMatch = validateTransformOperations(valueList, hasBigRotation) >= 0;
 
     const double currentTime = monotonicallyIncreasingTime();
-    m_animations.add(TextureMapperAnimation(keyframesName, valueList, boxSize, anim, currentTime - timeOffset, listsMatch));
+    m_animations.add(TextureMapperAnimation(keyframesName, valueList, boxSize, *anim, listsMatch, currentTime - timeOffset, 0, TextureMapperAnimation::AnimationState::Playing));
     // m_animationStartTime is the time of the first real frame of animation, now or delayed by a negative offset.
     if (timeOffset > 0)
         m_animationStartTime = currentTime;
@@ -624,8 +650,21 @@ bool GraphicsLayerTextureMapper::setFilters(const FilterOperations& filters)
     }
 
     // hardware mode is on 
-    notifyChange(FilterChange);
-    return GraphicsLayer::setFilters(filters);  //always returns true
+    bool canCompositeFilters = filtersCanBeComposited(filters);
+    if (GraphicsLayer::filters() == filters)
+        return canCompositeFilters;
+
+    if (canCompositeFilters) {
+        if (!GraphicsLayer::setFilters(filters))
+            return false;
+        notifyChange(FilterChange);
+    } else if (GraphicsLayer::filters().size()) {
+        clearFilters();
+        notifyChange(FilterChange);
+    }
+
+    return canCompositeFilters;
+
     //-EAWebKitChange
 }
 

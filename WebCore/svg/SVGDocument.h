@@ -19,20 +19,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGDocument_h
-#define SVGDocument_h
+#pragma once
 
-#include "Document.h"
+#include "XMLDocument.h"
 
 namespace WebCore {
 
 class SVGSVGElement;
 
-class SVGDocument final : public Document {
+class SVGDocument final : public XMLDocument {
 public:
     static Ref<SVGDocument> create(Frame*, const URL&);
 
-    SVGSVGElement* rootElement() const;
+    static SVGSVGElement* rootElement(const Document&);
 
     bool zoomAndPanEnabled() const;
     void startPan(const FloatPoint& start);
@@ -41,7 +40,7 @@ public:
 private:
     SVGDocument(Frame*, const URL&);
 
-    virtual Ref<Document> cloneDocumentWithoutChildren() const override;
+    Ref<Document> cloneDocumentWithoutChildren() const override;
 
     FloatSize m_panningOffset;
 };
@@ -57,5 +56,3 @@ SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::SVGDocument)
     static bool isType(const WebCore::Document& document) { return document.isSVGDocument(); }
     static bool isType(const WebCore::Node& node) { return is<WebCore::Document>(node) && isType(downcast<WebCore::Document>(node)); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif // SVGDocument_h

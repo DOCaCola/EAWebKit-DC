@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef Geoposition_h
-#define Geoposition_h
+#pragma once
 
 #include "Coordinates.h"
 #include "Event.h"
@@ -35,31 +34,28 @@ namespace WebCore {
 
 class Geoposition : public RefCounted<Geoposition> {
 public:
-    static Ref<Geoposition> create(PassRefPtr<Coordinates> coordinates, DOMTimeStamp timestamp)
+    static Ref<Geoposition> create(Ref<Coordinates>&& coordinates, DOMTimeStamp timestamp)
     {
-        return adoptRef(*new Geoposition(coordinates, timestamp));
+        return adoptRef(*new Geoposition(WTFMove(coordinates), timestamp));
     }
 
-    PassRefPtr<Geoposition> isolatedCopy() const
+    Ref<Geoposition> isolatedCopy() const
     {
-        return Geoposition::create(m_coordinates->isolatedCopy(), m_timestamp);
+        return create(m_coordinates->isolatedCopy(), m_timestamp);
     }
 
     DOMTimeStamp timestamp() const { return m_timestamp; }
-    Coordinates* coords() const { return m_coordinates.get(); }
+    const Coordinates& coords() const { return m_coordinates.get(); }
     
 private:
-    Geoposition(PassRefPtr<Coordinates> coordinates, DOMTimeStamp timestamp)
-        : m_coordinates(coordinates)
+    Geoposition(Ref<Coordinates>&& coordinates, DOMTimeStamp timestamp)
+        : m_coordinates(WTFMove(coordinates))
         , m_timestamp(timestamp)
     {
-        ASSERT(m_coordinates);
     }
 
-    RefPtr<Coordinates> m_coordinates;
+    Ref<Coordinates> m_coordinates;
     DOMTimeStamp m_timestamp;
 };
     
 } // namespace WebCore
-
-#endif // Geoposition_h

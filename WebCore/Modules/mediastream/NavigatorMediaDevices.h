@@ -28,8 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NavigatorMediaDevices_h
-#define NavigatorMediaDevices_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
@@ -48,7 +47,7 @@ public:
     virtual ~NavigatorMediaDevices();
     static NavigatorMediaDevices* from(Navigator*);
 
-    static MediaDevices* mediaDevices(Navigator*);
+    static MediaDevices* mediaDevices(Navigator&);
     MediaDevices* mediaDevices() const;
 
 private:
@@ -60,5 +59,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif // NavigatorMediaDevices_h

@@ -26,12 +26,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBEventDispatcher_h
-#define IDBEventDispatcher_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
-#include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -41,7 +39,7 @@ class EventTarget;
 
 class IDBEventDispatcher {
 public:
-    static bool dispatch(Event*, Vector<RefPtr<EventTarget>>&); // The target first and then its ancestors in order of how the event bubbles.
+    static bool dispatch(Event&, Vector<RefPtr<EventTarget>>&); // The target first and then its ancestors in order of how the event bubbles.
 
 private:
     IDBEventDispatcher();
@@ -50,5 +48,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif // IDBEventDispatcher_h

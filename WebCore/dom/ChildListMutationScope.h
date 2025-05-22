@@ -28,14 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ChildListMutationScope_h
-#define ChildListMutationScope_h
+#pragma once
 
 #include "Document.h"
 #include "MutationObserver.h"
 #include "Node.h"
 #include <memory>
-#include <wtf/HashMap.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/RefCounted.h>
 
@@ -46,7 +44,7 @@ class MutationObserverInterestGroup;
 // ChildListMutationAccumulator is not meant to be used directly; ChildListMutationScope is the public interface.
 class ChildListMutationAccumulator : public RefCounted<ChildListMutationAccumulator> {
 public:
-    static PassRefPtr<ChildListMutationAccumulator> getOrCreate(ContainerNode&);
+    static RefPtr<ChildListMutationAccumulator> getOrCreate(ContainerNode&);
     ~ChildListMutationAccumulator();
 
     void childAdded(Node&);
@@ -82,6 +80,8 @@ public:
             m_accumulator = ChildListMutationAccumulator::getOrCreate(target);
     }
 
+    bool canObserve() const { return m_accumulator; }
+
     void childAdded(Node& child)
     {
         if (m_accumulator && m_accumulator->hasObservers())
@@ -99,5 +99,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // ChildListMutationScope_h

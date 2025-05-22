@@ -34,31 +34,38 @@
 
 namespace WebCore {
 
-CSSValuePool& cssValuePool()
+CSSValuePool& CSSValuePool::singleton()
 {
     static NeverDestroyed<CSSValuePool> pool;
     return pool;
 }
 
 CSSValuePool::CSSValuePool()
-    : m_inheritedValue(CSSInheritedValue::create())
-    , m_implicitInitialValue(CSSInitialValue::createImplicit())
-    , m_explicitInitialValue(CSSInitialValue::createExplicit())
-    , m_colorTransparent(CSSPrimitiveValue::createColor(Color::transparent))
-    , m_colorWhite(CSSPrimitiveValue::createColor(Color::white))
-    , m_colorBlack(CSSPrimitiveValue::createColor(Color::black))
 {
+    m_inheritedValue.construct();
+    m_implicitInitialValue.construct(true);
+    m_explicitInitialValue.construct(false);
+    m_unsetValue.construct();
+    m_revertValue.construct();
+
+    m_transparentColor.construct(Color(Color::transparent));
+    m_whiteColor.construct(Color(Color::white));
+    m_blackColor.construct(Color(Color::black));
+
+    for (unsigned i = 0; i < numCSSValueKeywords; ++i)
+        m_identifierValues[i].construct(static_cast<CSSValueID>(i));
+
+    for (unsigned i = 0; i < (maximumCacheableIntegerValue + 1); ++i) {
+        m_pixelValues[i].construct(i, CSSPrimitiveValue::CSS_PX);
+        m_percentValues[i].construct(i, CSSPrimitiveValue::CSS_PERCENTAGE);
+        m_numberValues[i].construct(i, CSSPrimitiveValue::CSS_NUMBER);
+    }
 }
 
 Ref<CSSPrimitiveValue> CSSValuePool::createIdentifierValue(CSSValueID ident)
 {
-    if (!ident)
-        return CSSPrimitiveValue::createIdentifier(ident);
-
-    RELEASE_ASSERT(ident > 0 && ident < numCSSValueKeywords);
-    if (!m_identifierValueCache[ident])
-        m_identifierValueCache[ident] = CSSPrimitiveValue::createIdentifier(ident);
-    return *m_identifierValueCache[ident];
+    RELEASE_ASSERT(ident >= 0 && ident < numCSSValueKeywords);
+    return m_identifierValues[ident].get();
 }
 
 Ref<CSSPrimitiveValue> CSSValuePool::createIdentifierValue(CSSPropertyID ident)
@@ -66,29 +73,29 @@ Ref<CSSPrimitiveValue> CSSValuePool::createIdentifierValue(CSSPropertyID ident)
     return CSSPrimitiveValue::createIdentifier(ident);
 }
 
-Ref<CSSPrimitiveValue> CSSValuePool::createColorValue(unsigned rgbValue)
+Ref<CSSPrimitiveValue> CSSValuePool::createColorValue(const Color& color)
 {
     // These are the empty and deleted values of the hash table.
-    if (rgbValue == Color::transparent)
-        return m_colorTransparent.copyRef();
-    if (rgbValue == Color::white)
-        return m_colorWhite.copyRef();
+    if (color == Color::transparent)
+        return m_transparentColor.get();
+    if (color == Color::white)
+        return m_whiteColor.get();
     // Just because it is common.
-    if (rgbValue == Color::black)
-        return m_colorBlack.copyRef();
+    if (color == Color::black)
+        return m_blackColor.get();
 
     // Remove one entry at random if the cache grows too large.
     const int maximumColorCacheSize = 512;
     if (m_colorValueCache.size() >= maximumColorCacheSize)
         m_colorValueCache.remove(m_colorValueCache.begin());
 
-    ColorValueCache::AddResult entry = m_colorValueCache.add(rgbValue, nullptr);
+    ColorValueCache::AddResult entry = m_colorValueCache.add(color, nullptr);
     if (entry.isNewEntry)
-        entry.iterator->value = CSSPrimitiveValue::createColor(rgbValue);
+        entry.iterator->value = CSSPrimitiveValue::create(color);
     return *entry.iterator->value;
 }
 
-Ref<CSSPrimitiveValue> CSSValuePool::createValue(double value, CSSPrimitiveValue::UnitTypes type)
+Ref<CSSPrimitiveValue> CSSValuePool::createValue(double value, CSSPrimitiveValue::UnitType type)
 {
     ASSERT(std::isfinite(value));
 
@@ -99,24 +106,16 @@ Ref<CSSPrimitiveValue> CSSValuePool::createValue(double value, CSSPrimitiveValue
     if (value != intValue)
         return CSSPrimitiveValue::create(value, type);
 
-    RefPtr<CSSPrimitiveValue>* cache;
     switch (type) {
     case CSSPrimitiveValue::CSS_PX:
-        cache = m_pixelValueCache;
-        break;
+        return m_pixelValues[intValue].get();
     case CSSPrimitiveValue::CSS_PERCENTAGE:
-        cache = m_percentValueCache;
-        break;
+        return m_percentValues[intValue].get();
     case CSSPrimitiveValue::CSS_NUMBER:
-        cache = m_numberValueCache;
-        break;
+        return m_numberValues[intValue].get();
     default:
         return CSSPrimitiveValue::create(value, type);
     }
-
-    if (!cache[intValue])
-        cache[intValue] = CSSPrimitiveValue::create(value, type);
-    return *cache[intValue];
 }
 
 Ref<CSSPrimitiveValue> CSSValuePool::createFontFamilyValue(const String& familyName, FromSystemFontID fromSystemFontID)
@@ -133,7 +132,7 @@ Ref<CSSPrimitiveValue> CSSValuePool::createFontFamilyValue(const String& familyN
     return *value;
 }
 
-PassRefPtr<CSSValueList> CSSValuePool::createFontFaceValue(const AtomicString& string)
+RefPtr<CSSValueList> CSSValuePool::createFontFaceValue(const AtomicString& string)
 {
     // Remove one entry at random if the cache grows too large.
     const int maximumFontFaceCacheSize = 128;
@@ -141,8 +140,13 @@ PassRefPtr<CSSValueList> CSSValuePool::createFontFaceValue(const AtomicString& s
         m_fontFaceValueCache.remove(m_fontFaceValueCache.begin());
 
     RefPtr<CSSValueList>& value = m_fontFaceValueCache.add(string, nullptr).iterator->value;
-    if (!value)
-        value = CSSParser::parseFontFaceValue(string);
+    if (value)
+        return value;
+    
+    RefPtr<CSSValue> result = CSSParser::parseSingleValue(CSSPropertyFontFamily, string);
+    if (!result || !result->isValueList())
+        return value;
+    value = static_pointer_cast<CSSValueList>(result);
     return value;
 }
 
@@ -151,15 +155,6 @@ void CSSValuePool::drain()
     m_colorValueCache.clear();
     m_fontFaceValueCache.clear();
     m_fontFamilyValueCache.clear();
-
-    for (int i = 0; i < numCSSValueKeywords; ++i)
-        m_identifierValueCache[i] = nullptr;
-
-    for (int i = 0; i < maximumCacheableIntegerValue; ++i) {
-        m_pixelValueCache[i] = nullptr;
-        m_percentValueCache[i] = nullptr;
-        m_numberValueCache[i] = nullptr;
-    }
 }
 
 }

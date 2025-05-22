@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2007-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,25 +26,10 @@
 #include "config.h"
 #include "JSHTMLDocument.h"
 
-#include "Frame.h"
-#include "HTMLAllCollection.h"
-#include "HTMLBodyElement.h"
-#include "HTMLCollection.h"
-#include "HTMLDocument.h"
-#include "HTMLElement.h"
 #include "HTMLIFrameElement.h"
-#include "HTMLNames.h"
-#include "JSDOMWindow.h"
 #include "JSDOMWindowCustom.h"
-#include "JSDOMWindowShell.h"
 #include "JSHTMLCollection.h"
-#include "JSMainThreadExecState.h"
 #include "SegmentedString.h"
-#include "DocumentParser.h"
-#include <interpreter/StackVisitor.h>
-#include <runtime/Error.h>
-#include <runtime/JSCell.h>
-#include <wtf/unicode/CharacterNames.h>
 
 using namespace JSC;
 
@@ -52,158 +37,153 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-bool JSHTMLDocument::canGetItemsForName(ExecState*, HTMLDocument* document, PropertyName propertyName)
+JSValue toJSNewlyCreated(ExecState* state, JSDOMGlobalObject* globalObject, Ref<HTMLDocument>&& passedDocument)
 {
-    AtomicStringImpl* atomicPropertyName = propertyName.publicName();
-    return atomicPropertyName && document->hasDocumentNamedItem(*atomicPropertyName);
+    auto& document = passedDocument.get();
+    auto* wrapper = createWrapper<HTMLDocument>(globalObject, WTFMove(passedDocument));
+    reportMemoryForDocumentIfFrameless(*state, document);
+    return wrapper;
 }
 
-bool JSHTMLDocument::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+JSValue toJS(ExecState* state, JSDOMGlobalObject* globalObject, HTMLDocument& document)
 {
-    JSHTMLDocument* thisObject = jsCast<JSHTMLDocument*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    if (auto* wrapper = cachedDocumentWrapper(*state, *globalObject, document))
+        return wrapper;
+    return toJSNewlyCreated(state, globalObject, Ref<HTMLDocument>(document));
+}
+
+bool JSHTMLDocument::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
+{
+    auto& thisObject = *jsCast<JSHTMLDocument*>(object);
+    ASSERT_GC_OBJECT_INHERITS(object, info());
 
     if (propertyName == "open") {
-        if (Base::getOwnPropertySlot(thisObject, exec, propertyName, slot))
+        if (Base::getOwnPropertySlot(&thisObject, state, propertyName, slot))
             return true;
-
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, nonCachingStaticFunctionGetter<jsHTMLDocumentPrototypeFunctionOpen, 2>);
+        slot.setCustom(&thisObject, ReadOnly | DontDelete | DontEnum, nonCachingStaticFunctionGetter<jsHTMLDocumentPrototypeFunctionOpen, 2>);
         return true;
     }
 
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
+    JSValue value;
+    if (thisObject.nameGetter(state, propertyName, value)) {
+        slot.setValue(&thisObject, ReadOnly | DontDelete | DontEnum, value);
         return true;
     }
 
-    if (const HashTableValue* entry = JSHTMLDocument::info()->staticPropHashTable->entry(propertyName)) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
-
-    return Base::getOwnPropertySlot(thisObject, exec, propertyName, slot);
+    return Base::getOwnPropertySlot(&thisObject, state, propertyName, slot);
 }
 
-EncodedJSValue JSHTMLDocument::nameGetter(ExecState* exec, JSObject* slotBase, EncodedJSValue, PropertyName propertyName)
+bool JSHTMLDocument::nameGetter(ExecState* state, PropertyName propertyName, JSValue& value)
 {
-    JSHTMLDocument* thisObj = jsCast<JSHTMLDocument*>(slotBase);
-    HTMLDocument& document = thisObj->impl();
+    auto& document = wrapped();
 
-    AtomicStringImpl* atomicPropertyName = propertyName.publicName();
+    auto* atomicPropertyName = propertyName.publicName();
     if (!atomicPropertyName || !document.hasDocumentNamedItem(*atomicPropertyName))
-        return JSValue::encode(jsUndefined());
+        return false;
 
     if (UNLIKELY(document.documentNamedItemContainsMultipleElements(*atomicPropertyName))) {
-        Ref<HTMLCollection> collection = document.documentNamedItems(atomicPropertyName);
+        auto collection = document.documentNamedItems(atomicPropertyName);
         ASSERT(collection->length() > 1);
-        return JSValue::encode(toJS(exec, thisObj->globalObject(), WTF::getPtr(collection)));
+        value = toJS(state, globalObject(), collection);
+        return true;
     }
 
-    Element* element = document.documentNamedItem(*atomicPropertyName);
-    if (UNLIKELY(is<HTMLIFrameElement>(*element))) {
-        if (Frame* frame = downcast<HTMLIFrameElement>(*element).contentFrame())
-            return JSValue::encode(toJS(exec, frame));
+    auto& element = *document.documentNamedItem(*atomicPropertyName);
+    if (UNLIKELY(is<HTMLIFrameElement>(element))) {
+        if (auto* frame = downcast<HTMLIFrameElement>(element).contentFrame()) {
+            value = toJS(state, frame);
+            return true;
+        }
     }
 
-    return JSValue::encode(toJS(exec, thisObj->globalObject(), element));
+    value = toJS(state, globalObject(), element);
+    return true;
 }
 
 // Custom attributes
 
-JSValue JSHTMLDocument::all(ExecState* exec) const
+JSValue JSHTMLDocument::all(ExecState& state) const
 {
     // If "all" has been overwritten, return the overwritten value
-    JSValue v = getDirect(exec->vm(), Identifier::fromString(exec, "all"));
-    if (v)
-        return v;
+    if (auto overwrittenValue = getDirect(state.vm(), Identifier::fromString(&state, "all")))
+        return overwrittenValue;
 
-    return toJS(exec, globalObject(), impl().all());
+    return toJS(&state, globalObject(), wrapped().all());
 }
 
-void JSHTMLDocument::setAll(ExecState* exec, JSValue value)
+void JSHTMLDocument::setAll(ExecState& state, JSValue value)
 {
     // Add "all" to the property map.
-    putDirect(exec->vm(), Identifier::fromString(exec, "all"), value);
+    putDirect(state.vm(), Identifier::fromString(&state, "all"), value);
 }
 
-static Document* findCallingDocument(ExecState* exec)
+static inline Document* findCallingDocument(ExecState& state)
 {
     CallerFunctor functor;
-    exec->iterate(functor);
-    CallFrame* callerFrame = functor.callerFrame();
+    state.iterate(functor);
+    auto* callerFrame = functor.callerFrame();
     if (!callerFrame)
         return nullptr;
-
-    return asJSDOMWindow(functor.callerFrame()->lexicalGlobalObject())->impl().document();
+    return asJSDOMWindow(callerFrame->lexicalGlobalObject())->wrapped().document();
 }
 
 // Custom functions
 
-JSValue JSHTMLDocument::open(ExecState* exec)
+JSValue JSHTMLDocument::open(ExecState& state)
 {
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     // For compatibility with other browsers, pass open calls with more than 2 parameters to the window.
-    if (exec->argumentCount() > 2) {
-        if (Frame* frame = impl().frame()) {
-            JSDOMWindowShell* wrapper = toJSDOMWindowShell(frame, currentWorld(exec));
-            if (wrapper) {
-                JSValue function = wrapper->get(exec, Identifier::fromString(exec, "open"));
+    if (state.argumentCount() > 2) {
+        if (auto* frame = wrapped().frame()) {
+            if (auto* wrapper = toJSDOMWindowShell(frame, currentWorld(&state))) {
+                auto function = wrapper->get(&state, Identifier::fromString(&state, "open"));
                 CallData callData;
-                CallType callType = ::getCallData(function, callData);
-                if (callType == CallTypeNone)
-                    return throwTypeError(exec);
-                return JSC::call(exec, function, callType, callData, wrapper, ArgList(exec));
+                auto callType = ::getCallData(function, callData);
+                if (callType == CallType::None)
+                    return throwTypeError(&state, scope);
+                return JSC::call(&state, function, callType, callData, wrapper, ArgList(&state));
             }
         }
         return jsUndefined();
     }
 
-    // document.open clobbers the security context of the document and
-    // aliases it with the active security context.
-    Document* activeDocument = asJSDOMWindow(exec->lexicalGlobalObject())->impl().document();
-
-    // In the case of two parameters or fewer, do a normal document open.
-    impl().open(activeDocument);
+    // Calling document.open clobbers the security context of the document and aliases it with the active security context.
+    // FIXME: Is it correct that this does not use findCallingDocument as the write function below does?
+    wrapped().open(asJSDOMWindow(state.lexicalGlobalObject())->wrapped().document());
+    // FIXME: Why do we return the document instead of returning undefined?
     return this;
 }
 
 enum NewlineRequirement { DoNotAddNewline, DoAddNewline };
 
-static inline void documentWrite(ExecState* exec, JSHTMLDocument* thisDocument, NewlineRequirement addNewline)
+static inline JSValue documentWrite(ExecState& state, JSHTMLDocument& document, NewlineRequirement addNewline)
 {
-    HTMLDocument* document = &thisDocument->impl();
-    // DOM only specifies single string argument, but browsers allow multiple or no arguments.
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-    size_t size = exec->argumentCount();
-
-    String firstString = exec->argument(0).toString(exec)->value(exec);
-    SegmentedString segmentedString = firstString;
-    if (size != 1) {
-        if (!size)
-            segmentedString.clear();
-        else {
-            for (size_t i = 1; i < size; ++i) {
-                String subsequentString = exec->uncheckedArgument(i).toString(exec)->value(exec);
-                segmentedString.append(SegmentedString(subsequentString));
-            }
-        }
+    SegmentedString segmentedString;
+    size_t argumentCount = state.argumentCount();
+    for (size_t i = 0; i < argumentCount; ++i) {
+        segmentedString.append(state.uncheckedArgument(i).toWTFString(&state));
+        RETURN_IF_EXCEPTION(scope, { });
     }
     if (addNewline)
-        segmentedString.append(SegmentedString(String(&newlineCharacter, 1)));
+        segmentedString.append(String { "\n" });
 
-    Document* activeDocument = findCallingDocument(exec);
-    document->write(segmentedString, activeDocument);
-}
-
-JSValue JSHTMLDocument::write(ExecState* exec)
-{
-    documentWrite(exec, this, DoNotAddNewline);
+    document.wrapped().write(WTFMove(segmentedString), findCallingDocument(state));
     return jsUndefined();
 }
 
-JSValue JSHTMLDocument::writeln(ExecState* exec)
+JSValue JSHTMLDocument::write(ExecState& state)
 {
-    documentWrite(exec, this, DoAddNewline);
-    return jsUndefined();
+    return documentWrite(state, *this, DoNotAddNewline);
+}
+
+JSValue JSHTMLDocument::writeln(ExecState& state)
+{
+    return documentWrite(state, *this, DoAddNewline);
 }
 
 } // namespace WebCore

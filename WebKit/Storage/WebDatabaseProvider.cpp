@@ -33,7 +33,7 @@
 #include "WebDatabaseProvider.h"
 
 #include <IDBFactoryBackendInterface.h>
-#include <wtf/NeverDestroyed.h>
+#include <SessionID.h>
 
 WebDatabaseProvider& WebDatabaseProvider::singleton()
 {
@@ -51,8 +51,22 @@ WebDatabaseProvider::~WebDatabaseProvider()
 }
 
 #if ENABLE(INDEXED_DATABASE)
-RefPtr<WebCore::IDBFactoryBackendInterface> WebDatabaseProvider::createIDBFactoryBackend()
+WebCore::IDBClient::IDBConnectionToServer& WebDatabaseProvider::idbConnectionToServerForSession(const WebCore::SessionID& sessionID)
 {
-    return nullptr;
+    auto result = m_idbServerMap.add(sessionID.sessionID(), nullptr);
+    if (result.isNewEntry) {
+        if (sessionID.isEphemeral())
+            result.iterator->value = WebCore::InProcessIDBServer::create();
+        else
+            result.iterator->value = WebCore::InProcessIDBServer::create(indexedDatabaseDirectoryPath());
+    }
+
+    return result.iterator->value->connectionToServer();
+}
+
+void WebDatabaseProvider::deleteAllDatabases()
+{
+    for (auto& server : m_idbServerMap.values())
+        server->idbServer().closeAndDeleteDatabasesModifiedSince(std::chrono::system_clock::time_point::min(), [] { });
 }
 #endif

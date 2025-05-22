@@ -22,39 +22,35 @@
  *
  */
 
-#ifndef CollapsedBorderValue_h
-#define CollapsedBorderValue_h
+#pragma once
 
 #include "BorderValue.h"
+#include "LayoutUnit.h"
 
 namespace WebCore {
 
 class CollapsedBorderValue {
 public:
     CollapsedBorderValue()
-        : m_color(0)
-        , m_colorIsValid(false)
-        , m_width(0)
-        , m_style(BNONE)
+        : m_style(BNONE)
         , m_precedence(BOFF)
         , m_transparent(false)
     {
     }
 
     CollapsedBorderValue(const BorderValue& border, const Color& color, EBorderPrecedence precedence)
-        : m_color(color.rgb())
-        , m_colorIsValid(color.isValid())
-        , m_width(border.nonZero() ? border.width() : 0)
+        : m_width(LayoutUnit(border.nonZero() ? border.width() : 0))
+        , m_color(color)
         , m_style(border.style())
         , m_precedence(precedence)
         , m_transparent(border.isTransparent())
     {
     }
 
-    unsigned width() const { return m_style > BHIDDEN ? m_width : 0; }
+    LayoutUnit width() const { return m_style > BHIDDEN ? m_width : LayoutUnit::fromPixel(0); }
     EBorderStyle style() const { return static_cast<EBorderStyle>(m_style); }
     bool exists() const { return m_precedence != BOFF; }
-    Color color() const { return Color(m_color, m_colorIsValid); }
+    const Color& color() const { return m_color; }
     bool isTransparent() const { return m_transparent; }
     EBorderPrecedence precedence() const { return static_cast<EBorderPrecedence>(m_precedence); }
 
@@ -63,15 +59,20 @@ public:
         return width() == o.width() && style() == o.style() && precedence() == o.precedence();
     }
 
+    static LayoutUnit adjustedCollapsedBorderWidth(float borderWidth, float deviceScaleFactor, bool roundUp);
+
 private:
-    RGBA32 m_color;
-    unsigned m_colorIsValid : 1;
-    unsigned m_width : 23;
+    LayoutUnit m_width;
+    Color m_color;
     unsigned m_style : 4; // EBorderStyle
     unsigned m_precedence : 3; // EBorderPrecedence
     unsigned m_transparent : 1;
 };
 
-} // namespace WebCore
+inline LayoutUnit CollapsedBorderValue::adjustedCollapsedBorderWidth(float borderWidth, float deviceScaleFactor, bool roundUp)
+{
+    float halfCollapsedBorderWidth = (borderWidth + (roundUp ? (1 / deviceScaleFactor) : 0)) / 2;
+    return floorToDevicePixel(halfCollapsedBorderWidth, deviceScaleFactor);
+}
 
-#endif // CollapsedBorderValue_h
+} // namespace WebCore

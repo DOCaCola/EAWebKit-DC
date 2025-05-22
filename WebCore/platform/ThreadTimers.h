@@ -28,7 +28,6 @@
 #define ThreadTimers_h
 
 #include <wtf/Noncopyable.h>
-#include <wtf/HashSet.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -51,8 +50,6 @@ namespace WebCore {
         void fireTimersInNestedEventLoop();
 
     private:
-        static void sharedTimerFired();
-
         void sharedTimerFiredInternal();
         void fireTimersInNestedEventLoopInternal();
 

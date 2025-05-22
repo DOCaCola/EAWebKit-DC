@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2009, 2011 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2008-2009, 2011, 2016 Apple Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,28 +24,11 @@
  */
 
 #include "config.h"
-
 #include "JSWorkerGlobalScope.h"
 
-#include "ExceptionCode.h"
-#include "JSDOMBinding.h"
-#include "JSDOMGlobalObject.h"
-#include "JSEventListener.h"
-#include "JSEventSource.h"
-#include "JSMessageChannel.h"
-#include "JSMessagePort.h"
-#include "JSWorkerLocation.h"
-#include "JSWorkerNavigator.h"
-#include "JSXMLHttpRequest.h"
+#include "JSDOMConvert.h"
 #include "ScheduledAction.h"
 #include "WorkerGlobalScope.h"
-#include "WorkerLocation.h"
-#include "WorkerNavigator.h"
-#include <interpreter/Interpreter.h>
-
-#if ENABLE(WEB_SOCKETS)
-#include "JSWebSocket.h"
-#endif
 
 using namespace JSC;
 
@@ -53,58 +36,44 @@ namespace WebCore {
 
 void JSWorkerGlobalScope::visitAdditionalChildren(SlotVisitor& visitor)
 {
-    if (WorkerLocation* location = impl().optionalLocation())
+    if (auto* location = wrapped().optionalLocation())
         visitor.addOpaqueRoot(location);
-    if (WorkerNavigator* navigator = impl().optionalNavigator())
+    if (auto* navigator = wrapped().optionalNavigator())
         visitor.addOpaqueRoot(navigator);
+    ScriptExecutionContext& context = wrapped();
+    visitor.addOpaqueRoot(&context);
 }
 
-bool JSWorkerGlobalScope::getOwnPropertySlotDelegate(ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+JSValue JSWorkerGlobalScope::setTimeout(ExecState& state)
 {
-    // Look for overrides before looking at any of our own properties.
-    if (JSGlobalObject::getOwnPropertySlot(this, exec, propertyName, slot))
-        return true;
-    return false;
-}
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-JSValue JSWorkerGlobalScope::importScripts(ExecState* exec)
-{
-    if (!exec->argumentCount())
-        return jsUndefined();
+    if (UNLIKELY(state.argumentCount() < 1))
+        return throwException(&state, scope, createNotEnoughArgumentsError(&state));
 
-    Vector<String> urls;
-    for (unsigned i = 0; i < exec->argumentCount(); i++) {
-        urls.append(exec->uncheckedArgument(i).toString(exec)->value(exec));
-        if (exec->hadException())
-            return jsUndefined();
-    }
-    ExceptionCode ec = 0;
-
-    impl().importScripts(urls, ec);
-    setDOMException(exec, ec);
-    return jsUndefined();
-}
-
-JSValue JSWorkerGlobalScope::setTimeout(ExecState* exec)
-{
-    std::unique_ptr<ScheduledAction> action = ScheduledAction::create(exec, globalObject()->world(), impl().contentSecurityPolicy());
-    if (exec->hadException())
-        return jsUndefined();
+    std::unique_ptr<ScheduledAction> action = ScheduledAction::create(&state, globalObject()->world(), wrapped().contentSecurityPolicy());
+    RETURN_IF_EXCEPTION(scope, JSValue());
     if (!action)
         return jsNumber(0);
-    int delay = exec->argument(1).toInt32(exec);
-    return jsNumber(impl().setTimeout(WTF::move(action), delay));
+    int delay = state.argument(1).toInt32(&state);
+    return jsNumber(wrapped().setTimeout(WTFMove(action), delay));
 }
 
-JSValue JSWorkerGlobalScope::setInterval(ExecState* exec)
+JSValue JSWorkerGlobalScope::setInterval(ExecState& state)
 {
-    std::unique_ptr<ScheduledAction> action = ScheduledAction::create(exec, globalObject()->world(), impl().contentSecurityPolicy());
-    if (exec->hadException())
-        return jsUndefined();
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    if (UNLIKELY(state.argumentCount() < 1))
+        return throwException(&state, scope, createNotEnoughArgumentsError(&state));
+
+    std::unique_ptr<ScheduledAction> action = ScheduledAction::create(&state, globalObject()->world(), wrapped().contentSecurityPolicy());
+    RETURN_IF_EXCEPTION(scope, JSValue());
     if (!action)
         return jsNumber(0);
-    int delay = exec->argument(1).toInt32(exec);
-    return jsNumber(impl().setInterval(WTF::move(action), delay));
+    int delay = state.argument(1).toInt32(&state);
+    return jsNumber(wrapped().setInterval(WTFMove(action), delay));
 }
 
 } // namespace WebCore

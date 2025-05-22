@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,17 +38,22 @@ namespace WebCore {
 namespace ContentExtensions {
 
 ContentExtensionStyleSheet::ContentExtensionStyleSheet(Document& document)
-    : m_styleSheet(CSSStyleSheet::create(StyleSheetContents::create(), &document))
+    : m_styleSheet(CSSStyleSheet::create(StyleSheetContents::create(), document))
 {
     m_styleSheet->contents().setIsUserStyleSheet(true);
 }
 
-void ContentExtensionStyleSheet::addDisplayNoneSelector(const String& selector, uint32_t selectorID)
+ContentExtensionStyleSheet::~ContentExtensionStyleSheet()
+{
+    m_styleSheet->clearOwnerNode();
+}
+
+bool ContentExtensionStyleSheet::addDisplayNoneSelector(const String& selector, uint32_t selectorID)
 {
     ASSERT(selectorID != std::numeric_limits<uint32_t>::max());
 
     if (!m_addedSelectorIDs.add(selectorID).isNewEntry)
-        return;
+        return false;
 
     StringBuilder css;
     css.append(selector);
@@ -56,6 +61,7 @@ void ContentExtensionStyleSheet::addDisplayNoneSelector(const String& selector, 
     css.append(ContentExtensionsBackend::displayNoneCSSRule());
     css.append('}');
     m_styleSheet->contents().parseString(css.toString());
+    return true;
 }
 
 } // namespace ContentExtensions

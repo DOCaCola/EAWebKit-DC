@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,18 +29,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PageRuntimeAgent_h
-#define PageRuntimeAgent_h
+#pragma once
 
+#include "InspectorWebAgentBase.h"
 #include <inspector/InspectorFrontendDispatchers.h>
 #include <inspector/agents/InspectorRuntimeAgent.h>
 
 namespace JSC {
 class ExecState;
-}
-
-namespace Inspector {
-class InjectedScriptManager;
 }
 
 namespace WebCore {
@@ -53,32 +50,31 @@ typedef String ErrorString;
 class PageRuntimeAgent final : public Inspector::InspectorRuntimeAgent {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    PageRuntimeAgent(Inspector::InjectedScriptManager*, Page*, InspectorPageAgent*);
+    PageRuntimeAgent(PageAgentContext&, InspectorPageAgent*);
     virtual ~PageRuntimeAgent() { }
 
-    virtual void didCreateFrontendAndBackend(Inspector::FrontendChannel*, Inspector::BackendDispatcher*) override;
-    virtual void willDestroyFrontendAndBackend(Inspector::DisconnectReason) override;
-    virtual void enable(ErrorString&) override;
-    virtual void disable(ErrorString&) override;
+    void didCreateFrontendAndBackend(Inspector::FrontendRouter*, Inspector::BackendDispatcher*) override;
+    void willDestroyFrontendAndBackend(Inspector::DisconnectReason) override;
+    void enable(ErrorString&) override;
+    void disable(ErrorString&) override;
 
-    // InspectorInstrumentation callbacks.
+    // InspectorInstrumentation
     void didCreateMainWorldContext(Frame&);
 
 private:
-    virtual JSC::VM& globalVM() override;
-    virtual Inspector::InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
-    virtual void muteConsole() override;
-    virtual void unmuteConsole() override;
+    Inspector::InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
+    void muteConsole() override;
+    void unmuteConsole() override;
     void reportExecutionContextCreation();
     void notifyContextCreated(const String& frameId, JSC::ExecState*, SecurityOrigin*, bool isPageContext);
 
-    Page* m_inspectedPage;
-    InspectorPageAgent* m_pageAgent;
     std::unique_ptr<Inspector::RuntimeFrontendDispatcher> m_frontendDispatcher;
     RefPtr<Inspector::RuntimeBackendDispatcher> m_backendDispatcher;
-    bool m_mainWorldContextCreated;
+    InspectorPageAgent* m_pageAgent;
+
+    Page& m_inspectedPage;
+
+    bool m_mainWorldContextCreated { false };
 };
 
 } // namespace WebCore
-
-#endif // !defined(InspectorPagerAgent_h)

@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef MarkupAccumulator_h
-#define MarkupAccumulator_h
+#pragma once
 
 #include "Element.h"
 #include "markup.h"
@@ -54,13 +53,13 @@ enum EntityMask {
     EntityMaskInPCDATA = EntityAmp | EntityLt | EntityGt,
     EntityMaskInHTMLPCDATA = EntityMaskInPCDATA | EntityNbsp,
     EntityMaskInAttributeValue = EntityAmp | EntityLt | EntityGt | EntityQuot,
-    EntityMaskInHTMLAttributeValue = EntityMaskInAttributeValue | EntityNbsp,
+    EntityMaskInHTMLAttributeValue = EntityAmp | EntityQuot | EntityNbsp,
 };
 
 // FIXME: Noncopyable?
 class MarkupAccumulator {
 public:
-    MarkupAccumulator(Vector<Node*>*, EAbsoluteURLs, const Range* = 0, EFragmentSerialization = HTMLFragmentSerialization);
+    MarkupAccumulator(Vector<Node*>*, EAbsoluteURLs, const Range* = nullptr, EFragmentSerialization = HTMLFragmentSerialization);
     virtual ~MarkupAccumulator();
 
     String serializeNodes(Node& targetNode, EChildrenOnly, Vector<QualifiedName>* tagNamesToSkip = nullptr);
@@ -85,7 +84,7 @@ protected:
     virtual void appendText(StringBuilder&, const Text&);
     virtual void appendElement(StringBuilder&, const Element&, Namespaces*);
 
-    void appendStartTag(const Node&, Namespaces* = 0);
+    void appendStartTag(const Node&, Namespaces* = nullptr);
 
     void appendOpenTag(StringBuilder&, const Element&, Namespaces*);
     void appendCloseTag(StringBuilder&, const Element&);
@@ -123,6 +122,4 @@ private:
     unsigned m_prefixLevel;
 };
 
-}
-
-#endif
+} // namespace WebCore

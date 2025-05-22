@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TouchEvent_h
-#define TouchEvent_h
+#pragma once
 
 #if ENABLE(IOS_TOUCH_EVENTS)
 #include <WebKitAdditions/TouchEventIOS.h>
@@ -40,13 +39,9 @@ class TouchEvent final : public MouseRelatedEvent {
 public:
     virtual ~TouchEvent();
 
-    static Ref<TouchEvent> create()
-    {
-        return adoptRef(*new TouchEvent);
-    }
     static Ref<TouchEvent> create(TouchList* touches, 
             TouchList* targetTouches, TouchList* changedTouches, 
-            const AtomicString& type, PassRefPtr<AbstractView> view,
+            const AtomicString& type, DOMWindow* view,
             int screenX, int screenY, int pageX, int pageY,
             bool ctrlKey, bool altKey, bool shiftKey, bool metaKey)
     {
@@ -54,10 +49,25 @@ public:
                 type, view, screenX, screenY, pageX, pageY,
                 ctrlKey, altKey, shiftKey, metaKey));
     }
+    static Ref<TouchEvent> createForBindings()
+    {
+        return adoptRef(*new TouchEvent);
+    }
+
+    struct Init : MouseRelatedEventInit {
+        RefPtr<TouchList> touches;
+        RefPtr<TouchList> targetTouches;
+        RefPtr<TouchList> changedTouches;
+    };
+
+    static Ref<TouchEvent> create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
+    {
+        return adoptRef(*new TouchEvent(type, initializer, isTrusted));
+    }
 
     void initTouchEvent(TouchList* touches, TouchList* targetTouches,
             TouchList* changedTouches, const AtomicString& type, 
-            PassRefPtr<AbstractView> view, int screenX, int screenY, 
+            DOMWindow*, int screenX, int screenY,
             int clientX, int clientY,
             bool ctrlKey, bool altKey, bool shiftKey, bool metaKey);
 
@@ -65,21 +75,22 @@ public:
     TouchList* targetTouches() const { return m_targetTouches.get(); }
     TouchList* changedTouches() const { return m_changedTouches.get(); }
 
-    void setTouches(PassRefPtr<TouchList> touches) { m_touches = touches; }
-    void setTargetTouches(PassRefPtr<TouchList> targetTouches) { m_targetTouches = targetTouches; }
-    void setChangedTouches(PassRefPtr<TouchList> changedTouches) { m_changedTouches = changedTouches; }
+    void setTouches(RefPtr<TouchList>&& touches) { m_touches = touches; }
+    void setTargetTouches(RefPtr<TouchList>&& targetTouches) { m_targetTouches = targetTouches; }
+    void setChangedTouches(RefPtr<TouchList>&& changedTouches) { m_changedTouches = changedTouches; }
 
-    virtual bool isTouchEvent() const override;
+    bool isTouchEvent() const override;
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
     TouchEvent();
     TouchEvent(TouchList* touches, TouchList* targetTouches,
             TouchList* changedTouches, const AtomicString& type,
-            PassRefPtr<AbstractView>, int screenX, int screenY, int pageX,
+            DOMWindow*, int screenX, int screenY, int pageX,
             int pageY,
             bool ctrlKey, bool altKey, bool shiftKey, bool metaKey);
+    TouchEvent(const AtomicString&, const Init&, IsTrusted);
 
     RefPtr<TouchList> m_touches;
     RefPtr<TouchList> m_targetTouches;
@@ -91,5 +102,3 @@ private:
 SPECIALIZE_TYPE_TRAITS_EVENT(TouchEvent)
 
 #endif // ENABLE(TOUCH_EVENTS)
-
-#endif // TouchEvent_h

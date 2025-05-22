@@ -23,18 +23,25 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TiledBacking_h
-#define TiledBacking_h
+#pragma once
+
+#include <wtf/MonotonicTime.h>
+#include <wtf/Optional.h>
 
 namespace WebCore {
 
-static const int defaultTileWidth = 512;
-static const int defaultTileHeight = 512;
+enum TileSizeMode {
+    StandardTileSizeMode,
+    GiantTileSizeMode
+};
 
+class FloatPoint;
+class FloatRect;
 class IntRect;
 class PlatformCALayer;
 
 enum ScrollingModeIndication {
+    SynchronousScrollingBecauseOfLackOfScrollingCoordinatorIndication,
     SynchronousScrollingBecauseOfStyleIndication,
     SynchronousScrollingBecauseOfEventHandlersIndication,
     AsyncScrollingIndication
@@ -44,9 +51,9 @@ struct VelocityData  {
     double horizontalVelocity;
     double verticalVelocity;
     double scaleChangeRate;
-    double lastUpdateTime;
+    MonotonicTime lastUpdateTime;
     
-    VelocityData(double horizontal = 0, double vertical = 0, double scaleChange = 0, double updateTime = 0)
+    VelocityData(double horizontal = 0, double vertical = 0, double scaleChange = 0, MonotonicTime updateTime = MonotonicTime())
         : horizontalVelocity(horizontal)
         , verticalVelocity(vertical)
         , scaleChangeRate(scaleChange)
@@ -67,6 +74,9 @@ public:
     virtual void setVisibleRect(const FloatRect&) = 0;
     virtual FloatRect visibleRect() const = 0;
 
+    // Only used to update the tile coverage map. 
+    virtual void setLayoutViewportRect(std::optional<FloatRect>) = 0;
+
     virtual void setCoverageRect(const FloatRect&) = 0;
     virtual FloatRect coverageRect() const = 0;
     virtual bool tilesWouldChangeForCoverageRect(const FloatRect&) const = 0;
@@ -75,6 +85,14 @@ public:
     virtual void setTopContentInset(float) = 0;
 
     virtual void setVelocity(const VelocityData&) = 0;
+    
+    enum {
+        NotScrollable           = 0,
+        HorizontallyScrollable  = 1 << 0,
+        VerticallyScrollable    = 1 << 1
+    };
+    typedef unsigned Scrollability;
+    virtual void setScrollability(Scrollability) = 0;
 
     virtual void prepopulateRect(const FloatRect&) = 0;
 
@@ -91,7 +109,10 @@ public:
     virtual void setTileCoverage(TileCoverage) = 0;
     virtual TileCoverage tileCoverage() const = 0;
 
-    virtual FloatRect computeTileCoverageRect(const FloatSize& newSize, const FloatRect& previousVisibleRect, const FloatRect& currentVisibleRect, float contentsScale) const = 0;
+    virtual void adjustTileCoverageRect(FloatRect& coverageRect, const FloatSize& newSize, const FloatRect& previousVisibleRect, const FloatRect& currentVisibleRect, float contentsScale) const = 0;
+
+    virtual void willStartLiveResize() = 0;
+    virtual void didEndLiveResize() = 0;
 
     virtual IntSize tileSize() const = 0;
 
@@ -106,7 +127,8 @@ public:
     
     virtual double retainedTileBackingStoreMemory() const = 0;
 
-    virtual void setTileMargins(int marginTop, int marginBottom, int marginLeft, int marginRight) = 0;
+    virtual void setHasMargins(bool marginTop, bool marginBottom, bool marginLeft, bool marginRight) = 0;
+    virtual void setMarginSize(int) = 0;
     virtual bool hasMargins() const = 0;
     virtual bool hasHorizontalMargins() const = 0;
     virtual bool hasVerticalMargins() const = 0;
@@ -134,5 +156,3 @@ public:
 };
 
 } // namespace WebCore
-
-#endif // TiledBacking_h

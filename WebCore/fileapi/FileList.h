@@ -23,12 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef FileList_h
-#define FileList_h
+#pragma once
 
 #include "File.h"
 #include "ScriptWrappable.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
@@ -44,11 +42,11 @@ public:
 
     static Ref<FileList> create(Vector<RefPtr<File>>&& files)
     {
-        return adoptRef(*new FileList(WTF::move(files)));
+        return adoptRef(*new FileList(WTFMove(files)));
     }
 
     unsigned length() const { return m_files.size(); }
-    File* item(unsigned index) const;
+    WEBCORE_EXPORT File* item(unsigned index) const;
 
     bool isEmpty() const { return m_files.isEmpty(); }
     Vector<String> paths() const;
@@ -56,18 +54,16 @@ public:
 private:
     FileList();
     FileList(Vector<RefPtr<File>>&& files)
-        : m_files(WTF::move(files))
+        : m_files(WTFMove(files))
     { }
 
     // FileLists can only be changed by their owners.
     friend class DataTransfer;
     friend class FileInputType;
-    void append(PassRefPtr<File> file) { m_files.append(file); }
+    void append(RefPtr<File>&& file) { m_files.append(WTFMove(file)); }
     void clear() { m_files.clear(); }
 
     Vector<RefPtr<File>> m_files;
 };
 
 } // namespace WebCore
-
-#endif // FileList_h

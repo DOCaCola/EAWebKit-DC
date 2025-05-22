@@ -30,16 +30,17 @@
 #include "GraphicsTypes3D.h"
 
 #include "AudioTrackPrivate.h"
-#include "CDMSession.h"
+#include "LegacyCDMSession.h"
 #include "InbandTextTrackPrivate.h"
 #include "IntRect.h"
 #include "URL.h"
 #include "LayoutRect.h"
 #include "MediaPlayerEnums.h"
-#include "NativeImagePtr.h"
+#include "NativeImage.h"
 #include "PlatformLayer.h"
 #include "PlatformMediaResourceLoader.h"
 #include "PlatformMediaSession.h"
+#include "SecurityOriginHash.h"
 #include "Timer.h"
 #include "VideoTrackPrivate.h"
 #include <runtime/Uint8Array.h>
@@ -47,14 +48,12 @@
 #include <wtf/HashSet.h>
 #include <wtf/MediaTime.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/Ref.h>
+#include <wtf/RefCounted.h>
 #include <wtf/text/StringHash.h>
 
 #if ENABLE(AVF_CAPTIONS)
 #include "PlatformTextTrack.h"
-#endif
-
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-#include "PlatformTextTrackMenu.h"
 #endif
 
 OBJC_CLASS AVAsset;
@@ -107,32 +106,19 @@ struct PlatformMedia {
 };
 
 struct MediaEngineSupportParameters {
+
+    MediaEngineSupportParameters() { }
+
     String type;
     String codecs;
     URL url;
-#if ENABLE(ENCRYPTED_MEDIA)
-    String keySystem;
-#endif
-#if ENABLE(MEDIA_SOURCE)
-    bool isMediaSource;
-#endif
-#if ENABLE(MEDIA_STREAM)
-    bool isMediaStream;
-#endif
-
-    MediaEngineSupportParameters()
-#if ENABLE(MEDIA_SOURCE)
-        : isMediaSource(false)
-#endif
-    {
-#if ENABLE(MEDIA_STREAM)
-        isMediaStream = false;
-#endif
-    }
+    bool isMediaSource { false };
+    bool isMediaStream { false };
 };
 
 extern const PlatformMedia NoPlatformMedia;
 
+class CDMSessionClient;
 class CachedResourceLoader;
 class ContentType;
 class GraphicsContext;
@@ -211,28 +197,20 @@ public:
     // availability of the platformLayer().
     virtual void mediaPlayerRenderingModeChanged(MediaPlayer*) { }
 
+    // whether accelerated compositing is enabled for video rendering
+    virtual bool mediaPlayerAcceleratedCompositingEnabled() { return false; }
+
+    virtual void mediaPlayerActiveSourceBuffersChanged(const MediaPlayer*) { }
+
 #if PLATFORM(WIN) && USE(AVFOUNDATION)
     virtual GraphicsDeviceAdapter* mediaPlayerGraphicsDeviceAdapter(const MediaPlayer*) const { return 0; }
 #endif
 
-#if ENABLE(ENCRYPTED_MEDIA)
-    enum MediaKeyErrorCode { UnknownError = 1, ClientError, ServiceError, OutputError, HardwareChangeError, DomainError };
-    virtual void mediaPlayerKeyAdded(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */) { }
-    virtual void mediaPlayerKeyError(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, MediaKeyErrorCode, unsigned short /* systemCode */) { }
-    virtual void mediaPlayerKeyMessage(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, const unsigned char* /* message */, unsigned /* messageLength */, const URL& /* defaultURL */) { }
-    virtual bool mediaPlayerKeyNeeded(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, const unsigned char* /* initData */, unsigned /* initDataLength */) { return false; }
-#endif
-
-#if ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     virtual RefPtr<ArrayBuffer> mediaPlayerCachedKeyForKeyId(const String&) const { return nullptr; }
     virtual bool mediaPlayerKeyNeeded(MediaPlayer*, Uint8Array*) { return false; }
     virtual String mediaPlayerMediaKeysStorageDirectory() const { return emptyString(); }
 #endif
-    
-#if ENABLE(MEDIA_STREAM)
-    virtual String mediaPlayerMediaDeviceIdentifierStorageDirectory() const { return emptyString(); }
-#endif
-
     
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
     virtual void mediaPlayerCurrentPlaybackTargetIsWirelessChanged(MediaPlayer*) { };
@@ -254,16 +232,18 @@ public:
     virtual bool mediaPlayerIsPaused() const { return true; }
     virtual bool mediaPlayerIsLooping() const { return false; }
     virtual CachedResourceLoader* mediaPlayerCachedResourceLoader() { return 0; }
-    virtual RefPtr<PlatformMediaResourceLoader> mediaPlayerCreateResourceLoader(std::unique_ptr<PlatformMediaResourceLoaderClient>) { return nullptr; }
+    virtual RefPtr<PlatformMediaResourceLoader> mediaPlayerCreateResourceLoader() { return nullptr; }
     virtual bool doesHaveAttribute(const AtomicString&, AtomicString* = 0) const { return false; }
+    virtual bool mediaPlayerShouldUsePersistentCache() const { return true; }
+    virtual const String& mediaPlayerMediaCacheDirectory() const { return emptyString(); }
 
 #if ENABLE(VIDEO_TRACK)
-    virtual void mediaPlayerDidAddAudioTrack(PassRefPtr<AudioTrackPrivate>) { }
-    virtual void mediaPlayerDidAddTextTrack(PassRefPtr<InbandTextTrackPrivate>) { }
-    virtual void mediaPlayerDidAddVideoTrack(PassRefPtr<VideoTrackPrivate>) { }
-    virtual void mediaPlayerDidRemoveAudioTrack(PassRefPtr<AudioTrackPrivate>) { }
-    virtual void mediaPlayerDidRemoveTextTrack(PassRefPtr<InbandTextTrackPrivate>) { }
-    virtual void mediaPlayerDidRemoveVideoTrack(PassRefPtr<VideoTrackPrivate>) { }
+    virtual void mediaPlayerDidAddAudioTrack(AudioTrackPrivate&) { }
+    virtual void mediaPlayerDidAddTextTrack(InbandTextTrackPrivate&) { }
+    virtual void mediaPlayerDidAddVideoTrack(VideoTrackPrivate&) { }
+    virtual void mediaPlayerDidRemoveAudioTrack(AudioTrackPrivate&) { }
+    virtual void mediaPlayerDidRemoveTextTrack(InbandTextTrackPrivate&) { }
+    virtual void mediaPlayerDidRemoveVideoTrack(VideoTrackPrivate&) { }
 
     virtual void textTrackRepresentationBoundsChanged(const IntRect&) { }
 #if ENABLE(AVF_CAPTIONS)
@@ -291,6 +271,8 @@ public:
 #if USE(GSTREAMER)
     virtual void requestInstallMissingPlugins(const String&, const String&, MediaPlayerRequestInstallMissingPluginsCallback&) { };
 #endif
+
+    virtual bool mediaPlayerShouldDisableSleep() const { return false; }
 };
 
 class MediaPlayerSupportsTypeClient {
@@ -301,20 +283,22 @@ public:
     virtual String mediaPlayerDocumentHost() const { return String(); }
 };
 
-class MediaPlayer : public MediaPlayerEnums {
+class MediaPlayer : public MediaPlayerEnums, public RefCounted<MediaPlayer> {
     WTF_MAKE_NONCOPYABLE(MediaPlayer); WTF_MAKE_FAST_ALLOCATED;
 public:
-    explicit MediaPlayer(MediaPlayerClient&);
+    static Ref<MediaPlayer> create(MediaPlayerClient&);
     virtual ~MediaPlayer();
+
+    void invalidate();
 
     // Media engine support.
     enum SupportsType { IsNotSupported, IsSupported, MayBeSupported };
     static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters&, const MediaPlayerSupportsTypeClient*);
-    static void getSupportedTypes(HashSet<String>&);
+    static void getSupportedTypes(HashSet<String, ASCIICaseInsensitiveHash>&);
     static bool isAvailable();
-    static void getSitesInMediaCache(Vector<String>&);
-    static void clearMediaCache();
-    static void clearMediaCacheForSite(const String&);
+    static HashSet<RefPtr<SecurityOrigin>> originsInMediaCache(const String& path);
+    static void clearMediaCache(const String& path, std::chrono::system_clock::time_point modifiedSince);
+    static void clearMediaCacheForOrigins(const String& path, const HashSet<RefPtr<SecurityOrigin>>&);
     static bool supportsKeySystem(const String& keySystem, const String& mimeType);
 
     bool supportsFullscreen() const;
@@ -324,14 +308,17 @@ public:
     bool doesHaveAttribute(const AtomicString&, AtomicString* value = nullptr) const;
     PlatformMedia platformMedia() const;
     PlatformLayer* platformLayer() const;
-#if PLATFORM(IOS)
-    void setVideoFullscreenLayer(PlatformLayer*);
+
+#if PLATFORM(IOS) || (PLATFORM(MAC) && ENABLE(VIDEO_PRESENTATION_MODE))
+    void setVideoFullscreenLayer(PlatformLayer*, std::function<void()> completionHandler = [] { });
     void setVideoFullscreenFrame(FloatRect);
     using MediaPlayerEnums::VideoGravity;
     void setVideoFullscreenGravity(VideoGravity);
     void setVideoFullscreenMode(VideoFullscreenMode);
     VideoFullscreenMode fullscreenMode() const;
+#endif
 
+#if PLATFORM(IOS)
     NSArray *timedMetadata() const;
     String accessLog() const;
     String errorLog() const;
@@ -363,20 +350,12 @@ public:
     void pause();
     void setShouldBufferData(bool);
 
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     // Represents synchronous exceptions that can be thrown from the Encrypted Media methods.
     // This is different from the asynchronous MediaKeyError.
     enum MediaKeyException { NoError, InvalidPlayerState, KeySystemNotSupported };
-#endif
 
-#if ENABLE(ENCRYPTED_MEDIA)
-    MediaKeyException generateKeyRequest(const String& keySystem, const unsigned char* initData, unsigned initDataLength);
-    MediaKeyException addKey(const String& keySystem, const unsigned char* key, unsigned keyLength, const unsigned char* initData, unsigned initDataLength, const String& sessionId);
-    MediaKeyException cancelKeyRequest(const String& keySystem, const String& sessionId);
-#endif
-
-#if ENABLE(ENCRYPTED_MEDIA_V2)
-    std::unique_ptr<CDMSession> createSession(const String& keySystem);
+    std::unique_ptr<CDMSession> createSession(const String& keySystem, CDMSessionClient*);
     void setCDMSession(CDMSession*);
     void keyAdded();
 #endif
@@ -411,7 +390,7 @@ public:
 
     double volume() const;
     void setVolume(double);
-    bool platformVolumeConfigurationRequired() const { return m_client.mediaPlayerPlatformVolumeConfigurationRequired(); }
+    bool platformVolumeConfigurationRequired() const { return client().mediaPlayerPlatformVolumeConfigurationRequired(); }
 
     bool muted() const;
     void setMuted(bool);
@@ -422,8 +401,8 @@ public:
     bool autoplay() const;
     void setAutoplay(bool);
 
-    void paint(GraphicsContext*, const FloatRect&);
-    void paintCurrentFrameInContext(GraphicsContext*, const FloatRect&);
+    void paint(GraphicsContext&, const FloatRect&);
+    void paintCurrentFrameInContext(GraphicsContext&, const FloatRect&);
 
     // copyVideoTextureToPlatformTexture() is used to do the GPU-GPU textures copy without a readback to system memory.
     // The first five parameters denote the corresponding GraphicsContext, destination texture, requested level, requested type and the required internalFormat for destination texture.
@@ -438,9 +417,9 @@ public:
     // In chromium, the implementation is based on GL_CHROMIUM_copy_texture extension which is documented at
     // http://src.chromium.org/viewvc/chrome/trunk/src/gpu/GLES2/extensions/CHROMIUM/CHROMIUM_copy_texture.txt and implemented at
     // http://src.chromium.org/viewvc/chrome/trunk/src/gpu/command_buffer/service/gles2_cmd_copy_texture_chromium.cc via shaders.
-    bool copyVideoTextureToPlatformTexture(GraphicsContext3D*, Platform3DObject texture, GC3Dint level, GC3Denum type, GC3Denum internalFormat, bool premultiplyAlpha, bool flipY);
+    bool copyVideoTextureToPlatformTexture(GraphicsContext3D*, Platform3DObject texture, GC3Denum target, GC3Dint level, GC3Denum internalFormat, GC3Denum format, GC3Denum type, bool premultiplyAlpha, bool flipY);
 
-    PassNativeImagePtr nativeImageForCurrentTime();
+    NativeImagePtr nativeImageForCurrentTime();
 
     using MediaPlayerEnums::NetworkState;
     NetworkState networkState();
@@ -469,7 +448,7 @@ public:
 
     void repaint();
 
-    MediaPlayerClient& client() const { return m_client; }
+    MediaPlayerClient& client() const { return *m_client; }
 
     bool hasAvailableVideoFrame() const;
     void prepareForRendering();
@@ -539,14 +518,7 @@ public:
     AudioSourceProvider* audioSourceProvider();
 #endif
 
-#if ENABLE(ENCRYPTED_MEDIA)
-    void keyAdded(const String& keySystem, const String& sessionId);
-    void keyError(const String& keySystem, const String& sessionId, MediaPlayerClient::MediaKeyErrorCode, unsigned short systemCode);
-    void keyMessage(const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const URL& defaultURL);
-    bool keyNeeded(const String& keySystem, const String& sessionId, const unsigned char* initData, unsigned initDataLength);
-#endif
-
-#if ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     RefPtr<ArrayBuffer> cachedKeyForKeyId(const String& keyId) const;
     bool keyNeeded(Uint8Array* initData);
     String mediaKeysStorageDirectory() const;
@@ -559,15 +531,15 @@ public:
     long platformErrorCode() const;
 
     CachedResourceLoader* cachedResourceLoader();
-    PassRefPtr<PlatformMediaResourceLoader> createResourceLoader(std::unique_ptr<PlatformMediaResourceLoaderClient>);
+    PassRefPtr<PlatformMediaResourceLoader> createResourceLoader();
 
 #if ENABLE(VIDEO_TRACK)
-    void addAudioTrack(PassRefPtr<AudioTrackPrivate>);
-    void addTextTrack(PassRefPtr<InbandTextTrackPrivate>);
-    void addVideoTrack(PassRefPtr<VideoTrackPrivate>);
-    void removeAudioTrack(PassRefPtr<AudioTrackPrivate>);
-    void removeTextTrack(PassRefPtr<InbandTextTrackPrivate>);
-    void removeVideoTrack(PassRefPtr<VideoTrackPrivate>);
+    void addAudioTrack(AudioTrackPrivate&);
+    void addTextTrack(InbandTextTrackPrivate&);
+    void addVideoTrack(VideoTrackPrivate&);
+    void removeAudioTrack(AudioTrackPrivate&);
+    void removeTextTrack(InbandTextTrackPrivate&);
+    void removeVideoTrack(VideoTrackPrivate&);
 
     bool requiresTextTrackRepresentation() const;
     void setTextTrackRepresentation(TextTrackRepresentation*);
@@ -586,13 +558,8 @@ public:
 
     static void resetMediaEngines();
 
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-    bool implementsTextTrackControls() const;
-    PassRefPtr<PlatformTextTrackMenuInterface> textTrackMenu();
-#endif
-
 #if USE(GSTREAMER)
-    void simulateAudioInterruption();
+    WEBCORE_EXPORT void simulateAudioInterruption();
 #endif
 
     String languageOfPrimaryAudioTrack() const;
@@ -613,14 +580,21 @@ public:
     String sourceApplicationIdentifier() const;
     Vector<String> preferredAudioCharacteristics() const;
 
+    bool ended() const;
+
+    void setShouldDisableSleep(bool);
+    bool shouldDisableSleep() const;
+
 private:
+    MediaPlayer(MediaPlayerClient&);
+
     const MediaPlayerFactory* nextBestMediaEngine(const MediaPlayerFactory*) const;
     void loadWithNextMediaEngine(const MediaPlayerFactory*);
     void reloadTimerFired();
 
     static void initializeMediaEngines();
 
-    MediaPlayerClient& m_client;
+    MediaPlayerClient* m_client;
     Timer m_reloadTimer;
     std::unique_ptr<MediaPlayerPrivateInterface> m_private;
     const MediaPlayerFactory* m_currentMediaEngine;
@@ -637,6 +611,7 @@ private:
     bool m_privateBrowsing;
     bool m_shouldPrepareToRender;
     bool m_contentMIMETypeWasInferredFromExtension;
+    bool m_initializingMediaEngine { false };
 
 #if ENABLE(MEDIA_SOURCE)
     RefPtr<MediaSourcePrivateClient> m_mediaSource;
@@ -647,15 +622,15 @@ private:
 };
 
 typedef std::function<std::unique_ptr<MediaPlayerPrivateInterface> (MediaPlayer*)> CreateMediaEnginePlayer;
-typedef void (*MediaEngineSupportedTypes)(HashSet<String>& types);
+typedef void (*MediaEngineSupportedTypes)(HashSet<String, ASCIICaseInsensitiveHash>& types);
 typedef MediaPlayer::SupportsType (*MediaEngineSupportsType)(const MediaEngineSupportParameters& parameters);
-typedef void (*MediaEngineGetSitesInMediaCache)(Vector<String>&);
-typedef void (*MediaEngineClearMediaCache)();
-typedef void (*MediaEngineClearMediaCacheForSite)(const String&);
+typedef HashSet<RefPtr<SecurityOrigin>> (*MediaEngineOriginsInMediaCache)(const String& path);
+typedef void (*MediaEngineClearMediaCache)(const String& path, std::chrono::system_clock::time_point modifiedSince);
+typedef void (*MediaEngineClearMediaCacheForOrigins)(const String& path, const HashSet<RefPtr<SecurityOrigin>>&);
 typedef bool (*MediaEngineSupportsKeySystem)(const String& keySystem, const String& mimeType);
 
 typedef void (*MediaEngineRegistrar)(CreateMediaEnginePlayer, MediaEngineSupportedTypes, MediaEngineSupportsType,
-    MediaEngineGetSitesInMediaCache, MediaEngineClearMediaCache, MediaEngineClearMediaCacheForSite, MediaEngineSupportsKeySystem);
+    MediaEngineOriginsInMediaCache, MediaEngineClearMediaCache, MediaEngineClearMediaCacheForOrigins, MediaEngineSupportsKeySystem);
 typedef void (*MediaEngineRegister)(MediaEngineRegistrar);
 
 class MediaPlayerFactorySupport {

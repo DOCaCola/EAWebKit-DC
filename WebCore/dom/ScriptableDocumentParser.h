@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  
-#ifndef ScriptableDocumentParser_h
-#define ScriptableDocumentParser_h
+#pragma once
 
 #include "DecodedDataDocumentParser.h"
 #include "FragmentScriptingPermission.h"
@@ -59,13 +58,11 @@ protected:
     explicit ScriptableDocumentParser(Document&, ParserContentPolicy = AllowScriptingContent);
 
 private:
-    virtual ScriptableDocumentParser* asScriptableDocumentParser() override final { return this; }
+    ScriptableDocumentParser* asScriptableDocumentParser() final { return this; }
 
     // http://www.whatwg.org/specs/web-apps/current-work/#script-created-parser
     bool m_wasCreatedByScript;
     ParserContentPolicy m_parserContentPolicy;
 };
 
-}
-
-#endif // ScriptableDocumentParser_h
+} // namespace WebCore

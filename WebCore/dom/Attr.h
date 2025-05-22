@@ -22,18 +22,18 @@
  *
  */
 
-#ifndef Attr_h
-#define Attr_h
+#pragma once
 
 #include "ContainerNode.h"
 #include "QualifiedName.h"
 
 namespace WebCore {
 
+class Attribute;
 class CSSStyleDeclaration;
 class MutableStyleProperties;
 
-// Attr can have Text and EntityReference children
+// Attr can have Text children
 // therefore it has to be a fullblown Node. The plan
 // is to dynamically allocate a textchild and store the
 // resulting nodevalue in the attribute upon
@@ -41,62 +41,63 @@ class MutableStyleProperties;
 
 class Attr final : public ContainerNode {
 public:
-    static RefPtr<Attr> create(Element*, const QualifiedName&);
-    static RefPtr<Attr> create(Document&, const QualifiedName&, const AtomicString& value);
+    static Ref<Attr> create(Element&, const QualifiedName&);
+    static Ref<Attr> create(Document&, const QualifiedName&, const AtomicString& value);
     virtual ~Attr();
 
     String name() const { return qualifiedName().toString(); }
     bool specified() const { return true; }
     Element* ownerElement() const { return m_element; }
 
-    const AtomicString& value() const;
-    void setValue(const AtomicString&, ExceptionCode&);
+    WEBCORE_EXPORT const AtomicString& value() const;
     void setValue(const AtomicString&);
+    const AtomicString& valueForBindings() const { return value(); }
+    WEBCORE_EXPORT void setValueForBindings(const AtomicString&);
 
     const QualifiedName& qualifiedName() const { return m_name; }
 
-    bool isId() const;
+    WEBCORE_EXPORT bool isId() const;
 
-    CSSStyleDeclaration* style();
+    WEBCORE_EXPORT CSSStyleDeclaration* style();
 
-    void attachToElement(Element*);
+    void attachToElement(Element&);
     void detachFromElementWithValue(const AtomicString&);
 
-    virtual const AtomicString& namespaceURI() const override { return m_name.namespaceURI(); }
+    const AtomicString& namespaceURI() const final { return m_name.namespaceURI(); }
+    const AtomicString& localName() const final { return m_name.localName(); }
+    const AtomicString& prefix() const final { return m_name.prefix(); }
 
 private:
-    Attr(Element*, const QualifiedName&);
+    Attr(Element&, const QualifiedName&);
     Attr(Document&, const QualifiedName&, const AtomicString& value);
 
     void createTextChild();
 
-    virtual String nodeName() const override { return name(); }
-    virtual NodeType nodeType() const override { return ATTRIBUTE_NODE; }
+    String nodeName() const final { return name(); }
+    NodeType nodeType() const final { return ATTRIBUTE_NODE; }
 
-    virtual const AtomicString& localName() const override { return m_name.localName(); }
-    virtual const AtomicString& prefix() const override { return m_name.prefix(); }
+    String nodeValue() const final { return value(); }
+    ExceptionOr<void> setNodeValue(const String&) final;
 
-    virtual void setPrefix(const AtomicString&, ExceptionCode&) override;
+    ExceptionOr<void> setPrefix(const AtomicString&) final;
 
-    virtual String nodeValue() const override { return value(); }
-    virtual void setNodeValue(const String&, ExceptionCode&) override;
-    virtual RefPtr<Node> cloneNodeInternal(Document&, CloningOperation) override;
+    Ref<Node> cloneNodeInternal(Document&, CloningOperation) final;
 
-    virtual bool isAttributeNode() const override { return true; }
-    virtual bool childTypeAllowed(NodeType) const override;
+    bool isAttributeNode() const final { return true; }
+    bool childTypeAllowed(NodeType) const final;
 
-    virtual void childrenChanged(const ChildChange&) override;
+    void childrenChanged(const ChildChange&) final;
 
     Attribute& elementAttribute();
 
     // Attr wraps either an element/name, or a name/value pair (when it's a standalone Node.)
     // Note that m_name is always set, but m_element/m_standaloneValue may be null.
-    Element* m_element;
+    Element* m_element { nullptr };
     QualifiedName m_name;
     AtomicString m_standaloneValue;
 
     RefPtr<MutableStyleProperties> m_style;
-    unsigned m_ignoreChildrenChanged;
+    unsigned m_ignoreChildrenChanged { 0 };
 };
 
 } // namespace WebCore
@@ -104,5 +105,3 @@ private:
 SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::Attr)
     static bool isType(const WebCore::Node& node) { return node.isAttributeNode(); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif // Attr_h

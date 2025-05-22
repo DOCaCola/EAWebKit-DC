@@ -18,13 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef DOMPluginArray_h
-#define DOMPluginArray_h
+#pragma once
 
 #include "DOMPlugin.h"
 #include "DOMWindowProperty.h"
 #include "ScriptWrappable.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
@@ -38,11 +36,11 @@ public:
     ~DOMPluginArray();
 
     unsigned length() const;
-    PassRefPtr<DOMPlugin> item(unsigned index);
-    bool canGetItemsForName(const AtomicString& propertyName);
-    PassRefPtr<DOMPlugin> namedItem(const AtomicString& propertyName);
+    RefPtr<DOMPlugin> item(unsigned index);
+    RefPtr<DOMPlugin> namedItem(const AtomicString& propertyName);
+    Vector<AtomicString> supportedPropertyNames();
 
-    void refresh(bool reload);
+    void refresh(bool reloadPages);
 
 private:
     explicit DOMPluginArray(Frame*);
@@ -50,5 +48,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // DOMPluginArray_h

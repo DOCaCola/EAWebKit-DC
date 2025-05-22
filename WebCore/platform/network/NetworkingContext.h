@@ -18,12 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef NetworkingContext_h
-#define NetworkingContext_h
+#pragma once
 
-#include "NetworkStorageSession.h"
 #include <wtf/RefCounted.h>
 #include <wtf/RetainPtr.h>
+#include <wtf/text/WTFString.h>
 
 #if PLATFORM(COCOA)
 #include <wtf/SchedulePair.h>
@@ -39,6 +38,7 @@ typedef struct _SoupSession SoupSession;
 
 namespace WebCore {
 
+class NetworkStorageSession;
 class ResourceError;
 class ResourceRequest;
 
@@ -59,9 +59,7 @@ public:
 
     virtual String sourceApplicationIdentifier() const { return emptyString(); }
 
-#if PLATFORM(COCOA) || USE(CFNETWORK) || USE(SOUP)
     virtual NetworkStorageSession& storageSession() const = 0;
-#endif
 
 	//+EAWebKitChange
 	//10/14/2011
@@ -78,5 +76,3 @@ protected:
 };
 
 }
-
-#endif // NetworkingContext_h

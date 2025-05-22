@@ -27,37 +27,37 @@
  */
 
 [
-    JSCustomGetOwnPropertySlotAndDescriptor,
-    CustomNamedSetter,
-    GenerateIsReachable=ImplFrame,
+    CheckSecurity,
     CustomDeleteProperty,
     CustomEnumerateProperty,
+    CustomGetPrototype,
+    CustomNamedSetter,
+    CustomPreventExtensions,
+    CustomSetPrototype,
+    GenerateIsReachable=ImplFrame,
     JSCustomDefineOwnProperty,
-    JSCustomNamedGetterOnPrototype,
     JSCustomDefineOwnPropertyOnPrototype,
-    OperationsNotDeletable
+    JSCustomGetOwnPropertySlotAndDescriptor,
+    JSCustomNamedGetterOnPrototype,
+    Unforgeable,
 ] interface Location {
-    [DoNotCheckSecurityOnSetter, CustomSetter] attribute DOMString href;
+    [SetterCallWith=ActiveWindow&FirstWindow, DoNotCheckSecurityOnSetter] stringifier attribute USVString href;
 
-    [Custom, ForwardDeclareInHeader] void assign([Default=Undefined] optional DOMString url);
-    [Custom, ForwardDeclareInHeader] void replace([Default=Undefined] optional DOMString url);
-    [Custom, ForwardDeclareInHeader] void reload();
+    [CallWith=ActiveWindow&FirstWindow, ForwardDeclareInHeader] void assign(USVString url);
+    [DoNotCheckSecurity, CallWith=ActiveWindow&FirstWindow, ForwardDeclareInHeader] void replace(USVString url);
+    [CallWith=ActiveWindow, ForwardDeclareInHeader] void reload();
 
     // URI decomposition attributes
-    [CustomSetter] attribute DOMString protocol;
-    [CustomSetter] attribute DOMString host;
-    [CustomSetter] attribute DOMString hostname;
-    [CustomSetter] attribute DOMString port;
-    [CustomSetter] attribute DOMString pathname;
-    [CustomSetter] attribute DOMString search;
-    [CustomSetter] attribute DOMString hash;
+    [SetterCallWith=ActiveWindow&FirstWindow, SetterMayThrowException] attribute USVString protocol;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString host;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString hostname;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString port;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString pathname;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString search;
+    [SetterCallWith=ActiveWindow&FirstWindow] attribute USVString hash;
 
-    readonly attribute DOMString origin;
+    readonly attribute USVString origin;
 
-    readonly attribute DOMStringList ancestorOrigins;
-
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-    [NotEnumerable, Custom, ImplementedAs=toStringFunction] DOMString toString();
-#endif
+    // FIXME: Add support for SameObject.
+    [Unforgeable, CachedAttribute] readonly attribute DOMStringList ancestorOrigins;
 };
-

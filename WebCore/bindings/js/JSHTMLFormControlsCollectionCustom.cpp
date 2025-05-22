@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2007-2008, 2016 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,34 +30,39 @@ using namespace JSC;
 
 namespace WebCore {
 
-static JSValue namedItems(ExecState* exec, JSHTMLFormControlsCollection* collection, PropertyName propertyName)
+static JSValue namedItems(ExecState& state, JSHTMLFormControlsCollection* collection, PropertyName propertyName)
 {
     const AtomicString& name = propertyNameToAtomicString(propertyName);
-    Vector<Ref<Element>> namedItems = collection->impl().namedItems(name);
+    Vector<Ref<Element>> namedItems = collection->wrapped().namedItems(name);
 
     if (namedItems.isEmpty())
         return jsUndefined();
     if (namedItems.size() == 1)
-        return toJS(exec, collection->globalObject(), namedItems[0].ptr());
+        return toJS(&state, collection->globalObject(), namedItems[0]);
 
-    ASSERT(collection->impl().type() == FormControls);
-    return toJS(exec, collection->globalObject(), collection->impl().ownerNode().radioNodeList(name).get());
+    ASSERT(collection->wrapped().type() == FormControls);
+    return toJS(&state, collection->globalObject(), collection->wrapped().ownerNode().radioNodeList(name).get());
 }
 
-bool JSHTMLFormControlsCollection::canGetItemsForName(ExecState*, HTMLFormControlsCollection* collection, PropertyName propertyName)
+bool JSHTMLFormControlsCollection::nameGetter(ExecState* state, PropertyName propertyName, JSValue& value)
 {
-    return collection->hasNamedItem(propertyNameToAtomicString(propertyName));
+    auto items = namedItems(*state, this, propertyName);
+    if (items.isUndefined())
+        return false;
+
+    value = items;
+    return true;
 }
 
-EncodedJSValue JSHTMLFormControlsCollection::nameGetter(ExecState* exec, JSObject* slotBase, EncodedJSValue, PropertyName propertyName)
+JSValue JSHTMLFormControlsCollection::namedItem(ExecState& state)
 {
-    JSHTMLFormControlsCollection* thisObj = jsCast<JSHTMLFormControlsCollection*>(slotBase);
-    return JSValue::encode(namedItems(exec, thisObj, propertyName));
-}
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-JSValue JSHTMLFormControlsCollection::namedItem(ExecState* exec)
-{
-    JSValue value = namedItems(exec, this, Identifier::fromString(exec, exec->argument(0).toString(exec)->value(exec)));
+    if (UNLIKELY(state.argumentCount() < 1))
+        return throwException(&state, scope, createNotEnoughArgumentsError(&state));
+
+    JSValue value = namedItems(state, this, Identifier::fromString(&state, state.uncheckedArgument(0).toWTFString(&state)));
     return value.isUndefined() ? jsNull() : value;
 }
 

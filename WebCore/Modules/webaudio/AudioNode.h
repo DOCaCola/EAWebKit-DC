@@ -22,15 +22,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AudioNode_h
-#define AudioNode_h
+#pragma once
 
 #include "AudioBus.h"
 #include "EventTarget.h"
-#include <memory>
+#include "ExceptionOr.h"
 #include <wtf/Forward.h>
-#include <wtf/RefPtr.h>
-#include <wtf/Vector.h>
 
 #define DEBUG_AUDIONODE_REFERENCES 0
 
@@ -40,8 +37,6 @@ class AudioContext;
 class AudioNodeInput;
 class AudioNodeOutput;
 class AudioParam;
-
-typedef int ExceptionCode;
 
 // An AudioNode is the basic building block for handling audio within an AudioContext.
 // It may be an audio source, an intermediate processing module, or an audio destination.
@@ -53,11 +48,11 @@ class AudioNode : public EventTargetWithInlineData {
 public:
     enum { ProcessingSizeInFrames = 128 };
 
-    AudioNode(AudioContext*, float sampleRate);
+    AudioNode(AudioContext&, float sampleRate);
     virtual ~AudioNode();
 
-    AudioContext* context() { return m_context.get(); }
-    const AudioContext* context() const { return m_context.get(); }
+    AudioContext& context() { return m_context.get(); }
+    const AudioContext& context() const { return m_context.get(); }
 
     enum NodeType {
         NodeTypeUnknown,
@@ -126,9 +121,9 @@ public:
     AudioNodeOutput* output(unsigned);
 
     // Called from main thread by corresponding JavaScript methods.
-    virtual void connect(AudioNode*, unsigned outputIndex, unsigned inputIndex, ExceptionCode&);
-    void connect(AudioParam*, unsigned outputIndex, ExceptionCode&);
-    virtual void disconnect(unsigned outputIndex, ExceptionCode&);
+    virtual ExceptionOr<void> connect(AudioNode&, unsigned outputIndex, unsigned inputIndex);
+    ExceptionOr<void> connect(AudioParam&, unsigned outputIndex);
+    virtual ExceptionOr<void> disconnect(unsigned outputIndex);
 
     virtual float sampleRate() const { return m_sampleRate; }
 
@@ -166,21 +161,21 @@ public:
     void enableOutputsIfNecessary();
     void disableOutputsIfNecessary();
 
-    unsigned long channelCount();
-    virtual void setChannelCount(unsigned long, ExceptionCode&);
+    unsigned channelCount();
+    virtual ExceptionOr<void> setChannelCount(unsigned);
 
     String channelCountMode();
-    void setChannelCountMode(const String&, ExceptionCode&);
+    ExceptionOr<void> setChannelCountMode(const String&);
 
     String channelInterpretation();
-    void setChannelInterpretation(const String&, ExceptionCode&);
+    ExceptionOr<void> setChannelInterpretation(const String&);
 
     ChannelCountMode internalChannelCountMode() const { return m_channelCountMode; }
     AudioBus::ChannelInterpretation internalChannelInterpretation() const { return m_channelInterpretation; }
 
     // EventTarget
-    virtual EventTargetInterface eventTargetInterface() const override;
-    virtual ScriptExecutionContext* scriptExecutionContext() const override final;
+    EventTargetInterface eventTargetInterface() const override;
+    ScriptExecutionContext* scriptExecutionContext() const final;
 
 protected:
     // Inputs and outputs must be created before the AudioNode is initialized.
@@ -198,7 +193,7 @@ protected:
 private:
     volatile bool m_isInitialized;
     NodeType m_nodeType;
-    RefPtr<AudioContext> m_context;
+    Ref<AudioContext> m_context;
     float m_sampleRate;
     Vector<std::unique_ptr<AudioNodeInput>> m_inputs;
     Vector<std::unique_ptr<AudioNodeOutput>> m_outputs;
@@ -218,8 +213,8 @@ private:
     static int s_nodeCount[NodeTypeEnd];
 #endif
 
-    virtual void refEventTarget() override { ref(); }
-    virtual void derefEventTarget() override { deref(); }
+    void refEventTarget() override { ref(); }
+    void derefEventTarget() override { deref(); }
 
 protected:
     unsigned m_channelCount;
@@ -228,5 +223,3 @@ protected:
 };
 
 } // namespace WebCore
-
-#endif // AudioNode_h

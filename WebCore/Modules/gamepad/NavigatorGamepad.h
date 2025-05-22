@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NavigatorGamepad_h
-#define NavigatorGamepad_h
+#pragma once
 
 #if ENABLE(GAMEPAD)
 
@@ -46,7 +45,7 @@ public:
 
     // The array of Gamepads might be sparse.
     // Null checking each entry is necessary.
-    static const Vector<RefPtr<Gamepad>>& getGamepads(Navigator*);
+    static const Vector<RefPtr<Gamepad>>& getGamepads(Navigator&);
 
     double navigationStart() const { return m_navigationStart; }
 
@@ -69,5 +68,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(GAMEPAD)
-
-#endif // NavigatorGamepad_h

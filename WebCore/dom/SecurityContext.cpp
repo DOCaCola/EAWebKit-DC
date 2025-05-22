@@ -31,6 +31,7 @@
 #include "HTMLParserIdioms.h"
 #include "SecurityOrigin.h"
 #include "SecurityOriginPolicy.h"
+#include <wtf/NeverDestroyed.h>
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
@@ -47,7 +48,7 @@ SecurityContext::~SecurityContext()
 
 void SecurityContext::setSecurityOriginPolicy(RefPtr<SecurityOriginPolicy>&& securityOriginPolicy)
 {
-    m_securityOriginPolicy = WTF::move(securityOriginPolicy);
+    m_securityOriginPolicy = WTFMove(securityOriginPolicy);
     m_haveInitializedSecurityOrigin = true;
 }
 
@@ -61,7 +62,7 @@ SecurityOrigin* SecurityContext::securityOrigin() const
 
 void SecurityContext::setContentSecurityPolicy(std::unique_ptr<ContentSecurityPolicy> contentSecurityPolicy)
 {
-    m_contentSecurityPolicy = WTF::move(contentSecurityPolicy);
+    m_contentSecurityPolicy = WTFMove(contentSecurityPolicy);
 }
 
 bool SecurityContext::isSecureTransitionTo(const URL& url) const
@@ -72,7 +73,7 @@ bool SecurityContext::isSecureTransitionTo(const URL& url) const
     if (!haveInitializedSecurityOrigin())
         return true;
 
-    return securityOriginPolicy()->origin().canAccess(SecurityOrigin::create(url).ptr());
+    return securityOriginPolicy()->origin().canAccess(SecurityOrigin::create(url).get());
 }
 
 void SecurityContext::enforceSandboxFlags(SandboxFlags mask)
@@ -84,6 +85,20 @@ void SecurityContext::enforceSandboxFlags(SandboxFlags mask)
         setSecurityOriginPolicy(SecurityOriginPolicy::create(SecurityOrigin::createUnique()));
 }
 
+bool SecurityContext::isSupportedSandboxPolicy(StringView policy)
+{
+    static const char* const supportedPolicies[] = {
+        "allow-forms", "allow-same-origin", "allow-scripts", "allow-top-navigation", "allow-pointer-lock", "allow-popups"
+    };
+
+    for (auto* supportedPolicy : supportedPolicies) {
+        if (equalIgnoringASCIICase(policy, supportedPolicy))
+            return true;
+    }
+    return false;
+}
+
+// Keep SecurityContext::isSupportedSandboxPolicy() in sync when updating this function.
 SandboxFlags SecurityContext::parseSandboxPolicy(const String& policy, String& invalidTokensErrorMessage)
 {
     // http://www.w3.org/TR/html5/the-iframe-element.html#attr-iframe-sandbox
@@ -104,18 +119,18 @@ SandboxFlags SecurityContext::parseSandboxPolicy(const String& policy, String& i
 
         // Turn off the corresponding sandbox flag if it's set as "allowed".
         String sandboxToken = policy.substring(start, end - start);
-        if (equalIgnoringCase(sandboxToken, "allow-same-origin"))
+        if (equalLettersIgnoringASCIICase(sandboxToken, "allow-same-origin"))
             flags &= ~SandboxOrigin;
-        else if (equalIgnoringCase(sandboxToken, "allow-forms"))
+        else if (equalLettersIgnoringASCIICase(sandboxToken, "allow-forms"))
             flags &= ~SandboxForms;
-        else if (equalIgnoringCase(sandboxToken, "allow-scripts")) {
+        else if (equalLettersIgnoringASCIICase(sandboxToken, "allow-scripts")) {
             flags &= ~SandboxScripts;
             flags &= ~SandboxAutomaticFeatures;
-        } else if (equalIgnoringCase(sandboxToken, "allow-top-navigation"))
+        } else if (equalLettersIgnoringASCIICase(sandboxToken, "allow-top-navigation"))
             flags &= ~SandboxTopNavigation;
-        else if (equalIgnoringCase(sandboxToken, "allow-popups"))
+        else if (equalLettersIgnoringASCIICase(sandboxToken, "allow-popups"))
             flags &= ~SandboxPopups;
-        else if (equalIgnoringCase(sandboxToken, "allow-pointer-lock"))
+        else if (equalLettersIgnoringASCIICase(sandboxToken, "allow-pointer-lock"))
             flags &= ~SandboxPointerLock;
         else {
             if (numberOfTokenErrors)

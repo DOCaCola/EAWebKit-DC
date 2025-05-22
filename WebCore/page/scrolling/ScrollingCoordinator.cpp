@@ -28,6 +28,7 @@
 #include "ScrollingCoordinator.h"
 
 #include "Document.h"
+#include "EventNames.h"
 #include "FrameView.h"
 #include "GraphicsLayer.h"
 #include "IntRect.h"
@@ -40,6 +41,7 @@
 #include "RenderView.h"
 #include "ScrollAnimator.h"
 #include "Settings.h"
+#include "TextStream.h"
 #include <wtf/MainThread.h>
 #include <wtf/text/StringBuilder.h>
 
@@ -95,95 +97,92 @@ bool ScrollingCoordinator::coordinatesScrollingForFrameView(const FrameView& fra
     return renderView->usesCompositing();
 }
 
-Region ScrollingCoordinator::absoluteNonFastScrollableRegionForFrame(const Frame& frame) const
+EventTrackingRegions ScrollingCoordinator::absoluteEventTrackingRegionsForFrame(const Frame& frame) const
 {
-    RenderView* renderView = frame.contentRenderer();
+    auto* renderView = frame.contentRenderer();
     if (!renderView || renderView->documentBeingDestroyed())
-        return Region();
+        return EventTrackingRegions();
 
 #if ENABLE(IOS_TOUCH_EVENTS)
     // On iOS, we use nonFastScrollableRegion to represent the region covered by elements with touch event handlers.
     ASSERT(frame.isMainFrame());
-
-    Document* document = frame.document();
+    auto* document = frame.document();
     if (!document)
-        return Region();
-
-    Vector<IntRect> touchRects;
-    document->getTouchRects(touchRects);
-    
-    Region touchRegion;
-    for (const auto& rect : touchRects)
-        touchRegion.unite(rect);
-
-    // FIXME: use absoluteRegionForEventTargets().
-    return touchRegion;
+        return EventTrackingRegions();
+    return document->eventTrackingRegions();
 #else
-    Region nonFastScrollableRegion;
-    FrameView* frameView = frame.view();
+    auto* frameView = frame.view();
     if (!frameView)
-        return nonFastScrollableRegion;
+        return EventTrackingRegions();
+
+    Region nonFastScrollableRegion;
 
     // FIXME: should ASSERT(!frameView->needsLayout()) here, but need to fix DebugPageOverlays
     // to not ask for regions at bad times.
 
-    if (const FrameView::ScrollableAreaSet* scrollableAreas = frameView->scrollableAreas()) {
+    if (auto* scrollableAreas = frameView->scrollableAreas()) {
         for (auto& scrollableArea : *scrollableAreas) {
             // Composited scrollable areas can be scrolled off the main thread.
             if (scrollableArea->usesAsyncScrolling())
                 continue;
 
-            IntRect box = scrollableArea->scrollableAreaBoundingBox();
+            bool isInsideFixed;
+            IntRect box = scrollableArea->scrollableAreaBoundingBox(&isInsideFixed);
+            if (isInsideFixed)
+                box = IntRect(frameView->fixedScrollableAreaBoundsInflatedForScrolling(LayoutRect(box)));
+
             nonFastScrollableRegion.unite(box);
         }
     }
 
     for (auto& widget : frameView->widgetsInRenderTree()) {
-        RenderWidget* renderWidget = RenderWidget::find(widget);
-        if (!renderWidget || !is<PluginViewBase>(*widget))
+        if (!is<PluginViewBase>(*widget))
             continue;
-    
-        if (downcast<PluginViewBase>(*widget).wantsWheelEvents())
-            nonFastScrollableRegion.unite(renderWidget->absoluteBoundingBoxRect());
+        if (!downcast<PluginViewBase>(*widget).wantsWheelEvents())
+            continue;
+        auto* renderWidget = RenderWidget::find(*widget);
+        if (!renderWidget)
+            continue;
+        nonFastScrollableRegion.unite(renderWidget->absoluteBoundingBoxRect());
     }
     
+    EventTrackingRegions eventTrackingRegions;
+
     // FIXME: if we've already accounted for this subframe as a scrollable area, we can avoid recursing into it here.
     for (Frame* subframe = frame.tree().firstChild(); subframe; subframe = subframe->tree().nextSibling()) {
-        FrameView* subframeView = subframe->view();
+        auto* subframeView = subframe->view();
         if (!subframeView)
             continue;
 
-        Region subframeRegion = absoluteNonFastScrollableRegionForFrame(*subframe);
+        EventTrackingRegions subframeRegion = absoluteEventTrackingRegionsForFrame(*subframe);
         // Map from the frame document to our document.
-        IntPoint offset = subframeView->contentsToView(IntPoint());
-        offset = subframeView->convertToContainingView(offset);
-        offset = frameView->viewToContents(offset);
+        IntPoint offset = subframeView->contentsToContainingViewContents(IntPoint());
 
         // FIXME: this translation ignores non-trival transforms on the frame.
         subframeRegion.translate(toIntSize(offset));
-        nonFastScrollableRegion.unite(subframeRegion);
+        eventTrackingRegions.unite(subframeRegion);
     }
 
-    Document::RegionFixedPair wheelHandlerRegion = frame.document()->absoluteRegionForEventTargets(frame.document()->wheelEventTargets());
+    auto wheelHandlerRegion = frame.document()->absoluteRegionForEventTargets(frame.document()->wheelEventTargets());
     bool wheelHandlerInFixedContent = wheelHandlerRegion.second;
     if (wheelHandlerInFixedContent) {
-        // FIXME: if a fixed element has a wheel event handler, for now just cover the entire document
-        // with the slow-scrolling region. This could be improved.
         // FIXME: need to handle position:sticky here too.
-        bool inFixed;
-        wheelHandlerRegion.first.unite(enclosingIntRect(frame.document()->absoluteEventHandlerBounds(inFixed)));
+        LayoutRect inflatedWheelHandlerBounds = frameView->fixedScrollableAreaBoundsInflatedForScrolling(LayoutRect(wheelHandlerRegion.first.bounds()));
+        wheelHandlerRegion.first.unite(enclosingIntRect(inflatedWheelHandlerBounds));
     }
     
     nonFastScrollableRegion.unite(wheelHandlerRegion.first);
 
     // FIXME: If this is not the main frame, we could clip the region to the frame's bounds.
-    return nonFastScrollableRegion;
+    eventTrackingRegions.uniteSynchronousRegion(eventNames().wheelEvent, nonFastScrollableRegion);
+
+    return eventTrackingRegions;
 #endif
 }
 
-Region ScrollingCoordinator::absoluteNonFastScrollableRegion() const
+EventTrackingRegions ScrollingCoordinator::absoluteEventTrackingRegions() const
 {
-    return absoluteNonFastScrollableRegionForFrame(m_page->mainFrame());
+    return absoluteEventTrackingRegionsForFrame(m_page->mainFrame());
 }
 
 void ScrollingCoordinator::frameViewHasSlowRepaintObjectsDidChange(FrameView& frameView)
@@ -346,7 +345,7 @@ SynchronousScrollingReasons ScrollingCoordinator::synchronousScrollingReasons(co
     return synchronousScrollingReasons;
 }
 
-void ScrollingCoordinator::updateSynchronousScrollingReasons(FrameView& frameView)
+void ScrollingCoordinator::updateSynchronousScrollingReasons(const FrameView& frameView)
 {
     // FIXME: Once we support async scrolling of iframes, we'll have to track the synchronous scrolling
     // reasons per frame (maybe on scrolling tree nodes).
@@ -366,10 +365,11 @@ void ScrollingCoordinator::setForceSynchronousScrollLayerPositionUpdates(bool fo
         updateSynchronousScrollingReasons(*frameView);
 }
 
-bool ScrollingCoordinator::shouldUpdateScrollLayerPositionSynchronously() const
+bool ScrollingCoordinator::shouldUpdateScrollLayerPositionSynchronously(const FrameView& frameView) const
 {
-    if (FrameView* frameView = m_page->mainFrame().view())
-        return synchronousScrollingReasons(*frameView);
+    if (&frameView == m_page->mainFrame().view())
+        return synchronousScrollingReasons(frameView);
+    
     return true;
 }
 
@@ -419,6 +419,41 @@ String ScrollingCoordinator::synchronousScrollingReasonsAsText() const
         return synchronousScrollingReasonsAsText(synchronousScrollingReasons(*frameView));
 
     return String();
+}
+
+TextStream& operator<<(TextStream& ts, ScrollingNodeType nodeType)
+{
+    switch (nodeType) {
+    case FrameScrollingNode:
+        ts << "frame-scrolling";
+        break;
+    case OverflowScrollingNode:
+        ts << "overflow-scrolling";
+        break;
+    case FixedNode:
+        ts << "fixed";
+        break;
+    case StickyNode:
+        ts << "sticky";
+        break;
+    }
+    return ts;
+}
+
+TextStream& operator<<(TextStream& ts, ScrollingLayerPositionAction action)
+{
+    switch (action) {
+    case ScrollingLayerPositionAction::Set:
+        ts << "set";
+        break;
+    case ScrollingLayerPositionAction::SetApproximate:
+        ts << "set approximate";
+        break;
+    case ScrollingLayerPositionAction::Sync:
+        ts << "sync";
+        break;
+    }
+    return ts;
 }
 
 } // namespace WebCore

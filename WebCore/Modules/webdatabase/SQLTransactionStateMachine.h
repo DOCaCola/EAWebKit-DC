@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef SQLTransactionStateMachine_h
-#define SQLTransactionStateMachine_h
+#pragma once
 
 #include "SQLTransactionState.h"
 #include <wtf/ThreadSafeRefCounted.h>
@@ -39,7 +38,7 @@ public:
 protected:
     SQLTransactionStateMachine();
 
-    typedef SQLTransactionState (T::* StateFunction)();
+    typedef void (T::*StateFunction)();
     virtual StateFunction stateFunctionFor(SQLTransactionState) = 0;
 
     void setStateToRequestedState();
@@ -90,19 +89,22 @@ template<typename T>
 void SQLTransactionStateMachine<T>::runStateMachine()
 {
     ASSERT(SQLTransactionState::End < SQLTransactionState::Idle);
-    while (m_nextState > SQLTransactionState::Idle) {
-        ASSERT(m_nextState < SQLTransactionState::NumberOfStates);
-        StateFunction stateFunction = stateFunctionFor(m_nextState);
-        ASSERT(stateFunction);
+
+    if (m_nextState <= SQLTransactionState::Idle)
+        return;
+
+    ASSERT(m_nextState < SQLTransactionState::NumberOfStates);
+
+    StateFunction stateFunction = stateFunctionFor(m_nextState);
+    ASSERT(stateFunction);
 
 #ifndef NDEBUG
-        m_stateAuditTrail[m_nextStateAuditEntry] = m_nextState;
-        m_nextStateAuditEntry = (m_nextStateAuditEntry + 1) % s_sizeOfStateAuditTrail;
+    m_stateAuditTrail[m_nextStateAuditEntry] = m_nextState;
+    m_nextStateAuditEntry = (m_nextStateAuditEntry + 1) % s_sizeOfStateAuditTrail;
 #endif
-        m_nextState = (static_cast<T*>(this)->*stateFunction)();
-    }
+
+    (static_cast<T*>(this)->*stateFunction)();
+    m_nextState = SQLTransactionState::Idle;
 }
 
 } // namespace WebCore
-
-#endif // SQLTransactionStateMachine_h

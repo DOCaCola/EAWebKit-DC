@@ -23,11 +23,8 @@
 
 #include "Document.h"
 #include "Event.h"
-#include "EventNames.h"
-#include "HTMLNames.h"
 #include "SVGAnimatedStaticPropertyTearOff.h"
 #include "XLinkNames.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
@@ -141,12 +138,17 @@ String SVGScriptElement::eventAttributeValue() const
     return String();
 }
 
-bool SVGScriptElement::asyncAttributeValue() const
+bool SVGScriptElement::hasAsyncAttribute() const
 {
     return false;
 }
 
-bool SVGScriptElement::deferAttributeValue() const
+bool SVGScriptElement::hasDeferAttribute() const
+{
+    return false;
+}
+
+bool SVGScriptElement::hasNoModuleAttribute() const
 {
     return false;
 }
@@ -156,9 +158,9 @@ bool SVGScriptElement::hasSourceAttribute() const
     return hasAttribute(XLinkNames::hrefAttr);
 }
 
-RefPtr<Element> SVGScriptElement::cloneElementWithoutAttributesAndChildren(Document& targetDocument)
+Ref<Element> SVGScriptElement::cloneElementWithoutAttributesAndChildren(Document& targetDocument)
 {
-    return adoptRef(new SVGScriptElement(tagQName(), targetDocument, false, alreadyStarted()));
+    return adoptRef(*new SVGScriptElement(tagQName(), targetDocument, false, alreadyStarted()));
 }
 
 #ifndef NDEBUG

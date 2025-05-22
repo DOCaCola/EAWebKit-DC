@@ -23,10 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SimpleLineLayoutFlowContents_h
-#define SimpleLineLayoutFlowContents_h
+#pragma once
 
-#include "RenderText.h"
+#include "RenderObject.h"
 
 namespace WebCore {
 class RenderBlockFlow;
@@ -38,6 +37,12 @@ public:
     FlowContents(const RenderBlockFlow&);
 
     struct Segment {
+        unsigned toSegmentPosition(unsigned position) const
+        {
+            ASSERT(position >= start);
+            return position - start;
+        }
+        unsigned toRenderPosition(unsigned position) const { return start + position; }
         unsigned start;
         unsigned end;
         String text;
@@ -66,5 +71,3 @@ inline const FlowContents::Segment& FlowContents::segmentForRun(unsigned start, 
 
 }
 }
-
-#endif

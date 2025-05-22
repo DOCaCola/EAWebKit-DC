@@ -29,14 +29,24 @@
 
 #include "FloatConversion.h"
 #include "IntSize.h"
+#include "TextStream.h"
 #include <limits>
 #include <math.h>
-#include <wtf/PrintStream.h>
 
 namespace WebCore {
 
-FloatSize::FloatSize(const IntSize& size) : m_width(size.width()), m_height(size.height())
+FloatSize::FloatSize(const IntSize& size)
+    : m_width(size.width())
+    , m_height(size.height())
 {
+}
+
+FloatSize FloatSize::constrainedBetween(const FloatSize& min, const FloatSize& max) const
+{
+    return {
+        std::max(min.width(), std::min(max.width(), m_width)),
+        std::max(min.height(), std::min(max.height(), m_height))
+    };
 }
 
 float FloatSize::diagonalLength() const
@@ -59,9 +69,10 @@ FloatSize FloatSize::narrowPrecision(double width, double height)
     return FloatSize(narrowPrecisionToFloat(width), narrowPrecisionToFloat(height));
 }
 
-void FloatSize::dump(PrintStream& out) const
+TextStream& operator<<(TextStream& ts, const FloatSize& size)
 {
-    out.printf("(%f x %f)", width(), height());
+    return ts << "width=" << TextStream::FormatNumberRespectingIntegers(size.width())
+        << " height=" << TextStream::FormatNumberRespectingIntegers(size.height());
 }
 
 }

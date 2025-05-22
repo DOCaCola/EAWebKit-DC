@@ -23,27 +23,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StorageNamespace_h
-#define StorageNamespace_h
+#pragma once
 
 #include <wtf/Forward.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
 
 class Page;
-class PageGroup;
-class SecurityOrigin;
 class StorageArea;
+struct SecurityOriginData;
 
 class StorageNamespace : public RefCounted<StorageNamespace> {
 public:
     virtual ~StorageNamespace() { }
-    virtual RefPtr<StorageArea> storageArea(PassRefPtr<SecurityOrigin>) = 0;
+    virtual RefPtr<StorageArea> storageArea(const SecurityOriginData&) = 0;
     virtual RefPtr<StorageNamespace> copy(Page* newPage) = 0;
 };
 
 } // namespace WebCore
-
-#endif // StorageNamespace_h

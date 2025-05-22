@@ -28,10 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FileError_h
-#define FileError_h
+#pragma once
 
-#include <wtf/PassRefPtr.h>
+#include <wtf/Ref.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
@@ -54,7 +53,7 @@ public:
         PATH_EXISTS_ERR = 12,
     };
 
-    static PassRefPtr<FileError> create(ErrorCode code) { return adoptRef(new FileError(code)); }
+    static Ref<FileError> create(ErrorCode code) { return adoptRef(*new FileError(code)); }
 
     ErrorCode code() const { return m_code; }
 
@@ -67,5 +66,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // FileError_h

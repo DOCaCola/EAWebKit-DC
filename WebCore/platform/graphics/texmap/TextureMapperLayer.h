@@ -20,8 +20,6 @@
 #ifndef TextureMapperLayer_h
 #define TextureMapperLayer_h
 
-#if USE(TEXTURE_MAPPER)
-
 #include "FilterOperations.h"
 #include "FloatRect.h"
 #include "GraphicsLayerTransform.h"
@@ -78,7 +76,9 @@ public:
     TextureMapper* textureMapper() const { return rootLayer().m_textureMapper; }
     void setTextureMapper(TextureMapper* texmap) { m_textureMapper = texmap; }
 
+#if !USE(COORDINATED_GRAPHICS)
     void setChildren(const Vector<GraphicsLayer*>&);
+#endif
     void setChildren(const Vector<TextureMapperLayer*>&);
     void setMaskLayer(TextureMapperLayer*);
     void setReplicaLayer(TextureMapperLayer*);
@@ -166,9 +166,9 @@ private:
     void computePatternTransformIfNeeded();
 
     // TextureMapperAnimation::Client
-    virtual void setAnimatedTransform(const TransformationMatrix&) override;
-    virtual void setAnimatedOpacity(float) override;
-    virtual void setAnimatedFilters(const FilterOperations&) override;
+    void setAnimatedTransform(const TransformationMatrix&) override;
+    void setAnimatedOpacity(float) override;
+    void setAnimatedFilters(const FilterOperations&) override;
 
     bool isVisible() const;
     enum ContentsLayerCount {
@@ -262,6 +262,5 @@ private:
 };
 
 }
-#endif
 
 #endif // TextureMapperLayer_h

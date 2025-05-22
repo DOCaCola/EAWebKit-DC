@@ -29,14 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GridPosition_h
-#define GridPosition_h
+#pragma once
 
 #if ENABLE(CSS_GRID_LAYOUT)
 
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
+
+// Recommended maximum size for both explicit and implicit grids.
+const int kGridMaxTracks = 1000000;
 
 enum GridPositionType {
     AutoPosition,
@@ -70,7 +72,7 @@ public:
     void setExplicitPosition(int position, const String& namedGridLine)
     {
         m_type = ExplicitPosition;
-        m_integerPosition = position;
+        setIntegerPosition(position);
         m_namedGridLine = namedGridLine;
     }
 
@@ -86,7 +88,7 @@ public:
     void setSpanPosition(int position, const String& namedGridLine)
     {
         m_type = SpanPosition;
-        m_integerPosition = position;
+        setIntegerPosition(position);
         m_namedGridLine = namedGridLine;
     }
 
@@ -123,7 +125,13 @@ public:
     {
         return isAuto() || isSpan();
     }
+
 private:
+    void setIntegerPosition(int integerPosition)
+    {
+        m_integerPosition = clampTo(integerPosition, -kGridMaxTracks, kGridMaxTracks);
+    }
+
     GridPositionType m_type;
     int m_integerPosition;
     String m_namedGridLine;
@@ -131,6 +139,4 @@ private:
 
 } // namespace WebCore
 
-#endif /* ENABLE(CSS_GRID_LAYOUT) */
-
-#endif // GridPosition_h
+#endif // ENABLE(CSS_GRID_LAYOUT)

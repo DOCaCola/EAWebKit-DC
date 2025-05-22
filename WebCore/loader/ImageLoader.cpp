@@ -29,6 +29,7 @@
 #include "Document.h"
 #include "Element.h"
 #include "Event.h"
+#include "EventNames.h"
 #include "EventSender.h"
 #include "Frame.h"
 #include "HTMLNames.h"
@@ -37,7 +38,6 @@
 #include "Page.h"
 #include "RenderImage.h"
 #include "RenderSVGImage.h"
-#include "SecurityOrigin.h"
 #include <wtf/NeverDestroyed.h>
 
 #if ENABLE(VIDEO)
@@ -89,7 +89,7 @@ static inline bool pageIsBeingDismissed(Document& document)
 
 ImageLoader::ImageLoader(Element& element)
     : m_element(element)
-    , m_image(0)
+    , m_image(nullptr)
     , m_derefElementTimer(*this, &ImageLoader::timerFired)
     , m_hasPendingBeforeLoadEvent(false)
     , m_hasPendingLoadEvent(false)
@@ -103,7 +103,7 @@ ImageLoader::ImageLoader(Element& element)
 ImageLoader::~ImageLoader()
 {
     if (m_image)
-        m_image->removeClient(this);
+        m_image->removeClient(*this);
 
     ASSERT(m_hasPendingBeforeLoadEvent || !beforeLoadEventSender().hasPendingEvents(*this));
     if (m_hasPendingBeforeLoadEvent)
@@ -147,7 +147,7 @@ void ImageLoader::clearImageWithoutConsideringPendingLoadEvent()
         }
         m_imageComplete = true;
         if (oldImage)
-            oldImage->removeClient(this);
+            oldImage->removeClient(*this);
     }
 
     if (RenderImageResource* imageResource = renderImageResource())
@@ -170,30 +170,28 @@ void ImageLoader::updateFromElement()
 
     // Do not load any image if the 'src' attribute is missing or if it is
     // an empty string.
-    CachedResourceHandle<CachedImage> newImage = 0;
+    CachedResourceHandle<CachedImage> newImage = nullptr;
     if (!attr.isNull() && !stripLeadingAndTrailingHTMLSpaces(attr).isEmpty()) {
         ResourceLoaderOptions options = CachedResourceLoader::defaultCachedResourceOptions();
-        options.setContentSecurityPolicyImposition(element().isInUserAgentShadowTree() ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck);
+        options.contentSecurityPolicyImposition = element().isInUserAgentShadowTree() ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck;
+        options.sameOriginDataURLFlag = SameOriginDataURLFlag::Set;
 
         CachedResourceRequest request(ResourceRequest(document.completeURL(sourceURI(attr))), options);
-        request.setInitiator(&element());
+        request.setInitiator(element());
 
-        String crossOriginMode = element().fastGetAttribute(HTMLNames::crossoriginAttr);
-        if (!crossOriginMode.isNull()) {
-            StoredCredentials allowCredentials = equalIgnoringCase(crossOriginMode, "use-credentials") ? AllowStoredCredentials : DoNotAllowStoredCredentials;
-            updateRequestForAccessControl(request.mutableResourceRequest(), document.securityOrigin(), allowCredentials);
-        }
+        request.setAsPotentiallyCrossOrigin(element().attributeWithoutSynchronization(HTMLNames::crossoriginAttr), document);
 
         if (m_loadManually) {
             bool autoLoadOtherImages = document.cachedResourceLoader().autoLoadImages();
             document.cachedResourceLoader().setAutoLoadImages(false);
-            newImage = new CachedImage(request.resourceRequest(), m_element.document().page()->sessionID());
+            newImage = new CachedImage(WTFMove(request), m_element.document().page()->sessionID());
+            newImage->setStatus(CachedResource::Pending);
             newImage->setLoading(true);
             newImage->setOwningCachedResourceLoader(&document.cachedResourceLoader());
             document.cachedResourceLoader().m_documentResources.set(newImage->url(), newImage.get());
             document.cachedResourceLoader().setAutoLoadImages(autoLoadOtherImages);
         } else
-            newImage = document.cachedResourceLoader().requestImage(request);
+            newImage = document.cachedResourceLoader().requestImage(WTFMove(request));
 
         // If we do not have an image here, it means that a cross-site
         // violation occurred, or that the image was blocked via Content
@@ -211,7 +209,7 @@ void ImageLoader::updateFromElement()
         m_hasPendingErrorEvent = true;
         errorEventSender().dispatchEventSoon(*this);
     }
-    
+
     CachedImage* oldImage = m_image.get();
     if (newImage != oldImage) {
         if (m_hasPendingBeforeLoadEvent) {
@@ -249,10 +247,10 @@ void ImageLoader::updateFromElement()
             // If newImage is cached, addClient() will result in the load event
             // being queued to fire. Ensure this happens after beforeload is
             // dispatched.
-            newImage->addClient(this);
+            newImage->addClient(*this);
         }
         if (oldImage) {
-            oldImage->removeClient(this);
+            oldImage->removeClient(*this);
             updateRenderer();
         }
     }
@@ -271,10 +269,10 @@ void ImageLoader::updateFromElementIgnoringPreviousError()
     updateFromElement();
 }
 
-void ImageLoader::notifyFinished(CachedResource* resource)
+void ImageLoader::notifyFinished(CachedResource& resource)
 {
     ASSERT(m_failedLoadURL.isEmpty());
-    ASSERT(resource == m_image.get());
+    ASSERT_UNUSED(resource, &resource == m_image.get());
 
     m_imageComplete = true;
     if (!hasPendingBeforeLoadEvent())
@@ -283,13 +281,13 @@ void ImageLoader::notifyFinished(CachedResource* resource)
     if (!m_hasPendingLoadEvent)
         return;
 
-    if (element().fastHasAttribute(HTMLNames::crossoriginAttr) && !resource->passesSameOriginPolicyCheck(*element().document().securityOrigin())) {
+    if (m_image->resourceError().isAccessControl()) {
         clearImageWithoutConsideringPendingLoadEvent();
 
         m_hasPendingErrorEvent = true;
         errorEventSender().dispatchEventSoon(*this);
 
-        DEPRECATED_DEFINE_STATIC_LOCAL(String, consoleMessage, (ASCIILiteral("Cross-origin image load denied by Cross-Origin Resource Sharing policy.")));
+        static NeverDestroyed<String> consoleMessage(ASCIILiteral("Cross-origin image load denied by Cross-Origin Resource Sharing policy."));
         element().document().addConsoleMessage(MessageSource::Security, MessageLevel::Error, consoleMessage);
 
         ASSERT(!m_hasPendingLoadEvent);
@@ -300,7 +298,7 @@ void ImageLoader::notifyFinished(CachedResource* resource)
         return;
     }
 
-    if (resource->wasCanceled()) {
+    if (m_image->wasCanceled()) {
         m_hasPendingLoadEvent = false;
         // Only consider updating the protection ref-count of the Element immediately before returning
         // from this function as doing so might result in the destruction of this ImageLoader.
@@ -401,7 +399,7 @@ void ImageLoader::dispatchPendingBeforeLoadEvent()
         return;
     }
     if (m_image) {
-        m_image->removeClient(this);
+        m_image->removeClient(*this);
         m_image = nullptr;
     }
 
@@ -467,7 +465,7 @@ void ImageLoader::elementDidMoveToNewDocument()
 
 inline void ImageLoader::clearFailedLoadURL()
 {
-    m_failedLoadURL = AtomicString();
+    m_failedLoadURL = nullAtom;
 }
 
 }

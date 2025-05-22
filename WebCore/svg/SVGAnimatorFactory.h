@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGAnimatorFactory_h
-#define SVGAnimatorFactory_h
+#pragma once
 
 #include "SVGAnimatedAngle.h"
 #include "SVGAnimatedBoolean.h"
@@ -55,7 +54,7 @@ public:
         case AnimatedBoolean:
             return std::make_unique<SVGAnimatedBooleanAnimator>(animationElement, contextElement);
         case AnimatedColor:
-            return std::make_unique<SVGAnimatedColorAnimator>(animationElement, contextElement);
+            return std::make_unique<SVGAnimatedColorAnimator>(*animationElement, *contextElement);
         case AnimatedEnumeration:
             return std::make_unique<SVGAnimatedEnumerationAnimator>(animationElement, contextElement);
         case AnimatedInteger:
@@ -97,5 +96,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // SVGAnimatorFactory_h

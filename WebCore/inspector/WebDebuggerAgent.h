@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,9 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebDebuggerAgent_h
-#define WebDebuggerAgent_h
+#pragma once
 
+#include "InspectorWebAgentBase.h"
 #include <inspector/agents/InspectorDebuggerAgent.h>
 
 namespace WebCore {
@@ -37,16 +37,14 @@ class WebDebuggerAgent : public Inspector::InspectorDebuggerAgent {
     WTF_MAKE_NONCOPYABLE(WebDebuggerAgent);
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    WebDebuggerAgent(Inspector::InjectedScriptManager*, InstrumentingAgents*);
+    WebDebuggerAgent(WebAgentContext&);
     virtual ~WebDebuggerAgent() { }
 
 protected:
-    virtual void enable() override;
-    virtual void disable(bool isBeingDestroyed) override;
+    void enable() override;
+    void disable(bool isBeingDestroyed) override;
 
-    InstrumentingAgents* m_instrumentingAgents;
+    InstrumentingAgents& m_instrumentingAgents;
 };
 
 } // namespace WebCore
-
-#endif // !defined(WebDebuggerAgent_h)

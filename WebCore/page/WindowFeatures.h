@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2007, 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2003, 2007, 2010, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,58 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WindowFeatures_h
-#define WindowFeatures_h
+#pragma once
 
-#include <wtf/Forward.h>
-#include <wtf/HashMap.h>
+#include <functional>
 #include <wtf/Optional.h>
 #include <wtf/Vector.h>
-#include <wtf/text/StringHash.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
 class FloatRect;
 
 struct WindowFeatures {
-    WindowFeatures()
-        : menuBarVisible(true)
-        , statusBarVisible(true)
-        , toolBarVisible(true)
-        , locationBarVisible(true)
-        , scrollbarsVisible(true)
-        , resizable(true)
-        , fullscreen(false)
-        , dialog(false)
-    {
-    }
-    explicit WindowFeatures(const String& windowFeaturesString);
-    WindowFeatures(const String& dialogFeaturesString, const FloatRect& screenAvailableRect);
+    std::optional<float> x;
+    std::optional<float> y;
+    std::optional<float> width;
+    std::optional<float> height;
 
-    Optional<float> x;
-    Optional<float> y;
-    Optional<float> width;
-    Optional<float> height;
+    bool menuBarVisible { true };
+    bool statusBarVisible { true };
+    bool toolBarVisible { true };
+    bool locationBarVisible { true };
+    bool scrollbarsVisible { true };
+    bool resizable { true };
 
-    bool menuBarVisible;
-    bool statusBarVisible;
-    bool toolBarVisible;
-    bool locationBarVisible;
-    bool scrollbarsVisible;
-    bool resizable;
-
-    bool fullscreen;
-    bool dialog;
+    bool fullscreen { false };
+    bool dialog { false };
 
     Vector<String> additionalFeatures;
-
-private:
-    static HashMap<String, String> parseDialogFeatures(const String&);
-    static bool boolFeature(const HashMap<String, String>&, const char* key, bool defaultValue = false);
-    static float floatFeature(const HashMap<String, String>&, const char* key, float min, float max, float defaultValue);
-    void setWindowFeature(const String& keyString, const String& valueString);
 };
 
-} // namespace WebCore
+WindowFeatures parseWindowFeatures(StringView windowFeaturesString);
+WindowFeatures parseDialogFeatures(const String& dialogFeaturesString, const FloatRect& screenAvailableRect);
 
-#endif // WindowFeatures_h
+void processFeaturesString(StringView features, std::function<void(StringView type, StringView value)> callback);
+
+} // namespace WebCore

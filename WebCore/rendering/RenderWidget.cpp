@@ -46,42 +46,40 @@ unsigned WidgetHierarchyUpdatesSuspensionScope::s_widgetHierarchyUpdateSuspendCo
 
 WidgetHierarchyUpdatesSuspensionScope::WidgetToParentMap& WidgetHierarchyUpdatesSuspensionScope::widgetNewParentMap()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(WidgetToParentMap, map, ());
+    static NeverDestroyed<WidgetToParentMap> map;
     return map;
 }
 
 void WidgetHierarchyUpdatesSuspensionScope::moveWidgets()
 {
-    WidgetToParentMap map;
-    widgetNewParentMap().swap(map);
-    WidgetToParentMap::iterator end = map.end();
-    for (WidgetToParentMap::iterator it = map.begin(); it != end; ++it) {
-        Widget* child = it->key.get();
-        ScrollView* currentParent = child->parent();
-        FrameView* newParent = it->value;
+    auto map = WTFMove(widgetNewParentMap());
+    for (auto& entry : map) {
+        auto& child = *entry.key;
+        auto* currentParent = child.parent();
+        auto* newParent = entry.value;
         if (newParent != currentParent) {
             if (currentParent)
-                currentParent->removeChild(*child);
+                currentParent->removeChild(child);
             if (newParent)
                 newParent->addChild(child);
         }
     }
 }
 
-static void moveWidgetToParentSoon(Widget* child, FrameView* parent)
+static void moveWidgetToParentSoon(Widget& child, FrameView* parent)
 {
     if (!WidgetHierarchyUpdatesSuspensionScope::isSuspended()) {
         if (parent)
             parent->addChild(child);
         else
-            child->removeFromParent();
+            child.removeFromParent();
         return;
     }
     WidgetHierarchyUpdatesSuspensionScope::scheduleWidgetToMove(child, parent);
 }
 
-RenderWidget::RenderWidget(HTMLFrameOwnerElement& element, Ref<RenderStyle>&& style)
-    : RenderReplaced(element, WTF::move(style))
+RenderWidget::RenderWidget(HTMLFrameOwnerElement& element, RenderStyle&& style)
+    : RenderReplaced(element, WTFMove(style))
     , m_weakPtrFactory(this)
 {
     setInline(false);
@@ -140,7 +138,7 @@ bool RenderWidget::setWidgetGeometry(const LayoutRect& frame)
     if (!weakThis)
         return true;
 
-    if (boundsChanged && hasLayer() && layer()->isComposited())
+    if (boundsChanged && isComposited())
         layer()->backing()->updateAfterWidgetResize();
 
     return oldFrameRect.size() != newFrameRect.size();
@@ -161,13 +159,13 @@ bool RenderWidget::updateWidgetGeometry()
     return setWidgetGeometry(absoluteContentBox);
 }
 
-void RenderWidget::setWidget(PassRefPtr<Widget> widget)
+void RenderWidget::setWidget(RefPtr<Widget>&& widget)
 {
     if (widget == m_widget)
         return;
 
     if (m_widget) {
-        moveWidgetToParentSoon(m_widget.get(), 0);
+        moveWidgetToParentSoon(*m_widget, nullptr);
         view().frameView().willRemoveWidgetFromRenderTree(*m_widget);
         widgetRendererMap().remove(m_widget.get());
         m_widget = nullptr;
@@ -193,7 +191,7 @@ void RenderWidget::setWidget(PassRefPtr<Widget> widget)
                 repaint();
             }
         }
-        moveWidgetToParentSoon(m_widget.get(), &view().frameView());
+        moveWidgetToParentSoon(*m_widget, &view().frameView());
     }
 }
 
@@ -228,20 +226,20 @@ void RenderWidget::paintContents(PaintInfo& paintInfo, const LayoutPoint& paintO
     // When painting widgets into compositing layers, tx and ty are relative to the enclosing compositing layer,
     // not the root. In this case, shift the CTM and adjust the paintRect to be root-relative to fix plug-in drawing.
     if (!widgetPaintOffset.isZero()) {
-        paintInfo.context->translate(widgetPaintOffset);
+        paintInfo.context().translate(widgetPaintOffset);
         paintRect.move(-widgetPaintOffset);
     }
     // FIXME: Remove repaintrect encolsing/integral snapping when RenderWidget becomes device pixel snapped.
-    m_widget->paint(paintInfo.context, snappedIntRect(paintRect));
+    m_widget->paint(paintInfo.context(), snappedIntRect(paintRect));
 
     if (!widgetPaintOffset.isZero())
-        paintInfo.context->translate(-widgetPaintOffset);
+        paintInfo.context().translate(-widgetPaintOffset);
 
     if (is<FrameView>(*m_widget)) {
         FrameView& frameView = downcast<FrameView>(*m_widget);
         bool runOverlapTests = !frameView.useSlowRepaintsIfNotOverlapped();
         if (paintInfo.overlapTestRequests && runOverlapTests) {
-            ASSERT(!paintInfo.overlapTestRequests->contains(this));
+            ASSERT(!paintInfo.overlapTestRequests->contains(this) || (paintInfo.overlapTestRequests->get(this) == m_widget->frameRect()));
             paintInfo.overlapTestRequests->set(this, m_widget->frameRect());
         }
     }
@@ -254,7 +252,7 @@ void RenderWidget::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 
     LayoutPoint adjustedPaintOffset = paintOffset + location();
 
-    if (hasBoxDecorations() && (paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseSelection))
+    if (hasVisibleBoxDecorations() && (paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseSelection))
         paintBoxDecorations(paintInfo, adjustedPaintOffset);
 
     if (paintInfo.phase == PaintPhaseMask) {
@@ -275,26 +273,26 @@ void RenderWidget::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
             return;
 
         // Push a clip if we have a border radius, since we want to round the foreground content that gets painted.
-        paintInfo.context->save();
+        paintInfo.context().save();
         FloatRoundedRect roundedInnerRect = FloatRoundedRect(style().getRoundedInnerBorderFor(borderRect,
             paddingTop() + borderTop(), paddingBottom() + borderBottom(), paddingLeft() + borderLeft(), paddingRight() + borderRight(), true, true));
-        clipRoundedInnerRect(paintInfo.context, borderRect, roundedInnerRect);
+        clipRoundedInnerRect(paintInfo.context(), borderRect, roundedInnerRect);
     }
 
     if (m_widget)
         paintContents(paintInfo, paintOffset);
 
     if (style().hasBorderRadius())
-        paintInfo.context->restore();
+        paintInfo.context().restore();
 
     // Paint a partially transparent wash over selected widgets.
     if (isSelected() && !document().printing()) {
         // FIXME: selectionRect() is in absolute, not painting coordinates.
-        paintInfo.context->fillRect(snappedIntRect(selectionRect()), selectionBackgroundColor(), style().colorSpace());
+        paintInfo.context().fillRect(snappedIntRect(selectionRect()), selectionBackgroundColor());
     }
 
     if (hasLayer() && layer()->canResize())
-        layer()->paintResizer(paintInfo.context, roundedIntPoint(adjustedPaintOffset), paintInfo.rect);
+        layer()->paintResizer(paintInfo.context(), roundedIntPoint(adjustedPaintOffset), paintInfo.rect);
 }
 
 void RenderWidget::setOverlapTestResult(bool isOverlapped)
@@ -338,9 +336,9 @@ void RenderWidget::setSelectionState(SelectionState state)
         m_widget->setIsSelected(isSelected());
 }
 
-RenderWidget* RenderWidget::find(const Widget* widget)
+RenderWidget* RenderWidget::find(const Widget& widget)
 {
-    return widgetRendererMap().get(widget);
+    return widgetRendererMap().get(&widget);
 }
 
 bool RenderWidget::nodeAtPoint(const HitTestRequest& request, HitTestResult& result, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction action)
@@ -350,7 +348,7 @@ bool RenderWidget::nodeAtPoint(const HitTestRequest& request, HitTestResult& res
         RenderView& childRoot = *childFrameView.renderView();
 
         LayoutPoint adjustedLocation = accumulatedOffset + location();
-        LayoutPoint contentOffset = LayoutPoint(borderLeft() + paddingLeft(), borderTop() + paddingTop()) - childFrameView.scrollOffset();
+        LayoutPoint contentOffset = LayoutPoint(borderLeft() + paddingLeft(), borderTop() + paddingTop()) - toIntSize(childFrameView.scrollPosition());
         HitTestLocation newHitTestLocation(locationInContainer, -adjustedLocation - contentOffset);
         HitTestRequest newHitTestRequest(request.type() | HitTestRequest::ChildFrameHitTest);
         HitTestResult childFrameResult(newHitTestLocation);

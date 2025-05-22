@@ -31,8 +31,8 @@ using namespace WTF::Unicode;
 
 namespace WebCore {
 
-RenderQuote::RenderQuote(Document& document, Ref<RenderStyle>&& style, QuoteType quote)
-    : RenderInline(document, WTF::move(style))
+RenderQuote::RenderQuote(Document& document, RenderStyle&& style, QuoteType quote)
+    : RenderInline(document, WTFMove(style))
     , m_type(quote)
     , m_text(emptyString())
 {
@@ -45,6 +45,12 @@ RenderQuote::~RenderQuote()
     ASSERT(!m_isAttached);
     ASSERT(!m_next);
     ASSERT(!m_previous);
+}
+
+void RenderQuote::insertedIntoTree()
+{
+    RenderInline::insertedIntoTree();
+    attachQuote();
 }
 
 void RenderQuote::willBeRemovedFromTree()
@@ -349,9 +355,9 @@ void RenderQuote::updateText()
     m_text = text;
     // Start from the end of the child list because, if we've had a first-letter
     // renderer inserted then the remaining text will be at the end.
-	if (auto* renderText = quoteTextRenderer(lastChild())) {
-		renderText->setContentString(m_text);
-		renderText->dirtyLineBoxes(false);
+    if (auto* renderText = quoteTextRenderer(lastChild())) {
+        renderText->setContentString(m_text);
+        renderText->dirtyLineBoxes(false);
         return;
     }
     addChild(new RenderTextFragment(document(), m_text));
@@ -383,6 +389,9 @@ String RenderQuote::computeText() const
 
 void RenderQuote::attachQuote()
 {
+    if (view().renderTreeIsBeingMutatedInternally())
+        return;
+
     ASSERT(!m_isAttached);
     ASSERT(!m_next);
     ASSERT(!m_previous);
@@ -424,6 +433,9 @@ void RenderQuote::attachQuote()
 
 void RenderQuote::detachQuote()
 {
+    if (view().renderTreeIsBeingMutatedInternally())
+        return;
+
     ASSERT(!m_next || m_next->m_isAttached);
     ASSERT(!m_previous || m_previous->m_isAttached);
     if (!m_isAttached)

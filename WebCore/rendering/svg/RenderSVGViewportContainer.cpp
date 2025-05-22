@@ -25,13 +25,12 @@
 
 #include "GraphicsContext.h"
 #include "RenderView.h"
-#include "SVGNames.h"
 #include "SVGSVGElement.h"
 
 namespace WebCore {
 
-RenderSVGViewportContainer::RenderSVGViewportContainer(SVGSVGElement& element, Ref<RenderStyle>&& style)
-    : RenderSVGContainer(element, WTF::move(style))
+RenderSVGViewportContainer::RenderSVGViewportContainer(SVGSVGElement& element, RenderStyle&& style)
+    : RenderSVGContainer(element, WTFMove(style))
     , m_didTransformToRootUpdate(false)
     , m_isLayoutSizeChanged(false)
     , m_needsTransformUpdate(true)
@@ -51,7 +50,7 @@ void RenderSVGViewportContainer::determineIfLayoutSizeChanged()
 void RenderSVGViewportContainer::applyViewportClip(PaintInfo& paintInfo)
 {
     if (SVGRenderSupport::isOverflowHidden(*this))
-        paintInfo.context->clip(m_viewport);
+        paintInfo.context().clip(m_viewport);
 }
 
 void RenderSVGViewportContainer::calcViewport()

@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef RemoveNodeCommand_h
-#define RemoveNodeCommand_h
+#pragma once
 
 #include "EditCommand.h"
 
@@ -32,27 +31,25 @@ namespace WebCore {
 
 class RemoveNodeCommand : public SimpleEditCommand {
 public:
-    static Ref<RemoveNodeCommand> create(PassRefPtr<Node> node, ShouldAssumeContentIsAlwaysEditable shouldAssumeContentIsAlwaysEditable)
+    static Ref<RemoveNodeCommand> create(Ref<Node>&& node, ShouldAssumeContentIsAlwaysEditable shouldAssumeContentIsAlwaysEditable, EditAction editingAction = EditActionUnspecified)
     {
-        return adoptRef(*new RemoveNodeCommand(node, shouldAssumeContentIsAlwaysEditable));
+        return adoptRef(*new RemoveNodeCommand(WTFMove(node), shouldAssumeContentIsAlwaysEditable, editingAction));
     }
 
 private:
-    explicit RemoveNodeCommand(PassRefPtr<Node>, ShouldAssumeContentIsAlwaysEditable);
+    RemoveNodeCommand(Ref<Node>&&, ShouldAssumeContentIsAlwaysEditable, EditAction);
 
-    virtual void doApply() override;
-    virtual void doUnapply() override;
+    void doApply() override;
+    void doUnapply() override;
 
 #ifndef NDEBUG
     void getNodesInCommand(HashSet<Node*>&) override;
 #endif
 
-    RefPtr<Node> m_node;
+    Ref<Node> m_node;
     RefPtr<ContainerNode> m_parent;
     RefPtr<Node> m_refChild;
     ShouldAssumeContentIsAlwaysEditable m_shouldAssumeContentIsAlwaysEditable;
 };
 
 } // namespace WebCore
-
-#endif // RemoveNodeCommand_h

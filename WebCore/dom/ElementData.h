@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ElementData_h
-#define ElementData_h
+#pragma once
 
 #include "Attribute.h"
 #include "SpaceSplitString.h"
@@ -85,8 +84,7 @@ public:
 
     static const unsigned attributeNotFound = static_cast<unsigned>(-1);
 
-    void clearClass() const { m_classNames.clear(); }
-    void setClass(const AtomicString& className, bool shouldFoldCase) const { m_classNames.set(className, shouldFoldCase); }
+    void setClassNames(const SpaceSplitString& classNames) const { m_classNames = classNames; }
     const SpaceSplitString& classNames() const { return m_classNames; }
     static ptrdiff_t classNamesMemoryOffset() { return OBJECT_OFFSETOF(ElementData, m_classNames); }
 
@@ -348,6 +346,3 @@ SPECIALIZE_TYPE_TRAITS_END()
 SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::UniqueElementData)
     static bool isType(const WebCore::ElementData& elementData) { return elementData.isUnique(); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif // ElementData_h
-

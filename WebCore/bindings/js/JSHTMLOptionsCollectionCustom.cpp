@@ -20,55 +20,21 @@
 #include "config.h"
 #include "JSHTMLOptionsCollection.h"
 
+#include "CustomElementReactionQueue.h"
 #include "ExceptionCode.h"
-#include "HTMLNames.h"
-#include "HTMLOptionElement.h"
-#include "HTMLOptionsCollection.h"
-#include "HTMLSelectElement.h"
 #include "JSHTMLOptionElement.h"
 #include "JSHTMLSelectElement.h"
 #include "JSHTMLSelectElementCustom.h"
-#include "JSNodeList.h"
-#include "StaticNodeList.h"
-
 #include <wtf/MathExtras.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-void JSHTMLOptionsCollection::setLength(ExecState* exec, JSValue value)
+void JSHTMLOptionsCollection::indexSetter(ExecState* state, unsigned index, JSValue value)
 {
-    ExceptionCode ec = 0;
-    unsigned newLength = 0;
-    double lengthValue = value.toNumber(exec);
-    if (!std::isnan(lengthValue) && !std::isinf(lengthValue)) {
-        if (lengthValue < 0.0)
-            ec = INDEX_SIZE_ERR;
-        else if (lengthValue > static_cast<double>(UINT_MAX))
-            newLength = UINT_MAX;
-        else
-            newLength = static_cast<unsigned>(lengthValue);
-    }
-    if (!ec)
-        impl().setLength(newLength, ec);
-    setDOMException(exec, ec);
-}
-
-void JSHTMLOptionsCollection::indexSetter(ExecState* exec, unsigned index, JSValue value)
-{
-    selectIndexSetter(&impl().selectElement(), exec, index, value);
-}
-
-JSValue JSHTMLOptionsCollection::remove(ExecState* exec)
-{
-    // The argument can be an HTMLOptionElement or an index.
-    JSValue argument = exec->argument(0);
-    if (HTMLOptionElement* option = JSHTMLOptionElement::toWrapped(argument))
-        impl().remove(option);
-    else
-        impl().remove(argument.toInt32(exec));
-    return jsUndefined();
+    CustomElementReactionStack customElementReactionStack;
+    selectElementIndexSetter(*state, wrapped().selectElement(), index, value);
 }
 
 }

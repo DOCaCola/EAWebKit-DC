@@ -36,6 +36,7 @@
 #include "MediaControlElements.h"
 #include "Page.h"
 #include "PageGroup.h"
+#include "RenderTheme.h"
 #include "TextTrack.h"
 #include "TextTrackList.h"
 #include "UUID.h"
@@ -45,21 +46,28 @@ namespace WebCore {
 
 const AtomicString& MediaControlsHost::automaticKeyword()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(const AtomicString, automatic, ("automatic", AtomicString::ConstructFromLiteral));
+    static NeverDestroyed<const AtomicString> automatic("automatic", AtomicString::ConstructFromLiteral);
     return automatic;
 }
 
 const AtomicString& MediaControlsHost::forcedOnlyKeyword()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(const AtomicString, forcedOn, ("forced-only", AtomicString::ConstructFromLiteral));
+    static NeverDestroyed<const AtomicString> forcedOn("forced-only", AtomicString::ConstructFromLiteral);
     return forcedOn;
 }
 
 const AtomicString& MediaControlsHost::alwaysOnKeyword()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(const AtomicString, alwaysOn, ("always-on", AtomicString::ConstructFromLiteral));
+    static NeverDestroyed<const AtomicString> alwaysOn("always-on", AtomicString::ConstructFromLiteral);
     return alwaysOn;
 }
+
+const AtomicString& MediaControlsHost::manualKeyword()
+{
+    static NeverDestroyed<const AtomicString> alwaysOn("manual", AtomicString::ConstructFromLiteral);
+    return alwaysOn;
+}
+
 
 Ref<MediaControlsHost> MediaControlsHost::create(HTMLMediaElement* mediaElement)
 {
@@ -76,33 +84,25 @@ MediaControlsHost::~MediaControlsHost()
 {
 }
 
-Vector<RefPtr<TextTrack>> MediaControlsHost::sortedTrackListForMenu(TextTrackList* trackList)
+Vector<RefPtr<TextTrack>> MediaControlsHost::sortedTrackListForMenu(TextTrackList& trackList)
 {
-    if (!trackList)
-        return Vector<RefPtr<TextTrack>>();
-
     Page* page = m_mediaElement->document().page();
     if (!page)
-        return Vector<RefPtr<TextTrack>>();
+        return { };
 
-    CaptionUserPreferences* captionPreferences = page->group().captionPreferences();
-    return captionPreferences->sortedTrackListForMenu(trackList);
+    return page->group().captionPreferences().sortedTrackListForMenu(&trackList);
 }
 
-Vector<RefPtr<AudioTrack>> MediaControlsHost::sortedTrackListForMenu(AudioTrackList* trackList)
+Vector<RefPtr<AudioTrack>> MediaControlsHost::sortedTrackListForMenu(AudioTrackList& trackList)
 {
-    if (!trackList)
-        return Vector<RefPtr<AudioTrack>>();
-
     Page* page = m_mediaElement->document().page();
     if (!page)
-        return Vector<RefPtr<AudioTrack>>();
+        return { };
 
-    CaptionUserPreferences* captionPreferences = page->group().captionPreferences();
-    return captionPreferences->sortedTrackListForMenu(trackList);
+    return page->group().captionPreferences().sortedTrackListForMenu(&trackList);
 }
 
-String MediaControlsHost::displayNameForTrack(TextTrack* track)
+String MediaControlsHost::displayNameForTrack(const std::optional<TextOrAudioTrack>& track)
 {
     if (!track)
         return emptyString();
@@ -111,21 +111,9 @@ String MediaControlsHost::displayNameForTrack(TextTrack* track)
     if (!page)
         return emptyString();
 
-    CaptionUserPreferences* captionPreferences = page->group().captionPreferences();
-    return captionPreferences->displayNameForTrack(track);
-}
-
-String MediaControlsHost::displayNameForTrack(AudioTrack* track)
-{
-    if (!track)
-        return emptyString();
-
-    Page* page = m_mediaElement->document().page();
-    if (!page)
-        return emptyString();
-
-    CaptionUserPreferences* captionPreferences = page->group().captionPreferences();
-    return captionPreferences->displayNameForTrack(track);
+    return WTF::visit([&page](auto& track) {
+        return page->group().captionPreferences().displayNameForTrack(track.get());
+    }, track.value());
 }
 
 TextTrack* MediaControlsHost::captionMenuOffItem()
@@ -138,19 +126,21 @@ TextTrack* MediaControlsHost::captionMenuAutomaticItem()
     return TextTrack::captionMenuAutomaticItem();
 }
 
-AtomicString MediaControlsHost::captionDisplayMode()
+AtomicString MediaControlsHost::captionDisplayMode() const
 {
     Page* page = m_mediaElement->document().page();
     if (!page)
         return emptyAtom;
 
-    switch (page->group().captionPreferences()->captionDisplayMode()) {
+    switch (page->group().captionPreferences().captionDisplayMode()) {
     case CaptionUserPreferences::Automatic:
         return automaticKeyword();
     case CaptionUserPreferences::ForcedOnly:
         return forcedOnlyKeyword();
     case CaptionUserPreferences::AlwaysOn:
         return alwaysOnKeyword();
+    case CaptionUserPreferences::Manual:
+        return manualKeyword();
     default:
         ASSERT_NOT_REACHED();
         return emptyAtom;
@@ -200,9 +190,24 @@ bool MediaControlsHost::allowsInlineMediaPlayback() const
     return !m_mediaElement->mediaSession().requiresFullscreenForVideoPlayback(*m_mediaElement);
 }
 
-bool MediaControlsHost::supportsFullscreen()
+bool MediaControlsHost::supportsFullscreen() const
 {
-    return m_mediaElement->supportsFullscreen();
+    return m_mediaElement->supportsFullscreen(HTMLMediaElementEnums::VideoFullscreenModeStandard);
+}
+
+bool MediaControlsHost::isVideoLayerInline() const
+{
+    return m_mediaElement->isVideoLayerInline();
+}
+
+bool MediaControlsHost::isInMediaDocument() const
+{
+    return m_mediaElement->document().isMediaDocument();
+}
+
+void MediaControlsHost::setPreparedToReturnVideoLayerToInline(bool value)
+{
+    m_mediaElement->setPreparedToReturnVideoLayerToInline(value);
 }
 
 bool MediaControlsHost::userGestureRequired() const
@@ -228,37 +233,29 @@ String MediaControlsHost::externalDeviceDisplayName() const
 #endif
 }
 
-String MediaControlsHost::externalDeviceType() const
+auto MediaControlsHost::externalDeviceType() const -> DeviceType
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, none, (ASCIILiteral("none")));
-    String type = none;
-    
-#if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, airplay, (ASCIILiteral("airplay")));
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, tvout, (ASCIILiteral("tvout")));
-    
+#if !ENABLE(WIRELESS_PLAYBACK_TARGET)
+    return DeviceType::None;
+#else
     MediaPlayer* player = m_mediaElement->player();
     if (!player) {
         LOG(Media, "MediaControlsHost::externalDeviceType - returning \"none\" because player is NULL");
-        return none;
+        return DeviceType::None;
     }
     
     switch (player->wirelessPlaybackTargetType()) {
     case MediaPlayer::TargetTypeNone:
-        type = none;
-        break;
+        return DeviceType::None;
     case MediaPlayer::TargetTypeAirPlay:
-        type = airplay;
-        break;
+        return DeviceType::Airplay;
     case MediaPlayer::TargetTypeTVOut:
-        type = tvout;
-        break;
+        return DeviceType::Tvout;
     }
+
+    ASSERT_NOT_REACHED();
+    return DeviceType::None;
 #endif
-    
-    LOG(Media, "MediaControlsHost::externalDeviceType - returning \"%s\"", type.utf8().data());
-    
-    return type;
 }
 
 bool MediaControlsHost::controlsDependOnPageScaleFactor() const
@@ -274,6 +271,22 @@ void MediaControlsHost::setControlsDependOnPageScaleFactor(bool value)
 String MediaControlsHost::generateUUID() const
 {
     return createCanonicalUUIDString();
+}
+
+String MediaControlsHost::shadowRootCSSText() const
+{
+    Page* page = m_mediaElement->document().page();
+    if (!page)
+        return emptyString();
+    return RenderTheme::themeForPage(page)->modernMediaControlsStyleSheet();
+}
+
+String MediaControlsHost::base64StringForIconAndPlatform(const String& iconName, const String& platform) const
+{
+    Page* page = m_mediaElement->document().page();
+    if (!page)
+        return emptyString();
+    return RenderTheme::themeForPage(page)->mediaControlsBase64StringForIconAndPlatform(iconName, platform);
 }
 
 }

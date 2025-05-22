@@ -33,10 +33,11 @@
 #include "StorageThread.h"
 
 #include <wtf/AutodrainedPool.h>
+#include <wtf/HashSet.h>
 #include <wtf/MainThread.h>
+#include <wtf/NeverDestroyed.h>
 //+EAWebKitChange
 //06/13/2013
-#include <EAWebKit/EAWebKitThreadInterface.h>
 //-EAWebKitChange
 
 namespace WebCore {
@@ -44,7 +45,7 @@ namespace WebCore {
 static HashSet<StorageThread*>& activeStorageThreads()
 {
     ASSERT(isMainThread());
-    DEPRECATED_DEFINE_STATIC_LOCAL(HashSet<StorageThread*>, threads, ());
+    static NeverDestroyed<HashSet<StorageThread*>> threads;
     return threads;
 }
 
@@ -102,11 +103,11 @@ void StorageThread::DoWork()
 }
 //-EAWebKitChange
 
-void StorageThread::dispatch(const std::function<void ()>& function)
+void StorageThread::dispatch(Function<void ()>&& function)
 {
     ASSERT(isMainThread());
     ASSERT(!m_queue.killed() && m_threadID);
-    m_queue.append(std::make_unique<std::function<void ()>>(function));
+    m_queue.append(std::make_unique<Function<void ()>>(WTFMove(function)));
 }
 
 void StorageThread::terminate()
@@ -118,7 +119,7 @@ void StorageThread::terminate()
     if (!m_threadID)
         return;
 
-    m_queue.append(std::make_unique<std::function<void ()>>([this] {
+    m_queue.append(std::make_unique<Function<void ()>>([this] {
         performTerminate();
     }));
     waitForThreadCompletion(m_threadID);
@@ -136,8 +137,11 @@ void StorageThread::releaseFastMallocFreeMemoryInAllThreads()
 {
     HashSet<StorageThread*>& threads = activeStorageThreads();
 
-    for (HashSet<StorageThread*>::iterator it = threads.begin(), end = threads.end(); it != end; ++it)
-        (*it)->dispatch(WTF::releaseFastMallocFreeMemory);
+    for (HashSet<StorageThread*>::iterator it = threads.begin(), end = threads.end(); it != end; ++it) {
+        (*it)->dispatch([]() {
+            WTF::releaseFastMallocFreeMemory();
+        });
+    }
 }
 
 }

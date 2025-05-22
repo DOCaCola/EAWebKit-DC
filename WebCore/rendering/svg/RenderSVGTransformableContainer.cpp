@@ -22,13 +22,13 @@
 #include "config.h"
 #include "RenderSVGTransformableContainer.h"
 
-#include "SVGNames.h"
+#include "SVGGElement.h"
 #include "SVGUseElement.h"
 
 namespace WebCore {
     
-RenderSVGTransformableContainer::RenderSVGTransformableContainer(SVGGraphicsElement& element, Ref<RenderStyle>&& style)
-    : RenderSVGContainer(element, WTF::move(style))
+RenderSVGTransformableContainer::RenderSVGTransformableContainer(SVGGraphicsElement& element, RenderStyle&& style)
+    : RenderSVGContainer(element, WTFMove(style))
     , m_needsTransformUpdate(true)
     , m_didTransformToRootUpdate(false)
 {

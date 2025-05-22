@@ -23,19 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ContextMenuClient_h
-#define ContextMenuClient_h
+#pragma once
 
 #if ENABLE(CONTEXT_MENUS)
 
 #include "ContextMenu.h"
-#include "PlatformMenuDescription.h"
 #include <wtf/Forward.h>
 
 namespace WebCore {
-    class ContextMenuItem;
+
     class Frame;
-    class HitTestResult;
     class URL;
 
     class ContextMenuClient {
@@ -43,22 +40,12 @@ namespace WebCore {
         virtual ~ContextMenuClient() {  }
         virtual void contextMenuDestroyed() = 0;
         
-#if USE(CROSS_PLATFORM_CONTEXT_MENUS)
-        virtual std::unique_ptr<ContextMenu> customizeMenu(std::unique_ptr<ContextMenu>) = 0;
-#else
-        virtual PlatformMenuDescription getCustomMenuFromDefaultItems(ContextMenu*) = 0;
-#endif
-
-        virtual void contextMenuItemSelected(ContextMenuItem*, const ContextMenu*) = 0;
-
         virtual void downloadURL(const URL& url) = 0;
         virtual void searchWithGoogle(const Frame*) = 0;
         virtual void lookUpInDictionary(Frame*) = 0;
         virtual bool isSpeaking() = 0;
         virtual void speak(const String&) = 0;
         virtual void stopSpeaking() = 0;
-
-        virtual ContextMenuItem shareMenuItem(const HitTestResult&) = 0;
 
 #if PLATFORM(COCOA)
         virtual void searchWithSpotlight() = 0;
@@ -68,7 +55,7 @@ namespace WebCore {
         virtual void showContextMenu() = 0;
 #endif
     };
-}
+
+} // namespace WebCore
 
 #endif // ENABLE(CONTEXT_MENUS)
-#endif

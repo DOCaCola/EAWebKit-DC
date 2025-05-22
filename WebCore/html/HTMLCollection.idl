@@ -20,16 +20,12 @@
 
 [
     CustomToJSObject,
+    ExportToWrappedFunction,
     GenerateIsReachable=ImplOwnerNodeRoot,
-    ObjCPolymorphic,
+    LegacyUnenumerableNamedProperties,
     ReportExtraMemoryCost,
 ] interface HTMLCollection {
     readonly attribute unsigned long length;
-    getter Node item([Default=Undefined] optional unsigned long index);
-    getter Node namedItem([Default=Undefined] optional DOMString name);
-
-#if defined(LANGUAGE_OBJECTIVE_C) && LANGUAGE_OBJECTIVE_C
-    NodeList tags([Default=Undefined] optional DOMString name);
-#endif
+    getter Element? item(unsigned long index);
+    getter Element? namedItem(DOMString name);
 };
-

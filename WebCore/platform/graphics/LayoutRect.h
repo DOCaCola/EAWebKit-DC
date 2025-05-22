@@ -39,6 +39,8 @@
 
 namespace WebCore {
 
+class TextStream;
+
 class LayoutRect {
 public:
     LayoutRect() { }
@@ -46,6 +48,8 @@ public:
         : m_location(location), m_size(size) { }
     LayoutRect(LayoutUnit x, LayoutUnit y, LayoutUnit width, LayoutUnit height)
         : m_location(LayoutPoint(x, y)), m_size(LayoutSize(width, height)) { }
+    LayoutRect(const LayoutPoint& topLeft, const LayoutPoint& bottomRight)
+        : m_location(topLeft), m_size(LayoutSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y())) { }
     LayoutRect(const FloatPoint& location, const FloatSize& size)
         : m_location(location), m_size(size) { }
     LayoutRect(const IntRect& rect) : m_location(rect.location()), m_size(rect.size()) { }
@@ -122,6 +126,13 @@ public:
     LayoutPoint maxXMinYCorner() const { return LayoutPoint(m_location.x() + m_size.width(), m_location.y()); } // typically topRight
     LayoutPoint minXMaxYCorner() const { return LayoutPoint(m_location.x(), m_location.y() + m_size.height()); } // typically bottomLeft
     LayoutPoint maxXMaxYCorner() const { return LayoutPoint(m_location.x() + m_size.width(), m_location.y() + m_size.height()); } // typically bottomRight
+    bool isMaxXMaxYRepresentable() const
+    {
+        FloatRect rect = *this;
+        float maxX = rect.maxX();
+        float maxY = rect.maxY();
+        return maxX > LayoutUnit::nearlyMin() && maxX < LayoutUnit::nearlyMax() && maxY > LayoutUnit::nearlyMin() && maxY < LayoutUnit::nearlyMax();
+    }
     
     bool intersects(const LayoutRect&) const;
     WEBCORE_EXPORT bool contains(const LayoutRect&) const;
@@ -135,6 +146,7 @@ public:
     void intersect(const LayoutRect&);
     WEBCORE_EXPORT void unite(const LayoutRect&);
     void uniteIfNonZero(const LayoutRect&);
+    bool checkedUnite(const LayoutRect&);
 
     void inflateX(LayoutUnit dx)
     {
@@ -234,6 +246,8 @@ inline FloatRect snapRectToDevicePixelsWithWritingDirection(const LayoutRect& re
 }
 
 FloatRect encloseRectToDevicePixels(const LayoutRect&, float pixelSnappingFactor);
+
+TextStream& operator<<(TextStream&, const LayoutRect&);
 
 } // namespace WebCore
 

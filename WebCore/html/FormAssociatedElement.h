@@ -21,8 +21,7 @@
  *
  */
 
-#ifndef FormAssociatedElement_h
-#define FormAssociatedElement_h
+#pragma once
 
 #include "FormNamedItem.h"
 #include <wtf/text/WTFString.h>
@@ -72,27 +71,28 @@ public:
     bool badInput() const { return hasBadInput(); }
     bool customError() const;
 
-    // Implementations of patternMismatch, rangeOverflow, rangerUnderflow, stepMismatch, tooLong and valueMissing must call willValidate.
+    // Implementations of patternMismatch, rangeOverflow, rangerUnderflow, stepMismatch, tooShort, tooLong and valueMissing must call willValidate.
     virtual bool hasBadInput() const;
     virtual bool patternMismatch() const;
     virtual bool rangeOverflow() const;
     virtual bool rangeUnderflow() const;
     virtual bool stepMismatch() const;
+    virtual bool tooShort() const;
     virtual bool tooLong() const;
     virtual bool typeMismatch() const;
     virtual bool valueMissing() const;
     virtual String validationMessage() const;
-    bool valid() const;
+    virtual bool isValid() const;
     virtual void setCustomValidity(const String&);
 
     void formAttributeTargetChanged();
 
 protected:
-    FormAssociatedElement();
+    FormAssociatedElement(HTMLFormElement*);
 
     void insertedInto(ContainerNode&);
     void removedFrom(ContainerNode&);
-    void didMoveToNewDocument(Document* oldDocument);
+    void didMoveToNewDocument(Document& oldDocument);
 
     void setForm(HTMLFormElement*);
     void formAttributeChanged();
@@ -112,13 +112,12 @@ private:
 
     void resetFormAttributeTargetObserver();
 
-    virtual bool isFormAssociatedElement() const override final { return true; }
+    bool isFormAssociatedElement() const final { return true; }
 
     std::unique_ptr<FormAttributeTargetObserver> m_formAttributeTargetObserver;
     HTMLFormElement* m_form;
+    HTMLFormElement* m_formSetByParser;
     String m_customValidationMessage;
 };
 
 } // namespace
-
-#endif // FormAssociatedElement_h

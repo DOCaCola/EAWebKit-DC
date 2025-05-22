@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef VisiblePosition_h
-#define VisiblePosition_h
+#pragma once
 
 #include "EditingBoundary.h"
 #include "Position.h"
@@ -47,6 +46,7 @@ namespace WebCore {
 
 class InlineBox;
 class Node;
+class TextStream;
 
 class VisiblePosition {
 public:
@@ -68,13 +68,13 @@ public:
     // FIXME: Change the following functions' parameter from a boolean to StayInEditableContent.
 
     // next() and previous() will increment/decrement by a character cluster.
-    WEBCORE_EXPORT VisiblePosition next(EditingBoundaryCrossingRule = CanCrossEditingBoundary) const;
-    WEBCORE_EXPORT VisiblePosition previous(EditingBoundaryCrossingRule = CanCrossEditingBoundary) const;
-    VisiblePosition honorEditingBoundaryAtOrBefore(const VisiblePosition&) const;
-    VisiblePosition honorEditingBoundaryAtOrAfter(const VisiblePosition&) const;
+    WEBCORE_EXPORT VisiblePosition next(EditingBoundaryCrossingRule = CanCrossEditingBoundary, bool* reachedBoundary = nullptr) const;
+    WEBCORE_EXPORT VisiblePosition previous(EditingBoundaryCrossingRule = CanCrossEditingBoundary, bool* reachedBoundary = nullptr) const;
+    VisiblePosition honorEditingBoundaryAtOrBefore(const VisiblePosition&, bool* reachedBoundary = nullptr) const;
+    VisiblePosition honorEditingBoundaryAtOrAfter(const VisiblePosition&, bool* reachedBoundary = nullptr) const;
 
-    WEBCORE_EXPORT VisiblePosition left(bool stayInEditableContent = false) const;
-    WEBCORE_EXPORT VisiblePosition right(bool stayInEditableContent = false) const;
+    WEBCORE_EXPORT VisiblePosition left(bool stayInEditableContent = false, bool* reachedBoundary = nullptr) const;
+    WEBCORE_EXPORT VisiblePosition right(bool stayInEditableContent = false, bool* reachedBoundary = nullptr) const;
 
     WEBCORE_EXPORT UChar32 characterAfter() const;
     UChar32 characterBefore() const { return previous().characterAfter(); }
@@ -95,10 +95,14 @@ public:
     // Rect is local to the returned renderer
     WEBCORE_EXPORT LayoutRect localCaretRect(RenderObject*&) const;
     // Bounds of (possibly transformed) caret in absolute coords
-    WEBCORE_EXPORT IntRect absoluteCaretBounds() const;
+    WEBCORE_EXPORT IntRect absoluteCaretBounds(bool* insideFixed = nullptr) const;
     // Abs x/y position of the caret ignoring transforms.
     // FIXME: navigation with transforms should be smarter.
     WEBCORE_EXPORT int lineDirectionPointForBlockDirectionNavigation() const;
+
+    // This is a tentative enhancement of operator== to account for affinity.
+    // FIXME: Combine this function with operator==
+    bool equals(const VisiblePosition&) const;
 
 #if ENABLE(TREE_DEBUGGING)
     void debugPosition(const char* msg = "") const;
@@ -148,7 +152,7 @@ inline bool operator>=(const VisiblePosition& a, const VisiblePosition& b)
     return a.deepEquivalent() >= b.deepEquivalent();
 }    
 
-WEBCORE_EXPORT PassRefPtr<Range> makeRange(const VisiblePosition&, const VisiblePosition&);
+WEBCORE_EXPORT RefPtr<Range> makeRange(const VisiblePosition&, const VisiblePosition&);
 bool setStart(Range*, const VisiblePosition&);
 bool setEnd(Range*, const VisiblePosition&);
 VisiblePosition startVisiblePosition(const Range*, EAffinity);
@@ -159,12 +163,13 @@ WEBCORE_EXPORT Element* enclosingBlockFlowElement(const VisiblePosition&);
 bool isFirstVisiblePositionInNode(const VisiblePosition&, const Node*);
 bool isLastVisiblePositionInNode(const VisiblePosition&, const Node*);
 
+TextStream& operator<<(TextStream&, EAffinity);
+TextStream& operator<<(TextStream&, const VisiblePosition&);
+
 } // namespace WebCore
 
 #if ENABLE(TREE_DEBUGGING)
-// Outside the WebCore namespace for ease of invocation from gdb.
+// Outside the WebCore namespace for ease of invocation from the debugger.
 void showTree(const WebCore::VisiblePosition*);
 void showTree(const WebCore::VisiblePosition&);
 #endif
-
-#endif // VisiblePosition_h

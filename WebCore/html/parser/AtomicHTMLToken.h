@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef AtomicHTMLToken_h
-#define AtomicHTMLToken_h
+#pragma once
 
 #include "HTMLToken.h"
 
@@ -34,7 +33,10 @@ namespace WebCore {
 class AtomicHTMLToken {
 public:
     explicit AtomicHTMLToken(HTMLToken&);
-    AtomicHTMLToken(HTMLToken::Type, const AtomicString& name, Vector<Attribute>&& = Vector<Attribute>()); // Only StartTag or EndTag.
+    AtomicHTMLToken(HTMLToken::Type, const AtomicString& name, Vector<Attribute>&& = { }); // Only StartTag or EndTag.
+
+    AtomicHTMLToken(const AtomicHTMLToken&) = delete;
+    AtomicHTMLToken(AtomicHTMLToken&&) = default;
 
     HTMLToken::Type type() const;
 
@@ -89,7 +91,8 @@ private:
     Vector<Attribute> m_attributes; // StartTag, EndTag.
 };
 
-Attribute* findAttribute(Vector<Attribute>&, const QualifiedName&);
+const Attribute* findAttribute(const Vector<Attribute>&, const QualifiedName&);
+bool hasAttribute(const Vector<Attribute>&, const AtomicString& localName);
 
 inline HTMLToken::Type AtomicHTMLToken::type() const
 {
@@ -170,13 +173,22 @@ inline String AtomicHTMLToken::systemIdentifier() const
     return StringImpl::create8BitIfPossible(m_doctypeData->systemIdentifier);
 }
 
-inline Attribute* findAttribute(Vector<Attribute>& attributes, const QualifiedName& name)
+inline const Attribute* findAttribute(const Vector<Attribute>& attributes, const QualifiedName& name)
 {
     for (auto& attribute : attributes) {
         if (attribute.name().matches(name))
             return &attribute;
     }
     return nullptr;
+}
+
+inline bool hasAttribute(const Vector<Attribute>& attributes, const AtomicString& localName)
+{
+    for (auto& attribute : attributes) {
+        if (attribute.localName() == localName)
+            return true;
+    }
+    return false;
 }
 
 inline void AtomicHTMLToken::initializeAttributes(const HTMLToken::AttributeList& attributes)
@@ -186,16 +198,15 @@ inline void AtomicHTMLToken::initializeAttributes(const HTMLToken::AttributeList
         return;
 
     m_attributes.reserveInitialCapacity(size);
-    for (unsigned i = 0; i < size; ++i) {
-        const HTMLToken::Attribute& attribute = attributes[i];
+    for (auto& attribute : attributes) {
         if (attribute.name.isEmpty())
             continue;
 
-        QualifiedName name(nullAtom, AtomicString(attribute.name), nullAtom);
+        AtomicString localName(attribute.name);
 
         // FIXME: This is N^2 for the number of attributes.
-        if (!findAttribute(m_attributes, name))
-            m_attributes.append(Attribute(name, AtomicString(attribute.value)));
+        if (!hasAttribute(m_attributes, localName))
+            m_attributes.uncheckedAppend(Attribute(QualifiedName(nullAtom, localName, nullAtom), AtomicString(attribute.value)));
     }
 }
 
@@ -237,11 +248,9 @@ inline AtomicHTMLToken::AtomicHTMLToken(HTMLToken::Type type, const AtomicString
     : m_type(type)
     , m_name(name)
     , m_selfClosing(false)
-    , m_attributes(WTF::move(attributes))
+    , m_attributes(WTFMove(attributes))
 {
     ASSERT(type == HTMLToken::StartTag || type == HTMLToken::EndTag);
 }
 
-}
-
-#endif
+} // namespace WebCore

@@ -1,239 +1,174 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
 #include "InspectorWorkerAgent.h"
 
-#include "InspectorForwarding.h"
+#include "Document.h"
 #include "InstrumentingAgents.h"
-#include "URL.h"
-#include "WorkerGlobalScopeProxy.h"
-#include <inspector/InspectorFrontendDispatchers.h>
-#include <inspector/InspectorValues.h>
-#include <wtf/RefPtr.h>
 
 using namespace Inspector;
 
 namespace WebCore {
 
-class InspectorWorkerAgent::WorkerFrontendChannel : public WorkerGlobalScopeProxy::PageInspector {
-    WTF_MAKE_FAST_ALLOCATED;
-public:
-    explicit WorkerFrontendChannel(Inspector::WorkerFrontendDispatcher* frontendDispatcher, WorkerGlobalScopeProxy* proxy)
-        : m_frontendDispatcher(frontendDispatcher)
-        , m_proxy(proxy)
-        , m_id(s_nextId++)
-        , m_connected(false)
-    {
-    }
-    virtual ~WorkerFrontendChannel()
-    {
-        disconnectFromWorkerGlobalScope();
-    }
-
-    int id() const { return m_id; }
-    WorkerGlobalScopeProxy* proxy() const { return m_proxy; }
-
-    void connectToWorkerGlobalScope()
-    {
-        if (m_connected)
-            return;
-        m_connected = true;
-        m_proxy->connectToInspector(this);
-    }
-
-    void disconnectFromWorkerGlobalScope()
-    {
-        if (!m_connected)
-            return;
-        m_connected = false;
-        m_proxy->disconnectFromInspector();
-    }
-
-private:
-    // WorkerGlobalScopeProxy::PageInspector implementation
-    virtual void dispatchMessageFromWorker(const String& messageString) override
-    {
-        RefPtr<InspectorValue> parsedMessage;
-        if (!InspectorValue::parseJSON(messageString, parsedMessage))
-            return;
-
-        RefPtr<InspectorObject> messageObject;
-        if (!parsedMessage->asObject(messageObject))
-            return;
-
-        m_frontendDispatcher->dispatchMessageFromWorker(m_id, messageObject);
-    }
-
-    Inspector::WorkerFrontendDispatcher* m_frontendDispatcher;
-    WorkerGlobalScopeProxy* m_proxy;
-    int m_id;
-    bool m_connected;
-    static int s_nextId;
-};
-
-int InspectorWorkerAgent::WorkerFrontendChannel::s_nextId = 1;
-
-InspectorWorkerAgent::InspectorWorkerAgent(InstrumentingAgents* instrumentingAgents)
-    : InspectorAgentBase(ASCIILiteral("Worker"), instrumentingAgents)
-    , m_enabled(false)
-    , m_shouldPauseDedicatedWorkerOnStart(false)
+InspectorWorkerAgent::InspectorWorkerAgent(PageAgentContext& context)
+    : InspectorAgentBase(ASCIILiteral("Worker"), context)
+    , m_frontendDispatcher(std::make_unique<Inspector::WorkerFrontendDispatcher>(context.frontendRouter))
+    , m_backendDispatcher(Inspector::WorkerBackendDispatcher::create(context.backendDispatcher, this))
+    , m_page(context.inspectedPage)
 {
-    m_instrumentingAgents->setInspectorWorkerAgent(this);
 }
 
-InspectorWorkerAgent::~InspectorWorkerAgent()
+void InspectorWorkerAgent::didCreateFrontendAndBackend(FrontendRouter*, BackendDispatcher*)
 {
-    m_instrumentingAgents->setInspectorWorkerAgent(nullptr);
+    m_instrumentingAgents.setInspectorWorkerAgent(this);
 }
 
-void InspectorWorkerAgent::didCreateFrontendAndBackend(Inspector::FrontendChannel* frontendChannel, Inspector::BackendDispatcher* backendDispatcher)
+void InspectorWorkerAgent::willDestroyFrontendAndBackend(DisconnectReason)
 {
-    m_frontendDispatcher = std::make_unique<Inspector::WorkerFrontendDispatcher>(frontendChannel);
-    m_backendDispatcher = Inspector::WorkerBackendDispatcher::create(backendDispatcher, this);
-}
+    m_instrumentingAgents.setInspectorWorkerAgent(nullptr);
 
-void InspectorWorkerAgent::willDestroyFrontendAndBackend(Inspector::DisconnectReason)
-{
-    m_shouldPauseDedicatedWorkerOnStart = false;
-    ErrorString unused;
-    disable(unused);
-
-    m_frontendDispatcher = nullptr;
-    m_backendDispatcher = nullptr;
+    ErrorString ignored;
+    disable(ignored);
 }
 
 void InspectorWorkerAgent::enable(ErrorString&)
 {
-    m_enabled = true;
-    if (!m_frontendDispatcher)
+    if (m_enabled)
         return;
 
-    createWorkerFrontendChannelsForExistingWorkers();
+    m_enabled = true;
+
+    connectToAllWorkerInspectorProxiesForPage();
 }
 
 void InspectorWorkerAgent::disable(ErrorString&)
 {
-    m_enabled = false;
-    if (!m_frontendDispatcher)
+    if (!m_enabled)
         return;
 
-    destroyWorkerFrontendChannels();
+    m_enabled = false;
+
+    disconnectFromAllWorkerInspectorProxies();
 }
 
-void InspectorWorkerAgent::canInspectWorkers(ErrorString&, bool* result)
+void InspectorWorkerAgent::initialized(ErrorString& errorString, const String& workerId)
 {
-    *result = true;
+    WorkerInspectorProxy* proxy = m_connectedProxies.get(workerId);
+    if (!proxy) {
+        errorString = ASCIILiteral("Worker not found.");
+        return;
+    }
+
+    proxy->resumeWorkerIfPaused();
 }
 
-void InspectorWorkerAgent::connectToWorker(ErrorString& error, int workerId)
+void InspectorWorkerAgent::sendMessageToWorker(ErrorString& errorString, const String& workerId, const String& message)
 {
-    WorkerFrontendChannel* channel = m_idToChannel.get(workerId);
-    if (channel)
-        channel->connectToWorkerGlobalScope();
-    else
-        error = ASCIILiteral("Worker is gone");
+    if (!m_enabled) {
+        errorString = ASCIILiteral("Worker inspection must be enabled.");
+        return;
+    }
+
+    WorkerInspectorProxy* proxy = m_connectedProxies.get(workerId);
+    if (!proxy) {
+        errorString = ASCIILiteral("Worker not found.");
+        return;
+    }
+
+    proxy->sendMessageToWorkerInspectorController(message);
 }
 
-void InspectorWorkerAgent::disconnectFromWorker(ErrorString& error, int workerId)
+void InspectorWorkerAgent::sendMessageFromWorkerToFrontend(WorkerInspectorProxy* proxy, const String& message)
 {
-    WorkerFrontendChannel* channel = m_idToChannel.get(workerId);
-    if (channel)
-        channel->disconnectFromWorkerGlobalScope();
-    else
-        error = ASCIILiteral("Worker is gone");
+    m_frontendDispatcher->dispatchMessageFromWorker(proxy->identifier(), message);
 }
 
-void InspectorWorkerAgent::sendMessageToWorker(ErrorString& error, int workerId, const InspectorObject& message)
+bool InspectorWorkerAgent::shouldWaitForDebuggerOnStart() const
 {
-    WorkerFrontendChannel* channel = m_idToChannel.get(workerId);
-    if (channel)
-        channel->proxy()->sendMessageToInspector(message.toJSONString());
-    else
-        error = ASCIILiteral("Worker is gone");
+    return m_enabled;
 }
 
-void InspectorWorkerAgent::setAutoconnectToWorkers(ErrorString&, bool value)
+void InspectorWorkerAgent::workerStarted(WorkerInspectorProxy* proxy, const URL&)
 {
-    m_shouldPauseDedicatedWorkerOnStart = value;
+    if (!m_enabled)
+        return;
+
+    connectToWorkerInspectorProxy(proxy);
 }
 
-bool InspectorWorkerAgent::shouldPauseDedicatedWorkerOnStart() const
+void InspectorWorkerAgent::workerTerminated(WorkerInspectorProxy* proxy)
 {
-    return m_shouldPauseDedicatedWorkerOnStart;
+    if (!m_enabled)
+        return;
+
+    disconnectFromWorkerInspectorProxy(proxy);
 }
 
-void InspectorWorkerAgent::didStartWorkerGlobalScope(WorkerGlobalScopeProxy* workerGlobalScopeProxy, const URL& url)
+void InspectorWorkerAgent::connectToAllWorkerInspectorProxiesForPage()
 {
-    m_dedicatedWorkers.set(workerGlobalScopeProxy, url.string());
-    if (m_frontendDispatcher && m_enabled)
-        createWorkerFrontendChannel(workerGlobalScopeProxy, url.string());
-}
+    ASSERT(m_connectedProxies.isEmpty());
 
-void InspectorWorkerAgent::workerGlobalScopeTerminated(WorkerGlobalScopeProxy* proxy)
-{
-    m_dedicatedWorkers.remove(proxy);
-    for (WorkerChannels::iterator it = m_idToChannel.begin(); it != m_idToChannel.end(); ++it) {
-        if (proxy == it->value->proxy()) {
-            m_frontendDispatcher->workerTerminated(it->key);
-            delete it->value;
-            m_idToChannel.remove(it);
-            return;
-        }
+    for (auto* proxy : WorkerInspectorProxy::allWorkerInspectorProxies()) {
+        if (!is<Document>(proxy->scriptExecutionContext()))
+            continue;
+
+        Document& document = downcast<Document>(*proxy->scriptExecutionContext());
+        if (document.page() != &m_page)
+            continue;
+
+        connectToWorkerInspectorProxy(proxy);
     }
 }
 
-void InspectorWorkerAgent::createWorkerFrontendChannelsForExistingWorkers()
+void InspectorWorkerAgent::disconnectFromAllWorkerInspectorProxies()
 {
-    for (DedicatedWorkers::iterator it = m_dedicatedWorkers.begin(); it != m_dedicatedWorkers.end(); ++it)
-        createWorkerFrontendChannel(it->key, it->value);
+    Vector<WorkerInspectorProxy*> proxies;
+    copyValuesToVector(m_connectedProxies, proxies);
+    for (auto* proxy : proxies)
+        proxy->disconnectFromWorkerInspectorController();
+
+    m_connectedProxies.clear();
 }
 
-void InspectorWorkerAgent::destroyWorkerFrontendChannels()
+void InspectorWorkerAgent::connectToWorkerInspectorProxy(WorkerInspectorProxy* proxy)
 {
-    for (WorkerChannels::iterator it = m_idToChannel.begin(); it != m_idToChannel.end(); ++it) {
-        it->value->disconnectFromWorkerGlobalScope();
-        delete it->value;
-    }
-    m_idToChannel.clear();
+    proxy->connectToWorkerInspectorController(this);
+
+    m_connectedProxies.set(proxy->identifier(), proxy);
+
+    m_frontendDispatcher->workerCreated(proxy->identifier(), proxy->url());
 }
 
-void InspectorWorkerAgent::createWorkerFrontendChannel(WorkerGlobalScopeProxy* workerGlobalScopeProxy, const String& url)
+void InspectorWorkerAgent::disconnectFromWorkerInspectorProxy(WorkerInspectorProxy* proxy)
 {
-    WorkerFrontendChannel* channel = new WorkerFrontendChannel(m_frontendDispatcher.get(), workerGlobalScopeProxy);
-    m_idToChannel.set(channel->id(), channel);
+    m_frontendDispatcher->workerTerminated(proxy->identifier());
 
-    ASSERT(m_frontendDispatcher);
-    if (m_shouldPauseDedicatedWorkerOnStart)
-        channel->connectToWorkerGlobalScope();
-    m_frontendDispatcher->workerCreated(channel->id(), url, m_shouldPauseDedicatedWorkerOnStart);
+    m_connectedProxies.remove(proxy->identifier());
+
+    proxy->disconnectFromWorkerInspectorController();
 }
 
-} // namespace WebCore
+} // namespace Inspector

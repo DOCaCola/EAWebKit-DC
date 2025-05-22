@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2015, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,58 +23,68 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DOMTokenList_h
-#define DOMTokenList_h
+#pragma once
 
-#include <wtf/text/AtomicString.h>
-#include <wtf/Vector.h>
+#include "Element.h"
 
 namespace WebCore {
 
-class Element;
-
-typedef int ExceptionCode;
-
 class DOMTokenList {
-    WTF_MAKE_NONCOPYABLE(DOMTokenList); WTF_MAKE_FAST_ALLOCATED;
+    WTF_MAKE_FAST_ALLOCATED;
 public:
-    DOMTokenList() { }
-    virtual ~DOMTokenList() {};
+    DOMTokenList(Element&, const QualifiedName& attributeName, WTF::Function<bool(StringView)>&& isSupportedToken = { });
 
-    virtual void ref() = 0;
-    virtual void deref() = 0;
+    void associatedAttributeValueChanged(const AtomicString&);
 
-    virtual unsigned length() const = 0;
-    virtual const AtomicString item(unsigned index) const = 0;
+    void ref() { m_element.ref(); }
+    void deref() { m_element.deref(); }
 
-    bool contains(const AtomicString&, ExceptionCode&) const;
-    void add(const Vector<String>&, ExceptionCode&);
-    void add(const AtomicString&, ExceptionCode&);
-    void remove(const Vector<String>&, ExceptionCode&);
-    void remove(const AtomicString&, ExceptionCode&);
-    bool toggle(const AtomicString&, ExceptionCode&);
-    bool toggle(const AtomicString&, bool force, ExceptionCode&);
+    unsigned length() const;
+    const AtomicString& item(unsigned index) const;
 
-    AtomicString toString() const { return value(); }
+    WEBCORE_EXPORT bool contains(const AtomicString&) const;
+    ExceptionOr<void> add(const Vector<String>&);
+    ExceptionOr<void> add(const AtomicString&);
+    ExceptionOr<void> remove(const Vector<String>&);
+    ExceptionOr<void> remove(const AtomicString&);
+    WEBCORE_EXPORT ExceptionOr<bool> toggle(const AtomicString&, std::optional<bool> force);
+    ExceptionOr<void> replace(const AtomicString& token, const AtomicString& newToken);
+    ExceptionOr<bool> supports(StringView token);
 
-    virtual Element* element() const { return 0; }
+    Element& element() const { return m_element; }
 
-protected:
-    virtual AtomicString value() const = 0;
-    virtual void setValue(const AtomicString&) = 0;
+    WEBCORE_EXPORT void setValue(const String&);
+    WEBCORE_EXPORT const AtomicString& value() const;
 
-    void addInternal(const AtomicString&);
-    virtual bool containsInternal(const AtomicString&) const = 0;
-    void removeInternal(const AtomicString&);
+private:
+    void updateTokensFromAttributeValue(const String&);
+    void updateAssociatedAttributeFromTokens();
 
-    static bool validateToken(const AtomicString&, ExceptionCode&);
-    static bool validateTokens(const Vector<String>&, ExceptionCode&);
-    static String addToken(const AtomicString&, const AtomicString&);
-    static String addTokens(const AtomicString&, const Vector<String>&);
-    static String removeToken(const AtomicString&, const AtomicString&);
-    static String removeTokens(const AtomicString&, const Vector<String>&);
+    WEBCORE_EXPORT Vector<AtomicString>& tokens();
+    const Vector<AtomicString>& tokens() const { return const_cast<DOMTokenList&>(*this).tokens(); }
+
+    static ExceptionOr<void> validateToken(const String&);
+    static ExceptionOr<void> validateTokens(const String* tokens, size_t length);
+    ExceptionOr<void> addInternal(const String* tokens, size_t length);
+    ExceptionOr<void> removeInternal(const String* tokens, size_t length);
+
+    Element& m_element;
+    const WebCore::QualifiedName& m_attributeName;
+    bool m_inUpdateAssociatedAttributeFromTokens { false };
+    bool m_tokensNeedUpdating { true };
+    Vector<AtomicString> m_tokens;
+    WTF::Function<bool(StringView)> m_isSupportedToken;
 };
 
-} // namespace WebCore
+inline unsigned DOMTokenList::length() const
+{
+    return tokens().size();
+}
 
-#endif // DOMTokenList_h
+inline const AtomicString& DOMTokenList::item(unsigned index) const
+{
+    auto& tokens = this->tokens();
+    return index < tokens.size() ? tokens[index] : nullAtom;
+}
+
+} // namespace WebCore

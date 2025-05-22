@@ -41,7 +41,7 @@ namespace WebCore {
 #if ENABLE(SVG_FONTS)
 bool CSSFontFaceSrcValue::isSVGFontFaceSrc() const
 {
-    return equalIgnoringCase(m_format, "svg");
+    return equalLettersIgnoringASCIICase(m_format, "svg");
 }
 
 bool CSSFontFaceSrcValue::isSVGFontTarget() const
@@ -85,12 +85,6 @@ String CSSFontFaceSrcValue::customCSSText() const
     return result.toString();
 }
 
-void CSSFontFaceSrcValue::addSubresourceStyleURLs(ListHashSet<URL>& urls, const StyleSheetContents* styleSheet) const
-{
-    if (!isLocal())
-        addSubresourceURL(urls, styleSheet->completeURL(m_resource));
-}
-
 bool CSSFontFaceSrcValue::traverseSubresources(const std::function<bool (const CachedResource&)>& handler) const
 {
     if (!m_cachedFont)
@@ -100,14 +94,15 @@ bool CSSFontFaceSrcValue::traverseSubresources(const std::function<bool (const C
 
 CachedFont* CSSFontFaceSrcValue::cachedFont(Document* document, bool isSVG, bool isInitiatingElementInUserAgentShadowTree)
 {
-    if (!m_cachedFont) {
-        ResourceLoaderOptions options = CachedResourceLoader::defaultCachedResourceOptions();
-        options.setContentSecurityPolicyImposition(isInitiatingElementInUserAgentShadowTree ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck);
+    if (m_cachedFont)
+        return m_cachedFont.get();
 
-        CachedResourceRequest request(ResourceRequest(document->completeURL(m_resource)), options);
-        request.setInitiator(cachedResourceRequestInitiators().css);
-        m_cachedFont = document->cachedResourceLoader().requestFont(request, isSVG);
-    }
+    ResourceLoaderOptions options = CachedResourceLoader::defaultCachedResourceOptions();
+    options.contentSecurityPolicyImposition = isInitiatingElementInUserAgentShadowTree ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck;
+
+    CachedResourceRequest request(ResourceRequest(document->completeURL(m_resource)), options);
+    request.setInitiator(cachedResourceRequestInitiators().css);
+    m_cachedFont = document->cachedResourceLoader().requestFont(WTFMove(request), isSVG);
     return m_cachedFont.get();
 }
 

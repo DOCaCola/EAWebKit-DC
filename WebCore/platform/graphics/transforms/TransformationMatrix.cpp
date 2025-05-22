@@ -32,7 +32,7 @@
 #include "FloatQuad.h"
 #include "IntRect.h"
 #include "LayoutRect.h"
-
+#include "TextStream.h"
 #include <wtf/Assertions.h>
 #include <wtf/MathExtras.h>
 
@@ -1445,7 +1445,7 @@ bool TransformationMatrix::isInvertible() const
     return true;
 }
 
-TransformationMatrix TransformationMatrix::inverse() const
+std::optional<TransformationMatrix> TransformationMatrix::inverse() const
 {
     if (isIdentityOrTranslation()) {
         // identity matrix
@@ -1460,9 +1460,10 @@ TransformationMatrix TransformationMatrix::inverse() const
     }
 
     TransformationMatrix invMat;
-    bool inverted = WebCore::inverse(m_matrix, invMat.m_matrix);
-    if (!inverted)
-        return TransformationMatrix();
+    // FIXME: Use LU decomposition to apply the inverse instead of calculating the inverse explicitly.
+    // Calculating the inverse of a 4x4 matrix using cofactors is numerically unstable and unnecessary to apply the inverse transformation to a point.
+    if (!WebCore::inverse(m_matrix, invMat.m_matrix))
+        return std::nullopt;
 
     return invMat;
 }
@@ -1500,8 +1501,11 @@ void TransformationMatrix::blend2(const TransformationMatrix& from, double progr
 {
     Decomposed2Type fromDecomp;
     Decomposed2Type toDecomp;
-    from.decompose2(fromDecomp);
-    decompose2(toDecomp);
+    if (!from.decompose2(fromDecomp) || !decompose2(toDecomp)) {
+        if (progress < 0.5)
+            *this = from;
+        return;
+    }
 
     // If x-axis of one is flipped, and y-axis of the other, convert to an unflipped rotation.
     if ((fromDecomp.scaleX < 0 && toDecomp.scaleY < 0) || (fromDecomp.scaleY < 0 && toDecomp.scaleX < 0)) {
@@ -1540,8 +1544,11 @@ void TransformationMatrix::blend4(const TransformationMatrix& from, double progr
 {
     Decomposed4Type fromDecomp;
     Decomposed4Type toDecomp;
-    from.decompose4(fromDecomp);
-    decompose4(toDecomp);
+    if (!from.decompose4(fromDecomp) || !decompose4(toDecomp)) {
+        if (progress < 0.5)
+            *this = from;
+        return;
+    }
 
     blendFloat(fromDecomp.scaleX, toDecomp.scaleX, progress);
     blendFloat(fromDecomp.scaleY, toDecomp.scaleY, progress);
@@ -1740,6 +1747,22 @@ bool TransformationMatrix::isBackFaceVisible() const
     double zComponentOfTransformedNormal = cofactor33 / determinant;
 
     return zComponentOfTransformedNormal < 0;
+}
+
+TextStream& operator<<(TextStream& ts, const TransformationMatrix& transform)
+{
+    ts << "\n";
+    ts.increaseIndent();
+    ts.writeIndent();
+    ts << "[" << transform.m11() << " " << transform.m12() << " " << transform.m13() << " " << transform.m14() << "]\n";
+    ts.writeIndent();
+    ts << "[" << transform.m21() << " " << transform.m22() << " " << transform.m23() << " " << transform.m24() << "]\n";
+    ts.writeIndent();
+    ts << "[" << transform.m31() << " " << transform.m32() << " " << transform.m33() << " " << transform.m34() << "]\n";
+    ts.writeIndent();
+    ts << "[" << transform.m41() << " " << transform.m42() << " " << transform.m43() << " " << transform.m44() << "]";
+    ts.decreaseIndent();
+    return ts;
 }
 
 }

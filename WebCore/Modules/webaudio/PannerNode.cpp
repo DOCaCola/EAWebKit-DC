@@ -23,17 +23,15 @@
  */
 
 #include "config.h"
+#include "PannerNode.h"
 
 #if ENABLE(WEB_AUDIO)
-
-#include "PannerNode.h"
 
 #include "AudioBufferSourceNode.h"
 #include "AudioBus.h"
 #include "AudioContext.h"
 #include "AudioNodeInput.h"
 #include "AudioNodeOutput.h"
-#include "ExceptionCode.h"
 #include "HRTFPanner.h"
 #include "ScriptExecutionContext.h"
 #include <wtf/MathExtras.h>
@@ -46,14 +44,14 @@ static void fixNANs(double &x)
         x = 0.0;
 }
 
-PannerNode::PannerNode(AudioContext* context, float sampleRate)
+PannerNode::PannerNode(AudioContext& context, float sampleRate)
     : AudioNode(context, sampleRate)
-    , m_panningModel(Panner::PanningModelHRTF)
+    , m_panningModel(PanningModelType::HRTF)
     , m_lastGain(-1.0)
     , m_connectionCount(0)
 {
     // Load the HRTF database asynchronously so we don't block the Javascript thread while creating the HRTF database.
-    m_hrtfDatabaseLoader = HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(context->sampleRate());
+    m_hrtfDatabaseLoader = HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(context.sampleRate());
 
     addInput(std::make_unique<AudioNodeInput>(this));
     addOutput(std::make_unique<AudioNodeOutput>(this, 2));
@@ -84,11 +82,12 @@ void PannerNode::pullInputs(size_t framesToProcess)
 {
     // We override pullInputs(), so we can detect new AudioSourceNodes which have connected to us when new connections are made.
     // These AudioSourceNodes need to be made aware of our existence in order to handle doppler shift pitch changes.
-    if (m_connectionCount != context()->connectionCount()) {
-        m_connectionCount = context()->connectionCount();
+    if (m_connectionCount != context().connectionCount()) {
+        m_connectionCount = context().connectionCount();
 
         // Recursively go through all nodes connected to us.
-        notifyAudioSourcesConnectedToNode(this);
+        HashSet<AudioNode*> visitedNodes;
+        notifyAudioSourcesConnectedToNode(this, visitedNodes);
     }
     
     AudioNode::pullInputs(framesToProcess);
@@ -110,8 +109,8 @@ void PannerNode::process(size_t framesToProcess)
     }
 
     // HRTFDatabase should be loaded before proceeding for offline audio context when panningModel() is "HRTF".
-    if (panningModel() == "HRTF" && !m_hrtfDatabaseLoader->isLoaded()) {
-        if (context()->isOfflineContext())
+    if (panningModel() == PanningModelType::HRTF && !m_hrtfDatabaseLoader->isLoaded()) {
+        if (context().isOfflineContext())
             m_hrtfDatabaseLoader->waitForLoaderThreadCompletion();
         else {
             destination->zero();
@@ -120,7 +119,7 @@ void PannerNode::process(size_t framesToProcess)
     }
 
     // The audio thread can't block on this lock, so we use std::try_to_lock instead.
-    std::unique_lock<std::mutex> lock(m_pannerMutex, std::try_to_lock);
+    std::unique_lock<Lock> lock(m_pannerMutex, std::try_to_lock);
     if (!lock.owns_lock()) {
         // Too bad - The try_lock() failed. We must be in the middle of changing the panner.
         destination->zero();
@@ -172,100 +171,28 @@ void PannerNode::uninitialize()
 
 AudioListener* PannerNode::listener()
 {
-    return context()->listener();
+    return context().listener();
 }
 
-String PannerNode::panningModel() const
+void PannerNode::setPanningModel(PanningModelType model)
 {
-    switch (m_panningModel) {
-    case EQUALPOWER:
-        return "equalpower";
-    case HRTF:
-        return "HRTF";
-    case SOUNDFIELD:
-        return "soundfield";
-    default:
-        ASSERT_NOT_REACHED();
-        return "HRTF";
+    if (!m_panner.get() || model != m_panningModel) {
+        // This synchronizes with process().
+        std::lock_guard<Lock> lock(m_pannerMutex);
+
+        m_panner = Panner::create(model, sampleRate(), m_hrtfDatabaseLoader.get());
+        m_panningModel = model;
     }
 }
 
-void PannerNode::setPanningModel(const String& model)
+DistanceModelType PannerNode::distanceModel() const
 {
-    if (model == "equalpower")
-        setPanningModel(EQUALPOWER);
-    else if (model == "HRTF")
-        setPanningModel(HRTF);
-    else if (model == "soundfield")
-        setPanningModel(SOUNDFIELD);
-    else
-        ASSERT_NOT_REACHED();
+    return const_cast<PannerNode*>(this)->m_distanceEffect.model();
 }
 
-bool PannerNode::setPanningModel(unsigned model)
+void PannerNode::setDistanceModel(DistanceModelType model)
 {
-    switch (model) {
-    case EQUALPOWER:
-    case HRTF:
-        if (!m_panner.get() || model != m_panningModel) {
-            // This synchronizes with process().
-            std::lock_guard<std::mutex> lock(m_pannerMutex);
-
-            m_panner = Panner::create(model, sampleRate(), m_hrtfDatabaseLoader.get());
-            m_panningModel = model;
-        }
-        break;
-    case SOUNDFIELD:
-        // FIXME: Implement sound field model. See // https://bugs.webkit.org/show_bug.cgi?id=77367.
-        context()->scriptExecutionContext()->addConsoleMessage(MessageSource::JS, MessageLevel::Warning, ASCIILiteral("'soundfield' panning model not implemented."));
-        break;
-    default:
-        return false;
-    }
-    
-    return true;
-}
-
-String PannerNode::distanceModel() const
-{
-    switch (const_cast<PannerNode*>(this)->m_distanceEffect.model()) {
-    case DistanceEffect::ModelLinear:
-        return "linear";
-    case DistanceEffect::ModelInverse:
-        return "inverse";
-    case DistanceEffect::ModelExponential:
-        return "exponential";
-    default:
-        ASSERT_NOT_REACHED();
-        return "inverse";
-    }
-}
-
-void PannerNode::setDistanceModel(const String& model)
-{
-    if (model == "linear")
-        setDistanceModel(DistanceEffect::ModelLinear);
-    else if (model == "inverse")
-        setDistanceModel(DistanceEffect::ModelInverse);
-    else if (model == "exponential")
-        setDistanceModel(DistanceEffect::ModelExponential);
-    else
-        ASSERT_NOT_REACHED();
-}
-
-bool PannerNode::setDistanceModel(unsigned model)
-{
-    switch (model) {
-    case DistanceEffect::ModelLinear:
-    case DistanceEffect::ModelInverse:
-    case DistanceEffect::ModelExponential:
-        m_distanceEffect.setModel(static_cast<DistanceEffect::ModelType>(model), true);
-        break;
-    default:
-        return false;
-    }
-
-    return true;
+    m_distanceEffect.setModel(model, true);
 }
 
 void PannerNode::getAzimuthElevation(double* outAzimuth, double* outElevation)
@@ -397,7 +324,7 @@ float PannerNode::distanceConeGain()
     return float(distanceGain * coneGain);
 }
 
-void PannerNode::notifyAudioSourcesConnectedToNode(AudioNode* node)
+void PannerNode::notifyAudioSourcesConnectedToNode(AudioNode* node, HashSet<AudioNode*>& visitedNodes)
 {
     ASSERT(node);
     if (!node)
@@ -416,7 +343,11 @@ void PannerNode::notifyAudioSourcesConnectedToNode(AudioNode* node)
             for (unsigned j = 0; j < input->numberOfRenderingConnections(); ++j) {
                 AudioNodeOutput* connectedOutput = input->renderingOutput(j);
                 AudioNode* connectedNode = connectedOutput->node();
-                notifyAudioSourcesConnectedToNode(connectedNode); // recurse
+                if (visitedNodes.contains(connectedNode))
+                    continue;
+
+                visitedNodes.add(connectedNode);
+                notifyAudioSourcesConnectedToNode(connectedNode, visitedNodes);
             }
         }
     }

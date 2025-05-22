@@ -38,31 +38,20 @@ namespace WebCore {
 
 void JSTextTrack::visitAdditionalChildren(SlotVisitor& visitor)
 {
-    visitor.addOpaqueRoot(root(&impl()));
+    visitor.addOpaqueRoot(root(&wrapped()));
 }
 
-void JSTextTrack::setKind(ExecState* exec, JSValue value)
+void JSTextTrack::setLanguage(ExecState& state, JSValue value)
 {
 #if ENABLE(MEDIA_SOURCE)
-    auto& string = value.toString(exec)->value(exec);
-    if (exec->hadException())
-        return;
-    impl().setKind(string);
-#else
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(value);
-#endif
-}
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-void JSTextTrack::setLanguage(ExecState* exec, JSValue value)
-{
-#if ENABLE(MEDIA_SOURCE)
-    auto& string = value.toString(exec)->value(exec);
-    if (exec->hadException())
-        return;
-    impl().setLanguage(string);
+    auto string = value.toWTFString(&state);
+    RETURN_IF_EXCEPTION(scope, void());
+    wrapped().setLanguage(string);
 #else
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(value);
 #endif
 }

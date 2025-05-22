@@ -23,10 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef Coordinates_h
-#define Coordinates_h
+#pragma once
 
 #include "Event.h"
+#include <wtf/Optional.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
@@ -42,11 +42,11 @@ public:
 
     double latitude() const { return m_latitude; }
     double longitude() const { return m_longitude; }
-    double altitude(bool& isNull) const;
+    std::optional<double> altitude() const;
     double accuracy() const { return m_accuracy; }
-    double altitudeAccuracy(bool& isNull) const;
-    double heading(bool& isNull) const;
-    double speed(bool& isNull) const;
+    std::optional<double> altitudeAccuracy() const;
+    std::optional<double> heading() const;
+    std::optional<double> speed() const;
     
 private:
     Coordinates(double latitude, double longitude, bool providesAltitude, double altitude, double accuracy, bool providesAltitudeAccuracy, double altitudeAccuracy, bool providesHeading, double heading, bool providesSpeed, double speed)
@@ -79,5 +79,3 @@ private:
 };
     
 } // namespace WebCore
-
-#endif // Coordinates_h

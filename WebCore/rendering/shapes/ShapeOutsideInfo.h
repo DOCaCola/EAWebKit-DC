@@ -27,14 +27,12 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ShapeOutsideInfo_h
-#define ShapeOutsideInfo_h
-
-#if ENABLE(CSS_SHAPES)
+#pragma once
 
 #include "LayoutSize.h"
 #include "Shape.h"
 #include <wtf/HashMap.h>
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
@@ -130,7 +128,7 @@ private:
     typedef HashMap<const RenderBox*, std::unique_ptr<ShapeOutsideInfo>> InfoMap;
     static InfoMap& infoMap()
     {
-        DEPRECATED_DEFINE_STATIC_LOCAL(InfoMap, staticInfoMap, ());
+        static NeverDestroyed<InfoMap> staticInfoMap;
         return staticInfoMap;
     }
 
@@ -143,5 +141,3 @@ private:
 };
 
 }
-#endif
-#endif

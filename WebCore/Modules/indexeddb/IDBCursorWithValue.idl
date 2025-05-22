@@ -25,7 +25,9 @@
 
 [
     Conditional=INDEXED_DATABASE,
-    EnabledAtRuntime=IndexedDB,
+    ActiveDOMObject,
+    SkipVTableValidation,
+    JSCustomMarkFunction,
 ] interface IDBCursorWithValue : IDBCursor {
     readonly attribute any value;
 };

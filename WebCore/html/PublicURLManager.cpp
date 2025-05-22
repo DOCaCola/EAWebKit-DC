@@ -45,22 +45,22 @@ PublicURLManager::PublicURLManager(ScriptExecutionContext* context)
 {
 }
 
-void PublicURLManager::registerURL(SecurityOrigin* origin, const URL& url, URLRegistrable* registrable)
+void PublicURLManager::registerURL(SecurityOrigin* origin, const URL& url, URLRegistrable& registrable)
 {
     if (m_isStopped)
         return;
 
-    RegistryURLMap::iterator found = m_registryToURL.add(&registrable->registry(), URLSet()).iterator;
+    RegistryURLMap::iterator found = m_registryToURL.add(&registrable.registry(), URLSet()).iterator;
     found->key->registerURL(origin, url, registrable);
     found->value.add(url.string());
 }
 
 void PublicURLManager::revoke(const URL& url)
 {
-    for (RegistryURLMap::iterator i = m_registryToURL.begin(); i != m_registryToURL.end(); ++i) {
-        if (i->value.contains(url.string())) {
-            i->key->unregisterURL(url);
-            i->value.remove(url.string());
+    for (auto& registry : m_registryToURL) {
+        if (registry.value.contains(url.string())) {
+            registry.key->unregisterURL(url);
+            registry.value.remove(url.string());
             break;
         }
     }
@@ -72,15 +72,15 @@ void PublicURLManager::stop()
         return;
 
     m_isStopped = true;
-    for (RegistryURLMap::iterator i = m_registryToURL.begin(); i != m_registryToURL.end(); ++i) {
-        for (URLSet::iterator j = i->value.begin(); j != i->value.end(); ++j)
-            i->key->unregisterURL(URL(ParsedURLString, *j));
+    for (auto& registry : m_registryToURL) {
+        for (auto& url : registry.value)
+            registry.key->unregisterURL(URL(ParsedURLString, url));
     }
 
     m_registryToURL.clear();
 }
 
-bool PublicURLManager::canSuspendForPageCache() const
+bool PublicURLManager::canSuspendForDocumentSuspension() const
 {
     // Suspending an PublicURLManager is safe as it does not cause any JS to be executed.
     return true;

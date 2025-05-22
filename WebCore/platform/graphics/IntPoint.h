@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005, 2006 Apple Inc.  All rights reserved.
+ * Copyright (C) 2004-2016 Apple Inc.  All rights reserved.
  * Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,20 +57,28 @@ namespace EA{namespace WebKit{class IntPoint;}}
 #if PLATFORM(WIN)
 typedef struct tagPOINT POINT;
 typedef struct tagPOINTS POINTS;
+
+struct D2D_POINT_2U;
+typedef D2D_POINT_2U D2D1_POINT_2U;
+
+struct D2D_POINT_2F;
+typedef D2D_POINT_2F D2D1_POINT_2F;
 #endif
 
 namespace WebCore {
 
 class FloatPoint;
+class TextStream;
 
 class IntPoint {
 public:
     IntPoint() : m_x(0), m_y(0) { }
     IntPoint(int x, int y) : m_x(x), m_y(y) { }
-    explicit IntPoint(const IntSize& size) : m_x(size.width()), m_y(size.height()) { }
-    explicit IntPoint(const FloatPoint&); // don't do this implicitly since it's lossy
+    WEBCORE_EXPORT explicit IntPoint(const IntSize& size) : m_x(size.width()), m_y(size.height()) { }
+    WEBCORE_EXPORT explicit IntPoint(const FloatPoint&); // don't do this implicitly since it's lossy
 
     static IntPoint zero() { return IntPoint(); }
+    bool isZero() const { return !m_x && !m_y; }
 
     int x() const { return m_x; }
     int y() const { return m_y; }
@@ -86,18 +94,29 @@ public:
         m_x = lroundf(static_cast<float>(m_x * sx));
         m_y = lroundf(static_cast<float>(m_y * sy));
     }
+
+    void scale(float scale)
+    {
+        this->scale(scale, scale);
+    }
     
     IntPoint expandedTo(const IntPoint& other) const
     {
-        return IntPoint(m_x > other.m_x ? m_x : other.m_x,
-            m_y > other.m_y ? m_y : other.m_y);
+        return {
+            m_x > other.m_x ? m_x : other.m_x,
+            m_y > other.m_y ? m_y : other.m_y
+        };
     }
 
     IntPoint shrunkTo(const IntPoint& other) const
     {
-        return IntPoint(m_x < other.m_x ? m_x : other.m_x,
-            m_y < other.m_y ? m_y : other.m_y);
+        return {
+            m_x < other.m_x ? m_x : other.m_x,
+            m_y < other.m_y ? m_y : other.m_y
+        };
     }
+
+    WEBCORE_EXPORT IntPoint constrainedBetween(const IntPoint& min, const IntPoint& max) const;
 
     int distanceSquaredToPoint(const IntPoint&) const;
 
@@ -128,6 +147,11 @@ public:
     operator POINT() const;
     IntPoint(const POINTS&);
     operator POINTS() const;
+
+    IntPoint(const D2D1_POINT_2U&);
+    explicit IntPoint(const D2D1_POINT_2F&); // Don't do this implicitly, since it's lossy.
+    operator D2D1_POINT_2F() const;
+    operator D2D1_POINT_2U() const;
 #elif PLATFORM(EFL)
     explicit IntPoint(const Evas_Point&);
     operator Evas_Point() const;
@@ -138,8 +162,6 @@ public:
 	operator EA::WebKit::IntPoint() const;
 	//-EAWebKitChange
 #endif
-
-    void dump(WTF::PrintStream& out) const;
 
 private:
     int m_x, m_y;
@@ -201,6 +223,8 @@ inline int IntPoint::distanceSquaredToPoint(const IntPoint& point) const
 {
     return ((*this) - point).diagonalLengthSquared();
 }
+
+WEBCORE_EXPORT TextStream& operator<<(TextStream&, const IntPoint&);
 
 } // namespace WebCore
 

@@ -24,23 +24,17 @@
  */
 
 [
-    NoInterfaceObject,
-    Conditional=MEDIA_STREAM,
     ActiveDOMObject,
-    EventTarget,
-] interface RTCDTMFSender {
+    Conditional=WEB_RTC,
+    NoInterfaceObject,
+] interface RTCDTMFSender : EventTarget {
     readonly attribute boolean canInsertDTMF;
     readonly attribute MediaStreamTrack track;
     readonly attribute DOMString toneBuffer;
     readonly attribute long duration;
     readonly attribute long interToneGap;
 
-    [RaisesException] void insertDTMF(DOMString tones, optional long duration, optional long interToneGap);
+    [MayThrowException] void insertDTMF(DOMString tones, optional long duration, optional long interToneGap);
 
     attribute EventHandler ontonechange;
-
-    // EventTarget interface
-    void addEventListener(DOMString type, EventListener listener, optional boolean useCapture);
-    void removeEventListener(DOMString type, EventListener listener, optional boolean useCapture);
-    [RaisesException] boolean dispatchEvent(Event event);
 };

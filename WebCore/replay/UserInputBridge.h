@@ -25,8 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef UserInputBridge_h
-#define UserInputBridge_h
+#pragma once
 
 #include "ScrollTypes.h"
 #include <wtf/Noncopyable.h>
@@ -89,7 +88,7 @@ public:
 
     // Navigation APIs.
     WEBCORE_EXPORT void loadRequest(const FrameLoadRequest&, InputSource source = InputSource::User);
-    WEBCORE_EXPORT void reloadFrame(Frame*, bool endToEndReload, InputSource source = InputSource::User);
+    WEBCORE_EXPORT void reloadFrame(Frame*, bool endToEndReload, bool contentBlockersEnabled, InputSource = InputSource::User);
     WEBCORE_EXPORT void stopLoadingFrame(Frame*, InputSource source = InputSource::User);
     WEBCORE_EXPORT bool tryClosePage(InputSource source = InputSource::User);
 
@@ -101,5 +100,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // UserInputBridge_h

@@ -27,28 +27,22 @@
 #include "JSDocumentFragment.h"
 
 #include "ExceptionCode.h"
-#include "JSNodeOrString.h"
+#include "JSShadowRoot.h"
 
 using namespace JSC;
 
 namespace WebCore {
 
-JSValue JSDocumentFragment::prepend(ExecState* state)
+JSValue toJSNewlyCreated(ExecState*, JSDOMGlobalObject* globalObject, Ref<DocumentFragment>&& impl)
 {
-    ExceptionCode ec = 0;
-    impl().prepend(toNodeOrStringVector(*state), ec);
-    setDOMException(state, ec);
-
-    return jsUndefined();
+    if (impl->isShadowRoot())
+        return createWrapper<ShadowRoot>(globalObject, WTFMove(impl));
+    return createWrapper<DocumentFragment>(globalObject, WTFMove(impl));
 }
 
-JSValue JSDocumentFragment::append(ExecState* state)
+JSValue toJS(ExecState* state, JSDOMGlobalObject* globalObject, DocumentFragment& impl)
 {
-    ExceptionCode ec = 0;
-    impl().append(toNodeOrStringVector(*state), ec);
-    setDOMException(state, ec);
-
-    return jsUndefined();
+    return wrap(state, globalObject, impl);
 }
 
 } // namespace WebCore

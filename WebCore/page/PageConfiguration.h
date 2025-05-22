@@ -20,14 +20,14 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PageConfiguration_h
-#define PageConfiguration_h
+#pragma once
 
 #include <wtf/Noncopyable.h>
 #include <wtf/RefPtr.h>
+#include <wtf/UniqueRef.h>
 
 namespace WebCore {
 
@@ -35,27 +35,29 @@ class AlternativeTextClient;
 class ApplicationCacheStorage;
 class BackForwardClient;
 class ChromeClient;
+class ContextMenuClient;
 class DatabaseProvider;
 class DiagnosticLoggingClient;
 class DragClient;
 class EditorClient;
 class FrameLoaderClient;
 class InspectorClient;
+class LibWebRTCProvider;
+class PaymentCoordinatorClient;
 class PlugInClient;
+class PluginInfoProvider;
 class ProgressTrackerClient;
+class SocketProvider;
 class StorageNamespaceProvider;
-class UserContentController;
+class UserContentProvider;
 class ValidationMessageClient;
 class VisitedLinkStore;
-
-#if ENABLE(CONTEXT_MENUS)
-class ContextMenuClient;
-#endif
+class WebGLStateTracker;
 
 class PageConfiguration {
     WTF_MAKE_NONCOPYABLE(PageConfiguration); WTF_MAKE_FAST_ALLOCATED;
 public:
-    WEBCORE_EXPORT PageConfiguration();
+    WEBCORE_EXPORT PageConfiguration(UniqueRef<EditorClient>&&, Ref<SocketProvider>&&, UniqueRef<LibWebRTCProvider>&&);
     WEBCORE_EXPORT ~PageConfiguration();
 
     AlternativeTextClient* alternativeTextClient { nullptr };
@@ -63,23 +65,30 @@ public:
 #if ENABLE(CONTEXT_MENUS)
     ContextMenuClient* contextMenuClient { nullptr };
 #endif
-    EditorClient* editorClient { nullptr };
+    UniqueRef<EditorClient> editorClient;
+    Ref<SocketProvider> socketProvider;
     DragClient* dragClient { nullptr };
     InspectorClient* inspectorClient { nullptr };
+#if ENABLE(APPLE_PAY)
+    PaymentCoordinatorClient* paymentCoordinatorClient { nullptr };
+#endif
+
+    UniqueRef<LibWebRTCProvider> libWebRTCProvider;
+
     PlugInClient* plugInClient { nullptr };
     ProgressTrackerClient* progressTrackerClient { nullptr };
     RefPtr<BackForwardClient> backForwardClient;
-    ValidationMessageClient* validationMessageClient { nullptr };
+    std::unique_ptr<ValidationMessageClient> validationMessageClient;
     FrameLoaderClient* loaderClientForMainFrame { nullptr };
-    DiagnosticLoggingClient* diagnosticLoggingClient { nullptr };
+    std::unique_ptr<DiagnosticLoggingClient> diagnosticLoggingClient;
+    std::unique_ptr<WebGLStateTracker> webGLStateTracker;
 
     RefPtr<ApplicationCacheStorage> applicationCacheStorage;
     RefPtr<DatabaseProvider> databaseProvider;
+    RefPtr<PluginInfoProvider> pluginInfoProvider;
     RefPtr<StorageNamespaceProvider> storageNamespaceProvider;
-    RefPtr<UserContentController> userContentController;
+    RefPtr<UserContentProvider> userContentProvider;
     RefPtr<VisitedLinkStore> visitedLinkStore;
 };
 
 }
-
-#endif

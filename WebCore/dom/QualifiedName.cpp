@@ -33,8 +33,8 @@
 #include "XMLNames.h"
 #include <wtf/Assertions.h>
 #include <wtf/HashSet.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/StaticConstructors.h>
-#include <wtf/text/StringBuilder.h>
 
 #if ENABLE(MATHML)
 #include "MathMLNames.h"
@@ -74,7 +74,7 @@ struct QNameComponentsTranslator {
 
 static inline QNameSet& qualifiedNameCache()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(QNameSet, nameCache, ());
+    static NeverDestroyed<QNameSet> nameCache;
     return nameCache;
 }
 
@@ -88,14 +88,6 @@ QualifiedName::QualifiedName(const AtomicString& p, const AtomicString& l, const
 QualifiedName::QualifiedNameImpl::~QualifiedNameImpl()
 {
     qualifiedNameCache().remove(this);
-}
-
-String QualifiedName::toString() const
-{
-    if (!hasPrefix())
-        return localName();
-
-    return prefix().string() + ':' + localName().string();
 }
 
 // Global init routines
@@ -115,14 +107,14 @@ void QualifiedName::init()
 
 const QualifiedName& nullQName()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(QualifiedName, nullName, (nullAtom, nullAtom, nullAtom));
+    static NeverDestroyed<QualifiedName> nullName(nullAtom, nullAtom, nullAtom);
     return nullName;
 }
 
 const AtomicString& QualifiedName::localNameUpper() const
 {
     if (!m_impl->m_localNameUpper)
-        m_impl->m_localNameUpper = m_impl->m_localName.upper();
+        m_impl->m_localNameUpper = m_impl->m_localName.convertToASCIIUppercase();
     return m_impl->m_localNameUpper;
 }
 

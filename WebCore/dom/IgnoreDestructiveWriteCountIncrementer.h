@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IgnoreDestructiveWriteCountIncrementer_h
-#define IgnoreDestructiveWriteCountIncrementer_h
+#pragma once
 
 #include "Document.h"
 
@@ -34,7 +33,7 @@ class IgnoreDestructiveWriteCountIncrementer {
     WTF_MAKE_NONCOPYABLE(IgnoreDestructiveWriteCountIncrementer);
 public:
     explicit IgnoreDestructiveWriteCountIncrementer(Document* document)
-        : m_count(document ? &document->m_ignoreDestructiveWriteCount : 0)
+        : m_count(document ? &document->m_ignoreDestructiveWriteCount : nullptr)
     {
         if (!m_count)
             return;
@@ -52,6 +51,4 @@ private:
     unsigned* m_count;
 };
 
-}
-
-#endif
+} // namespace WebCore

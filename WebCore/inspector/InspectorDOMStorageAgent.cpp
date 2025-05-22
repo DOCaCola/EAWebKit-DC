@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
  * Copyright (C) 2013 Samsung Electronics. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,45 +40,39 @@
 #include "InspectorPageAgent.h"
 #include "InstrumentingAgents.h"
 #include "Page.h"
-#include "PageGroup.h"
 #include "SecurityOrigin.h"
+#include "SecurityOriginData.h"
 #include "Storage.h"
 #include "StorageNamespace.h"
 #include "StorageNamespaceProvider.h"
 #include "VoidCallback.h"
 #include <inspector/InspectorFrontendDispatchers.h>
 #include <inspector/InspectorValues.h>
-#include <wtf/Vector.h>
 
 using namespace Inspector;
 
 namespace WebCore {
 
-InspectorDOMStorageAgent::InspectorDOMStorageAgent(InstrumentingAgents* instrumentingAgents, InspectorPageAgent* pageAgent)
-    : InspectorAgentBase(ASCIILiteral("DOMStorage"), instrumentingAgents)
+InspectorDOMStorageAgent::InspectorDOMStorageAgent(WebAgentContext& context, InspectorPageAgent* pageAgent)
+    : InspectorAgentBase(ASCIILiteral("DOMStorage"), context)
+    , m_frontendDispatcher(std::make_unique<Inspector::DOMStorageFrontendDispatcher>(context.frontendRouter))
+    , m_backendDispatcher(Inspector::DOMStorageBackendDispatcher::create(context.backendDispatcher, this))
     , m_pageAgent(pageAgent)
-    , m_enabled(false)
 {
-    m_instrumentingAgents->setInspectorDOMStorageAgent(this);
+    m_instrumentingAgents.setInspectorDOMStorageAgent(this);
 }
 
 InspectorDOMStorageAgent::~InspectorDOMStorageAgent()
 {
-    m_instrumentingAgents->setInspectorDOMStorageAgent(nullptr);
-    m_instrumentingAgents = nullptr;
+    m_instrumentingAgents.setInspectorDOMStorageAgent(nullptr);
 }
 
-void InspectorDOMStorageAgent::didCreateFrontendAndBackend(Inspector::FrontendChannel* frontendChannel, Inspector::BackendDispatcher* backendDispatcher)
+void InspectorDOMStorageAgent::didCreateFrontendAndBackend(Inspector::FrontendRouter*, Inspector::BackendDispatcher*)
 {
-    m_frontendDispatcher = std::make_unique<Inspector::DOMStorageFrontendDispatcher>(frontendChannel);
-    m_backendDispatcher = Inspector::DOMStorageBackendDispatcher::create(backendDispatcher, this);
 }
 
 void InspectorDOMStorageAgent::willDestroyFrontendAndBackend(Inspector::DisconnectReason)
 {
-    m_frontendDispatcher = nullptr;
-    m_backendDispatcher = nullptr;
-
     ErrorString unused;
     disable(unused);
 }
@@ -110,10 +105,10 @@ void InspectorDOMStorageAgent::getDOMStorageItems(ErrorString& errorString, cons
         auto entry = Inspector::Protocol::Array<String>::create();
         entry->addItem(key);
         entry->addItem(value);
-        storageItems->addItem(WTF::move(entry));
+        storageItems->addItem(WTFMove(entry));
     }
 
-    items = WTF::move(storageItems);
+    items = WTFMove(storageItems);
 }
 
 void InspectorDOMStorageAgent::setDOMStorageItem(ErrorString& errorString, const InspectorObject& storageId, const String& key, const String& value)
@@ -150,9 +145,9 @@ String InspectorDOMStorageAgent::storageId(Storage* storage)
     ASSERT(document);
     DOMWindow* window = document->domWindow();
     ASSERT(window);
-    RefPtr<SecurityOrigin> securityOrigin = document->securityOrigin();
+    Ref<SecurityOrigin> securityOrigin = document->securityOrigin();
     bool isLocalStorage = window->optionalLocalStorage() == storage;
-    return storageId(securityOrigin.get(), isLocalStorage)->toJSONString();
+    return storageId(securityOrigin.ptr(), isLocalStorage)->toJSONString();
 }
 
 RefPtr<Inspector::Protocol::DOMStorage::StorageId> InspectorDOMStorageAgent::storageId(SecurityOrigin* securityOrigin, bool isLocalStorage)
@@ -163,9 +158,9 @@ RefPtr<Inspector::Protocol::DOMStorage::StorageId> InspectorDOMStorageAgent::sto
         .release();
 }
 
-void InspectorDOMStorageAgent::didDispatchDOMStorageEvent(const String& key, const String& oldValue, const String& newValue, StorageType storageType, SecurityOrigin* securityOrigin, Page*)
+void InspectorDOMStorageAgent::didDispatchDOMStorageEvent(const String& key, const String& oldValue, const String& newValue, StorageType storageType, SecurityOrigin* securityOrigin)
 {
-    if (!m_frontendDispatcher || !m_enabled)
+    if (!m_enabled)
         return;
 
     RefPtr<Inspector::Protocol::DOMStorage::StorageId> id = storageId(securityOrigin, storageType == LocalStorage);
@@ -200,8 +195,8 @@ RefPtr<StorageArea> InspectorDOMStorageAgent::findStorageArea(ErrorString& error
     }
 
     if (!isLocalStorage)
-        return m_pageAgent->page()->sessionStorage()->storageArea(targetFrame->document()->securityOrigin());
-    return m_pageAgent->page()->storageNamespaceProvider().localStorageArea(*targetFrame->document());
+        return m_pageAgent->page().sessionStorage()->storageArea(SecurityOriginData::fromSecurityOrigin(targetFrame->document()->securityOrigin()));
+    return m_pageAgent->page().storageNamespaceProvider().localStorageArea(*targetFrame->document());
 }
 
 } // namespace WebCore

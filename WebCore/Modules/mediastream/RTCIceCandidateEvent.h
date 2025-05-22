@@ -22,10 +22,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RTCIceCandidateEvent_h
-#define RTCIceCandidateEvent_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "Event.h"
 #include <wtf/text/AtomicString.h>
@@ -37,22 +36,18 @@ class RTCIceCandidateEvent : public Event {
 public:
     virtual ~RTCIceCandidateEvent();
 
-    static Ref<RTCIceCandidateEvent> create();
-    static Ref<RTCIceCandidateEvent> create(bool canBubble, bool cancelable, PassRefPtr<RTCIceCandidate>);
+    static Ref<RTCIceCandidateEvent> create(bool canBubble, bool cancelable, RefPtr<RTCIceCandidate>&&);
 
     RTCIceCandidate* candidate() const;
 
     virtual EventInterface eventInterface() const;
 
 private:
-    RTCIceCandidateEvent();
-    RTCIceCandidateEvent(bool canBubble, bool cancelable, PassRefPtr<RTCIceCandidate>);
+    RTCIceCandidateEvent(bool canBubble, bool cancelable, RefPtr<RTCIceCandidate>&&);
 
     RefPtr<RTCIceCandidate> m_candidate;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif // RTCIceCandidateEvent_h
+#endif // ENABLE(WEB_RTC)

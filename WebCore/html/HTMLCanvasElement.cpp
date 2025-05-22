@@ -31,8 +31,6 @@
 #include "CanvasGradient.h"
 #include "CanvasPattern.h"
 #include "CanvasRenderingContext2D.h"
-#include "Chrome.h"
-#include "ChromeClient.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "Frame.h"
@@ -40,16 +38,17 @@
 #include "GeometryUtilities.h"
 #include "GraphicsContext.h"
 #include "HTMLNames.h"
+#include "HTMLParserIdioms.h"
 #include "ImageData.h"
 #include "MIMETypeRegistry.h"
-#include "Page.h"
 #include "RenderHTMLCanvas.h"
 #include "ScriptController.h"
 #include "Settings.h"
 #include <math.h>
-
 #include <runtime/JSCInlines.h>
 #include <runtime/JSLock.h>
+#include <wtf/RAMSize.h>
+#include <wtf/text/StringBuilder.h>
 
 #if ENABLE(WEBGL)    
 #include "WebGLContextAttributes.h"
@@ -61,28 +60,33 @@ namespace WebCore {
 using namespace HTMLNames;
 
 // These values come from the WhatWG/W3C HTML spec.
-static const int DefaultWidth = 300;
-static const int DefaultHeight = 150;
+const int defaultWidth = 300;
+const int defaultHeight = 150;
 
 // Firefox limits width/height to 32767 pixels, but slows down dramatically before it
 // reaches that limit. We limit by area instead, giving us larger maximum dimensions,
 // in exchange for a smaller maximum canvas size. The maximum canvas size is in device pixels.
 #if PLATFORM(IOS)
-static const unsigned MaxCanvasArea = 4096 * 4096;
+const unsigned maxCanvasArea = 4096 * 4096;
 #elif PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED < 101100
-static const unsigned MaxCanvasArea = 8192 * 8192;
+const unsigned maxCanvasArea = 8192 * 8192;
 #else
-static const unsigned MaxCanvasArea = 16384 * 16384;
+const unsigned maxCanvasArea = 16384 * 16384;
 #endif
+
+#if USE(CG)
+// FIXME: It seems strange that the default quality is not the one that is literally named "default".
+// Should fix names to make this easier to understand, or write an excellent comment here explaining why not.
+const InterpolationQuality defaultInterpolationQuality = InterpolationLow;
+#else
+const InterpolationQuality defaultInterpolationQuality = InterpolationDefault;
+#endif
+
+static size_t activePixelMemory = 0;
 
 HTMLCanvasElement::HTMLCanvasElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
-    , m_size(DefaultWidth, DefaultHeight)
-    , m_rendererIsCanvas(false)
-    , m_ignoreReset(false)
-    , m_originClean(true)
-    , m_hasCreatedImageBuffer(false)
-    , m_didClearImageBuffer(false)
+    , m_size(defaultWidth, defaultHeight)
 {
     ASSERT(hasTagName(canvasTag));
 }
@@ -97,12 +101,25 @@ Ref<HTMLCanvasElement> HTMLCanvasElement::create(const QualifiedName& tagName, D
     return adoptRef(*new HTMLCanvasElement(tagName, document));
 }
 
+static void removeFromActivePixelMemory(size_t pixelsReleased)
+{
+    if (!pixelsReleased)
+        return;
+
+    if (pixelsReleased < activePixelMemory)
+        activePixelMemory -= pixelsReleased;
+    else
+        activePixelMemory = 0;
+}
+    
 HTMLCanvasElement::~HTMLCanvasElement()
 {
-    for (auto it = m_observers.begin(), end = m_observers.end(); it != end; ++it)
-        (*it)->canvasDestroyed(*this);
+    for (auto& observer : m_observers)
+        observer->canvasDestroyed(*this);
 
     m_context = nullptr; // Ensure this goes away before the ImageBuffer.
+
+    releaseImageBufferAndContext();
 }
 
 void HTMLCanvasElement::parseAttribute(const QualifiedName& name, const AtomicString& value)
@@ -112,16 +129,12 @@ void HTMLCanvasElement::parseAttribute(const QualifiedName& name, const AtomicSt
     HTMLElement::parseAttribute(name, value);
 }
 
-RenderPtr<RenderElement> HTMLCanvasElement::createElementRenderer(Ref<RenderStyle>&& style, const RenderTreePosition& insertionPosition)
+RenderPtr<RenderElement> HTMLCanvasElement::createElementRenderer(RenderStyle&& style, const RenderTreePosition& insertionPosition)
 {
     Frame* frame = document().frame();
-    if (frame && frame->script().canExecuteScripts(NotAboutToExecuteScript)) {
-        m_rendererIsCanvas = true;
-        return createRenderer<RenderHTMLCanvas>(*this, WTF::move(style));
-    }
-
-    m_rendererIsCanvas = false;
-    return HTMLElement::createElementRenderer(WTF::move(style), insertionPosition);
+    if (frame && frame->script().canExecuteScripts(NotAboutToExecuteScript))
+        return createRenderer<RenderHTMLCanvas>(*this, WTFMove(style));
+    return HTMLElement::createElementRenderer(WTFMove(style), insertionPosition);
 }
 
 bool HTMLCanvasElement::canContainRangeEndPoint() const
@@ -144,14 +157,80 @@ void HTMLCanvasElement::removeObserver(CanvasObserver& observer)
     m_observers.remove(&observer);
 }
 
-void HTMLCanvasElement::setHeight(int value)
+void HTMLCanvasElement::setHeight(unsigned value)
 {
-    setIntegralAttribute(heightAttr, value);
+    setAttributeWithoutSynchronization(heightAttr, AtomicString::number(limitToOnlyHTMLNonNegative(value, defaultHeight)));
 }
 
-void HTMLCanvasElement::setWidth(int value)
+void HTMLCanvasElement::setWidth(unsigned value)
 {
-    setIntegralAttribute(widthAttr, value);
+    setAttributeWithoutSynchronization(widthAttr, AtomicString::number(limitToOnlyHTMLNonNegative(value, defaultWidth)));
+}
+
+static inline size_t maxActivePixelMemory()
+{
+    static size_t maxPixelMemory;
+    static std::once_flag onceFlag;
+    std::call_once(onceFlag, [] {
+        maxPixelMemory = std::max(ramSize() / 4, 2151 * MB);
+    });
+    return maxPixelMemory;
+}
+
+CanvasRenderingContext* HTMLCanvasElement::getContext(const String& type)
+{
+    if (HTMLCanvasElement::is2dType(type))
+        return getContext2d(type);
+
+#if ENABLE(WEBGL)
+    if (HTMLCanvasElement::is3dType(type))
+        return getContextWebGL(type);
+#endif
+
+    return nullptr;
+}
+
+bool HTMLCanvasElement::is2dType(const String& type)
+{
+    return type == "2d";
+}
+
+CanvasRenderingContext* HTMLCanvasElement::getContext2d(const String& type)
+{
+    ASSERT_UNUSED(HTMLCanvasElement::is2dType(type), type);
+
+    if (m_context && !m_context->is2d())
+        return nullptr;
+    if (!m_context) {
+        bool usesDashboardCompatibilityMode = false;
+#if ENABLE(DASHBOARD_SUPPORT)
+        if (Settings* settings = document().settings())
+            usesDashboardCompatibilityMode = settings->usesDashboardBackwardCompatibilityMode();
+#endif
+
+        // Make sure we don't use more pixel memory than the system can support.
+        size_t requestedPixelMemory = 4 * width() * height();
+        if (activePixelMemory + requestedPixelMemory > maxActivePixelMemory()) {
+            StringBuilder stringBuilder;
+            stringBuilder.appendLiteral("Total canvas memory use exceeds the maximum limit (");
+            stringBuilder.appendNumber(maxActivePixelMemory() / 1024 / 1024);
+            stringBuilder.appendLiteral(" MB).");
+            document().addConsoleMessage(MessageSource::JS, MessageLevel::Warning, stringBuilder.toString());
+            return nullptr;
+        }
+
+        m_context = std::make_unique<CanvasRenderingContext2D>(*this, document().inQuirksMode(), usesDashboardCompatibilityMode);
+
+        downcast<CanvasRenderingContext2D>(*m_context).setUsesDisplayListDrawing(m_usesDisplayListDrawing);
+        downcast<CanvasRenderingContext2D>(*m_context).setTracksDisplayListReplay(m_tracksDisplayListReplay);
+
+#if USE(IOSURFACE_CANVAS_BACKING_STORE) || ENABLE(ACCELERATED_2D_CANVAS)
+        // Need to make sure a RenderLayer and compositing layer get created for the Canvas
+        invalidateStyleAndLayerComposition();
+#endif
+    }
+
+    return m_context.get();
 }
 
 #if ENABLE(WEBGL)
@@ -177,90 +256,36 @@ static bool shouldEnableWebGL(Settings* settings)
 
     return settings->acceleratedCompositingEnabled();
 }
-#endif
 
-CanvasRenderingContext* HTMLCanvasElement::getContext(const String& type, CanvasContextAttributes* attrs)
-{
-    // A Canvas can either be "2D" or "webgl" but never both. If you request a 2D canvas and the existing
-    // context is already 2D, just return that. If the existing context is WebGL, then destroy it
-    // before creating a new 2D context. Vice versa when requesting a WebGL canvas. Requesting a
-    // context with any other type string will destroy any existing context.
-    
-    // FIXME: The code depends on the context not going away once created, to prevent JS from
-    // seeing a dangling pointer. So for now we will disallow the context from being changed
-    // once it is created. https://bugs.webkit.org/show_bug.cgi?id=117095
-    if (is2dType(type)) {
-        if (m_context && !m_context->is2d())
-            return nullptr;
-        if (!m_context) {
-            bool usesDashbardCompatibilityMode = false;
-#if ENABLE(DASHBOARD_SUPPORT)
-            if (Settings* settings = document().settings())
-                usesDashbardCompatibilityMode = settings->usesDashboardBackwardCompatibilityMode();
-#endif
-            m_context = std::make_unique<CanvasRenderingContext2D>(this, document().inQuirksMode(), usesDashbardCompatibilityMode);
-#if USE(IOSURFACE_CANVAS_BACKING_STORE) || ENABLE(ACCELERATED_2D_CANVAS)
-            // Need to make sure a RenderLayer and compositing layer get created for the Canvas
-            setNeedsStyleRecalc(SyntheticStyleChange);
-#endif
-        }
-        return m_context.get();
-    }
-#if ENABLE(WEBGL)
-    if (shouldEnableWebGL(document().settings())) {
-
-        if (is3dType(type)) {
-            if (m_context && !m_context->is3d())
-                return nullptr;
-            if (!m_context) {
-                m_context = WebGLRenderingContextBase::create(this, static_cast<WebGLContextAttributes*>(attrs), type);
-                if (m_context) {
-                    // Need to make sure a RenderLayer and compositing layer get created for the Canvas
-                    setNeedsStyleRecalc(SyntheticStyleChange);
-                }
-            }
-            return m_context.get();
-        }
-    }
-#else
-    UNUSED_PARAM(attrs);
-#endif
-    return nullptr;
-}
-    
-bool HTMLCanvasElement::probablySupportsContext(const String& type, CanvasContextAttributes*)
-{
-    // FIXME: Provide implementation that accounts for attributes. Bugzilla bug 117093
-    // https://bugs.webkit.org/show_bug.cgi?id=117093
-
-    // FIXME: The code depends on the context not going away once created (as getContext
-    // is implemented under this assumption) https://bugs.webkit.org/show_bug.cgi?id=117095
-    if (is2dType(type))
-        return !m_context || m_context->is2d();
-
-#if ENABLE(WEBGL)
-    if (shouldEnableWebGL(document().settings())) {
-        if (is3dType(type))
-            return !m_context || m_context->is3d();
-    }
-#endif
-    return false;
-}
-
-bool HTMLCanvasElement::is2dType(const String& type)
-{
-    return type == "2d";
-}
-
-#if ENABLE(WEBGL)
 bool HTMLCanvasElement::is3dType(const String& type)
 {
     // Retain support for the legacy "webkit-3d" name.
     return type == "webgl" || type == "experimental-webgl"
 #if ENABLE(WEBGL2)
-        || type == "experimental-webgl2"
+        || type == "webgl2"
 #endif
         || type == "webkit-3d";
+}
+
+CanvasRenderingContext* HTMLCanvasElement::getContextWebGL(const String& type, WebGLContextAttributes&& attrs)
+{
+    ASSERT(HTMLCanvasElement::is3dType(type));
+
+    if (!shouldEnableWebGL(document().settings()))
+        return nullptr;
+
+    if (m_context && !m_context->is3d())
+        return nullptr;
+
+    if (!m_context) {
+        m_context = WebGLRenderingContextBase::create(*this, attrs, type);
+        if (m_context) {
+            // Need to make sure a RenderLayer and compositing layer get created for the Canvas
+            invalidateStyleAndLayerComposition();
+        }
+    }
+
+    return m_context.get();
 }
 #endif
 
@@ -268,9 +293,13 @@ void HTMLCanvasElement::didDraw(const FloatRect& rect)
 {
     clearCopiedImage();
 
+    FloatRect dirtyRect = rect;
     if (RenderBox* ro = renderBox()) {
         FloatRect destRect = ro->contentBoxRect();
-        FloatRect r = mapRect(rect, FloatRect(0, 0, size().width(), size().height()), destRect);
+        // Inflate dirty rect to cover antialiasing on image buffers.
+        if (drawingContext() && drawingContext()->shouldAntialias())
+            dirtyRect.inflate(1);
+        FloatRect r = mapRect(dirtyRect, FloatRect(0, 0, size().width(), size().height()), destRect);
         r.intersect(destRect);
         if (r.isEmpty() || m_dirtyRect.contains(r))
             return;
@@ -278,14 +307,13 @@ void HTMLCanvasElement::didDraw(const FloatRect& rect)
         m_dirtyRect.unite(r);
         ro->repaintRectangle(enclosingIntRect(m_dirtyRect));
     }
-
-    notifyObserversCanvasChanged(rect);
+    notifyObserversCanvasChanged(dirtyRect);
 }
 
 void HTMLCanvasElement::notifyObserversCanvasChanged(const FloatRect& rect)
 {
-    for (auto it = m_observers.begin(), end = m_observers.end(); it != end; ++it)
-        (*it)->canvasChanged(*this, rect);
+    for (auto& observer : m_observers)
+        observer->canvasChanged(*this, rect);
 }
 
 void HTMLCanvasElement::reset()
@@ -293,16 +321,10 @@ void HTMLCanvasElement::reset()
     if (m_ignoreReset)
         return;
 
-    bool ok;
     bool hadImageBuffer = hasCreatedImageBuffer();
 
-    int w = getAttribute(widthAttr).toInt(&ok);
-    if (!ok || w < 0)
-        w = DefaultWidth;
-
-    int h = getAttribute(heightAttr).toInt(&ok);
-    if (!ok || h < 0)
-        h = DefaultHeight;
+    int w = limitToOnlyHTMLNonNegative(attributeWithoutSynchronization(widthAttr), defaultWidth);
+    int h = limitToOnlyHTMLNonNegative(attributeWithoutSynchronization(heightAttr), defaultHeight);
 
     if (m_contextStateSaver) {
         // Reset to the initial graphics context state.
@@ -310,10 +332,8 @@ void HTMLCanvasElement::reset()
         m_contextStateSaver->save();
     }
 
-    if (m_context && m_context->is2d()) {
-        CanvasRenderingContext2D* context2D = static_cast<CanvasRenderingContext2D*>(m_context.get());
-        context2D->reset();
-    }
+    if (is<CanvasRenderingContext2D>(m_context.get()))
+        downcast<CanvasRenderingContext2D>(*m_context).reset();
 
     IntSize oldSize = size();
     IntSize newSize(w, h);
@@ -332,20 +352,20 @@ void HTMLCanvasElement::reset()
         static_cast<WebGLRenderingContextBase*>(m_context.get())->reshape(width(), height());
 #endif
 
-    if (auto renderer = this->renderer()) {
-        if (m_rendererIsCanvas) {
-            if (oldSize != size()) {
-                downcast<RenderHTMLCanvas>(*renderer).canvasSizeChanged();
-                if (renderBox() && renderBox()->hasAcceleratedCompositing())
-                    renderBox()->contentChanged(CanvasChanged);
-            }
-            if (hadImageBuffer)
-                renderer->repaint();
+    auto renderer = this->renderer();
+    if (is<RenderHTMLCanvas>(renderer)) {
+        auto& canvasRenderer = downcast<RenderHTMLCanvas>(*renderer);
+        if (oldSize != size()) {
+            canvasRenderer.canvasSizeChanged();
+            if (canvasRenderer.hasAcceleratedCompositing())
+                canvasRenderer.contentChanged(CanvasChanged);
         }
+        if (hadImageBuffer)
+            canvasRenderer.repaint();
     }
 
-    for (auto it = m_observers.begin(), end = m_observers.end(); it != end; ++it)
-        (*it)->canvasResized(*this);
+    for (auto& observer : m_observers)
+        observer->canvasResized(*this);
 }
 
 bool HTMLCanvasElement::paintsIntoCanvasBuffer() const
@@ -366,17 +386,18 @@ bool HTMLCanvasElement::paintsIntoCanvasBuffer() const
 }
 
 
-void HTMLCanvasElement::paint(GraphicsContext* context, const LayoutRect& r, bool useLowQualityScale)
+void HTMLCanvasElement::paint(GraphicsContext& context, const LayoutRect& r)
 {
     // Clear the dirty rect
     m_dirtyRect = FloatRect();
 
-    if (context->paintingDisabled())
+    if (context.paintingDisabled())
         return;
     
     if (m_context) {
         if (!paintsIntoCanvasBuffer() && !document().printing())
             return;
+
         m_context->paintRenderingResultsToCanvas();
     }
 
@@ -388,9 +409,9 @@ void HTMLCanvasElement::paint(GraphicsContext* context, const LayoutRect& r, boo
 #if ENABLE(CSS_IMAGE_ORIENTATION)
                 orientationDescription.setImageOrientationEnum(renderer()->style().imageOrientation());
 #endif 
-                context->drawImage(m_presentedImage.get(), ColorSpaceDeviceRGB, snappedIntRect(r), ImagePaintingOptions(orientationDescription, useLowQualityScale));
+                context.drawImage(*m_presentedImage, snappedIntRect(r), ImagePaintingOptions(orientationDescription));
             } else
-                context->drawImageBuffer(imageBuffer, ColorSpaceDeviceRGB, snappedIntRect(r), useLowQualityScale);
+                context.drawImageBuffer(*imageBuffer, snappedIntRect(r));
         }
     }
 
@@ -426,49 +447,46 @@ void HTMLCanvasElement::clearPresentationCopy()
     m_presentedImage = nullptr;
 }
 
+void HTMLCanvasElement::releaseImageBufferAndContext()
+{
+    m_contextStateSaver = nullptr;
+    setImageBuffer(nullptr);
+}
+    
 void HTMLCanvasElement::setSurfaceSize(const IntSize& size)
 {
     m_size = size;
     m_hasCreatedImageBuffer = false;
-    m_contextStateSaver = nullptr;
-    m_imageBuffer.reset();
+    releaseImageBufferAndContext();
     clearCopiedImage();
 }
 
 String HTMLCanvasElement::toEncodingMimeType(const String& mimeType)
 {
-    String lowercaseMimeType = mimeType.lower();
-
-    // FIXME: Make isSupportedImageMIMETypeForEncoding threadsafe (to allow this method to be used on a worker thread).
-    if (mimeType.isNull() || !MIMETypeRegistry::isSupportedImageMIMETypeForEncoding(lowercaseMimeType))
-        lowercaseMimeType = "image/png";
-
-    return lowercaseMimeType;
+    if (!MIMETypeRegistry::isSupportedImageMIMETypeForEncoding(mimeType))
+        return ASCIILiteral("image/png");
+    return mimeType.convertToASCIILowercase();
 }
 
-String HTMLCanvasElement::toDataURL(const String& mimeType, const double* quality, ExceptionCode& ec)
+ExceptionOr<String> HTMLCanvasElement::toDataURL(const String& mimeType, std::optional<double> quality)
 {
-    if (!m_originClean) {
-        ec = SECURITY_ERR;
-        return String();
-    }
+    if (!m_originClean)
+        return Exception { SECURITY_ERR };
 
     if (m_size.isEmpty() || !buffer())
-        return String("data:,");
+        return String { ASCIILiteral { "data:," } };
 
-    String encodingMimeType = toEncodingMimeType(mimeType);
+    String encodingMIMEType = toEncodingMimeType(mimeType);
 
 #if USE(CG)
     // Try to get ImageData first, as that may avoid lossy conversions.
-    RefPtr<ImageData> imageData = getImageData();
-
-    if (imageData)
-        return ImageDataToDataURL(*imageData, encodingMimeType, quality);
+    if (auto imageData = getImageData())
+        return dataURL(*imageData, encodingMIMEType, quality);
 #endif
 
     makeRenderingResultsAvailable();
 
-    return buffer()->toDataURL(encodingMimeType, quality);
+    return buffer()->toDataURL(encodingMIMEType, quality);
 }
 
 RefPtr<ImageData> HTMLCanvasElement::getImageData()
@@ -517,7 +535,7 @@ FloatSize HTMLCanvasElement::convertDeviceToLogical(const FloatSize& deviceSize)
 
 SecurityOrigin* HTMLCanvasElement::securityOrigin() const
 {
-    return document().securityOrigin();
+    return &document().securityOrigin();
 }
 
 bool HTMLCanvasElement::shouldAccelerate(const IntSize& size) const
@@ -548,7 +566,52 @@ size_t HTMLCanvasElement::memoryCost() const
 {
     if (!m_imageBuffer)
         return 0;
-    return 4 * m_imageBuffer->internalSize().width() * m_imageBuffer->internalSize().height();
+    return m_imageBuffer->memoryCost();
+}
+
+size_t HTMLCanvasElement::externalMemoryCost() const
+{
+    if (!m_imageBuffer)
+        return 0;
+    return m_imageBuffer->externalMemoryCost();
+}
+
+void HTMLCanvasElement::setUsesDisplayListDrawing(bool usesDisplayListDrawing)
+{
+    if (usesDisplayListDrawing == m_usesDisplayListDrawing)
+        return;
+    
+    m_usesDisplayListDrawing = usesDisplayListDrawing;
+
+    if (is<CanvasRenderingContext2D>(m_context.get()))
+        downcast<CanvasRenderingContext2D>(*m_context).setUsesDisplayListDrawing(m_usesDisplayListDrawing);
+}
+
+void HTMLCanvasElement::setTracksDisplayListReplay(bool tracksDisplayListReplay)
+{
+    if (tracksDisplayListReplay == m_tracksDisplayListReplay)
+        return;
+
+    m_tracksDisplayListReplay = tracksDisplayListReplay;
+
+    if (is<CanvasRenderingContext2D>(m_context.get()))
+        downcast<CanvasRenderingContext2D>(*m_context).setTracksDisplayListReplay(m_tracksDisplayListReplay);
+}
+
+String HTMLCanvasElement::displayListAsText(DisplayList::AsTextFlags flags) const
+{
+    if (is<CanvasRenderingContext2D>(m_context.get()))
+        return downcast<CanvasRenderingContext2D>(*m_context).displayListAsText(flags);
+
+    return String();
+}
+
+String HTMLCanvasElement::replayDisplayListAsText(DisplayList::AsTextFlags flags) const
+{
+    if (is<CanvasRenderingContext2D>(m_context.get()))
+        return downcast<CanvasRenderingContext2D>(*m_context).replayDisplayListAsText(flags);
+
+    return String();
 }
 
 void HTMLCanvasElement::createImageBuffer() const
@@ -563,11 +626,22 @@ void HTMLCanvasElement::createImageBuffer() const
     if (!deviceSize.isExpressibleAsIntSize())
         return;
 
-    if (deviceSize.width() * deviceSize.height() > MaxCanvasArea) {
+    if (deviceSize.width() * deviceSize.height() > maxCanvasArea) {
         StringBuilder stringBuilder;
         stringBuilder.appendLiteral("Canvas area exceeds the maximum limit (width * height > ");
-        stringBuilder.appendNumber(MaxCanvasArea);
+        stringBuilder.appendNumber(maxCanvasArea);
         stringBuilder.appendLiteral(").");
+        document().addConsoleMessage(MessageSource::JS, MessageLevel::Warning, stringBuilder.toString());
+        return;
+    }
+    
+    // Make sure we don't use more pixel memory than the system can support.
+    size_t requestedPixelMemory = 4 * width() * height();
+    if (activePixelMemory + requestedPixelMemory > maxActivePixelMemory()) {
+        StringBuilder stringBuilder;
+        stringBuilder.appendLiteral("Total canvas memory use exceeds the maximum limit (");
+        stringBuilder.appendNumber(maxActivePixelMemory() / 1024 / 1024);
+        stringBuilder.appendLiteral(" MB).");
         document().addConsoleMessage(MessageSource::JS, MessageLevel::Warning, stringBuilder.toString());
         return;
     }
@@ -577,15 +651,14 @@ void HTMLCanvasElement::createImageBuffer() const
         return;
 
     RenderingMode renderingMode = shouldAccelerate(bufferSize) ? Accelerated : Unaccelerated;
-    m_imageBuffer = ImageBuffer::create(size(), 1, ColorSpaceDeviceRGB, renderingMode);
+
+    setImageBuffer(ImageBuffer::create(size(), renderingMode));
     if (!m_imageBuffer)
         return;
-    m_imageBuffer->context()->setShadowsIgnoreTransforms(true);
-    m_imageBuffer->context()->setImageInterpolationQuality(DefaultInterpolationQuality);
-    if (document().settings() && !document().settings()->antialiased2dCanvasEnabled())
-        m_imageBuffer->context()->setShouldAntialias(false);
-    m_imageBuffer->context()->setStrokeThickness(1);
-    m_contextStateSaver = std::make_unique<GraphicsContextStateSaver>(*m_imageBuffer->context());
+    m_imageBuffer->context().setShadowsIgnoreTransforms(true);
+    m_imageBuffer->context().setImageInterpolationQuality(defaultInterpolationQuality);
+    m_imageBuffer->context().setStrokeThickness(1);
+    m_contextStateSaver = std::make_unique<GraphicsContextStateSaver>(m_imageBuffer->context());
 
     JSC::JSLockHolder lock(scriptExecutionContext()->vm());
     scriptExecutionContext()->vm().heap.reportExtraMemoryAllocated(memoryCost());
@@ -593,13 +666,22 @@ void HTMLCanvasElement::createImageBuffer() const
 #if USE(IOSURFACE_CANVAS_BACKING_STORE) || ENABLE(ACCELERATED_2D_CANVAS)
     if (m_context && m_context->is2d())
         // Recalculate compositing requirements if acceleration state changed.
-        const_cast<HTMLCanvasElement*>(this)->setNeedsStyleRecalc(SyntheticStyleChange);
+        const_cast<HTMLCanvasElement*>(this)->invalidateStyleAndLayerComposition();
 #endif
+}
+
+void HTMLCanvasElement::setImageBuffer(std::unique_ptr<ImageBuffer> buffer) const
+{
+    removeFromActivePixelMemory(memoryCost());
+
+    m_imageBuffer = WTFMove(buffer);
+
+    activePixelMemory += memoryCost();
 }
 
 GraphicsContext* HTMLCanvasElement::drawingContext() const
 {
-    return buffer() ? m_imageBuffer->context() : nullptr;
+    return buffer() ? &m_imageBuffer->context() : nullptr;
 }
 
 GraphicsContext* HTMLCanvasElement::existingDrawingContext() const
@@ -635,10 +717,9 @@ void HTMLCanvasElement::clearImageBuffer() const
 
     m_didClearImageBuffer = true;
 
-    if (m_context->is2d()) {
-        CanvasRenderingContext2D* context2D = static_cast<CanvasRenderingContext2D*>(m_context.get());
+    if (is<CanvasRenderingContext2D>(*m_context)) {
         // No need to undo transforms/clip/etc. because we are called right after the context is reset.
-        context2D->clearRect(0, 0, width(), height());
+        downcast<CanvasRenderingContext2D>(*m_context).clearRect(0, 0, width(), height());
     }
 }
 

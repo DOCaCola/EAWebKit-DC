@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CommonCryptoUtilities_h
-#define CommonCryptoUtilities_h
+#pragma once
 
 #if ENABLE(SUBTLE_CRYPTO)
 
@@ -32,16 +31,9 @@
 #include <CommonCrypto/CommonCryptor.h>
 #include <wtf/Vector.h>
 
-#if defined(__has_include)
-#if __has_include(<CommonCrypto/CommonRSACryptor.h>)
+#if USE(APPLE_INTERNAL_SDK)
 #include <CommonCrypto/CommonRSACryptor.h>
-#endif
-#endif
-
-#if defined(__has_include) && PLATFORM(COCOA)
-#if __has_include(<CommonCrypto/CommonRandomSPI.h>)
 #include <CommonCrypto/CommonRandomSPI.h>
-#endif
 #endif
 
 #ifndef _CC_RSACRYPTOR_H_
@@ -90,6 +82,8 @@ extern "C" void CCRSACryptorRelease(CCRSACryptorRef key);
 extern "C" CCCryptorStatus CCRSAGetKeyComponents(CCRSACryptorRef rsaKey, uint8_t *modulus, size_t *modulusLength, uint8_t *exponent, size_t *exponentLength, uint8_t *p, size_t *pLength, uint8_t *q, size_t *qLength);
 extern "C" CCRSAKeyType CCRSAGetKeyType(CCRSACryptorRef key);
 extern "C" CCCryptorStatus CCCryptorGCM(CCOperation op, CCAlgorithm alg, const void* key, size_t keyLength, const void* iv, size_t ivLen, const void* aData, size_t aDataLen, const void* dataIn, size_t dataInLength, void* dataOut, const void* tag, size_t* tagLength);
+extern "C" CCCryptorStatus CCRSACryptorImport(const void *keyPackage, size_t keyPackageLen, CCRSACryptorRef *key);
+extern "C" CCCryptorStatus CCRSACryptorExport(CCRSACryptorRef key, void *out, size_t *outLen);
 
 namespace WebCore {
 
@@ -120,4 +114,3 @@ bool getCommonCryptoDigestAlgorithm(CryptoAlgorithmIdentifier, CCDigestAlgorithm
 } // namespace WebCore
 
 #endif // ENABLE(SUBTLE_CRYPTO)
-#endif // CommonCryptoUtilities_h

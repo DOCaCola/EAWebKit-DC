@@ -1,92 +1,15 @@
-find_library(ACCELERATE_LIBRARY accelerate)
-find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
-find_library(AUDIOUNIT_LIBRARY AudioUnit)
-find_library(CARBON_LIBRARY Carbon)
-find_library(COCOA_LIBRARY Cocoa)
-find_library(COREAUDIO_LIBRARY CoreAudio)
-find_library(DISKARBITRATION_LIBRARY DiskArbitration)
-find_library(IOKIT_LIBRARY IOKit)
-find_library(IOSURFACE_LIBRARY IOSurface)
-find_library(OPENGL_LIBRARY OpenGL)
+find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
 find_library(QUARTZ_LIBRARY Quartz)
-find_library(QUARTZCORE_LIBRARY QuartzCore)
-find_library(SECURITY_LIBRARY Security)
-find_library(SQLITE3_LIBRARY sqlite3)
-find_library(XML2_LIBRARY XML2)
-find_package(ZLIB REQUIRED)
-
-find_library(PDFKIT_FRAMEWORK PDFKit HINTS ${QUARTZ_LIBRARY}/Versions/*/Frameworks)
-find_path(PDFKIT_INCLUDE_DIRECTORY PDFKit.h HINTS ${PDFKIT_FRAMEWORK}/Versions/*/Headers)
-
-if ("${CURRENT_OSX_VERSION}" MATCHES "10.9")
-set(WEBKITSYSTEMINTERFACE_LIBRARY libWebKitSystemInterfaceMavericks.a)
-elif ("${CURRENT_OSX_VERSION}" MATCHES "10.10")
-set(WEBKITSYSTEMINTERFACE_LIBRARY libWebKitSystemInterfaceYosemite.a)
-else ()
-set(WEBKITSYSTEMINTERFACE_LIBRARY libWebKitSystemInterfaceElCapitan.a)
-endif ()
+add_definitions(-iframework ${QUARTZ_LIBRARY}/Frameworks)
+add_definitions(-iframework ${APPLICATIONSERVICES_LIBRARY}/Versions/Current/Frameworks)
 link_directories(../../WebKitLibraries)
 
-list(APPEND WebKit_LIBRARIES
-    PRIVATE ${ACCELERATE_LIBRARY}
-    PRIVATE ${AUDIOTOOLBOX_LIBRARY}
-    PRIVATE ${AUDIOUNIT_LIBRARY}
-    PRIVATE ${CARBON_LIBRARY}
-    PRIVATE ${COCOA_LIBRARY}
-    PRIVATE ${COREAUDIO_LIBRARY}
-    PRIVATE ${DISKARBITRATION_LIBRARY}
-    PRIVATE ${IOKIT_LIBRARY}
-    PRIVATE ${IOSURFACE_LIBRARY}
-    PRIVATE ${OPENGL_LIBRARY}
-    PRIVATE ${PDFKIT_FRAMEWORK}/PDFKit
-    PRIVATE ${QUARTZ_LIBRARY}
-    PRIVATE ${QUARTZCORE_LIBRARY}
-    PRIVATE ${SECURITY_LIBRARY}
-    PRIVATE ${SQLITE3_LIBRARY}
-    PRIVATE ${WEBKITSYSTEMINTERFACE_LIBRARY}
-    PRIVATE ${XML2_LIBRARY}
-    PRIVATE ${ZLIB_LIBRARIES}
-)
-
 list(APPEND WebKit_INCLUDE_DIRECTORIES
-    "${DERIVED_SOURCES_DIR}"
-    "${DERIVED_SOURCES_WEBCORE_DIR}"
     "${DERIVED_SOURCES_WEBKITLEGACY_DIR}"
-    "${JAVASCRIPTCORE_DIR}/dfg"
-    "${WEBCORE_DIR}/accessibility/mac"
-    "${WEBCORE_DIR}/bindings/objc"
-    "${WEBCORE_DIR}/bridge"
-    "${WEBCORE_DIR}/bridge/jsc"
-    "${WEBCORE_DIR}/bridge/objc"
-    "${WEBCORE_DIR}/ForwardingHeaders/inspector"
-    "${WEBCORE_DIR}/loader/archive/cf"
-    "${WEBCORE_DIR}/loader/cf"
-    "${WEBCORE_DIR}/loader/mac"
-    "${WEBCORE_DIR}/page/cocoa"
-    "${WEBCORE_DIR}/page/mac"
-    "${WEBCORE_DIR}/platform/cf"
-    "${WEBCORE_DIR}/platform/cocoa"
-    "${WEBCORE_DIR}/platform/graphics/avfoundation"
-    "${WEBCORE_DIR}/platform/graphics/avfoundation/cf"
-    "${WEBCORE_DIR}/platform/graphics/avfoundation/objc"
-    "${WEBCORE_DIR}/platform/graphics/ca"
-    "${WEBCORE_DIR}/platform/graphics/ca/mac"
-    "${WEBCORE_DIR}/platform/graphics/cocoa"
-    "${WEBCORE_DIR}/platform/graphics/cg"
-    "${WEBCORE_DIR}/platform/graphics/opentype"
-    "${WEBCORE_DIR}/platform/graphics/mac"
-    "${WEBCORE_DIR}/platform/mac"
-    "${WEBCORE_DIR}/platform/network/cocoa"
-    "${WEBCORE_DIR}/platform/network/cf"
-    "${WEBCORE_DIR}/platform/network/mac"
-    "${WEBCORE_DIR}/platform/text/cf"
-    "${WEBCORE_DIR}/platform/text/mac"
-    "${WEBCORE_DIR}/plugins/mac"
-    ../../WebKitLibraries
+    "${CMAKE_SOURCE_DIR}/WebKitLibraries"
 )
 
 list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
-    "${PDFKIT_INCLUDE_DIRECTORY}"
     mac
     mac/Carbon
     mac/DefaultDelegates
@@ -101,18 +24,10 @@ list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
     mac/WebCoreSupport
     mac/WebInspector
     mac/WebView
-    Storage
 )
 
 list(APPEND WebKit_SOURCES
-    Storage/StorageAreaImpl.cpp
-    Storage/StorageAreaSync.cpp
-    Storage/StorageNamespaceImpl.cpp
-    Storage/StorageSyncManager.cpp
-    Storage/StorageThread.cpp
-    Storage/StorageTracker.cpp
-    Storage/WebDatabaseProvider.cpp
-    Storage/WebStorageNamespaceProvider.cpp
+    cf/WebCoreSupport/WebInspectorClientCF.cpp
 
     mac/Carbon/CarbonUtils.m
     mac/Carbon/CarbonWindowAdapter.mm
@@ -121,6 +36,142 @@ list(APPEND WebKit_SOURCES
     mac/Carbon/HIViewAdapter.m
     mac/Carbon/HIWebView.mm
 
+    mac/DOM/DOM.mm
+    mac/DOM/DOMAbstractView.mm
+    mac/DOM/DOMAttr.mm
+    mac/DOM/DOMBlob.mm
+    mac/DOM/DOMCDATASection.mm
+    mac/DOM/DOMCharacterData.mm
+    mac/DOM/DOMComment.mm
+    mac/DOM/DOMCounter.mm
+    mac/DOM/DOMCSS.mm
+    mac/DOM/DOMCSSCharsetRule.mm
+    mac/DOM/DOMCSSFontFaceRule.mm
+    mac/DOM/DOMCSSImportRule.mm
+    mac/DOM/DOMCSSMediaRule.mm
+    mac/DOM/DOMCSSPageRule.mm
+    mac/DOM/DOMCSSPrimitiveValue.mm
+    mac/DOM/DOMCSSRule.mm
+    mac/DOM/DOMCSSRuleList.mm
+    mac/DOM/DOMCSSStyleDeclaration.mm
+    mac/DOM/DOMCSSStyleRule.mm
+    mac/DOM/DOMCSSStyleSheet.mm
+    mac/DOM/DOMCSSUnknownRule.mm
+    mac/DOM/DOMCSSValue.mm
+    mac/DOM/DOMCSSValueList.mm
+    mac/DOM/DOMCustomXPathNSResolver.mm
+    mac/DOM/DOMDOMImplementation.mm
+    mac/DOM/DOMDOMTokenList.mm
+    mac/DOM/DOMDocument.mm
+    mac/DOM/DOMDocumentFragment.mm
+    mac/DOM/DOMDocumentType.mm
+    mac/DOM/DOMElement.mm
+    mac/DOM/DOMEntityReference.mm
+    mac/DOM/DOMEvent.mm
+    mac/DOM/DOMEvents.mm
+    mac/DOM/DOMFile.mm
+    mac/DOM/DOMFileList.mm
+    mac/DOM/DOMHTML.mm
+    mac/DOM/DOMHTMLAnchorElement.mm
+    mac/DOM/DOMHTMLAppletElement.mm
+    mac/DOM/DOMHTMLAreaElement.mm
+    mac/DOM/DOMHTMLBRElement.mm
+    mac/DOM/DOMHTMLBaseElement.mm
+    mac/DOM/DOMHTMLBaseFontElement.mm
+    mac/DOM/DOMHTMLBodyElement.mm
+    mac/DOM/DOMHTMLButtonElement.mm
+    mac/DOM/DOMHTMLCanvasElement.mm
+    mac/DOM/DOMHTMLCollection.mm
+    mac/DOM/DOMHTMLDListElement.mm
+    mac/DOM/DOMHTMLDirectoryElement.mm
+    mac/DOM/DOMHTMLDivElement.mm
+    mac/DOM/DOMHTMLDocument.mm
+    mac/DOM/DOMHTMLElement.mm
+    mac/DOM/DOMHTMLEmbedElement.mm
+    mac/DOM/DOMHTMLFieldSetElement.mm
+    mac/DOM/DOMHTMLFontElement.mm
+    mac/DOM/DOMHTMLFormElement.mm
+    mac/DOM/DOMHTMLFrameElement.mm
+    mac/DOM/DOMHTMLFrameSetElement.mm
+    mac/DOM/DOMHTMLHRElement.mm
+    mac/DOM/DOMHTMLHeadElement.mm
+    mac/DOM/DOMHTMLHeadingElement.mm
+    mac/DOM/DOMHTMLHtmlElement.mm
+    mac/DOM/DOMHTMLIFrameElement.mm
+    mac/DOM/DOMHTMLImageElement.mm
+    mac/DOM/DOMHTMLInputElement.mm
+    mac/DOM/DOMHTMLLIElement.mm
+    mac/DOM/DOMHTMLLabelElement.mm
+    mac/DOM/DOMHTMLLegendElement.mm
+    mac/DOM/DOMHTMLLinkElement.mm
+    mac/DOM/DOMHTMLMapElement.mm
+    mac/DOM/DOMHTMLMarqueeElement.mm
+    mac/DOM/DOMHTMLMediaElement.mm
+    mac/DOM/DOMHTMLMenuElement.mm
+    mac/DOM/DOMHTMLMetaElement.mm
+    mac/DOM/DOMHTMLModElement.mm
+    mac/DOM/DOMHTMLOListElement.mm
+    mac/DOM/DOMHTMLObjectElement.mm
+    mac/DOM/DOMHTMLOptGroupElement.mm
+    mac/DOM/DOMHTMLOptionElement.mm
+    mac/DOM/DOMHTMLOptionsCollection.mm
+    mac/DOM/DOMHTMLParagraphElement.mm
+    mac/DOM/DOMHTMLParamElement.mm
+    mac/DOM/DOMHTMLPreElement.mm
+    mac/DOM/DOMHTMLQuoteElement.mm
+    mac/DOM/DOMHTMLScriptElement.mm
+    mac/DOM/DOMHTMLSelectElement.mm
+    mac/DOM/DOMHTMLStyleElement.mm
+    mac/DOM/DOMHTMLTableCaptionElement.mm
+    mac/DOM/DOMHTMLTableCellElement.mm
+    mac/DOM/DOMHTMLTableColElement.mm
+    mac/DOM/DOMHTMLTableElement.mm
+    mac/DOM/DOMHTMLTableRowElement.mm
+    mac/DOM/DOMHTMLTableSectionElement.mm
+    mac/DOM/DOMHTMLTextAreaElement.mm
+    mac/DOM/DOMHTMLTitleElement.mm
+    mac/DOM/DOMHTMLUListElement.mm
+    mac/DOM/DOMHTMLVideoElement.mm
+    mac/DOM/DOMInternal.mm
+    mac/DOM/DOMKeyboardEvent.mm
+    mac/DOM/DOMMediaError.mm
+    mac/DOM/DOMMediaList.mm
+    mac/DOM/DOMMouseEvent.mm
+    mac/DOM/DOMMutationEvent.mm
+    mac/DOM/DOMNamedNodeMap.mm
+    mac/DOM/DOMNode.mm
+    mac/DOM/DOMNodeIterator.mm
+    mac/DOM/DOMNodeList.mm
+    mac/DOM/DOMObject.mm
+    mac/DOM/DOMOverflowEvent.mm
+    mac/DOM/DOMProcessingInstruction.mm
+    mac/DOM/DOMProgressEvent.mm
+    mac/DOM/DOMRGBColor.mm
+    mac/DOM/DOMRange.mm
+    mac/DOM/DOMRect.mm
+    mac/DOM/DOMStyleSheet.mm
+    mac/DOM/DOMStyleSheetList.mm
+    mac/DOM/DOMText.mm
+    mac/DOM/DOMTextEvent.mm
+    mac/DOM/DOMTimeRanges.mm
+    mac/DOM/DOMTreeWalker.mm
+    mac/DOM/DOMUIEvent.mm
+    mac/DOM/DOMUIKitExtensions.mm
+    mac/DOM/DOMUtility.mm
+    mac/DOM/DOMWheelEvent.mm
+    mac/DOM/DOMXPath.mm
+    mac/DOM/DOMXPathExpression.mm
+    mac/DOM/DOMXPathResult.mm
+    mac/DOM/ExceptionHandlers.mm
+    mac/DOM/ObjCEventListener.mm
+    mac/DOM/ObjCNodeFilterCondition.mm
+
+    mac/DefaultDelegates/WebDefaultContextMenuDelegate.mm
+    mac/DefaultDelegates/WebDefaultEditingDelegate.m
+    mac/DefaultDelegates/WebDefaultPolicyDelegate.m
+    mac/DefaultDelegates/WebDefaultUIDelegate.m
+
+    mac/History/BackForwardList.mm
     mac/History/BinaryPropertyList.cpp
     mac/History/HistoryPropertyList.mm
     mac/History/WebBackForwardList.mm
@@ -128,7 +179,6 @@ list(APPEND WebKit_SOURCES
     mac/History/WebHistoryItem.mm
     mac/History/WebURLsWithTitles.m
 
-    mac/Misc/OldWebAssertions.c
     mac/Misc/WebCache.mm
     mac/Misc/WebCoreStatistics.mm
     mac/Misc/WebDownload.mm
@@ -164,8 +214,6 @@ list(APPEND WebKit_SOURCES
 
     mac/Plugins/WebBaseNetscapePluginView.mm
     mac/Plugins/WebBasePluginPackage.mm
-    mac/Plugins/WebNetscapeContainerCheckContextInfo.mm
-    mac/Plugins/WebNetscapeContainerCheckPrivate.mm
     mac/Plugins/WebNetscapePluginEventHandler.mm
     mac/Plugins/WebNetscapePluginEventHandlerCarbon.mm
     mac/Plugins/WebNetscapePluginEventHandlerCocoa.mm
@@ -195,6 +243,7 @@ list(APPEND WebKit_SOURCES
 
     mac/Storage/WebDatabaseManager.mm
     mac/Storage/WebDatabaseManagerClient.mm
+    mac/Storage/WebDatabaseProvider.mm
     mac/Storage/WebDatabaseQuotaManager.mm
     mac/Storage/WebStorageManager.mm
     mac/Storage/WebStorageTrackerClient.mm
@@ -216,15 +265,18 @@ list(APPEND WebKit_SOURCES
     mac/WebCoreSupport/WebIconDatabaseClient.mm
     mac/WebCoreSupport/WebInspectorClient.mm
     mac/WebCoreSupport/WebJavaScriptTextInputPanel.m
-    mac/WebCoreSupport/WebKeyGenerator.mm
     mac/WebCoreSupport/WebKitFullScreenListener.mm
     mac/WebCoreSupport/WebNotificationClient.mm
     mac/WebCoreSupport/WebOpenPanelResultListener.mm
     mac/WebCoreSupport/WebPlatformStrategies.mm
+    mac/WebCoreSupport/WebPluginInfoProvider.mm
     mac/WebCoreSupport/WebProgressTrackerClient.mm
     mac/WebCoreSupport/WebSecurityOrigin.mm
+    mac/WebCoreSupport/WebSelectionServiceController.mm
     mac/WebCoreSupport/WebSystemInterface.mm
     mac/WebCoreSupport/WebUserMediaClient.mm
+    mac/WebCoreSupport/WebValidationMessageClient.mm
+    mac/WebCoreSupport/WebVisitedLinkStore.mm
 
     mac/WebInspector/WebInspector.mm
     mac/WebInspector/WebInspectorFrontend.mm
@@ -248,6 +300,7 @@ list(APPEND WebKit_SOURCES
     mac/WebView/WebGeolocationPosition.mm
     mac/WebView/WebHTMLRepresentation.mm
     mac/WebView/WebHTMLView.mm
+    mac/WebView/WebImmediateActionController.mm
     mac/WebView/WebIndicateLayer.mm
     mac/WebView/WebJSPDFDoc.mm
     mac/WebView/WebNavigationData.mm
@@ -271,6 +324,7 @@ set(WebKit_LIBRARY_TYPE SHARED)
 
 set(WebKitLegacy_FORWARDING_HEADERS_DIRECTORIES
     mac/DOM
+    mac/DefaultDelegates
     mac/History
     mac/Misc
     mac/Panels
@@ -278,9 +332,6 @@ set(WebKitLegacy_FORWARDING_HEADERS_DIRECTORIES
     mac/WebCoreSupport
     mac/WebInspector
     mac/WebView
-    ${DERIVED_SOURCES_WEBCORE_DIR}
-    ${WEBCORE_DIR}/bindings/objc
-    ${WEBCORE_DIR}/plugins
 )
 
 set(WebKitLegacy_FORWARDING_HEADERS_FILES
@@ -302,24 +353,20 @@ set(WebKitLegacy_FORWARDING_HEADERS_FILES
     mac/WebView/WebFrame.h
     mac/WebView/WebView.h
 
-    ${DERIVED_SOURCES_WEBCORE_DIR}/DOMRange.h
-
-    ${WEBCORE_DIR}/bindings/objc/DOMCore.h
-    ${WEBCORE_DIR}/bindings/objc/DOMExtensions.h
-
     ${WEBCORE_DIR}/plugins/npfunctions.h
 )
 
 add_definitions("-include WebKitPrefix.h")
 
-set_source_files_properties(
+set(C99_FILES
     ${WEBKIT_DIR}/mac/Carbon/CarbonUtils.m
     ${WEBKIT_DIR}/mac/Carbon/CarbonWindowContentView.m
     ${WEBKIT_DIR}/mac/Carbon/CarbonWindowFrame.m
     ${WEBKIT_DIR}/mac/Carbon/HIViewAdapter.m
-    mac/History/WebURLsWithTitles.m
 
-    mac/Misc/OldWebAssertions.c
+    mac/DefaultDelegates/WebDefaultEditingDelegate.m
+    mac/DefaultDelegates/WebDefaultPolicyDelegate.m
+    mac/DefaultDelegates/WebDefaultUIDelegate.m
 
     mac/Misc/WebKitErrors.m
     mac/Misc/WebKitLogging.m
@@ -348,7 +395,16 @@ set_source_files_properties(
     mac/WebCoreSupport/WebJavaScriptTextInputPanel.m
 
     mac/WebView/WebFormDelegate.m
-PROPERTIES COMPILE_FLAGS -std=c99)
+)
+
+foreach (_file ${WebKit_SOURCES})
+    list(FIND C99_FILES ${_file} _c99_index)
+    if (${_c99_index} EQUAL -1)
+        set_source_files_properties(${_file} PROPERTIES COMPILE_FLAGS "-ObjC++ -std=c++14")
+    else ()
+        set_source_files_properties(${_file} PROPERTIES COMPILE_FLAGS -std=c99)
+    endif ()
+endforeach ()
 
 file(COPY
     mac/Plugins/Hosted/WebKitPluginAgent.defs
@@ -358,6 +414,7 @@ file(COPY
     mac/Plugins/Hosted/WebKitPluginHostTypes.defs
     mac/Plugins/Hosted/WebKitPluginHostTypes.h
 DESTINATION ${DERIVED_SOURCES_WEBKITLEGACY_DIR})
+
 add_custom_command(
     OUTPUT
         ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginAgentReplyServer.c
@@ -379,14 +436,27 @@ add_custom_command(
     COMMAND mig -I.. -sheader WebKitPluginClientServer.h WebKitPluginClient.defs
     VERBATIM)
 list(APPEND WebKit_SOURCES
-    ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginAgentReplyServer.c
-    ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginAgentReplyUser.c
-    ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginAgentServer.c
     ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginAgentUser.c
     ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginClientServer.c
-    ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginClientUser.c
-    ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginHostServer.c
     ${DERIVED_SOURCES_WEBKITLEGACY_DIR}/WebKitPluginHostUser.c
 )
 
 WEBKIT_CREATE_FORWARDING_HEADERS(WebKitLegacy DIRECTORIES ${WebKitLegacy_FORWARDING_HEADERS_DIRECTORIES} FILES ${WebKitLegacy_FORWARDING_HEADERS_FILES})
+WEBKIT_CREATE_FORWARDING_HEADERS(WebKit DIRECTORIES ${DERIVED_SOURCES_DIR}/ForwardingHeaders/WebKitLegacy)
+
+# FIXME: Forwarding headers should be copies of actual headers.
+file(GLOB ObjCHeaders ${WEBCORE_DIR}/plugins/*.h)
+list(APPEND ObjCHeaders
+    WebKitAvailability.h
+    WebScriptObject.h
+)
+foreach (_file ${ObjCHeaders})
+    get_filename_component(_name ${_file} NAME)
+    if (NOT EXISTS ${DERIVED_SOURCES_DIR}/ForwardingHeaders/WebKitLegacy/${_name})
+        file(WRITE ${DERIVED_SOURCES_DIR}/ForwardingHeaders/WebKitLegacy/${_name} "#import <WebCore/${_name}>")
+    endif ()
+endforeach ()
+
+set(WebKit_OUTPUT_NAME WebKitLegacy)
+
+set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "-compatibility_version 1 -current_version ${WEBKIT_MAC_VERSION}")

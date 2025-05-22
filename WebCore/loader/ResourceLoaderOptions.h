@@ -28,13 +28,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ResourceLoaderOptions_h
-#define ResourceLoaderOptions_h
+#pragma once
 
+#include "FetchOptions.h"
 #include "ResourceHandleTypes.h"
+#include <wtf/Vector.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
-    
+
 enum SendCallbackPolicy {
     SendCallbacks,
     DoNotSendCallbacks
@@ -55,12 +57,6 @@ enum SecurityCheckPolicy {
     DoSecurityCheck
 };
 
-enum RequestOriginPolicy {
-    UseDefaultOriginRestrictionsForType,
-    RestrictToSameOrigin,
-    PotentiallyCrossOriginEnabled // Indicates "potentially CORS-enabled fetch" in HTML standard.
-};
-
 enum CertificateInfoPolicy {
     IncludeCertificateInfo,
     DoNotIncludeCertificateInfo
@@ -71,62 +67,62 @@ enum class ContentSecurityPolicyImposition : uint8_t {
     DoPolicyCheck
 };
 
-struct ResourceLoaderOptions {
-    ResourceLoaderOptions()
-        : m_sendLoadCallbacks(DoNotSendCallbacks)
-        , m_sniffContent(DoNotSniffContent)
-        , m_dataBufferingPolicy(BufferData)
-        , m_allowCredentials(DoNotAllowStoredCredentials)
-        , m_clientCredentialPolicy(DoNotAskClientForAnyCredentials)
-        , m_securityCheck(DoSecurityCheck)
-        , m_requestOriginPolicy(UseDefaultOriginRestrictionsForType)
-        , m_certificateInfoPolicy(DoNotIncludeCertificateInfo)
-    {
-    }
-
-    ResourceLoaderOptions(SendCallbackPolicy sendLoadCallbacks, ContentSniffingPolicy sniffContent, DataBufferingPolicy dataBufferingPolicy, StoredCredentials allowCredentials, ClientCredentialPolicy credentialPolicy, SecurityCheckPolicy securityCheck, RequestOriginPolicy requestOriginPolicy, CertificateInfoPolicy certificateInfoPolicy, ContentSecurityPolicyImposition contentSecurityPolicyImposition)
-        : m_sendLoadCallbacks(sendLoadCallbacks)
-        , m_sniffContent(sniffContent)
-        , m_dataBufferingPolicy(dataBufferingPolicy)
-        , m_allowCredentials(allowCredentials)
-        , m_clientCredentialPolicy(credentialPolicy)
-        , m_securityCheck(securityCheck)
-        , m_requestOriginPolicy(requestOriginPolicy)
-        , m_certificateInfoPolicy(certificateInfoPolicy)
-        , m_contentSecurityPolicyImposition(contentSecurityPolicyImposition)
-    {
-    }
-
-    SendCallbackPolicy sendLoadCallbacks() const { return static_cast<SendCallbackPolicy>(m_sendLoadCallbacks); }
-    void setSendLoadCallbacks(SendCallbackPolicy allow) { m_sendLoadCallbacks = allow; }
-    ContentSniffingPolicy sniffContent() const { return static_cast<ContentSniffingPolicy>(m_sniffContent); }
-    void setSniffContent(ContentSniffingPolicy policy) { m_sniffContent = policy; }
-    DataBufferingPolicy dataBufferingPolicy() const { return static_cast<DataBufferingPolicy>(m_dataBufferingPolicy); }
-    void setDataBufferingPolicy(DataBufferingPolicy policy) { m_dataBufferingPolicy = policy; }
-    StoredCredentials allowCredentials() const { return static_cast<StoredCredentials>(m_allowCredentials); }
-    void setAllowCredentials(StoredCredentials allow) { m_allowCredentials = allow; }
-    ClientCredentialPolicy clientCredentialPolicy() const { return static_cast<ClientCredentialPolicy>(m_clientCredentialPolicy); }
-    void setClientCredentialPolicy(ClientCredentialPolicy policy) { m_clientCredentialPolicy = policy; }
-    SecurityCheckPolicy securityCheck() const { return static_cast<SecurityCheckPolicy>(m_securityCheck); }
-    void setSecurityCheck(SecurityCheckPolicy check) { m_securityCheck = check; }
-    RequestOriginPolicy requestOriginPolicy() const { return static_cast<RequestOriginPolicy>(m_requestOriginPolicy); }
-    void setRequestOriginPolicy(RequestOriginPolicy policy) { m_requestOriginPolicy = policy; }
-    CertificateInfoPolicy certificateInfoPolicy() const { return static_cast<CertificateInfoPolicy>(m_certificateInfoPolicy); }
-    void setCertificateInfoPolicy(CertificateInfoPolicy policy) { m_certificateInfoPolicy = policy; }
-    ContentSecurityPolicyImposition contentSecurityPolicyImposition() const { return m_contentSecurityPolicyImposition; }
-    void setContentSecurityPolicyImposition(ContentSecurityPolicyImposition imposition) { m_contentSecurityPolicyImposition = imposition; }
-
-    unsigned m_sendLoadCallbacks : 1;
-    unsigned m_sniffContent : 1;
-    unsigned m_dataBufferingPolicy : 1;
-    unsigned m_allowCredentials : 1; // Whether HTTP credentials and cookies are sent with the request.
-    unsigned m_clientCredentialPolicy : 2; // When we should ask the client for credentials (if we allow credentials at all).
-    unsigned m_securityCheck : 1;
-    unsigned m_requestOriginPolicy : 2;
-    unsigned m_certificateInfoPolicy : 1; // Whether the response should include certificate info.
-    ContentSecurityPolicyImposition m_contentSecurityPolicyImposition { ContentSecurityPolicyImposition::DoPolicyCheck };
+enum class DefersLoadingPolicy : uint8_t {
+    AllowDefersLoading,
+    DisallowDefersLoading
 };
 
-} // namespace WebCore    
+enum class CachingPolicy : uint8_t {
+    AllowCaching,
+    DisallowCaching
+};
 
-#endif // ResourceLoaderOptions_h
+enum class ClientCredentialPolicy {
+    CannotAskClientForCredentials,
+    MayAskClientForCredentials
+};
+
+enum class SameOriginDataURLFlag {
+    Set,
+    Unset
+};
+
+struct ResourceLoaderOptions : public FetchOptions {
+    ResourceLoaderOptions() { }
+
+    ResourceLoaderOptions(const FetchOptions& options) : FetchOptions(options) { }
+
+    ResourceLoaderOptions(SendCallbackPolicy sendLoadCallbacks, ContentSniffingPolicy sniffContent, DataBufferingPolicy dataBufferingPolicy, StoredCredentials allowCredentials, ClientCredentialPolicy credentialPolicy, FetchOptions::Credentials credentials, SecurityCheckPolicy securityCheck, FetchOptions::Mode mode, CertificateInfoPolicy certificateInfoPolicy, ContentSecurityPolicyImposition contentSecurityPolicyImposition, DefersLoadingPolicy defersLoadingPolicy, CachingPolicy cachingPolicy)
+        : sendLoadCallbacks(sendLoadCallbacks)
+        , sniffContent(sniffContent)
+        , dataBufferingPolicy(dataBufferingPolicy)
+        , allowCredentials(allowCredentials)
+        , securityCheck(securityCheck)
+        , certificateInfoPolicy(certificateInfoPolicy)
+        , contentSecurityPolicyImposition(contentSecurityPolicyImposition)
+        , defersLoadingPolicy(defersLoadingPolicy)
+        , cachingPolicy(cachingPolicy)
+        , clientCredentialPolicy(credentialPolicy)
+    {
+        this->credentials = credentials;
+        this->mode = mode;
+    }
+
+    SendCallbackPolicy sendLoadCallbacks { DoNotSendCallbacks };
+    ContentSniffingPolicy sniffContent { DoNotSniffContent };
+    DataBufferingPolicy dataBufferingPolicy { BufferData };
+    StoredCredentials allowCredentials { DoNotAllowStoredCredentials };
+    SecurityCheckPolicy securityCheck { DoSecurityCheck };
+    CertificateInfoPolicy certificateInfoPolicy { DoNotIncludeCertificateInfo };
+    ContentSecurityPolicyImposition contentSecurityPolicyImposition { ContentSecurityPolicyImposition::DoPolicyCheck };
+    DefersLoadingPolicy defersLoadingPolicy { DefersLoadingPolicy::AllowDefersLoading };
+    CachingPolicy cachingPolicy { CachingPolicy::AllowCaching };
+    SameOriginDataURLFlag sameOriginDataURLFlag { SameOriginDataURLFlag::Unset };
+
+    ClientCredentialPolicy clientCredentialPolicy { ClientCredentialPolicy::CannotAskClientForCredentials };
+    unsigned maxRedirectCount { 20 };
+
+    Vector<String> derivedCachedDataTypesToRetrieve;
+};
+
+} // namespace WebCore

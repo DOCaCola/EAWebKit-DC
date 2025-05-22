@@ -23,26 +23,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HTMLMediaElementMediaStream_h
-#define HTMLMediaElementMediaStream_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM) && ENABLE(VIDEO)
-
-#include <wtf/PassRefPtr.h>
 
 namespace WebCore {
 
 class HTMLMediaElement;
 class MediaStream;
+class ScriptExecutionContext;
 
 class HTMLMediaElementMediaStream {
 public:
-    static MediaStream* srcObject(HTMLMediaElement*, bool& isNull);
-    static void setSrcObject(HTMLMediaElement*, MediaStream*);
+    static MediaStream* srcObject(HTMLMediaElement&);
+    static void setSrcObject(ScriptExecutionContext&, HTMLMediaElement&, MediaStream*);
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && ENABLE(VIDEO)
-
-#endif // HTMLMediaElementMediaStream_h

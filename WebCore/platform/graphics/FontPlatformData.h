@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2010, 2013 Apple Inc.
+ * Copyright (C) 2006-2017 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Michael Emmel mike.emmel@gmail.com
  * Copyright (C) 2007 Holger Hans Peter Freyther
  * Copyright (C) 2007 Pioneer Research Center USA, Inc.
@@ -23,53 +23,53 @@
  *
  */
 
-// FIXME: This is temporary until all ports switch to using this file.
-#if PLATFORM(EFL) || PLATFORM(GTK)
-#include "freetype/FontPlatformData.h"
-#else
-
-#ifndef FontPlatformData_h
-#define FontPlatformData_h
+#pragma once
 
 #include "TextFlags.h"
-
-#if PLATFORM(WIN)
-#include "SharedGDIObject.h"
-#endif
-
-//+EAWebKitChange
-//1/21/2014
-#if USE(CAIRO) && !PLATFORM(EA)
-#include <wtf/HashFunctions.h>
-#include <cairo.h>
-#endif
-//-EAWebKitChange
-
-#if PLATFORM(COCOA)
-#if PLATFORM(IOS)
-#import <CoreGraphics/CoreGraphics.h>
-#endif
-#if USE(APPKIT)
-OBJC_CLASS NSFont;
-#endif
-
-typedef const struct __CTFont* CTFontRef;
-
-#endif
-
-#if USE(CG)
-typedef struct CGFont* CGFontRef;
-#endif
-
 #include <wtf/Forward.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/RetainPtr.h>
 #include <wtf/text/StringImpl.h>
 
+
+#if PLATFORM(WIN)
+#include "COMPtr.h"
+#include "SharedGDIObject.h"
+#endif
+
+//+EAWebKitChange
+//1/21/2014
+#if USE(CAIRO) && !PLATFORM(EA)
+#include "RefPtrCairo.h"
+#include <wtf/HashFunctions.h>
+#include <cairo.h>
+#endif
+//-EAWebKitChange
+
+#if USE(FREETYPE)
+#include "FcUniquePtr.h"
+#include "HarfBuzzFace.h"
+#include "OpenTypeVerticalData.h"
+#endif
+
+#if USE(APPKIT)
+OBJC_CLASS NSFont;
+#endif
+
+#if PLATFORM(COCOA)
+typedef const struct __CTFont* CTFontRef;
+#endif
+
+#if USE(CG)
+#include <CoreGraphics/CoreGraphics.h>
+#endif
+
 #if PLATFORM(WIN)
 #include <wtf/win/GDIObject.h>
 typedef struct HFONT__* HFONT;
+interface IDWriteFont;
+interface IDWriteFontFace;
 #endif
 
 //+EAWebKitChange
@@ -123,37 +123,57 @@ bool ShouldSmoothText(float fontSize, FontSmoothingMode mode = AutoSmoothing);
 }
 #endif
 //-EAWebKitChange
-
 namespace WebCore {
 
 class FontDescription;
 class SharedBuffer;
 
+// This class is conceptually immutable. Once created, no instances should ever change (in an observable way).
 class FontPlatformData {
     WTF_MAKE_FAST_ALLOCATED;
 public:
     FontPlatformData(WTF::HashTableDeletedValueType);
     FontPlatformData();
-    FontPlatformData(const FontPlatformData&);
+
     FontPlatformData(const FontDescription&, const AtomicString& family);
-    FontPlatformData(float size, bool syntheticBold, bool syntheticOblique, FontOrientation = Horizontal, FontWidthVariant = RegularWidth);
+    FontPlatformData(float size, bool syntheticBold, bool syntheticOblique, FontOrientation = Horizontal, FontWidthVariant = RegularWidth, TextRenderingMode = AutoTextRendering);
 
 #if PLATFORM(COCOA)
-    WEBCORE_EXPORT FontPlatformData(CTFontRef, float size, bool syntheticBold = false, bool syntheticOblique = false, FontOrientation = Horizontal, FontWidthVariant = RegularWidth);
+    WEBCORE_EXPORT FontPlatformData(CTFontRef, float size, bool syntheticBold = false, bool syntheticOblique = false, FontOrientation = Horizontal, FontWidthVariant = RegularWidth, TextRenderingMode = AutoTextRendering);
 #endif
 
-#if USE(CG)
-    FontPlatformData(CGFontRef, float size, bool syntheticBold, bool syntheticOblique, FontOrientation, FontWidthVariant);
+    static FontPlatformData cloneWithOrientation(const FontPlatformData&, FontOrientation);
+    static FontPlatformData cloneWithSyntheticOblique(const FontPlatformData&, bool);
+    static FontPlatformData cloneWithSize(const FontPlatformData&, float);
+
+#if USE(CG) && (PLATFORM(WIN) || (PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200) || (PLATFORM(IOS) && __IPHONE_OS_VERSION_MIN_REQUIRED < 100000))
+    FontPlatformData(CGFontRef, float size, bool syntheticBold, bool syntheticOblique, FontOrientation, FontWidthVariant, TextRenderingMode);
 #endif
 
 #if PLATFORM(WIN)
     FontPlatformData(GDIObject<HFONT>, float size, bool syntheticBold, bool syntheticOblique, bool useGDI);
+#endif
 
-#if USE(CG)
+#if PLATFORM(WIN) && USE(CG)
     FontPlatformData(GDIObject<HFONT>, CGFontRef, float size, bool syntheticBold, bool syntheticOblique, bool useGDI);
-#elif USE(CAIRO)
+#endif
+
+#if PLATFORM(WIN) && USE(DIRECT2D)
+    FontPlatformData(GDIObject<HFONT>, IDWriteFont*, float size, bool syntheticBold, bool syntheticOblique, bool useGDI);
+#endif
+
+#if PLATFORM(WIN) && USE(CAIRO)
     FontPlatformData(GDIObject<HFONT>, cairo_font_face_t*, float size, bool bold, bool italic);
 #endif
+
+#if USE(FREETYPE)
+    FontPlatformData(FcPattern*, const FontDescription&);
+    FontPlatformData(cairo_font_face_t*, const FontDescription&, bool syntheticBold, bool syntheticOblique);
+    FontPlatformData(const FontPlatformData&);
+    FontPlatformData(FontPlatformData&&) = default;
+    FontPlatformData& operator=(const FontPlatformData&);
+    FontPlatformData& operator=(FontPlatformData&&) = default;
+    ~FontPlatformData();
 #endif
 //+EAWebKitChange
 //1/15/2014
@@ -171,86 +191,58 @@ public:
 	EA::WebKit::IFont* font() const; 
 //-EAWebKitChange
 #elif PLATFORM(WIN)
+
     HFONT hfont() const { return m_font ? m_font->get() : 0; }
     bool useGDI() const { return m_useGDI; }
-#elif PLATFORM(COCOA)
+#endif
+
+#if PLATFORM(COCOA)
     CTFontRef font() const { return m_font.get(); }
     WEBCORE_EXPORT CTFontRef registeredFont() const; // Returns nullptr iff the font is not registered, such as web fonts (otherwise returns font()).
-    void setFont(CTFontRef);
 
     CTFontRef ctFont() const;
     static RetainPtr<CFTypeRef> objectForEqualityCheck(CTFontRef);
     RetainPtr<CFTypeRef> objectForEqualityCheck() const;
 
-    bool allowsLigatures() const;
-
-#if USE(APPKIT)
-    // FIXME: Remove this when all NSFont usage is removed.
-    NSFont *nsFont() const { return (NSFont *)m_font.get(); }
-    void setNSFont(NSFont *font) { setFont(reinterpret_cast<CTFontRef>(font)); }
-#endif
+    bool hasCustomTracking() const { return isSystemFont(); }
 #endif
 
-#if USE(CG)
+#if PLATFORM(WIN) || PLATFORM(COCOA)
+    bool isSystemFont() const { return m_isSystemFont; }
+#endif
+
+    bool hasVariations() const { return m_hasVariations; }
+
+#if USE(CG) && (PLATFORM(WIN) || (PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200) || (PLATFORM(IOS) && __IPHONE_OS_VERSION_MIN_REQUIRED < 100000))
     CGFontRef cgFont() const { return m_cgFont.get(); }
+#endif
+
+#if USE(DIRECT2D)
+    IDWriteFont* dwFont() const { return m_dwFont.get(); }
+    IDWriteFontFace* dwFontFace() const { return m_dwFontFace.get(); }
 #endif
 
     bool isFixedPitch() const;
     float size() const { return m_size; }
-    void setSize(float size) { m_size = size; }
     bool syntheticBold() const { return m_syntheticBold; }
     bool syntheticOblique() const { return m_syntheticOblique; }
     bool isColorBitmapFont() const { return m_isColorBitmapFont; }
-    bool isCompositeFontReference() const { return m_isCompositeFontReference; }
     FontOrientation orientation() const { return m_orientation; }
     FontWidthVariant widthVariant() const { return m_widthVariant; }
+    TextRenderingMode textRenderingMode() const { return m_textRenderingMode; }
     bool isForTextCombine() const { return widthVariant() != RegularWidth; } // Keep in sync with callers of FontDescription::setWidthVariant().
 
-    void setOrientation(FontOrientation orientation) { m_orientation = orientation; }
-    void setSyntheticOblique(bool syntheticOblique) { m_syntheticOblique = syntheticOblique; }
-
-	//+EAWebKitChange
-	//1/21/2014
-#if USE(CAIRO) && !PLATFORM(EA)
-	cairo_scaled_font_t* scaledFont() const { return m_scaledFont; }
+#if USE(CAIRO)
+    cairo_scaled_font_t* scaledFont() const { return m_scaledFont.get(); }
 #endif
-	//-EAWebKitChange
 
-    unsigned hash() const
-    {
-		//+EAWebKitChange
-		//05/13/2016
-        //hash all fields used in the == operator, but include the name of the font from the private data too
-#if PLATFORM(EA)
-			uintptr_t hashCodes[8];
-			hashCodes[0] = m_size;
-            hashCodes[1] = m_syntheticBold;
-            hashCodes[2] = m_syntheticOblique;
-            hashCodes[3] = m_isColorBitmapFont;
-            hashCodes[4] = m_isCompositeFontReference;
-            hashCodes[5] = m_orientation;
-            hashCodes[6] = m_widthVariant;
-			hashCodes[7] = StringHasher::computeHashAndMaskTop8Bits(font()->GetFamilyName(), EA::Internal::Strlen(font()->GetFamilyName()));
-			return StringHasher::hashMemory<sizeof(hashCodes)>(hashCodes);
-		//-EAWebKitChange
-#elif PLATFORM(WIN) && !USE(CAIRO)
-        return m_font ? m_font->hash() : 0;
-#elif OS(DARWIN)
-        ASSERT(m_font || !m_cgFont || isEmoji());
-        uintptr_t flags = static_cast<uintptr_t>(m_isHashTableDeletedValue << 4 | isEmoji() << 3 | m_orientation << 2 | m_syntheticBold << 1 | m_syntheticOblique);
-#if USE(APPKIT)
-        uintptr_t fontHash = (uintptr_t)m_font.get();
-#else
-        uintptr_t fontHash = reinterpret_cast<uintptr_t>(CFHash(m_font.get()));
+#if USE(FREETYPE)
+    HarfBuzzFace* harfBuzzFace() const;
+    bool hasCompatibleCharmap() const;
+    FcFontSet* fallbacks() const;
 #endif
-        uintptr_t hashCodes[3] = { fontHash, m_widthVariant, flags };
-        return StringHasher::hashMemory<sizeof(hashCodes)>(hashCodes);
-#elif USE(CAIRO)
-        return PtrHash<cairo_scaled_font_t*>::hash(m_scaledFont);
-#endif
-    }
 
-    const FontPlatformData& operator=(const FontPlatformData&);
+    unsigned hash() const;
 
     bool operator==(const FontPlatformData& other) const
     {
@@ -260,9 +252,9 @@ public:
             && m_syntheticBold == other.m_syntheticBold
             && m_syntheticOblique == other.m_syntheticOblique
             && m_isColorBitmapFont == other.m_isColorBitmapFont
-            && m_isCompositeFontReference == other.m_isCompositeFontReference
             && m_orientation == other.m_orientation
-            && m_widthVariant == other.m_widthVariant;
+            && m_widthVariant == other.m_widthVariant
+            && m_textRenderingMode == other.m_textRenderingMode;
     }
 
     bool isHashTableDeletedValue() const
@@ -277,29 +269,30 @@ public:
 #endif
     }
 
-#if PLATFORM(COCOA) || PLATFORM(WIN)
-    PassRefPtr<SharedBuffer> openTypeTable(uint32_t table) const;
+    bool isEmoji() const
+    {
+#if PLATFORM(IOS)
+        return m_isEmoji;
+#else
+        return false;
+#endif
+    }
+
+#if PLATFORM(COCOA) || PLATFORM(WIN) || USE(FREETYPE)
+    RefPtr<SharedBuffer> openTypeTable(uint32_t table) const;
 #endif
 
 #ifndef NDEBUG
     String description() const;
 #endif
 
-#if PLATFORM(IOS)
-    bool isEmoji() const { return m_isEmoji; }
-    void setIsEmoji(bool isEmoji) { m_isEmoji = isEmoji; }
-#elif PLATFORM(MAC)
-    bool isEmoji() const { return false; }
-    void setIsEmoji(bool) { }
-#endif
-
 private:
     bool platformIsEqual(const FontPlatformData&) const;
-    void platformDataInit(const FontPlatformData&);
-    const FontPlatformData& platformDataAssign(const FontPlatformData&);
+
 #if PLATFORM(COCOA)
     CGFloat ctFontSize() const;
 #endif
+
 #if PLATFORM(WIN)
     void platformDataInit(HFONT, float size, HDC, WCHAR* faceName);
 #endif
@@ -310,15 +303,11 @@ private:
 	static FontPlatformDataPrivate* hashTableDeletedFontValue() { return reinterpret_cast<FontPlatformDataPrivate*>(-1); }
 #endif
 	//-EAWebKitChange
+	
+#if USE(FREETYPE)
+    void buildScaledFont(cairo_font_face_t*);
+#endif
 
-public:
-    bool m_syntheticBold { false };
-    bool m_syntheticOblique { false };
-    FontOrientation m_orientation { Horizontal };
-    float m_size { 0 };
-    FontWidthVariant m_widthVariant { RegularWidth };
-
-private:
 	//+EAWebKitChange
 	//1/15/2014
 #if PLATFORM(EA)
@@ -332,19 +321,43 @@ private:
     RefPtr<SharedGDIObject<HFONT>> m_font;
 #endif
 
-#if USE(CG)
+#if USE(CG) && (PLATFORM(WIN) || (PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200) || (PLATFORM(IOS) && __IPHONE_OS_VERSION_MIN_REQUIRED < 100000))
     RetainPtr<CGFontRef> m_cgFont;
+#endif
+
+#if USE(DIRECT2D)
+    COMPtr<IDWriteFont> m_dwFont;
+    COMPtr<IDWriteFontFace> m_dwFontFace;
 #endif
 	//+EAWebKitChange
 	//1/21/2014
 #if USE(CAIRO) && !PLATFORM(EA)
     //-EAWebKitChange
-    cairo_scaled_font_t* m_scaledFont { nullptr };
+    RefPtr<cairo_scaled_font_t> m_scaledFont;
 #endif
 
+#if USE(FREETYPE)
+    RefPtr<FcPattern> m_pattern;
+    mutable FcUniquePtr<FcFontSet> m_fallbacks;
+    mutable RefPtr<HarfBuzzFace> m_harfBuzzFace;
+#endif
+
+    // The values below are common to all ports
+    // FIXME: If they're common to all ports, they should move to Font
+    float m_size { 0 };
+
+    FontOrientation m_orientation { Horizontal };
+    FontWidthVariant m_widthVariant { RegularWidth };
+    TextRenderingMode m_textRenderingMode { AutoTextRendering };
+
+    bool m_syntheticBold { false };
+    bool m_syntheticOblique { false };
     bool m_isColorBitmapFont { false };
-    bool m_isCompositeFontReference { false };
     bool m_isHashTableDeletedValue { false };
+    bool m_isSystemFont { false };
+    bool m_hasVariations { false };
+    // The values above are common to all ports
+
 #if PLATFORM(IOS)
     bool m_isEmoji { false };
 #endif
@@ -352,10 +365,53 @@ private:
 #if PLATFORM(WIN)
     bool m_useGDI { false };
 #endif
+
+#if USE(FREETYPE)
+    bool m_fixedWidth { false };
+#endif
 };
 
-} // namespace WebCore
+#if USE(APPKIT)
 
-#endif // FontPlatformData_h
+// NSFonts and CTFontRefs are toll-free-bridged.
+inline CTFontRef toCTFont(NSFont *font)
+{
+    return (CTFontRef)font;
+}
+
+inline NSFont *toNSFont(CTFontRef font)
+{
+    return (NSFont *)font;
+}
 
 #endif
+
+#if USE(CG)
+
+class ScopedTextMatrix {
+public:
+    ScopedTextMatrix(CGAffineTransform newMatrix, CGContextRef context)
+        : m_context(context)
+        , m_textMatrix(CGContextGetTextMatrix(context))
+    {
+        CGContextSetTextMatrix(m_context, newMatrix);
+    }
+
+    ~ScopedTextMatrix()
+    {
+        CGContextSetTextMatrix(m_context, m_textMatrix);
+    }
+
+    CGAffineTransform savedMatrix() const
+    {
+        return m_textMatrix;
+    }
+
+private:
+    CGContextRef m_context;
+    CGAffineTransform m_textMatrix;
+};
+
+#endif
+
+} // namespace WebCore

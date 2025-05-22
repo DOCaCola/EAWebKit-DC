@@ -1,9 +1,8 @@
 /*
- * Copyright (C) 2006 Apple Inc.  All rights reserved.
+ * Copyright (C) 2006, 2016 Apple Inc.  All rights reserved.
  * Copyright (C) 2008-2009 Torch Mobile, Inc.
  * Copyright (C) Research In Motion Limited 2009-2010. All rights reserved.
  * Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
- * Copyright (C) 2011, 2012, 2014, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,251 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ImageDecoder_h
-#define ImageDecoder_h
+#pragma once
 
+#include "ImageFrame.h"
 #include "IntRect.h"
-#include "ImageSource.h"
+#include "IntSize.h"
 #include "PlatformScreen.h"
 #include "SharedBuffer.h"
 #include <wtf/Assertions.h>
+#include <wtf/Optional.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
-#if USE(QCMSLIB)
-#include "qcms.h"
-#if OS(DARWIN)
-#include "GraphicsContextCG.h"
-#include <ApplicationServices/ApplicationServices.h>
-#include <wtf/RetainPtr.h>
-#endif
-#endif
-
 namespace WebCore {
-
-    // ImageFrame represents the decoded image data.  This buffer is what all
-    // decoders write a single frame into.
-    class ImageFrame {
-    public:
-        enum FrameStatus { FrameEmpty, FramePartial, FrameComplete };
-        enum FrameDisposalMethod {
-            // If you change the numeric values of these, make sure you audit
-            // all users, as some users may cast raw values to/from these
-            // constants.
-            DisposeNotSpecified,      // Leave frame in framebuffer
-            DisposeKeep,              // Leave frame in framebuffer
-            DisposeOverwriteBgcolor,  // Clear frame to transparent
-            DisposeOverwritePrevious  // Clear frame to previous framebuffer
-                                      // contents
-        };
-		//+EAWebKitChange
-		//10/14/2011
-#if PLATFORM(EA)
-		typedef uint32_t PixelData; 
-#else
-		//-EAWebKitChange
-        typedef unsigned PixelData;
-#endif
-
-        ImageFrame();
-
-        ImageFrame(const ImageFrame& other) { operator=(other); }
-
-        // For backends which refcount their data, this operator doesn't need to
-        // create a new copy of the image data, only increase the ref count.
-        ImageFrame& operator=(const ImageFrame& other);
-
-        // These do not touch other metadata, only the raw pixel data.
-        void clearPixelData();
-        void zeroFillPixelData();
-        void zeroFillFrameRect(const IntRect&);
-
-        // Makes this frame have an independent copy of the provided image's
-        // pixel data, so that modifications in one frame are not reflected in
-        // the other.  Returns whether the copy succeeded.
-        bool copyBitmapData(const ImageFrame&);
-
-        // Copies the pixel data at [(startX, startY), (endX, startY)) to the
-        // same X-coordinates on each subsequent row up to but not including
-        // endY.
-        void copyRowNTimes(int startX, int endX, int startY, int endY)
-        {
-            ASSERT(startX < width());
-            ASSERT(endX <= width());
-            ASSERT(startY < height());
-            ASSERT(endY <= height());
-            const int rowBytes = (endX - startX) * sizeof(PixelData);
-            const PixelData* const startAddr = getAddr(startX, startY);
-            for (int destY = startY + 1; destY < endY; ++destY)
-                memcpy(getAddr(startX, destY), startAddr, rowBytes);
-        }
-
-        // Allocates space for the pixel data.  Must be called before any pixels
-        // are written.  Must only be called once.  Returns whether allocation
-        // succeeded.
-        //+EAWebKitChange
-        //5/21/2015 - Added a bool so that we can optionally disallow the storage allocation (for example, when providing storage externally)
-        bool setSize(int newWidth, int newHeight, bool allocateStorage = true);
-        //-EAWebKitChange
-
-        // Returns a caller-owned pointer to the underlying native image data.
-        // (Actual use: This pointer will be owned by BitmapImage and freed in
-        // FrameData::clear()).
-        PassNativeImagePtr asNewNativeImage() const;
-
-        bool hasAlpha() const;
-        const IntRect& originalFrameRect() const { return m_originalFrameRect; }
-        FrameStatus status() const { return m_status; }
-        unsigned duration() const { return m_duration; }
-        FrameDisposalMethod disposalMethod() const { return m_disposalMethod; }
-        bool premultiplyAlpha() const { return m_premultiplyAlpha; }
-
-        void setHasAlpha(bool alpha);
-        void setColorProfile(const ColorProfile&);
-        void setOriginalFrameRect(const IntRect& r) { m_originalFrameRect = r; }
-        void setStatus(FrameStatus status);
-        void setDuration(unsigned duration) { m_duration = duration; }
-        void setDisposalMethod(FrameDisposalMethod method) { m_disposalMethod = method; }
-        void setPremultiplyAlpha(bool premultiplyAlpha) { m_premultiplyAlpha = premultiplyAlpha; }
-
-		//+EAWebKitChange
-		//10/14/2011
-		ALWAYS_INLINE void setRGBA(int x, int y, unsigned r, unsigned g, unsigned b, unsigned a)
-		//-EAWebKitChange
-        {
-            setRGBA(getAddr(x, y), r, g, b, a);
-        }
-		
-		//+EAWebKitChange
-		//10/14/2011
-		//Alex Mole: Add a lighter weight rgb-specific version
-		ALWAYS_INLINE void setRGBWithSolidAlpha(int x, int y, unsigned r, unsigned g, unsigned b)
-		{
-			setRGBWithSolidAlpha(getAddr(x, y), r, g, b);
-		}
-		//-EAWebKitChange
-
-        inline PixelData* getAddr(int x, int y)
-        {
-            return m_bytes + (y * width()) + x;
-        }
-
-        inline bool hasPixelData() const
-        {
-            return m_bytes;
-        }
-
-        // Use fix point multiplier instead of integer division or floating point math.
-        // This multipler produces exactly the same result for all values in range 0 - 255.
-        static const unsigned fixPointShift = 24;
-        static const unsigned fixPointMult = static_cast<unsigned>(1.0 / 255.0 * (1 << fixPointShift)) + 1;
-        // Multiplies unsigned value by fixpoint value and converts back to unsigned.
-        static unsigned fixPointUnsignedMultiply(unsigned fixed, unsigned v)
-        {
-            return  (fixed * v) >> fixPointShift;
-        }
-
-		//+EAWebKitChange
-		//10/14/2011
-		ALWAYS_INLINE void setRGBA(PixelData* dest, unsigned r, unsigned g, unsigned b, unsigned a)
-		//-EAWebKitChange
-        {
-            if (m_premultiplyAlpha && a < 255) {
-                if (!a) {
-                    *dest = 0;
-                    return;
-                }
-
-                unsigned alphaMult = a * fixPointMult;
-                r = fixPointUnsignedMultiply(r, alphaMult);
-                g = fixPointUnsignedMultiply(g, alphaMult);
-                b = fixPointUnsignedMultiply(b, alphaMult);
-            }
-            *dest = (a << 24 | r << 16 | g << 8 | b);
-        }
-
-#if ENABLE(APNG)
-        static inline unsigned divide255(unsigned a)
-        {
-            return (a + (a >> 8) + 1) >> 8;
-        }
-
-        inline void overRGBA(PixelData* dest, unsigned r, unsigned g, unsigned b, unsigned a)
-        {
-            if (!a)
-                return;
-
-            if (a < 255) {
-                unsigned aDest = ((*dest) >> 24) & 255;
-                if (aDest) {
-                    unsigned rDest = ((*dest) >> 16) & 255;
-                    unsigned gDest = ((*dest) >> 8) & 255;
-                    unsigned bDest = (*dest) & 255;
-                    unsigned aAux = 255 - a;
-                    if (!m_premultiplyAlpha) {
-                        rDest = divide255(rDest * aDest);
-                        gDest = divide255(gDest * aDest);
-                        bDest = divide255(bDest * aDest);
-                    }
-                    r = divide255(r * a + rDest * aAux);
-                    g = divide255(g * a + gDest * aAux);
-                    b = divide255(b * a + bDest * aAux);
-                    a += divide255(aDest * aAux);
-                    if (!m_premultiplyAlpha) {
-                        r = (r * 255 + a - 1) / a;
-                        g = (g * 255 + a - 1) / a;
-                        b = (b * 255 + a - 1) / a;
-                    }
-                } else if (m_premultiplyAlpha) {
-                    r = divide255(r * a);
-                    g = divide255(g * a);
-                    b = divide255(b * a);
-                }
-            }
-            *dest = (a << 24 | r << 16 | g << 8 | b);
-        }
-#endif
-		//+EAWebKitChange
-		//10/14/2011
-		// Alex Mole: Add a lighter weight rgb-specific version
-		ALWAYS_INLINE void setRGBWithSolidAlpha(PixelData* dest, unsigned r, unsigned g, unsigned b)
-		{
-			*dest = ( 0xff000000 | r << 16 | g << 8 | b);
-		}
-		//-EAWebKitChange
-
-    private:
-        int width() const
-        {
-            return m_size.width();
-        }
-
-        int height() const
-        {
-            return m_size.height();
-        }
-
-        Vector<PixelData> m_backingStore;
-        //+EAWebKitChange
-        //5/21/2015 - Made m_bytes public so that the pointer can be fixed up externally
-    public:
-        PixelData* m_bytes; // The memory is backed by m_backingStore.
-    private:
-        //-EAWebKitChange
-        IntSize m_size;
-        // FIXME: Do we need m_colorProfile anymore?
-        ColorProfile m_colorProfile;
-        bool m_hasAlpha;
-        IntRect m_originalFrameRect; // This will always just be the entire
-                                     // buffer except for GIF frames whose
-                                     // original rect was smaller than the
-                                     // overall image size.
-        FrameStatus m_status;
-        unsigned m_duration;
-        FrameDisposalMethod m_disposalMethod;
-        bool m_premultiplyAlpha;
-    };
 
     // ImageDecoder is a base for all format-specific decoders
     // (e.g. JPEGImageDecoder).  This base manages the ImageFrame cache.
@@ -282,31 +50,32 @@ namespace WebCore {
     class ImageDecoder {
         WTF_MAKE_NONCOPYABLE(ImageDecoder); WTF_MAKE_FAST_ALLOCATED;
     public:
-        ImageDecoder(ImageSource::AlphaOption alphaOption, ImageSource::GammaAndColorProfileOption gammaAndColorProfileOption)
-            : m_scaled(false)
-            , m_premultiplyAlpha(alphaOption == ImageSource::AlphaPremultiplied)
-            , m_ignoreGammaAndColorProfile(gammaAndColorProfileOption == ImageSource::GammaAndColorProfileIgnored)
-            , m_sizeAvailable(false)
-            , m_maxNumPixels(-1)
-            , m_isAllDataReceived(false)
-            , m_failed(false) { }
+        ImageDecoder(AlphaOption alphaOption, GammaAndColorProfileOption gammaAndColorProfileOption)
+            : m_premultiplyAlpha(alphaOption == AlphaOption::Premultiplied)
+            , m_ignoreGammaAndColorProfile(gammaAndColorProfileOption == GammaAndColorProfileOption::Ignored)
+        {
+        }
 
-        virtual ~ImageDecoder() { }
+        virtual ~ImageDecoder()
+        {
+        }
 
         // Returns a caller-owned decoder of the appropriate type.  Returns 0 if
         // we can't sniff a supported type from the provided data (possibly
         // because there isn't enough data yet).
-        static ImageDecoder* create(const SharedBuffer& data, ImageSource::AlphaOption, ImageSource::GammaAndColorProfileOption);
+        static std::unique_ptr<ImageDecoder> create(const SharedBuffer& data, AlphaOption, GammaAndColorProfileOption);
 
         virtual String filenameExtension() const = 0;
+        
+        bool premultiplyAlpha() const { return m_premultiplyAlpha; }
 
         bool isAllDataReceived() const { return m_isAllDataReceived; }
 
-        virtual void setData(SharedBuffer* data, bool allDataReceived)
+        virtual void setData(SharedBuffer& data, bool allDataReceived)
         {
             if (m_failed)
                 return;
-            m_data = data;
+            m_data = &data;
             m_isAllDataReceived = allDataReceived;
         }
 
@@ -318,9 +87,9 @@ namespace WebCore {
             return !m_failed && m_sizeAvailable;
         }
 
-        virtual IntSize size() const { return m_size; }
+        virtual IntSize size() { return isSizeAvailable() ? m_size : IntSize(); }
 
-        IntSize scaledSize() const
+        IntSize scaledSize()
         {
             return m_scaled ? IntSize(m_scaledColumns.size(), m_scaledRows.size()) : size();
         }
@@ -330,18 +99,18 @@ namespace WebCore {
         // sizes.  This does NOT differ from size() for GIF, since decoding GIFs
         // composites any smaller frames against previous frames to create full-
         // size frames.
-        virtual IntSize frameSizeAtIndex(size_t) const
+        virtual IntSize frameSizeAtIndex(size_t, SubsamplingLevel)
         {
             return size();
         }
 
         // Returns whether the size is legal (i.e. not going to result in
         // overflow elsewhere).  If not, marks decoding as failed.
-        virtual bool setSize(unsigned width, unsigned height)
+        virtual bool setSize(const IntSize& size)
         {
-            if (isOverSize(width, height))
+            if (ImageBackingStore::isOverSize(size))
                 return setFailed();
-            m_size = IntSize(width, height);
+            m_size = size;
             m_sizeAvailable = true;
             return true;
         }
@@ -350,24 +119,32 @@ namespace WebCore {
         // possible), without decoding the individual frames.
         // FIXME: Right now that has to be done by each subclass; factor the
         // decode call out and use it here.
-        virtual size_t frameCount() { return 1; }
+        virtual size_t frameCount() const { return 1; }
 
-        virtual int repetitionCount() const { return cAnimationNone; }
+        virtual RepetitionCount repetitionCount() const { return RepetitionCountNone; }
 
         // Decodes as much of the requested frame as possible, and returns an
         // ImageDecoder-owned pointer.
         virtual ImageFrame* frameBufferAtIndex(size_t) = 0;
 
+        bool frameIsCompleteAtIndex(size_t);
+
         // Make the best effort guess to check if the requested frame has alpha channel.
-        virtual bool frameHasAlphaAtIndex(size_t) const;
+        bool frameHasAlphaAtIndex(size_t) const;
 
         // Number of bytes in the decoded frame requested. Return 0 if not yet decoded.
-        virtual unsigned frameBytesAtIndex(size_t) const;
+        unsigned frameBytesAtIndex(size_t) const;
+        
+        float frameDurationAtIndex(size_t);
+        
+        NativeImagePtr createFrameImageAtIndex(size_t, SubsamplingLevel = SubsamplingLevel::Default, DecodingMode = DecodingMode::OnDemand);
 
         void setIgnoreGammaAndColorProfile(bool flag) { m_ignoreGammaAndColorProfile = flag; }
         bool ignoresGammaAndColorProfile() const { return m_ignoreGammaAndColorProfile; }
 
-        ImageOrientation orientation() const { return m_orientation; }
+        ImageOrientation frameOrientationAtIndex(size_t) const { return m_orientation; }
+        
+        bool frameAllowSubsamplingAtIndex(size_t) const { return false; }
 
         enum { iccColorProfileHeaderLength = 128 };
 
@@ -378,44 +155,16 @@ namespace WebCore {
             return !memcmp(&profileData[16], "RGB ", 4);
         }
 
+        static size_t bytesDecodedToDetermineProperties() { return 0; }
+        
+        static SubsamplingLevel subsamplingLevelForScale(float, SubsamplingLevel) { return SubsamplingLevel::Default; }
+
         static bool inputDeviceColorProfile(const char* profileData, unsigned profileLength)
         {
             ASSERT_UNUSED(profileLength, profileLength >= iccColorProfileHeaderLength);
 
             return !memcmp(&profileData[12], "mntr", 4) || !memcmp(&profileData[12], "scnr", 4);
         }
-
-#if USE(QCMSLIB)
-        static qcms_profile* qcmsOutputDeviceProfile()
-        {
-            static qcms_profile* outputDeviceProfile = 0;
-
-            static bool qcmsInitialized = false;
-            if (!qcmsInitialized) {
-                qcmsInitialized = true;
-                // FIXME: Add optional ICCv4 support.
-#if OS(DARWIN)
-                RetainPtr<CGColorSpaceRef> monitorColorSpace = adoptCF(CGDisplayCopyColorSpace(CGMainDisplayID()));
-                CFDataRef iccProfile(CGColorSpaceCopyICCProfile(monitorColorSpace.get()));
-                if (iccProfile) {
-                    size_t length = CFDataGetLength(iccProfile);
-                    const unsigned char* systemProfile = CFDataGetBytePtr(iccProfile);
-                    outputDeviceProfile = qcms_profile_from_memory(systemProfile, length);
-                    CFRelease(iccProfile);
-                }
-#endif
-                if (outputDeviceProfile && qcms_profile_is_bogus(outputDeviceProfile)) {
-                    qcms_profile_release(outputDeviceProfile);
-                    outputDeviceProfile = 0;
-                }
-                if (!outputDeviceProfile)
-                    outputDeviceProfile = qcms_profile_sRGB();
-                if (outputDeviceProfile)
-                    qcms_profile_precache_output_transform(outputDeviceProfile);
-            }
-            return outputDeviceProfile;
-        }
-#endif
 
         // Sets the "decode failure" flag.  For caller convenience (since so
         // many callers want to return false after calling this), returns false
@@ -434,13 +183,9 @@ namespace WebCore {
         // compositing).
         virtual void clearFrameBufferCache(size_t) { }
 
-#if ENABLE(IMAGE_DECODER_DOWN_SAMPLING)
-        void setMaxNumPixels(int m) { m_maxNumPixels = m; }
-#endif
-
         // If the image has a cursor hot-spot, stores it in the argument
         // and returns true. Otherwise returns false.
-        virtual bool hotSpot(IntPoint&) const { return false; }
+        virtual std::optional<IntPoint> hotSpot() const { return std::nullopt; }
 
     protected:
         void prepareScaleDataIfNecessary();
@@ -452,9 +197,7 @@ namespace WebCore {
 
         RefPtr<SharedBuffer> m_data; // The encoded data.
         Vector<ImageFrame, 1> m_frameBufferCache;
-        // FIXME: Do we need m_colorProfile any more, for any port?
-        ColorProfile m_colorProfile;
-        bool m_scaled;
+        bool m_scaled { false };
         Vector<int> m_scaledColumns;
         Vector<int> m_scaledRows;
         bool m_premultiplyAlpha;
@@ -462,22 +205,15 @@ namespace WebCore {
         ImageOrientation m_orientation;
 
     private:
-        // Some code paths compute the size of the image as "width * height * 4"
-        // and return it as a (signed) int.  Avoid overflow.
-        static bool isOverSize(unsigned width, unsigned height)
-        {
-            unsigned long long total_size = static_cast<unsigned long long>(width)
-                                          * static_cast<unsigned long long>(height);
-            return total_size > ((1 << 29) - 1);
-        }
-
         IntSize m_size;
-        bool m_sizeAvailable;
-        int m_maxNumPixels;
-        bool m_isAllDataReceived;
-        bool m_failed;
+        bool m_sizeAvailable { false };
+#if ENABLE(IMAGE_DECODER_DOWN_SAMPLING)
+        static const int m_maxNumPixels { 1024 * 1024 };
+#else
+        static const int m_maxNumPixels { -1 };
+#endif
+        bool m_isAllDataReceived { false };
+        bool m_failed { false };
     };
 
 } // namespace WebCore
-
-#endif

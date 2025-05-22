@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,14 +32,8 @@
 #include "config.h"
 #include "WorkerRuntimeAgent.h"
 
-#include "DOMWindow.h"
-#include "InstrumentingAgents.h"
-#include "JSDOMWindowBase.h"
 #include "ScriptState.h"
-#include "WorkerDebuggerAgent.h"
 #include "WorkerGlobalScope.h"
-#include "WorkerRunLoop.h"
-#include "WorkerThread.h"
 #include <inspector/InjectedScript.h>
 #include <inspector/InjectedScriptManager.h>
 
@@ -46,64 +41,31 @@ using namespace Inspector;
 
 namespace WebCore {
 
-WorkerRuntimeAgent::WorkerRuntimeAgent(InjectedScriptManager* injectedScriptManager, WorkerGlobalScope* workerGlobalScope)
-    : InspectorRuntimeAgent(injectedScriptManager)
-    , m_workerGlobalScope(workerGlobalScope)
-    , m_paused(false)
+WorkerRuntimeAgent::WorkerRuntimeAgent(WorkerAgentContext& context)
+    : InspectorRuntimeAgent(context)
+    , m_backendDispatcher(RuntimeBackendDispatcher::create(context.backendDispatcher, this))
+    , m_workerGlobalScope(context.workerGlobalScope)
 {
 }
 
-void WorkerRuntimeAgent::didCreateFrontendAndBackend(Inspector::FrontendChannel*, Inspector::BackendDispatcher* backendDispatcher)
+void WorkerRuntimeAgent::didCreateFrontendAndBackend(FrontendRouter*, BackendDispatcher*)
 {
-    m_backendDispatcher = Inspector::RuntimeBackendDispatcher::create(backendDispatcher, this);
 }
 
-void WorkerRuntimeAgent::willDestroyFrontendAndBackend(Inspector::DisconnectReason reason)
+void WorkerRuntimeAgent::willDestroyFrontendAndBackend(DisconnectReason reason)
 {
-    m_backendDispatcher = nullptr;
-
     InspectorRuntimeAgent::willDestroyFrontendAndBackend(reason);
 }
 
-InjectedScript WorkerRuntimeAgent::injectedScriptForEval(ErrorString& error, const int* executionContextId)
+InjectedScript WorkerRuntimeAgent::injectedScriptForEval(ErrorString& errorString, const int* executionContextId)
 {
     if (executionContextId) {
-        error = ASCIILiteral("Execution context id is not supported for workers as there is only one execution context.");
+        errorString = ASCIILiteral("Execution context id is not supported for workers as there is only one execution context.");
         return InjectedScript();
     }
 
-    JSC::ExecState* scriptState = execStateFromWorkerGlobalScope(m_workerGlobalScope);
-    return injectedScriptManager()->injectedScriptFor(scriptState);
-}
-
-void WorkerRuntimeAgent::muteConsole()
-{
-    // We don't need to mute console for workers.
-}
-
-void WorkerRuntimeAgent::unmuteConsole()
-{
-    // We don't need to mute console for workers.
-}
-
-void WorkerRuntimeAgent::run(ErrorString&)
-{
-    m_paused = false;
-}
-
-JSC::VM& WorkerRuntimeAgent::globalVM()
-{
-    return JSDOMWindowBase::commonVM();
-}
-
-void WorkerRuntimeAgent::pauseWorkerGlobalScope(WorkerGlobalScope* context)
-{
-    m_paused = true;
-    MessageQueueWaitResult result;
-    do {
-        result = context->thread().runLoop().runInMode(context, WorkerDebuggerAgent::debuggerTaskMode);
-    // Keep waiting until execution is resumed.
-    } while (result == MessageQueueMessageReceived && m_paused);
+    JSC::ExecState* scriptState = execStateFromWorkerGlobalScope(&m_workerGlobalScope);
+    return injectedScriptManager().injectedScriptFor(scriptState);
 }
 
 } // namespace WebCore

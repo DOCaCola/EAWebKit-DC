@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2015, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,211 +28,240 @@
 
 #include "ExceptionCode.h"
 #include "HTMLParserIdioms.h"
+#include "SpaceSplitString.h"
+#include <wtf/HashSet.h>
+#include <wtf/SetForScope.h>
+#include <wtf/text/AtomicStringHash.h>
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
 
-bool DOMTokenList::validateToken(const AtomicString& token, ExceptionCode& ec)
+DOMTokenList::DOMTokenList(Element& element, const QualifiedName& attributeName, WTF::Function<bool(StringView)>&& isSupportedToken)
+    : m_element(element)
+    , m_attributeName(attributeName)
+    , m_isSupportedToken(WTFMove(isSupportedToken))
 {
-    if (token.isEmpty()) {
-        ec = SYNTAX_ERR;
-        return false;
+}
+
+static inline bool tokenContainsHTMLSpace(const String& token)
+{
+    return token.find(isHTMLSpace) != notFound;
+}
+
+ExceptionOr<void> DOMTokenList::validateToken(const String& token)
+{
+    if (token.isEmpty())
+        return Exception { SYNTAX_ERR };
+
+    if (tokenContainsHTMLSpace(token))
+        return Exception { INVALID_CHARACTER_ERR };
+
+    return { };
+}
+
+ExceptionOr<void> DOMTokenList::validateTokens(const String* tokens, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        auto result = validateToken(tokens[i]);
+        if (result.hasException())
+            return result;
+    }
+    return { };
+}
+
+bool DOMTokenList::contains(const AtomicString& token) const
+{
+    return tokens().contains(token);
+}
+
+inline ExceptionOr<void> DOMTokenList::addInternal(const String* newTokens, size_t length)
+{
+    // This is usually called with a single token.
+    Vector<AtomicString, 1> uniqueNewTokens;
+    uniqueNewTokens.reserveInitialCapacity(length);
+
+    auto& tokens = this->tokens();
+
+    for (size_t i = 0; i < length; ++i) {
+        auto result = validateToken(newTokens[i]);
+        if (result.hasException())
+            return result;
+        if (!tokens.contains(newTokens[i]) && !uniqueNewTokens.contains(newTokens[i]))
+            uniqueNewTokens.uncheckedAppend(newTokens[i]);
     }
 
-    unsigned length = token.length();
-    for (unsigned i = 0; i < length; ++i) {
-        if (isHTMLSpace(token[i])) {
-            ec = INVALID_CHARACTER_ERR;
+    if (!uniqueNewTokens.isEmpty())
+        tokens.appendVector(uniqueNewTokens);
+
+    updateAssociatedAttributeFromTokens();
+
+    return { };
+}
+
+ExceptionOr<void> DOMTokenList::add(const Vector<String>& tokens)
+{
+    return addInternal(tokens.data(), tokens.size());
+}
+
+ExceptionOr<void> DOMTokenList::add(const AtomicString& token)
+{
+    return addInternal(&token.string(), 1);
+}
+
+inline ExceptionOr<void> DOMTokenList::removeInternal(const String* tokensToRemove, size_t length)
+{
+    auto result = validateTokens(tokensToRemove, length);
+    if (result.hasException())
+        return result;
+
+    auto& tokens = this->tokens();
+    for (size_t i = 0; i < length; ++i)
+        tokens.removeFirst(tokensToRemove[i]);
+
+    updateAssociatedAttributeFromTokens();
+
+    return { };
+}
+
+ExceptionOr<void> DOMTokenList::remove(const Vector<String>& tokens)
+{
+    return removeInternal(tokens.data(), tokens.size());
+}
+
+ExceptionOr<void> DOMTokenList::remove(const AtomicString& token)
+{
+    return removeInternal(&token.string(), 1);
+}
+
+ExceptionOr<bool> DOMTokenList::toggle(const AtomicString& token, std::optional<bool> force)
+{
+    auto result = validateToken(token);
+    if (result.hasException())
+        return result.releaseException();
+
+    auto& tokens = this->tokens();
+
+    if (tokens.contains(token)) {
+        if (!force.value_or(false)) {
+            tokens.removeFirst(token);
+            updateAssociatedAttributeFromTokens();
             return false;
         }
+        return true;
     }
 
+    if (force && !force.value())
+        return false;
+
+    tokens.append(token);
+    updateAssociatedAttributeFromTokens();
     return true;
 }
 
-bool DOMTokenList::validateTokens(const Vector<String>& tokens, ExceptionCode& ec)
+ExceptionOr<void> DOMTokenList::replace(const AtomicString& token, const AtomicString& newToken)
 {
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        if (!validateToken(tokens[i], ec))
-            return false;
-    }
+    if (token.isEmpty() || newToken.isEmpty())
+        return Exception { SYNTAX_ERR };
 
-    return true;
-}
+    if (tokenContainsHTMLSpace(token) || tokenContainsHTMLSpace(newToken))
+        return Exception { INVALID_CHARACTER_ERR };
 
-bool DOMTokenList::contains(const AtomicString& token, ExceptionCode& ec) const
-{
-    if (!validateToken(token, ec))
-        return false;
-    return containsInternal(token);
-}
+    auto& tokens = this->tokens();
+    size_t index = tokens.find(token);
+    if (index == notFound)
+        return { };
 
-void DOMTokenList::add(const AtomicString& token, ExceptionCode& ec)
-{
-    Vector<String> tokens;
-    tokens.append(token.string());
-    add(tokens, ec);
-}
-
-void DOMTokenList::add(const Vector<String>& tokens, ExceptionCode& ec)
-{
-    Vector<String> filteredTokens;
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        if (!validateToken(tokens[i], ec))
-            return;
-        if (!containsInternal(tokens[i]) && !filteredTokens.contains(tokens[i]))
-            filteredTokens.append(tokens[i]);
-    }
-
-    if (filteredTokens.isEmpty())
-        return;
-
-    setValue(addTokens(value(), filteredTokens));
-}
-
-void DOMTokenList::remove(const AtomicString& token, ExceptionCode& ec)
-{
-    Vector<String> tokens;
-    tokens.append(token.string());
-    remove(tokens, ec);
-}
-
-void DOMTokenList::remove(const Vector<String>& tokens, ExceptionCode& ec)
-{
-    if (!validateTokens(tokens, ec))
-        return;
-
-    // Check using containsInternal first since it is a lot faster than going
-    // through the string character by character.
-    bool found = false;
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        if (containsInternal(tokens[i])) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found)
-        setValue(removeTokens(value(), tokens));
-}
-
-bool DOMTokenList::toggle(const AtomicString& token, ExceptionCode& ec)
-{
-    if (!validateToken(token, ec))
-        return false;
-
-    if (containsInternal(token)) {
-        removeInternal(token);
-        return false;
-    }
-    addInternal(token);
-    return true;
-}
-
-bool DOMTokenList::toggle(const AtomicString& token, bool force, ExceptionCode& ec)
-{
-    if (!validateToken(token, ec))
-        return false;
-
-    if (force)
-        addInternal(token);
+    if (tokens.find(newToken) != notFound)
+        tokens.remove(index);
     else
-        removeInternal(token);
+        tokens[index] = newToken;
 
-    return force;
+    updateAssociatedAttributeFromTokens();
+
+    return { };
 }
 
-void DOMTokenList::addInternal(const AtomicString& token)
+// https://dom.spec.whatwg.org/#concept-domtokenlist-validation
+ExceptionOr<bool> DOMTokenList::supports(StringView token)
 {
-    if (!containsInternal(token))
-        setValue(addToken(value(), token));
+    if (!m_isSupportedToken)
+        return Exception { TypeError };
+    return m_isSupportedToken(token);
 }
 
-void DOMTokenList::removeInternal(const AtomicString& token)
+// https://dom.spec.whatwg.org/#dom-domtokenlist-value
+const AtomicString& DOMTokenList::value() const
 {
-    // Check using contains first since it uses AtomicString comparisons instead
-    // of character by character testing.
-    if (!containsInternal(token))
-        return;
-    setValue(removeToken(value(), token));
+    return m_element.getAttribute(m_attributeName);
 }
 
-String DOMTokenList::addToken(const AtomicString& input, const AtomicString& token)
+void DOMTokenList::setValue(const String& value)
 {
-    Vector<String> tokens;
-    tokens.append(token.string());
-    return addTokens(input, tokens);
+    m_element.setAttribute(m_attributeName, value);
 }
 
-String DOMTokenList::addTokens(const AtomicString& input, const Vector<String>& tokens)
+void DOMTokenList::updateTokensFromAttributeValue(const String& value)
 {
-    bool needsSpace = false;
+    // Clear tokens but not capacity.
+    m_tokens.shrink(0);
 
-    StringBuilder builder;
-    if (!input.isEmpty()) {
-        builder.append(input);
-        needsSpace = !isHTMLSpace(input[input.length() - 1]);
-    }
+    HashSet<AtomicString> addedTokens;
+    // https://dom.spec.whatwg.org/#ordered%20sets
+    for (unsigned start = 0; ; ) {
+        while (start < value.length() && isHTMLSpace(value[start]))
+            ++start;
+        if (start >= value.length())
+            break;
+        unsigned end = start + 1;
+        while (end < value.length() && !isHTMLSpace(value[end]))
+            ++end;
 
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        if (needsSpace)
-            builder.append(' ');
-        builder.append(tokens[i]);
-        needsSpace = true;
-    }
-
-    return builder.toString();
-}
-
-String DOMTokenList::removeToken(const AtomicString& input, const AtomicString& token)
-{
-    Vector<String> tokens;
-    tokens.append(token.string());
-    return removeTokens(input, tokens);
-}
-
-String DOMTokenList::removeTokens(const AtomicString& input, const Vector<String>& tokens)
-{
-    // Algorithm defined at http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#remove-a-token-from-a-string
-    // New spec is at http://dom.spec.whatwg.org/#remove-a-token-from-a-string
-
-    unsigned inputLength = input.length();
-    StringBuilder output; // 3
-    output.reserveCapacity(inputLength);
-    unsigned position = 0; // 4
-
-    // Step 5
-    while (position < inputLength) {
-        if (isHTMLSpace(input[position])) { // 6
-            output.append(input[position++]); // 6.1, 6.2
-            continue; // 6.3
+        AtomicString token = value.substring(start, end - start);
+        if (!addedTokens.contains(token)) {
+            m_tokens.append(token);
+            addedTokens.add(token);
         }
 
-        // Step 7
-        StringBuilder s;
-        while (position < inputLength && isNotHTMLSpace(input[position]))
-            s.append(input[position++]);
-
-        // Step 8
-        if (tokens.contains(s.toStringPreserveCapacity())) {
-            // Step 8.1
-            while (position < inputLength && isHTMLSpace(input[position]))
-                ++position;
-
-            // Step 8.2
-            size_t j = output.length();
-            while (j > 0 && isHTMLSpace(output[j - 1]))
-                --j;
-            output.resize(j);
-
-            // Step 8.3
-            if (position < inputLength && !output.isEmpty())
-                output.append(' ');
-        } else
-            output.append(s.toStringPreserveCapacity()); // Step 9
+        start = end + 1;
     }
 
-    return output.toString();
+    m_tokens.shrinkToFit();
+    m_tokensNeedUpdating = false;
+}
+
+void DOMTokenList::associatedAttributeValueChanged(const AtomicString&)
+{
+    // Do not reset the DOMTokenList value if the attribute value was changed by us.
+    if (m_inUpdateAssociatedAttributeFromTokens)
+        return;
+
+    m_tokensNeedUpdating = true;
+}
+
+// https://dom.spec.whatwg.org/#concept-dtl-update
+void DOMTokenList::updateAssociatedAttributeFromTokens()
+{
+    ASSERT(!m_tokensNeedUpdating);
+
+    // https://dom.spec.whatwg.org/#concept-ordered-set-serializer
+    StringBuilder builder;
+    for (auto& token : tokens()) {
+        if (!builder.isEmpty())
+            builder.append(' ');
+        builder.append(token);
+    }
+    AtomicString serializedValue = builder.toAtomicString();
+
+    SetForScope<bool> inAttributeUpdate(m_inUpdateAssociatedAttributeFromTokens, true);
+    m_element.setAttribute(m_attributeName, serializedValue);
+}
+
+Vector<AtomicString>& DOMTokenList::tokens()
+{
+    if (m_tokensNeedUpdating)
+        updateTokensFromAttributeValue(m_element.getAttribute(m_attributeName));
+    ASSERT(!m_tokensNeedUpdating);
+    return m_tokens;
 }
 
 } // namespace WebCore

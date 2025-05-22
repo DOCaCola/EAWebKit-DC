@@ -230,7 +230,7 @@ void ReplayController::createSegment()
     std::unique_ptr<InitialNavigation> navigationInput = InitialNavigation::createFromPage(m_page);
     // Dispatching this input schedules navigation of the main frame, causing a refresh.
     navigationInput->dispatch(*this);
-    m_activeCursor->storeInput(WTF::move(navigationInput));
+    m_activeCursor->storeInput(WTFMove(navigationInput));
 }
 
 void ReplayController::completeSegment()
@@ -284,7 +284,7 @@ void ReplayController::unloadSegment(bool suppressNotifications)
     LOG(WebReplay, "%-20s Clearing input cursors for page: %p\n", "ReplayController", &m_page);
 
     m_activeCursor = nullptr;
-    RefPtr<ReplaySessionSegment> unloadedSegment = m_loadedSegment.release();
+    auto unloadedSegment = WTFMove(m_loadedSegment);
     for (Frame* frame = &m_page.mainFrame(); frame; frame = frame->tree().traverseNext()) {
         frame->script().globalObject(mainThreadNormalWorld())->setInputCursor(m_emptyCursor.copyRef());
         frame->document()->setInputCursor(m_emptyCursor.copyRef());
@@ -403,10 +403,9 @@ void ReplayController::replayToPosition(const ReplayPosition& position, Dispatch
     startPlayback();
 }
 
-void ReplayController::frameNavigated(DocumentLoader* loader)
+void ReplayController::frameNavigated(Frame& frame)
 {
     ASSERT(m_sessionState != SessionState::Inactive);
-    ASSERT_ARG(loader, loader);
     
     // The initial capturing segment is created prior to main frame navigation.
     // Otherwise, the prior capturing segment was completed when the frame detached,
@@ -421,8 +420,8 @@ void ReplayController::frameNavigated(DocumentLoader* loader)
 
     // We store the input cursor in both Document and JSDOMWindow, so that
     // replay state is accessible from JavaScriptCore and script-free layout code.
-    loader->frame()->document()->setInputCursor(m_activeCursor.get());
-    loader->frame()->script().globalObject(mainThreadNormalWorld())->setInputCursor(m_activeCursor.get());
+    frame.document()->setInputCursor(*m_activeCursor);
+    frame.script().globalObject(mainThreadNormalWorld())->setInputCursor(m_activeCursor.get());
 }
 
 void ReplayController::frameDetached(Frame& frame)

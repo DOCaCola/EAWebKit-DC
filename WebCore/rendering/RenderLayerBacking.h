@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef RenderLayerBacking_h
-#define RenderLayerBacking_h
+#pragma once
 
 #include "FloatPoint.h"
 #include "FloatPoint3D.h"
@@ -190,37 +189,40 @@ public:
     void updateDebugIndicators(bool showBorder, bool showRepaintCounter);
 
     // GraphicsLayerClient interface
-    virtual void tiledBackingUsageChanged(const GraphicsLayer*, bool /*usingTiledBacking*/) override;
-    virtual void notifyAnimationStarted(const GraphicsLayer*, const String& animationKey, double startTime) override;
-    virtual void notifyFlushRequired(const GraphicsLayer*) override;
-    virtual void notifyFlushBeforeDisplayRefresh(const GraphicsLayer*) override;
+    void tiledBackingUsageChanged(const GraphicsLayer*, bool /*usingTiledBacking*/) override;
+    void notifyAnimationStarted(const GraphicsLayer*, const String& animationKey, double startTime) override;
+    void notifyFlushRequired(const GraphicsLayer*) override;
+    void notifyFlushBeforeDisplayRefresh(const GraphicsLayer*) override;
 
-    virtual void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const FloatRect& clip) override;
+    void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const FloatRect& clip) override;
 
-    virtual float deviceScaleFactor() const override;
-    virtual float contentsScaleMultiplierForNewTiles(const GraphicsLayer*) const override;
+    float deviceScaleFactor() const override;
+    float contentsScaleMultiplierForNewTiles(const GraphicsLayer*) const override;
 
-    virtual bool paintsOpaquelyAtNonIntegralScales(const GraphicsLayer*) const override;
+    bool paintsOpaquelyAtNonIntegralScales(const GraphicsLayer*) const override;
 
-    virtual float pageScaleFactor() const override;
-    virtual float zoomedOutPageScaleFactor() const override;
-    virtual void didCommitChangesForLayer(const GraphicsLayer*) const override;
-    virtual bool getCurrentTransform(const GraphicsLayer*, TransformationMatrix&) const override;
+    float pageScaleFactor() const override;
+    float zoomedOutPageScaleFactor() const override;
+    void didCommitChangesForLayer(const GraphicsLayer*) const override;
+    bool getCurrentTransform(const GraphicsLayer*, TransformationMatrix&) const override;
 
-    virtual bool isTrackingRepaints() const override;
-    virtual bool shouldSkipLayerInDump(const GraphicsLayer*, LayerTreeAsTextBehavior) const override;
-    virtual bool shouldDumpPropertyForLayer(const GraphicsLayer*, const char* propertyName) const override;
+    bool isTrackingRepaints() const override;
+    bool shouldSkipLayerInDump(const GraphicsLayer*, LayerTreeAsTextBehavior) const override;
+    bool shouldDumpPropertyForLayer(const GraphicsLayer*, const char* propertyName) const override;
 
-    virtual bool shouldAggressivelyRetainTiles(const GraphicsLayer*) const override;
-    virtual bool shouldTemporarilyRetainTileCohorts(const GraphicsLayer*) const override;
-    virtual bool needsPixelAligment() const override { return !m_isMainFrameRenderViewLayer; }
+    bool shouldAggressivelyRetainTiles(const GraphicsLayer*) const override;
+    bool shouldTemporarilyRetainTileCohorts(const GraphicsLayer*) const override;
+    bool useGiantTiles() const override;
+    bool needsPixelAligment() const override { return !m_isMainFrameRenderViewLayer; }
+
+    LayoutSize subpixelOffsetFromRenderer() const { return m_subpixelOffsetFromRenderer; }
 
 #if PLATFORM(IOS)
-    virtual bool needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack(const GraphicsLayer&) const override;
+    bool needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysOpaqueHack(const GraphicsLayer&) const override;
 #endif
 
 #ifndef NDEBUG
-    virtual void verifyNotPainting() override;
+    void verifyNotPainting() override;
 #endif
 
     WEBCORE_EXPORT LayoutRect contentsBox() const;
@@ -239,11 +241,16 @@ public:
 
     // Return an estimate of the backing store area (in pixels) allocated by this object's GraphicsLayers.
     WEBCORE_EXPORT double backingStoreMemoryEstimate() const;
+    
+    // For testing only.
+    WEBCORE_EXPORT void setUsesDisplayListDrawing(bool);
+    WEBCORE_EXPORT String displayListAsText(DisplayList::AsTextFlags) const;
 
-    LayoutSize devicePixelFractionFromRenderer() const { return m_devicePixelFractionFromRenderer; }
+    WEBCORE_EXPORT void setIsTrackingDisplayListReplay(bool);
+    WEBCORE_EXPORT String replayDisplayListAsText(DisplayList::AsTextFlags) const;
 
 private:
-    FloatRect backgroundBoxForPainting() const;
+    FloatRect backgroundBoxForSimpleContainerPainting() const;
 
     void createPrimaryGraphicsLayer();
     void destroyGraphicsLayers();
@@ -301,7 +308,7 @@ private:
     
     bool isMainFrameRenderViewLayer() const;
     
-    bool paintsBoxDecorations() const;
+    bool paintsNonDirectCompositedBoxDecoration() const;
     bool paintsChildren() const;
 
     // Returns true if this compositing layer has no visible content.
@@ -326,7 +333,7 @@ private:
     bool hasTiledBackingFlatteningLayer() const { return (m_childContainmentLayer && m_usingTiledCacheLayer); }
     GraphicsLayer* tileCacheFlatteningLayer() const { return m_usingTiledCacheLayer ? m_childContainmentLayer.get() : nullptr; }
 
-    void paintIntoLayer(const GraphicsLayer*, GraphicsContext*, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase);
+    void paintIntoLayer(const GraphicsLayer*, GraphicsContext&, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase);
 
     // Helper function for updateGeometry.
     void adjustAncestorCompositingBoundsForFlowThread(LayoutRect& ancestorCompositingBounds, const RenderLayer* compositingAncestor) const;
@@ -335,6 +342,8 @@ private:
     static AnimatedPropertyID cssToGraphicsLayerProperty(CSSPropertyID);
 
     bool canIssueSetNeedsDisplay() const { return !paintsIntoWindow() && !paintsIntoCompositedAncestor(); }
+    LayoutRect computeParentGraphicsLayerRect(RenderLayer* compositedAncestor, LayoutSize& ancestorClippingLayerOffset) const;
+    LayoutRect computePrimaryGraphicsLayerRect(const LayoutRect& parentGraphicsLayerRect) const;
 
     RenderLayer& m_owningLayer;
 
@@ -358,7 +367,8 @@ private:
     ScrollingNodeID m_scrollingNodeID;
 
     LayoutRect m_compositedBounds;
-    LayoutSize m_devicePixelFractionFromRenderer;
+    LayoutSize m_subpixelOffsetFromRenderer; // This is the subpixel distance between the primary graphics layer and the associated renderer's bounds.
+    LayoutSize m_compositedBoundsOffsetFromGraphicsLayer; // This is the subpixel distance between the primary graphics layer and the render layer bounds.
 
     bool m_artificiallyInflatedBounds; // bounds had to be made non-zero to make transform-origin work
     bool m_isMainFrameRenderViewLayer;
@@ -379,5 +389,3 @@ enum CanvasCompositingStrategy {
 CanvasCompositingStrategy canvasCompositingStrategy(const RenderObject&);
 
 } // namespace WebCore
-
-#endif // RenderLayerBacking_h

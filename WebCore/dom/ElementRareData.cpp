@@ -35,21 +35,19 @@
 namespace WebCore {
 
 struct SameSizeAsElementRareData : NodeRareData {
-    short indices[2];
-    unsigned bitfields;
+    int tabIndex;
+    unsigned short childIndex;
+#if ENABLE(FULLSCREEN_API)
+    unsigned bitfields : 11;
+#else
+    unsigned bitfields : 10;
+#endif
     RegionOversetState regionOversetState;
     LayoutSize sizeForResizing;
-    IntSize scrollOffset;
-	//+EAWebKitChange
-	//10/7/2015 : To match same sizes for all compilers
-    void* pointers[4];
-	std::unique_ptr<DatasetDOMStringMap> pointer2;
-    std::unique_ptr<ClassList> pointer3;
-    std::unique_ptr<NamedNodeMap> pointer4;
-	//-EAWebKitChange
+    IntPoint savedLayerScrollPosition;
+    void* pointers[8];
 };
-//+EAWebKitChange
-//10/7/2015
-COMPILE_ASSERT(sizeof(ElementRareData) == sizeof(SameSizeAsElementRareData), "ElementRareData should stay small");
-//-EAWebKitChange
+
+static_assert(sizeof(ElementRareData) == sizeof(SameSizeAsElementRareData), "ElementRareData should stay small");
+
 } // namespace WebCore

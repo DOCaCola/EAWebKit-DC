@@ -22,7 +22,6 @@
 #define PlatformTouchPoint_h
 
 #include "IntPoint.h"
-#include <wtf/Vector.h>
 
 #if ENABLE(TOUCH_EVENTS)
 

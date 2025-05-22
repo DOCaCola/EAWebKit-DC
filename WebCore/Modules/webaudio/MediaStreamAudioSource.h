@@ -23,13 +23,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MediaStreamAudioSource_h
-#define MediaStreamAudioSource_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
 #include "AudioDestinationConsumer.h"
 #include "RealtimeMediaSource.h"
+#include <wtf/Lock.h>
 #include <wtf/RefCounted.h>
 #include <wtf/ThreadingPrimitives.h>
 #include <wtf/Vector.h>
@@ -40,38 +40,36 @@ namespace WebCore {
 class AudioBus;
 class RealtimeMediaSourceCapabilities;
 
-class MediaStreamAudioSource : public RealtimeMediaSource {
+class MediaStreamAudioSource final : public RealtimeMediaSource {
 public:
     static Ref<MediaStreamAudioSource> create();
 
     ~MediaStreamAudioSource() { }
 
-    virtual bool useIDForTrackID() const { return true; }
+    RefPtr<RealtimeMediaSourceCapabilities> capabilities() const final;
+    const RealtimeMediaSourceSettings& settings() const final;
 
-    virtual RefPtr<RealtimeMediaSourceCapabilities> capabilities() const;
-    virtual const RealtimeMediaSourceStates& states();
-    
     const String& deviceId() const { return m_deviceId; }
     void setDeviceId(const String& deviceId) { m_deviceId = deviceId; }
 
     void setAudioFormat(size_t numberOfChannels, float sampleRate);
     void consumeAudio(AudioBus*, size_t numberOfFrames);
 
-    void addAudioConsumer(PassRefPtr<AudioDestinationConsumer>);
+    void addAudioConsumer(AudioDestinationConsumer*);
     bool removeAudioConsumer(AudioDestinationConsumer*);
     const Vector<RefPtr<AudioDestinationConsumer>>& audioConsumers() const { return m_audioConsumers; }
 
 private:
     MediaStreamAudioSource();
 
+    AudioSourceProvider* audioSourceProvider() override;
+
     String m_deviceId;
-    Mutex m_audioConsumersLock;
+    Lock m_audioConsumersLock;
     Vector<RefPtr<AudioDestinationConsumer>> m_audioConsumers;
-    RealtimeMediaSourceStates m_currentStates;
+    RealtimeMediaSourceSettings m_currentSettings;
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif // MediaStreamAudioSource_h

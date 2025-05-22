@@ -28,27 +28,19 @@
 #include "CachedResourceRequest.h"
 #include "CachedXSLStyleSheet.h"
 #include "Document.h"
-#include "ExceptionCode.h"
 #include "Frame.h"
 #include "FrameLoader.h"
-#include "XSLStyleSheet.h"
-#include "XMLDocumentParser.h" // for parseAttributes()
 #include "MediaList.h"
+#include "StyleScope.h"
 #include "StyleSheetContents.h"
+#include "XMLDocumentParser.h"
+#include "XSLStyleSheet.h"
 
 namespace WebCore {
 
 inline ProcessingInstruction::ProcessingInstruction(Document& document, const String& target, const String& data)
     : CharacterData(document, data, CreateOther)
     , m_target(target)
-    , m_cachedSheet(0)
-    , m_loading(false)
-    , m_alternate(false)
-    , m_createdByParser(false)
-    , m_isCSS(false)
-#if ENABLE(XSLT)
-    , m_isXSL(false)
-#endif
 {
 }
 
@@ -63,10 +55,10 @@ ProcessingInstruction::~ProcessingInstruction()
         m_sheet->clearOwnerNode();
 
     if (m_cachedSheet)
-        m_cachedSheet->removeClient(this);
+        m_cachedSheet->removeClient(*this);
 
     if (inDocument())
-        document().styleSheetCollection().removeStyleSheetCandidateNode(*this);
+        document().styleScope().removeStyleSheetCandidateNode(*this);
 }
 
 String ProcessingInstruction::nodeName() const
@@ -79,7 +71,7 @@ Node::NodeType ProcessingInstruction::nodeType() const
     return PROCESSING_INSTRUCTION_NODE;
 }
 
-RefPtr<Node> ProcessingInstruction::cloneNodeInternal(Document& targetDocument, CloningOperation)
+Ref<Node> ProcessingInstruction::cloneNodeInternal(Document& targetDocument, CloningOperation)
 {
     // FIXME: Is it a problem that this does not copy m_localHref?
     // What about other data members?
@@ -133,37 +125,40 @@ void ProcessingInstruction::checkStyleSheet()
 #endif
         } else {
             if (m_cachedSheet) {
-                m_cachedSheet->removeClient(this);
-                m_cachedSheet = 0;
+                m_cachedSheet->removeClient(*this);
+                m_cachedSheet = nullptr;
             }
-            
+
             String url = document().completeURL(href).string();
             if (!dispatchBeforeLoadEvent(url))
                 return;
-            
+
             m_loading = true;
-            document().styleSheetCollection().addPendingSheet();
-            
-            CachedResourceRequest request(ResourceRequest(document().completeURL(href)));
+            document().styleScope().addPendingSheet();
+
 #if ENABLE(XSLT)
-            if (m_isXSL)
-                m_cachedSheet = document().cachedResourceLoader().requestXSLStyleSheet(request);
-            else
+            if (m_isXSL) {
+                auto options = CachedResourceLoader::defaultCachedResourceOptions();
+                options.mode = FetchOptions::Mode::SameOrigin;
+                m_cachedSheet = document().cachedResourceLoader().requestXSLStyleSheet({ResourceRequest(document().completeURL(href)), options});
+            } else
 #endif
             {
                 String charset = attrs.get("charset");
-                if (charset.isEmpty())
-                    charset = document().charset();
-                request.setCharset(charset);
+                CachedResourceRequest request(document().completeURL(href), CachedResourceLoader::defaultCachedResourceOptions(), std::nullopt, charset.isEmpty() ? document().charset() : WTFMove(charset));
 
-                m_cachedSheet = document().cachedResourceLoader().requestCSSStyleSheet(request);
+                m_cachedSheet = document().cachedResourceLoader().requestCSSStyleSheet(WTFMove(request));
             }
             if (m_cachedSheet)
-                m_cachedSheet->addClient(this);
+                m_cachedSheet->addClient(*this);
             else {
                 // The request may have been denied if (for example) the stylesheet is local and the document is remote.
                 m_loading = false;
-                document().styleSheetCollection().removePendingSheet();
+                document().styleScope().removePendingSheet();
+#if ENABLE(XSLT)
+                if (m_isXSL)
+                    document().styleScope().flushPendingUpdate();
+#endif
             }
         }
     }
@@ -181,7 +176,11 @@ bool ProcessingInstruction::isLoading() const
 bool ProcessingInstruction::sheetLoaded()
 {
     if (!isLoading()) {
-        document().styleSheetCollection().removePendingSheet();
+        document().styleScope().removePendingSheet();
+#if ENABLE(XSLT)
+        if (m_isXSL)
+            document().styleScope().flushPendingUpdate();
+#endif
         return true;
     }
     return false;
@@ -197,12 +196,12 @@ void ProcessingInstruction::setCSSStyleSheet(const String& href, const URL& base
     ASSERT(m_isCSS);
     CSSParserContext parserContext(document(), baseURL, charset);
 
-    auto cssSheet = CSSStyleSheet::create(StyleSheetContents::create(href, parserContext), this);
+    auto cssSheet = CSSStyleSheet::create(StyleSheetContents::create(href, parserContext), *this);
     cssSheet.get().setDisabled(m_alternate);
     cssSheet.get().setTitle(m_title);
     cssSheet.get().setMediaQueries(MediaQuerySet::create(m_media));
 
-    m_sheet = WTF::move(cssSheet);
+    m_sheet = WTFMove(cssSheet);
 
     // We don't need the cross-origin security check here because we are
     // getting the sheet text in "strict" mode. This enforces a valid CSS MIME
@@ -230,8 +229,8 @@ void ProcessingInstruction::parseStyleSheet(const String& sheet)
 #endif
 
     if (m_cachedSheet)
-        m_cachedSheet->removeClient(this);
-    m_cachedSheet = 0;
+        m_cachedSheet->removeClient(*this);
+    m_cachedSheet = nullptr;
 
     m_loading = false;
 
@@ -241,15 +240,6 @@ void ProcessingInstruction::parseStyleSheet(const String& sheet)
     else if (m_isXSL)
         downcast<XSLStyleSheet>(*m_sheet).checkLoaded();
 #endif
-}
-
-void ProcessingInstruction::setCSSStyleSheet(PassRefPtr<CSSStyleSheet> sheet)
-{
-    ASSERT(!m_cachedSheet);
-    ASSERT(!m_loading);
-    m_sheet = sheet;
-    sheet->setTitle(m_title);
-    sheet->setDisabled(m_alternate);
 }
 
 void ProcessingInstruction::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
@@ -265,7 +255,7 @@ Node::InsertionNotificationRequest ProcessingInstruction::insertedInto(Container
     CharacterData::insertedInto(insertionPoint);
     if (!insertionPoint.inDocument())
         return InsertionDone;
-    document().styleSheetCollection().addStyleSheetCandidateNode(*this, m_createdByParser);
+    document().styleScope().addStyleSheetCandidateNode(*this, m_createdByParser);
     checkStyleSheet();
     return InsertionDone;
 }
@@ -276,7 +266,7 @@ void ProcessingInstruction::removedFrom(ContainerNode& insertionPoint)
     if (!insertionPoint.inDocument())
         return;
     
-    document().styleSheetCollection().removeStyleSheetCandidateNode(*this);
+    document().styleScope().removeStyleSheetCandidateNode(*this);
 
     if (m_sheet) {
         ASSERT(m_sheet->ownerNode() == this);
@@ -284,9 +274,12 @@ void ProcessingInstruction::removedFrom(ContainerNode& insertionPoint)
         m_sheet = nullptr;
     }
 
-    // If we're in document teardown, then we don't need to do any notification of our sheet's removal.
-    if (document().hasLivingRenderTree())
-        document().styleResolverChanged(DeferRecalcStyle);
+    if (m_loading) {
+        m_loading = false;
+        document().styleScope().removePendingSheet();
+    }
+
+    document().styleScope().didChangeActiveStyleSheetCandidates();
 }
 
 void ProcessingInstruction::finishParsingChildren()

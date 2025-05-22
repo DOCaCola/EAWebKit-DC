@@ -32,14 +32,17 @@
 #include "config.h"
 #include "EventTarget.h"
 
-#include "EventException.h"
+#include "EventNames.h"
+#include "ExceptionCode.h"
 #include "InspectorInstrumentation.h"
+#include "NoEventDispatchAssertion.h"
 #include "ScriptController.h"
 #include "WebKitAnimationEvent.h"
 #include "WebKitTransitionEvent.h"
 #include <wtf/MainThread.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/Ref.h>
+#include <wtf/SetForScope.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
 
@@ -47,26 +50,14 @@ using namespace WTF;
 
 namespace WebCore {
 
-EventTargetData::EventTargetData()
-{
-}
-
-EventTargetData::~EventTargetData()
-{
-}
-
-EventTarget::~EventTarget()
-{
-}
-
 Node* EventTarget::toNode()
 {
-    return 0;
+    return nullptr;
 }
 
 DOMWindow* EventTarget::toDOMWindow()
 {
-    return 0;
+    return nullptr;
 }
 
 bool EventTarget::isMessagePort() const
@@ -74,79 +65,81 @@ bool EventTarget::isMessagePort() const
     return false;
 }
 
-bool EventTarget::addEventListener(const AtomicString& eventType, RefPtr<EventListener>&& listener, bool useCapture)
+bool EventTarget::addEventListener(const AtomicString& eventType, Ref<EventListener>&& listener, const AddEventListenerOptions& options)
 {
-    return ensureEventTargetData().eventListenerMap.add(eventType, WTF::move(listener), useCapture);
+    return ensureEventTargetData().eventListenerMap.add(eventType, WTFMove(listener), { options.capture, options.passive, options.once });
 }
 
-bool EventTarget::removeEventListener(const AtomicString& eventType, EventListener* listener, bool useCapture)
+void EventTarget::addEventListenerForBindings(const AtomicString& eventType, RefPtr<EventListener>&& listener, AddEventListenerOptionsOrBoolean&& variant)
 {
-    EventTargetData* d = eventTargetData();
-    if (!d)
+    if (!listener)
+        return;
+
+    auto visitor = WTF::makeVisitor([&](const AddEventListenerOptions& options) {
+        addEventListener(eventType, listener.releaseNonNull(), options);
+    }, [&](bool capture) {
+        addEventListener(eventType, listener.releaseNonNull(), capture);
+    });
+
+    WTF::visit(visitor, variant);
+}
+
+void EventTarget::removeEventListenerForBindings(const AtomicString& eventType, RefPtr<EventListener>&& listener, ListenerOptionsOrBoolean&& variant)
+{
+    if (!listener)
+        return;
+
+    auto visitor = WTF::makeVisitor([&](const ListenerOptions& options) {
+        removeEventListener(eventType, *listener, options);
+    }, [&](bool capture) {
+        removeEventListener(eventType, *listener, capture);
+    });
+
+    WTF::visit(visitor, variant);
+}
+
+bool EventTarget::removeEventListener(const AtomicString& eventType, EventListener& listener, const ListenerOptions& options)
+{
+    auto* data = eventTargetData();
+    return data && data->eventListenerMap.remove(eventType, listener, options.capture);
+}
+
+bool EventTarget::setAttributeEventListener(const AtomicString& eventType, RefPtr<EventListener>&& listener)
+{
+    auto* existingListener = attributeEventListener(eventType);
+    if (!listener) {
+        if (existingListener)
+            removeEventListener(eventType, *existingListener, false);
         return false;
-
-    size_t indexOfRemovedListener;
-
-    if (!d->eventListenerMap.remove(eventType, listener, useCapture, indexOfRemovedListener))
-        return false;
-
-    // Notify firing events planning to invoke the listener at 'index' that
-    // they have one less listener to invoke.
-    if (!d->firingEventIterators)
+    }
+    if (existingListener) {
+        eventTargetData()->eventListenerMap.replace(eventType, *existingListener, listener.releaseNonNull(), { });
         return true;
-    for (size_t i = 0; i < d->firingEventIterators->size(); ++i) {
-        FiringEventIterator& firingIterator = d->firingEventIterators->at(i);
-        if (eventType != firingIterator.eventType)
-            continue;
-
-        if (indexOfRemovedListener >= firingIterator.size)
-            continue;
-
-        --firingIterator.size;
-        if (indexOfRemovedListener <= firingIterator.iterator)
-            --firingIterator.iterator;
     }
-
-    return true;
+    return addEventListener(eventType, listener.releaseNonNull());
 }
 
-bool EventTarget::setAttributeEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener)
+EventListener* EventTarget::attributeEventListener(const AtomicString& eventType)
 {
-    clearAttributeEventListener(eventType);
-    if (!listener)
-        return false;
-    return addEventListener(eventType, listener, false);
+    for (auto& eventListener : eventListeners(eventType)) {
+        if (eventListener->callback().isAttribute())
+            return &eventListener->callback();
+    }
+    return nullptr;
 }
 
-EventListener* EventTarget::getAttributeEventListener(const AtomicString& eventType)
+bool EventTarget::hasActiveEventListeners(const AtomicString& eventType) const
 {
-    const EventListenerVector& entry = getEventListeners(eventType);
-    for (size_t i = 0; i < entry.size(); ++i) {
-        if (entry[i].listener->isAttribute())
-            return entry[i].listener.get();
-    }
-    return 0;
+    auto* data = eventTargetData();
+    return data && data->eventListenerMap.containsActive(eventType);
 }
 
-bool EventTarget::clearAttributeEventListener(const AtomicString& eventType)
+ExceptionOr<bool> EventTarget::dispatchEventForBindings(Event& event)
 {
-    EventListener* listener = getAttributeEventListener(eventType);
-    if (!listener)
-        return false;
-    return removeEventListener(eventType, listener, false);
-}
+    event.setUntrusted();
 
-bool EventTarget::dispatchEvent(PassRefPtr<Event> event, ExceptionCode& ec)
-{
-    if (!event || event->type().isEmpty()) {
-        ec = EventException::UNSPECIFIED_EVENT_TYPE_ERR;
-        return false;
-    }
-
-    if (event->isBeingDispatched()) {
-        ec = EventException::DISPATCH_REQUEST_ERR;
-        return false;
-    }
+    if (!event.isInitialized() || event.isBeingDispatched())
+        return Exception { INVALID_STATE_ERR };
 
     if (!scriptExecutionContext())
         return false;
@@ -154,13 +147,17 @@ bool EventTarget::dispatchEvent(PassRefPtr<Event> event, ExceptionCode& ec)
     return dispatchEvent(event);
 }
 
-bool EventTarget::dispatchEvent(PassRefPtr<Event> event)
+bool EventTarget::dispatchEvent(Event& event)
 {
-    event->setTarget(this);
-    event->setCurrentTarget(this);
-    event->setEventPhase(Event::AT_TARGET);
-    bool defaultPrevented = fireEventListeners(event.get());
-    event->setEventPhase(0);
+    ASSERT(event.isInitialized());
+    ASSERT(!event.isBeingDispatched());
+
+    event.setTarget(this);
+    event.setCurrentTarget(this);
+    event.setEventPhase(Event::AT_TARGET);
+    bool defaultPrevented = fireEventListeners(event);
+    event.resetPropagationFlags();
+    event.setEventPhase(Event::NONE);
     return defaultPrevented;
 }
 
@@ -168,101 +165,100 @@ void EventTarget::uncaughtExceptionInEventHandler()
 {
 }
 
-static const AtomicString& legacyType(const Event* event)
+static const AtomicString& legacyType(const Event& event)
 {
-    if (event->type() == eventNames().animationendEvent)
+    if (event.type() == eventNames().animationendEvent)
         return eventNames().webkitAnimationEndEvent;
 
-    if (event->type() == eventNames().animationstartEvent)
+    if (event.type() == eventNames().animationstartEvent)
         return eventNames().webkitAnimationStartEvent;
 
-    if (event->type() == eventNames().animationiterationEvent)
+    if (event.type() == eventNames().animationiterationEvent)
         return eventNames().webkitAnimationIterationEvent;
 
-    if (event->type() == eventNames().transitionendEvent)
+    if (event.type() == eventNames().transitionendEvent)
         return eventNames().webkitTransitionEndEvent;
 
-    if (event->type() == eventNames().wheelEvent)
+    if (event.type() == eventNames().wheelEvent)
         return eventNames().mousewheelEvent;
 
-    return emptyAtom;
+    return nullAtom;
 }
 
-bool EventTarget::fireEventListeners(Event* event)
+bool EventTarget::fireEventListeners(Event& event)
 {
     ASSERT_WITH_SECURITY_IMPLICATION(!NoEventDispatchAssertion::isEventDispatchForbidden());
-    ASSERT(event && !event->type().isEmpty());
+    ASSERT(event.isInitialized());
 
-    EventTargetData* d = eventTargetData();
-    if (!d)
+    auto* data = eventTargetData();
+    if (!data)
         return true;
 
-    EventListenerVector* legacyListenersVector = 0;
+    SetForScope<bool> firingEventListenersScope(data->isFiringEventListeners, true);
+
+    if (auto* listenersVector = data->eventListenerMap.find(event.type())) {
+        fireEventListeners(event, *listenersVector);
+        return !event.defaultPrevented();
+    }
+
     const AtomicString& legacyTypeName = legacyType(event);
-    if (!legacyTypeName.isEmpty())
-        legacyListenersVector = d->eventListenerMap.find(legacyTypeName);
-
-    EventListenerVector* listenersVector = d->eventListenerMap.find(event->type());
-
-    if (listenersVector)
-        fireEventListeners(event, d, *listenersVector);
-    else if (legacyListenersVector) {
-        AtomicString typeName = event->type();
-        event->setType(legacyTypeName);
-        fireEventListeners(event, d, *legacyListenersVector);
-        event->setType(typeName);
+    if (!legacyTypeName.isNull()) {
+        if (auto* legacyListenersVector = data->eventListenerMap.find(legacyTypeName)) {
+            AtomicString typeName = event.type();
+            event.setType(legacyTypeName);
+            fireEventListeners(event, *legacyListenersVector);
+            event.setType(typeName);
+        }
     }
-
-    return !event->defaultPrevented();
+    return !event.defaultPrevented();
 }
-        
-void EventTarget::fireEventListeners(Event* event, EventTargetData* d, EventListenerVector& entry)
+
+// Intentionally creates a copy of the listeners vector to avoid event listeners added after this point from being run.
+// Note that removal still has an effect due to the removed field in RegisteredEventListener.
+void EventTarget::fireEventListeners(Event& event, EventListenerVector listeners)
 {
-    Ref<EventTarget> protect(*this);
+    Ref<EventTarget> protectedThis(*this);
+    ASSERT(!listeners.isEmpty());
 
-    // Fire all listeners registered for this event. Don't fire listeners removed during event dispatch.
-    // Also, don't fire event listeners added during event dispatch. Conveniently, all new event listeners will be added
-    // after or at index |size|, so iterating up to (but not including) |size| naturally excludes new event listeners.
-
-    size_t i = 0;
-    size_t size = entry.size();
-    if (!d->firingEventIterators)
-        d->firingEventIterators = std::make_unique<FiringEventIteratorVector>();
-    d->firingEventIterators->append(FiringEventIterator(event->type(), i, size));
-
-    ScriptExecutionContext* context = scriptExecutionContext();
-    Document* document = nullptr;
+    auto* context = scriptExecutionContext();
+    bool contextIsDocument = is<Document>(context);
     InspectorInstrumentationCookie willDispatchEventCookie;
-    if (is<Document>(context)) {
-        document = downcast<Document>(context);
-        willDispatchEventCookie = InspectorInstrumentation::willDispatchEvent(*document, *event, size > 0);
-    }
+    if (contextIsDocument)
+        willDispatchEventCookie = InspectorInstrumentation::willDispatchEvent(downcast<Document>(*context), event, true);
 
-    for (; i < size; ++i) {
-        RegisteredEventListener& registeredListener = entry[i];
-        if (event->eventPhase() == Event::CAPTURING_PHASE && !registeredListener.useCapture)
+    for (auto& registeredListener : listeners) {
+        if (UNLIKELY(registeredListener->wasRemoved()))
             continue;
-        if (event->eventPhase() == Event::BUBBLING_PHASE && registeredListener.useCapture)
+
+        if (event.eventPhase() == Event::CAPTURING_PHASE && !registeredListener->useCapture())
+            continue;
+        if (event.eventPhase() == Event::BUBBLING_PHASE && registeredListener->useCapture())
             continue;
 
         // If stopImmediatePropagation has been called, we just break out immediately, without
         // handling any more events on this target.
-        if (event->immediatePropagationStopped())
+        if (event.immediatePropagationStopped())
             break;
 
-        InspectorInstrumentationCookie cookie = InspectorInstrumentation::willHandleEvent(context, *event);
-        // To match Mozilla, the AT_TARGET phase fires both capturing and bubbling
-        // event listeners, even though that violates some versions of the DOM spec.
-        registeredListener.listener->handleEvent(context, event);
-        InspectorInstrumentation::didHandleEvent(cookie);
-    }
-    d->firingEventIterators->removeLast();
+        // Do this before invocation to avoid reentrancy issues.
+        if (registeredListener->isOnce())
+            removeEventListener(event.type(), registeredListener->callback(), ListenerOptions(registeredListener->useCapture()));
 
-    if (document)
+        if (registeredListener->isPassive())
+            event.setInPassiveListener(true);
+
+        InspectorInstrumentation::willHandleEvent(context, event);
+        registeredListener->callback().handleEvent(context, &event);
+
+        if (registeredListener->isPassive())
+            event.setInPassiveListener(false);
+    }
+
+    if (contextIsDocument)
         InspectorInstrumentation::didDispatchEvent(willDispatchEventCookie);
 }
 
-const EventListenerVector& EventTarget::getEventListeners(const AtomicString& eventType)
+const EventListenerVector& EventTarget::eventListeners(const AtomicString& eventType)
 {
     auto* data = eventTargetData();
     auto* listenerVector = data ? data->eventListenerMap.find(eventType) : nullptr;
@@ -272,19 +268,22 @@ const EventListenerVector& EventTarget::getEventListeners(const AtomicString& ev
 
 void EventTarget::removeAllEventListeners()
 {
-    EventTargetData* d = eventTargetData();
-    if (!d)
+    auto* data = eventTargetData();
+    if (!data)
         return;
-    d->eventListenerMap.clear();
+    data->eventListenerMap.clear();
+}
 
-    // Notify firing events planning to invoke the listener at 'index' that
-    // they have one less listener to invoke.
-    if (d->firingEventIterators) {
-        for (size_t i = 0; i < d->firingEventIterators->size(); ++i) {
-            d->firingEventIterators->at(i).iterator = 0;
-            d->firingEventIterators->at(i).size = 0;
-        }
-    }
+void EventTarget::visitJSEventListeners(JSC::SlotVisitor& visitor)
+{
+    EventTargetData* data = eventTargetDataConcurrently();
+    if (!data)
+        return;
+    
+    auto locker = holdLock(data->eventListenerMap.lock());
+    EventListenerIterator iterator(&data->eventListenerMap);
+    while (auto* listener = iterator.nextListener())
+        listener->visitJSFunction(visitor);
 }
 
 } // namespace WebCore

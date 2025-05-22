@@ -47,7 +47,7 @@ Texture::Texture(GraphicsContext3D* context, std::unique_ptr<Vector<unsigned>> t
     : m_context(context)
     , m_format(format)
     , m_tiles(IntSize(maxTextureSize, maxTextureSize), IntSize(width, height), true)
-    , m_tileTextureIds(WTF::move(tileTextureIds))
+    , m_tileTextureIds(WTFMove(tileTextureIds))
 {
 }
 
@@ -66,7 +66,7 @@ static void convertFormat(GraphicsContext3D* context, Texture::Format format, un
         *glType = GraphicsContext3D::UNSIGNED_BYTE;
         break;
     case Texture::BGRA8:
-        if (context->getExtensions()->supports("GL_EXT_texture_format_BGRA8888")) {
+        if (context->getExtensions().supports("GL_EXT_texture_format_BGRA8888")) {
             *glFormat = Extensions3D::BGRA_EXT;
             *glType = GraphicsContext3D::UNSIGNED_BYTE;
         } else {
@@ -120,7 +120,7 @@ PassRefPtr<Texture> Texture::create(GraphicsContext3D* context, Format format, i
                                         tileBoundsWithBorder.height(),
                                         0, glFormat, glType);
     }
-    return adoptRef(new Texture(context, WTF::move(textureIds), format, width, height, maxTextureSize));
+    return adoptRef(new Texture(context, WTFMove(textureIds), format, width, height, maxTextureSize));
 }
 
 template <bool swizzle>

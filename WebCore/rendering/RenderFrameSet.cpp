@@ -45,8 +45,8 @@
 
 namespace WebCore {
 
-RenderFrameSet::RenderFrameSet(HTMLFrameSetElement& frameSet, Ref<RenderStyle>&& style)
-    : RenderBox(frameSet, WTF::move(style), 0)
+RenderFrameSet::RenderFrameSet(HTMLFrameSetElement& frameSet, RenderStyle&& style)
+    : RenderBox(frameSet, WTFMove(style), 0)
     , m_isResizing(false)
     , m_isChildResizing(false)
 {
@@ -67,19 +67,22 @@ RenderFrameSet::GridAxis::GridAxis()
 {
 }
 
-static Color borderStartEdgeColor()
+static const Color& borderStartEdgeColor()
 {
-    return Color(170, 170, 170);
+    static NeverDestroyed<Color> color(170, 170, 170);
+    return color;
 }
 
-static Color borderEndEdgeColor()
+static const Color& borderEndEdgeColor()
 {
-    return Color::black;
+    static NeverDestroyed<Color> color = Color::black;
+    return color;
 }
 
-static Color borderFillColor()
+static const Color& borderFillColor()
 {
-    return Color(208, 208, 208);
+    static NeverDestroyed<Color> color(208, 208, 208);
+    return color;
 }
 
 void RenderFrameSet::paintColumnBorder(const PaintInfo& paintInfo, const IntRect& borderRect)
@@ -90,15 +93,14 @@ void RenderFrameSet::paintColumnBorder(const PaintInfo& paintInfo, const IntRect
     // FIXME: We should do something clever when borders from distinct framesets meet at a join.
     
     // Fill first.
-    GraphicsContext* context = paintInfo.context;
-    ColorSpace colorSpace = style().colorSpace();
-    context->fillRect(borderRect, frameSetElement().hasBorderColor() ? style().visitedDependentColor(CSSPropertyBorderLeftColor) : borderFillColor(), colorSpace);
+    GraphicsContext& context = paintInfo.context();
+    context.fillRect(borderRect, frameSetElement().hasBorderColor() ? style().visitedDependentColor(CSSPropertyBorderLeftColor) : borderFillColor());
     
     // Now stroke the edges but only if we have enough room to paint both edges with a little
     // bit of the fill color showing through.
     if (borderRect.width() >= 3) {
-        context->fillRect(IntRect(borderRect.location(), IntSize(1, height())), borderStartEdgeColor(), colorSpace);
-        context->fillRect(IntRect(IntPoint(borderRect.maxX() - 1, borderRect.y()), IntSize(1, height())), borderEndEdgeColor(), colorSpace);
+        context.fillRect(IntRect(borderRect.location(), IntSize(1, height())), borderStartEdgeColor());
+        context.fillRect(IntRect(IntPoint(borderRect.maxX() - 1, borderRect.y()), IntSize(1, height())), borderEndEdgeColor());
     }
 }
 
@@ -110,15 +112,14 @@ void RenderFrameSet::paintRowBorder(const PaintInfo& paintInfo, const IntRect& b
     // FIXME: We should do something clever when borders from distinct framesets meet at a join.
     
     // Fill first.
-    GraphicsContext* context = paintInfo.context;
-    ColorSpace colorSpace = style().colorSpace();
-    context->fillRect(borderRect, frameSetElement().hasBorderColor() ? style().visitedDependentColor(CSSPropertyBorderLeftColor) : borderFillColor(), colorSpace);
+    GraphicsContext& context = paintInfo.context();
+    context.fillRect(borderRect, frameSetElement().hasBorderColor() ? style().visitedDependentColor(CSSPropertyBorderLeftColor) : borderFillColor());
 
     // Now stroke the edges but only if we have enough room to paint both edges with a little
     // bit of the fill color showing through.
     if (borderRect.height() >= 3) {
-        context->fillRect(IntRect(borderRect.location(), IntSize(width(), 1)), borderStartEdgeColor(), colorSpace);
-        context->fillRect(IntRect(IntPoint(borderRect.x(), borderRect.maxY() - 1), IntSize(width(), 1)), borderEndEdgeColor(), colorSpace);
+        context.fillRect(IntRect(borderRect.location(), IntSize(width(), 1)), borderStartEdgeColor());
+        context.fillRect(IntRect(IntPoint(borderRect.x(), borderRect.maxY() - 1), IntSize(width(), 1)), borderEndEdgeColor());
     }
 }
 
@@ -533,10 +534,10 @@ void RenderFrameSet::positionFrames()
     }
 
     // all the remaining frames are hidden to avoid ugly spurious unflowed frames
-    for (; child; child = child->nextSiblingBox()) {
-        child->setWidth(0);
-        child->setHeight(0);
-        child->clearNeedsLayout();
+    for (auto* descendant = child; descendant; descendant = downcast<RenderBox>(RenderObjectTraversal::next(*descendant, this))) {
+        descendant->setWidth(0);
+        descendant->setHeight(0);
+        descendant->clearNeedsLayout();
     }
 }
 
@@ -650,7 +651,7 @@ void RenderFrameSet::positionFramesWithFlattening()
 
 bool RenderFrameSet::flattenFrameSet() const
 {
-    return frame().settings().frameFlatteningEnabled();
+    return settings().frameFlatteningEnabled();
 }
 
 void RenderFrameSet::startResizing(GridAxis& axis, int position)
@@ -679,7 +680,7 @@ void RenderFrameSet::continueResizing(GridAxis& axis, int position)
     setNeedsLayout();
 }
 
-bool RenderFrameSet::userResize(MouseEvent* evt)
+bool RenderFrameSet::userResize(MouseEvent& event)
 {
     if (flattenFrameSet())
         return false;
@@ -687,8 +688,8 @@ bool RenderFrameSet::userResize(MouseEvent* evt)
     if (!m_isResizing) {
         if (needsLayout())
             return false;
-        if (evt->type() == eventNames().mousedownEvent && evt->button() == LeftButton) {
-            FloatPoint localPos = absoluteToLocal(evt->absoluteLocation(), UseTransforms);
+        if (event.type() == eventNames().mousedownEvent && event.button() == LeftButton) {
+            FloatPoint localPos = absoluteToLocal(event.absoluteLocation(), UseTransforms);
             startResizing(m_cols, localPos.x());
             startResizing(m_rows, localPos.y());
             if (m_cols.m_splitBeingResized != noSplit || m_rows.m_splitBeingResized != noSplit) {
@@ -697,11 +698,11 @@ bool RenderFrameSet::userResize(MouseEvent* evt)
             }
         }
     } else {
-        if (evt->type() == eventNames().mousemoveEvent || (evt->type() == eventNames().mouseupEvent && evt->button() == LeftButton)) {
-            FloatPoint localPos = absoluteToLocal(evt->absoluteLocation(), UseTransforms);
+        if (event.type() == eventNames().mousemoveEvent || (event.type() == eventNames().mouseupEvent && event.button() == LeftButton)) {
+            FloatPoint localPos = absoluteToLocal(event.absoluteLocation(), UseTransforms);
             continueResizing(m_cols, localPos.x());
             continueResizing(m_rows, localPos.y());
-            if (evt->type() == eventNames().mouseupEvent && evt->button() == LeftButton) {
+            if (event.type() == eventNames().mouseupEvent && event.button() == LeftButton) {
                 setIsResizing(false);
                 return true;
             }

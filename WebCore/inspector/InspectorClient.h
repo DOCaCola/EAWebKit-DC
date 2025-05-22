@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2007, 2015 Apple Inc.  All rights reserved.
  * Copyright (C) 2011 Google Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorClient_h
-#define InspectorClient_h
+#pragma once
 
-#include "InspectorForwarding.h"
 #include <wtf/Forward.h>
-#include <wtf/HashMap.h>
-#include <wtf/HashSet.h>
+
+namespace Inspector {
+class FrontendChannel;
+}
 
 namespace WebCore {
 
@@ -43,10 +43,9 @@ class InspectorClient {
 public:
     virtual ~InspectorClient() { }
 
-    virtual void inspectorDestroyed() = 0;
+    virtual void inspectedPageDestroyed() = 0;
 
-    virtual InspectorFrontendChannel* openInspectorFrontend(InspectorController*) = 0;
-    virtual void closeInspectorFrontend() = 0;
+    virtual Inspector::FrontendChannel* openLocalFrontend(InspectorController*) = 0;
     virtual void bringFrontendToFront() = 0;
     virtual void didResizeMainFrame(Frame*) { }
 
@@ -56,21 +55,13 @@ public:
     virtual void showInspectorIndication() { }
     virtual void hideInspectorIndication() { }
 
-    virtual bool canClearBrowserCache() { return false; }
-    virtual void clearBrowserCache() { }
-    virtual bool canClearBrowserCookies() { return false; }
-    virtual void clearBrowserCookies() { }
-
     virtual bool overridesShowPaintRects() const { return false; }
     virtual void setShowPaintRects(bool) { }
     virtual void showPaintRect(const FloatRect&) { }
     virtual void didSetSearchingForNode(bool) { }
+    virtual void elementSelectionChanged(bool) { }
 
-    virtual bool handleJavaScriptDialog(bool, const String*) { return false; }
-
-    WEBCORE_EXPORT static bool doDispatchMessageOnFrontendPage(Page* frontendPage, const String& message);
+    WEBCORE_EXPORT static void doDispatchMessageOnFrontendPage(Page* frontendPage, const String& message);
 };
 
 } // namespace WebCore
-
-#endif // !defined(InspectorClient_h)

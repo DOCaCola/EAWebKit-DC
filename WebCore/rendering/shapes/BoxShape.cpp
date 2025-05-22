@@ -48,7 +48,7 @@ static inline LayoutUnit adjustRadiusForMarginBoxShape(LayoutUnit radius, Layout
 	//3/29/2015
 	{
         ASSERT(false); // there is a toDouble method on layout class. Instead of cast, may be we need to use that?
-		return radius + (margin * (1 + pow((double) ratio - 1, (double) 3)));
+		return radius + (margin * (1 + pow((double) ratio - 1, (double) 3.0)));
 	}
 	//-EAWebKitChange
 

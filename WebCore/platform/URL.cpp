@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2007, 2008, 2011, 2012, 2013, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2007-2008, 2011-2013, 2015-2016 Apple Inc. All rights reserved.
  * Copyright (C) 2012 Research In Motion Limited. All rights reserved.
  * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
@@ -31,11 +31,13 @@
 #include "DecodeEscapeSequences.h"
 #include "MIMETypeRegistry.h"
 #include "TextEncoding.h"
+#include "URLParser.h"
 #include "UUID.h"
 #include <stdio.h>
 #include <unicode/uidna.h>
 #include <wtf/HashMap.h>
 #include <wtf/HexNumber.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
@@ -52,14 +54,7 @@ namespace WebCore {
 typedef Vector<char, 512> CharBuffer;
 typedef Vector<UChar, 512> UCharBuffer;
 
-static const unsigned maximumValidPortNumber = 0xFFFE;
 static const unsigned invalidPortNumber = 0xFFFF;
-
-static inline bool isLetterMatchIgnoringCase(UChar character, char lowercaseLetter)
-{
-    ASSERT(isASCIILower(lowercaseLetter));
-    return (character | 0x20) == lowercaseLetter;
-}
 
 static const char wsScheme[] = {'w', 's'};
 static const char ftpScheme[] = {'f', 't', 'p'};
@@ -72,12 +67,6 @@ static const char httpsScheme[] = {'h', 't', 't', 'p', 's'};
 static const char httpsPort[] = {'4', '4', '3'};
 static const char gopherScheme[] = {'g', 'o', 'p', 'h', 'e', 'r'};
 static const char gopherPort[] = {'7', '0'};
-
-static inline bool isLetterMatchIgnoringCase(char character, char lowercaseLetter)
-{
-    ASSERT(isASCIILower(lowercaseLetter));
-    return (character | 0x20) == lowercaseLetter;
-}
 
 enum URLCharacterClasses {
     // alpha 
@@ -104,15 +93,19 @@ enum URLCharacterClasses {
     PathSegmentEndChar = 1 << 5,
 
     // not allowed in path
-    BadChar = 1 << 6
+    BadChar = 1 << 6,
+
+    // "\t" | "\n" | "\r"
+    TabNewline = 1 << 7
 };
 
 static const unsigned char characterClassTable[256] = {
     /* 0 nul */ PathSegmentEndChar,    /* 1 soh */ BadChar,
     /* 2 stx */ BadChar,    /* 3 etx */ BadChar,
     /* 4 eot */ BadChar,    /* 5 enq */ BadChar,    /* 6 ack */ BadChar,    /* 7 bel */ BadChar,
-    /* 8 bs */ BadChar,     /* 9 ht */ BadChar,     /* 10 nl */ BadChar,    /* 11 vt */ BadChar,
-    /* 12 np */ BadChar,    /* 13 cr */ BadChar,    /* 14 so */ BadChar,    /* 15 si */ BadChar,
+    /* 8 bs */ BadChar,     /* 9 ht */ BadChar | TabNewline,                /* 10 nl */ BadChar | TabNewline,
+    /* 11 vt */ BadChar,    /* 12 np */ BadChar,    /* 13 cr */ BadChar | TabNewline,
+    /* 14 so */ BadChar,    /* 15 si */ BadChar,
     /* 16 dle */ BadChar,   /* 17 dc1 */ BadChar,   /* 18 dc2 */ BadChar,   /* 19 dc3 */ BadChar,
     /* 20 dc4 */ BadChar,   /* 21 nak */ BadChar,   /* 22 syn */ BadChar,   /* 23 etb */ BadChar,
     /* 24 can */ BadChar,   /* 25 em */ BadChar,    /* 26 sub */ BadChar,   /* 27 esc */ BadChar,
@@ -336,8 +329,8 @@ static const unsigned char percentEncodeClassTable[256] = {
     /* 252 */ PercentEncodeSimple, /* 253 */ PercentEncodeSimple, /* 254 */ PercentEncodeSimple, /* 255 */ PercentEncodeSimple
 };
 
-static int copyPathRemovingDots(char* dst, const char* src, int srcStart, int srcEnd);
-static void encodeRelativeString(const String& rel, const TextEncoding&, CharBuffer& ouput);
+static unsigned copyPathRemovingDots(char* dst, const char* src, unsigned srcStart, unsigned srcEnd);
+static bool encodeRelativeString(const String& rel, const TextEncoding&, CharBuffer& ouput);
 static String substituteBackslashes(const String&);
 
 static inline bool isSchemeFirstChar(char c) { return characterClassTable[static_cast<unsigned char>(c)] & SchemeFirstChar; }
@@ -350,14 +343,7 @@ static inline bool isIPv6Char(unsigned char c) { return characterClassTable[c] &
 static inline bool isPathSegmentEndChar(char c) { return characterClassTable[static_cast<unsigned char>(c)] & PathSegmentEndChar; }
 static inline bool isPathSegmentEndChar(UChar c) { return c <= 0xff && (characterClassTable[c] & PathSegmentEndChar); }
 static inline bool isBadChar(unsigned char c) { return characterClassTable[c] & BadChar; }
-
-static inline bool isSchemeCharacterMatchIgnoringCase(char character, char schemeCharacter)
-{
-    ASSERT(isSchemeChar(character));
-    ASSERT(schemeCharacter & 0x20);
-    ASSERT(isASCIILower(schemeCharacter) || (!isASCIIUpper(schemeCharacter) && isSchemeChar(schemeCharacter)));
-    return (character | 0x20) == schemeCharacter;
-}
+static inline bool isTabNewline(UChar c) { return c <= 0xff && (characterClassTable[c] & TabNewline); }
 
 String encodeWithURLEscapeSequences(const String& notEncodedString, PercentEncodeCharacterClass whatToEncode);
 
@@ -391,7 +377,8 @@ static void appendASCII(const String& base, const char* rel, size_t len, CharBuf
 // Returns the index of the first index in string |s| of any of the characters
 // in |toFind|. |toFind| should be a null-terminated string, all characters up
 // to the null will be searched. Returns int if not found.
-static int findFirstOf(StringView string, unsigned startPosition, const char* target)
+const unsigned notFoundUnsigned = std::numeric_limits<unsigned>::max();
+static unsigned findFirstOf(StringView string, unsigned startPosition, const char* target)
 {
     unsigned length = string.length();
     for (unsigned i = startPosition; i < length; ++i) {
@@ -400,7 +387,7 @@ static int findFirstOf(StringView string, unsigned startPosition, const char* ta
                 return i;
         }
     }
-    return -1;
+    return notFoundUnsigned;
 }
 
 static inline void checkEncodedString(const String& url)
@@ -418,6 +405,7 @@ void URL::invalidate()
 {
     m_isValid = false;
     m_protocolIsInHTTPFamily = false;
+    m_cannotBeABaseURL = false;
     m_schemeEnd = 0;
     m_userStart = 0;
     m_userEnd = 0;
@@ -432,25 +420,43 @@ void URL::invalidate()
 
 URL::URL(ParsedURLStringTag, const String& url)
 {
-    parse(url);
-    ASSERT(url == m_string);
+    if (URLParser::enabled()) {
+        URLParser parser(url);
+        *this = parser.result();
+    } else
+        parse(url);
+#if OS(WINDOWS)
+        // FIXME(148598): Work around Windows local file handling bug in CFNetwork
+        ASSERT(isLocalFile() || url == m_string);
+#else
+        ASSERT(url == m_string);
+#endif
 }
 
 URL::URL(const URL& base, const String& relative)
 {
-    init(base, relative, UTF8Encoding());
+    if (URLParser::enabled()) {
+        URLParser parser(relative, base);
+        *this = parser.result();
+    } else
+        init(base, relative, UTF8Encoding());
 }
 
 URL::URL(const URL& base, const String& relative, const TextEncoding& encoding)
 {
-    // For UTF-{7,16,32}, we want to use UTF-8 for the query part as 
+    // For UTF-{7,16,32}, we want to use UTF-8 for the query part as
     // we do when submitting a form. A form with GET method
     // has its contents added to a URL as query params and it makes sense
     // to be consistent.
-    init(base, relative, encoding.encodingForFormSubmission());
+    if (URLParser::enabled()) {
+        URLParser parser(relative, base, encoding.encodingForFormSubmission());
+        *this = parser.result();
+    } else {
+        init(base, relative, encoding.encodingForFormSubmission());
+    }
 }
 
-static bool shouldTrimFromURL(unsigned char c)
+static bool shouldTrimFromURL(UChar c)
 {
     // Browsers ignore leading/trailing whitespace and control
     // characters from URLs.  Note that c is an *unsigned* char here
@@ -460,6 +466,9 @@ static bool shouldTrimFromURL(unsigned char c)
 
 void URL::init(const URL& base, const String& relative, const TextEncoding& encoding)
 {
+    if (URLParser::enabled())
+        ASSERT_NOT_REACHED();
+
     // Allow resolutions with a null or empty base URL, but not with any other invalid one.
     // FIXME: Is this a good rule?
     if (!base.m_isValid && !base.isEmpty()) {
@@ -468,9 +477,14 @@ void URL::init(const URL& base, const String& relative, const TextEncoding& enco
         return;
     }
 
+    // Get rid of leading and trailing whitespace and control characters.
+    String rel = relative.stripWhiteSpace(shouldTrimFromURL);
+
+    // Get rid of any tabs and newlines.
+    rel = rel.removeCharacters(isTabNewline);
+
     // For compatibility with Win IE, treat backslashes as if they were slashes,
     // as long as we're not dealing with javascript: or data: URLs.
-    String rel = relative;
     if (rel.contains('\\') && !(protocolIsJavaScript(rel) || protocolIs(rel, "data")))
         rel = substituteBackslashes(rel);
 
@@ -485,20 +499,15 @@ void URL::init(const URL& base, const String& relative, const TextEncoding& enco
         strBuffer[len] = 0;
         str = strBuffer.data();
     } else {
-        encodeRelativeString(rel, encoding, strBuffer);
+        if (!encodeRelativeString(rel, encoding, strBuffer)) {
+            m_string = blankURL();
+            invalidate();
+            return;
+        }
+
         str = strBuffer.data();
         len = strlen(str);
     }
-
-    // Get rid of leading whitespace and control characters.
-    while (len && shouldTrimFromURL(*str)) {
-        str++;
-        --len;
-    }
-
-    // Get rid of trailing whitespace and control characters.
-    while (len && shouldTrimFromURL(str[len - 1]))
-        str[--len] = '\0';
 
     // According to the RFC, the reference should be interpreted as an
     // absolute URI if possible, using the "leftmost, longest"
@@ -513,7 +522,7 @@ void URL::init(const URL& base, const String& relative, const TextEncoding& enco
             ++p;
         }
         if (*p == ':') {
-            if (p[1] != '/' && equalIgnoringCase(base.protocol(), String(str, p - str)) && base.isHierarchical())
+            if (p[1] != '/' && equalIgnoringASCIICase(base.protocol(), StringView(reinterpret_cast<LChar*>(str), p - str)) && base.isHierarchical())
                 str = p + 1;
             else
                 absolute = true;
@@ -638,11 +647,13 @@ void URL::init(const URL& base, const String& relative, const TextEncoding& enco
 
                 // all done with the path work, now copy any remainder
                 // of the relative reference; this will also add a null terminator
-                strncpy(bufferPos, relStringPos, bufferSize - (bufferPos - bufferStart));
+                const size_t currentOffset = bufferPos - bufferStart;
+                auto remainingBufferSize = bufferSize - currentOffset;
+                ASSERT(currentOffset + strlen(relStringPos) + 1 <= bufferSize);
+                strncpy(bufferPos, relStringPos, remainingBufferSize);
+                bufferPos[remainingBufferSize - 1] = '\0';
 
                 parse(parseBuffer.data(), &relative);
-
-                ASSERT(strlen(parseBuffer.data()) + 1 <= parseBuffer.size());
                 break;
             }
         }
@@ -673,24 +684,21 @@ String URL::lastPathComponent() const
     return m_string.substring(start, end - start + 1);
 }
 
-String URL::protocol() const
+StringView URL::protocol() const
 {
-    return m_string.left(m_schemeEnd);
+    return StringView(m_string).substring(0, m_schemeEnd);
 }
 
 String URL::host() const
 {
-    int start = hostStart();
+    unsigned start = hostStart();
     return m_string.substring(start, m_hostEnd - start);
 }
 
-unsigned short URL::port() const
+std::optional<uint16_t> URL::port() const
 {
-    // We return a port of 0 if there is no port specified. This can happen in two situations:
-    // 1) The URL contains no colon after the host name and before the path component of the URL.
-    // 2) The URL contains a colon but there's no port number before the path component of the URL begins.
-    if (m_hostEnd == m_portEnd || m_hostEnd == m_portEnd - 1)
-        return 0;
+    if (!m_portEnd || m_hostEnd >= m_portEnd - 1)
+        return std::nullopt;
 
     bool ok = false;
     unsigned number;
@@ -698,9 +706,28 @@ unsigned short URL::port() const
         number = charactersToUIntStrict(m_string.characters8() + m_hostEnd + 1, m_portEnd - m_hostEnd - 1, &ok);
     else
         number = charactersToUIntStrict(m_string.characters16() + m_hostEnd + 1, m_portEnd - m_hostEnd - 1, &ok);
-    if (!ok || number > maximumValidPortNumber)
-        return invalidPortNumber;
+    if (!ok || number > std::numeric_limits<uint16_t>::max())
+        return std::nullopt;
     return number;
+}
+
+String URL::hostAndPort() const
+{
+    if (auto port = this->port())
+        return host() + ':' + String::number(port.value());
+    return host();
+}
+
+String URL::protocolHostAndPort() const
+{
+    String result = m_string.substring(0, m_portEnd);
+
+    if (m_passwordEnd - m_userStart > 0) {
+        const int allowForTrailingAtSign = 1;
+        result.remove(m_userStart, m_passwordEnd - m_userStart + allowForTrailingAtSign);
+    }
+
+    return result;
 }
 
 String URL::user() const
@@ -748,6 +775,7 @@ String URL::baseAsString() const
 }
 
 #if !USE(CF)
+
 String URL::fileSystemPath() const
 {
     if (!isValid() || !isLocalFile())
@@ -755,44 +783,98 @@ String URL::fileSystemPath() const
 
     return decodeURLEscapeSequences(path());
 }
+
 #endif
 
 #ifdef NDEBUG
 
-static inline void assertProtocolIsGood(const char*)
+static inline void assertProtocolIsGood(StringView)
 {
 }
 
 #else
 
-static void assertProtocolIsGood(const char* protocol)
+static void assertProtocolIsGood(StringView protocol)
 {
-    const char* p = protocol;
-    while (*p) {
-        ASSERT(*p > ' ' && *p < 0x7F && !(*p >= 'A' && *p <= 'Z'));
-        ++p;
+    // FIXME: We probably don't need this function any more.
+    // The isASCIIAlphaCaselessEqual function asserts that passed-in characters
+    // are ones it can handle; the older code did not and relied on these checks.
+    for (auto character : protocol.codeUnits()) {
+        ASSERT(isASCII(character));
+        ASSERT(character > ' ');
+        ASSERT(!isASCIIUpper(character));
+        ASSERT(toASCIILowerUnchecked(character) == character);
     }
 }
 
 #endif
 
+using DefaultPortForProtocolMapForTesting = HashMap<String, uint16_t>;
+static DefaultPortForProtocolMapForTesting& defaultPortForProtocolMapForTesting()
+{
+    static NeverDestroyed<DefaultPortForProtocolMapForTesting> defaultPortForProtocolMap;
+    return defaultPortForProtocolMap;
+}
+
+void registerDefaultPortForProtocolForTesting(uint16_t port, const String& protocol)
+{
+    defaultPortForProtocolMapForTesting().add(protocol, port);
+}
+
+void clearDefaultPortForProtocolMapForTesting()
+{
+    defaultPortForProtocolMapForTesting().clear();
+}
+
+std::optional<uint16_t> defaultPortForProtocol(StringView protocol)
+{
+    const auto& defaultPortForProtocolMap = defaultPortForProtocolMapForTesting();
+    auto iterator = defaultPortForProtocolMap.find(protocol.toStringWithoutCopying());
+    if (iterator != defaultPortForProtocolMap.end())
+        return iterator->value;
+    return URLParser::defaultPortForProtocol(protocol);
+}
+
+bool isDefaultPortForProtocol(uint16_t port, StringView protocol)
+{
+    return defaultPortForProtocol(protocol) == port;
+}
+
 bool URL::protocolIs(const char* protocol) const
 {
-    assertProtocolIsGood(protocol);
+    assertProtocolIsGood(StringView(reinterpret_cast<const LChar*>(protocol), strlen(protocol)));
 
     // JavaScript URLs are "valid" and should be executed even if URL decides they are invalid.
     // The free function protocolIsJavaScript() should be used instead. 
-    ASSERT(!equalIgnoringCase(protocol, String("javascript")));
+    ASSERT(!equalLettersIgnoringASCIICase(StringView(protocol), "javascript"));
 
     if (!m_isValid)
         return false;
 
     // Do the comparison without making a new string object.
-    for (int i = 0; i < m_schemeEnd; ++i) {
-        if (!protocol[i] || !isSchemeCharacterMatchIgnoringCase(m_string[i], protocol[i]))
+    for (unsigned i = 0; i < m_schemeEnd; ++i) {
+        if (!protocol[i] || !isASCIIAlphaCaselessEqual(m_string[i], protocol[i]))
             return false;
     }
     return !protocol[m_schemeEnd]; // We should have consumed all characters in the argument.
+}
+
+bool URL::protocolIs(StringView protocol) const
+{
+    assertProtocolIsGood(protocol);
+
+    if (!m_isValid)
+        return false;
+    
+    if (m_schemeEnd != protocol.length())
+        return false;
+
+    // Do the comparison without making a new string object.
+    for (unsigned i = 0; i < m_schemeEnd; ++i) {
+        if (!isASCIIAlphaCaselessEqual(m_string[i], protocol[i]))
+            return false;
+    }
+    return true;
 }
 
 String URL::query() const
@@ -818,32 +900,102 @@ bool URL::setProtocol(const String& s)
         return false;
 
     if (!m_isValid) {
-        parse(newProtocol + ':' + m_string);
+        if (URLParser::enabled()) {
+            URLParser parser(makeString(newProtocol, ":", m_string));
+            *this = parser.result();
+        } else
+            parse(newProtocol + ':' + m_string);
         return true;
     }
 
-    parse(newProtocol + m_string.substring(m_schemeEnd));
+    if (URLParser::enabled()) {
+        URLParser parser(makeString(newProtocol, m_string.substring(m_schemeEnd)));
+        *this = parser.result();
+    } else
+        parse(newProtocol + m_string.substring(m_schemeEnd));
+
     return true;
 }
 
+static bool containsOnlyASCII(StringView string)
+{
+    if (string.is8Bit())
+        return charactersAreAllASCII(string.characters8(), string.length());
+    return charactersAreAllASCII(string.characters16(), string.length());
+}
+    
+// Appends the punycoded hostname identified by the given string and length to
+// the output buffer. The result will not be null terminated.
+// Return value of false means error in encoding.
+static bool appendEncodedHostname(UCharBuffer& buffer, StringView string)
+{
+    // Needs to be big enough to hold an IDN-encoded name.
+    // For host names bigger than this, we won't do IDN encoding, which is almost certainly OK.
+    const unsigned hostnameBufferLength = 2048;
+    
+    if (string.length() > hostnameBufferLength || containsOnlyASCII(string)) {
+        append(buffer, string);
+        return true;
+    }
+    
+    UChar hostnameBuffer[hostnameBufferLength];
+    UErrorCode error = U_ZERO_ERROR;
+    
+#if COMPILER(GCC_OR_CLANG)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    int32_t numCharactersConverted = uidna_IDNToASCII(string.upconvertedCharacters(), string.length(), hostnameBuffer,
+        hostnameBufferLength, UIDNA_ALLOW_UNASSIGNED, 0, &error);
+#if COMPILER(GCC_OR_CLANG)
+#pragma GCC diagnostic pop
+#endif
+    
+    if (error == U_ZERO_ERROR) {
+        buffer.append(hostnameBuffer, numCharactersConverted);
+        return true;
+    }
+    return false;
+}
+    
 void URL::setHost(const String& s)
 {
     if (!m_isValid)
         return;
 
-    // FIXME: Non-ASCII characters must be encoded and escaped to match parse() expectations,
-    // and to avoid changing more than just the host.
+    auto colonIndex = s.find(':');
+    if (colonIndex != notFound)
+        return;
 
+    UCharBuffer encodedHostName;
+    if (!appendEncodedHostname(encodedHostName, s))
+        return;
+    
     bool slashSlashNeeded = m_userStart == m_schemeEnd + 1;
-
-    parse(m_string.left(hostStart()) + (slashSlashNeeded ? "//" : "") + s + m_string.substring(m_hostEnd));
+    
+    StringBuilder builder;
+    builder.append(m_string.left(hostStart()));
+    if (slashSlashNeeded)
+        builder.appendLiteral("//");
+    builder.append(StringView(encodedHostName.data(), encodedHostName.size()));
+    builder.append(m_string.substring(m_hostEnd));
+    
+    if (URLParser::enabled()) {
+        URLParser parser(builder.toString());
+        *this = parser.result();
+    } else
+        parse(builder.toString());
 }
 
 void URL::removePort()
 {
     if (m_hostEnd == m_portEnd)
         return;
-    parse(m_string.left(m_hostEnd) + m_string.substring(m_portEnd));
+    if (URLParser::enabled()) {
+        URLParser parser(m_string.left(m_hostEnd) + m_string.substring(m_portEnd));
+        *this = parser.result();
+    } else
+        parse(m_string.left(m_hostEnd) + m_string.substring(m_portEnd));
 }
 
 void URL::setPort(unsigned short i)
@@ -852,9 +1004,13 @@ void URL::setPort(unsigned short i)
         return;
 
     bool colonNeeded = m_portEnd == m_hostEnd;
-    int portStart = (colonNeeded ? m_hostEnd : m_hostEnd + 1);
+    unsigned portStart = (colonNeeded ? m_hostEnd : m_hostEnd + 1);
 
-    parse(m_string.left(portStart) + (colonNeeded ? ":" : "") + String::number(i) + m_string.substring(m_portEnd));
+    if (URLParser::enabled()) {
+        URLParser parser(makeString(m_string.left(portStart), (colonNeeded ? ":" : ""), String::number(i), m_string.substring(m_portEnd)));
+        *this = parser.result();
+    } else
+        parse(m_string.left(portStart) + (colonNeeded ? ":" : "") + String::number(i) + m_string.substring(m_portEnd));
 }
 
 void URL::setHostAndPort(const String& hostAndPort)
@@ -862,12 +1018,44 @@ void URL::setHostAndPort(const String& hostAndPort)
     if (!m_isValid)
         return;
 
-    // FIXME: Non-ASCII characters must be encoded and escaped to match parse() expectations,
-    // and to avoid changing more than just host and port.
+    StringView hostName(hostAndPort);
+    StringView port;
+    
+    auto colonIndex = hostName.find(':');
+    if (colonIndex != notFound) {
+        port = hostName.substring(colonIndex + 1);
+        bool ok;
+        int portInt = port.toIntStrict(ok);
+        if (!ok || portInt < 0)
+            return;
+        hostName = hostName.substring(0, colonIndex);
+    }
+
+    if (hostName.isEmpty())
+        return;
+
+    UCharBuffer encodedHostName;
+    if (!appendEncodedHostname(encodedHostName, hostName))
+        return;
 
     bool slashSlashNeeded = m_userStart == m_schemeEnd + 1;
 
-    parse(m_string.left(hostStart()) + (slashSlashNeeded ? "//" : "") + hostAndPort + m_string.substring(m_portEnd));
+    StringBuilder builder;
+    builder.append(m_string.left(hostStart()));
+    if (slashSlashNeeded)
+        builder.appendLiteral("//");
+    builder.append(StringView(encodedHostName.data(), encodedHostName.size()));
+    if (!port.isEmpty()) {
+        builder.appendLiteral(":");
+        builder.append(port);
+    }
+    builder.append(m_string.substring(m_portEnd));
+
+    if (URLParser::enabled()) {
+        URLParser parser(builder.toString());
+        *this = parser.result();
+    } else
+        parse(builder.toString());
 }
 
 void URL::setUser(const String& user)
@@ -878,7 +1066,7 @@ void URL::setUser(const String& user)
     // FIXME: Non-ASCII characters must be encoded and escaped to match parse() expectations,
     // and to avoid changing more than just the user login.
 
-    int end = m_userEnd;
+    unsigned end = m_userEnd;
     if (!user.isEmpty()) {
         String u = encodeWithURLEscapeSequences(user, PercentEncodeUsername);
         if (m_userStart == m_schemeEnd + 1)
@@ -886,14 +1074,23 @@ void URL::setUser(const String& user)
         // Add '@' if we didn't have one before.
         if (end == m_hostEnd || (end == m_passwordEnd && m_string[end] != '@'))
             u.append('@');
-        parse(m_string.left(m_userStart) + u + m_string.substring(end));
+        if (URLParser::enabled()) {
+            URLParser parser(makeString(m_string.left(m_userStart), u, m_string.substring(end)));
+            *this = parser.result();
+        } else
+            parse(m_string.left(m_userStart) + u + m_string.substring(end));
     } else {
         // Remove '@' if we now have neither user nor password.
         if (m_userEnd == m_passwordEnd && end != m_hostEnd && m_string[end] == '@')
             end += 1;
         // We don't want to parse in the extremely common case where we are not going to make a change.
-        if (m_userStart != end)
-            parse(m_string.left(m_userStart) + m_string.substring(end));
+        if (m_userStart != end) {
+            if (URLParser::enabled()) {
+                URLParser parser(makeString(m_string.left(m_userStart), m_string.substring(end)));
+                *this = parser.result();
+            } else
+                parse(m_string.left(m_userStart) + m_string.substring(end));
+        }
     }
 }
 
@@ -902,7 +1099,7 @@ void URL::setPass(const String& password)
     if (!m_isValid)
         return;
 
-    int end = m_passwordEnd;
+    unsigned end = m_passwordEnd;
     if (!password.isEmpty()) {
         String p = ":" + encodeWithURLEscapeSequences(password, PercentEncodePassword) + "@";
         if (m_userEnd == m_schemeEnd + 1)
@@ -910,31 +1107,49 @@ void URL::setPass(const String& password)
         // Eat the existing '@' since we are going to add our own.
         if (end != m_hostEnd && m_string[end] == '@')
             end += 1;
-        parse(m_string.left(m_userEnd) + p + m_string.substring(end));
+        if (URLParser::enabled()) {
+            URLParser parser(makeString(m_string.left(m_userEnd), p, m_string.substring(end)));
+            *this = parser.result();
+        } else
+            parse(m_string.left(m_userEnd) + p + m_string.substring(end));
     } else {
         // Remove '@' if we now have neither user nor password.
         if (m_userStart == m_userEnd && end != m_hostEnd && m_string[end] == '@')
             end += 1;
         // We don't want to parse in the extremely common case where we are not going to make a change.
-        if (m_userEnd != end)
-            parse(m_string.left(m_userEnd) + m_string.substring(end));
+        if (m_userEnd != end) {
+            if (URLParser::enabled()) {
+                URLParser parser(makeString(m_string.left(m_userEnd), m_string.substring(end)));
+                *this = parser.result();
+            } else
+                parse(m_string.left(m_userEnd) + m_string.substring(end));
+        }
     }
 }
 
-void URL::setFragmentIdentifier(const String& s)
+void URL::setFragmentIdentifier(StringView identifier)
 {
     if (!m_isValid)
         return;
 
-    // FIXME: Non-ASCII characters must be encoded and escaped to match parse() expectations.
-    parse(m_string.left(m_queryEnd) + "#" + s);
+    // FIXME: Optimize the case where the identifier already happens to be equal to what was passed?
+    // FIXME: Is it correct to do this without encoding and escaping non-ASCII characters?
+    if (URLParser::enabled())
+        *this = URLParser { makeString(StringView { m_string }.substring(0, m_queryEnd), '#', identifier) }.result();
+    else
+        parse(m_string.left(m_queryEnd) + "#" + identifier);
 }
 
 void URL::removeFragmentIdentifier()
 {
-    if (!m_isValid)
+    if (!m_isValid) {
+        ASSERT(!m_fragmentEnd);
+        ASSERT(!m_queryEnd);
         return;
-    parse(m_string.left(m_queryEnd));
+    }
+    if (m_fragmentEnd > m_queryEnd)
+        m_string = m_string.left(m_queryEnd);
+    m_fragmentEnd = m_queryEnd;
 }
     
 void URL::setQuery(const String& query)
@@ -945,10 +1160,20 @@ void URL::setQuery(const String& query)
     // FIXME: '#' and non-ASCII characters must be encoded and escaped.
     // Usually, the query is encoded using document encoding, not UTF-8, but we don't have
     // access to the document in this function.
-    if ((query.isEmpty() || query[0] != '?') && !query.isNull())
-        parse(m_string.left(m_pathEnd) + "?" + query + m_string.substring(m_queryEnd));
-    else
-        parse(m_string.left(m_pathEnd) + query + m_string.substring(m_queryEnd));
+    // https://webkit.org/b/161176
+    if ((query.isEmpty() || query[0] != '?') && !query.isNull()) {
+        if (URLParser::enabled()) {
+            URLParser parser(makeString(m_string.left(m_pathEnd), "?", query, m_string.substring(m_queryEnd)));
+            *this = parser.result();
+        } else
+            parse(m_string.left(m_pathEnd) + "?" + query + m_string.substring(m_queryEnd));
+    } else {
+        if (URLParser::enabled()) {
+            URLParser parser(makeString(m_string.left(m_pathEnd), query, m_string.substring(m_queryEnd)));
+            *this = parser.result();
+        } else
+            parse(m_string.left(m_pathEnd) + query + m_string.substring(m_queryEnd));
+    }
 
 }
 
@@ -963,7 +1188,11 @@ void URL::setPath(const String& s)
     if (path.isEmpty() || path[0] != '/')
         path = "/" + path;
 
-    parse(m_string.left(m_portEnd) + encodeWithURLEscapeSequences(path) + m_string.substring(m_pathEnd));
+    if (URLParser::enabled()) {
+        URLParser parser(makeString(m_string.left(m_portEnd), encodeWithURLEscapeSequences(path), m_string.substring(m_pathEnd)));
+        *this = parser.result();
+    } else
+        parse(m_string.left(m_portEnd) + encodeWithURLEscapeSequences(path) + m_string.substring(m_pathEnd));
 }
 
 String decodeURLEscapeSequences(const String& string)
@@ -1029,7 +1258,7 @@ static void escapeAndAppendNonHierarchicalPart(char*& buffer, const char* strSta
 }
 
 // copy a path, accounting for "." and ".." segments
-static int copyPathRemovingDots(char* dst, const char* src, int srcStart, int srcEnd)
+static unsigned copyPathRemovingDots(char* dst, const char* src, unsigned srcStart, unsigned srcEnd)
 {
     char* bufferPathStart = dst;
 
@@ -1094,6 +1323,8 @@ static inline bool hasSlashDotOrDotDot(const char* str)
 
 void URL::parse(const String& string)
 {
+    if (URLParser::enabled())
+        ASSERT_NOT_REACHED();
     checkEncodedString(string);
 
     CharBuffer buffer(string.length() + 1);
@@ -1102,13 +1333,80 @@ void URL::parse(const String& string)
     parse(buffer.data(), &string);
 }
 
+static inline bool cannotBeABaseURL(const URL& url)
+{
+    // FIXME: Support https://url.spec.whatwg.org/#url-cannot-be-a-base-url-flag properly
+    // According spec, this should be computed at parsing time.
+    // For the moment, we just check whether the scheme is special or not.
+    if (url.protocolIs("ftp") || url.protocolIs("file") || url.protocolIs("gopher") || url.protocolIs("http") || url.protocolIs("https") || url.protocolIs("ws") || url.protocolIs("wss"))
+        return false;
+    return true;
+}
+
+// Implementation of https://url.spec.whatwg.org/#url-serializing
+String URL::serialize(bool omitFragment) const
+{
+    if (URLParser::enabled()) {
+        if (omitFragment)
+            return m_string.left(m_queryEnd);
+        return m_string;
+    }
+
+    if (isNull())
+        return String();
+
+    StringBuilder urlBuilder;
+    urlBuilder.append(m_string, 0, m_schemeEnd);
+    urlBuilder.appendLiteral(":");
+    unsigned start = hostStart();
+    if (start < m_hostEnd) {
+        urlBuilder.appendLiteral("//");
+        if (hasUsername()) {
+            urlBuilder.append(m_string, m_userStart, m_userEnd - m_userStart);
+            unsigned passwordStart = m_userEnd + 1;
+            if (hasPassword()) {
+                urlBuilder.appendLiteral(":");
+                urlBuilder.append(m_string, passwordStart, m_passwordEnd - passwordStart);
+            }
+            urlBuilder.appendLiteral("@");
+        }
+        // FIXME: Serialize host according https://url.spec.whatwg.org/#concept-host-serializer for IPv4 and IPv6 addresses.
+        urlBuilder.append(m_string, start, m_hostEnd - start);
+        if (port()) {
+            urlBuilder.appendLiteral(":");
+            urlBuilder.appendNumber(port().value());
+        }
+    } else if (protocolIs("file"))
+        urlBuilder.appendLiteral("//");
+    if (cannotBeABaseURL(*this))
+        urlBuilder.append(m_string, m_portEnd, m_pathEnd - m_portEnd);
+    else {
+        urlBuilder.appendLiteral("/");
+        if (m_pathEnd > m_portEnd) {
+            unsigned pathStart = m_portEnd + 1;
+            urlBuilder.append(m_string, pathStart, m_pathEnd - pathStart);
+        }
+    }
+    if (hasQuery()) {
+        urlBuilder.appendLiteral("?");
+        urlBuilder.append(m_string, m_pathEnd + 1, m_queryEnd - (m_pathEnd + 1));
+    }
+    if (!omitFragment && hasFragment()) {
+        urlBuilder.appendLiteral("#");
+        urlBuilder.append(m_string, m_queryEnd + 1, m_fragmentEnd - (m_queryEnd + 1));
+    }
+    return urlBuilder.toString();
+}
+
 #if PLATFORM(IOS)
+
 static bool shouldCanonicalizeScheme = true;
 
 void enableURLSchemeCanonicalization(bool enableSchemeCanonicalization)
 {
     shouldCanonicalizeScheme = enableSchemeCanonicalization;
 }
+
 #endif
 
 template<size_t length>
@@ -1161,7 +1459,7 @@ static inline bool isDefaultPortForScheme(const char* port, size_t portLength, c
     return false;
 }
 
-static inline bool hostPortIsEmptyButCredentialsArePresent(int hostStart, int portEnd, char userinfoEndChar)
+static inline bool hostPortIsEmptyButCredentialsArePresent(unsigned hostStart, unsigned portEnd, char userinfoEndChar)
 {
     return userinfoEndChar == '@' && hostStart == portEnd;
 }
@@ -1202,6 +1500,8 @@ static bool isCanonicalHostnameLowercaseForScheme(const char* scheme, size_t sch
 
 void URL::parse(const char* url, const String* originalString)
 {
+    if (URLParser::enabled())
+        ASSERT_NOT_REACHED();
     if (!url || url[0] == '\0') {
         // valid URL must be non-empty
         m_string = originalString ? *originalString : url;
@@ -1216,7 +1516,7 @@ void URL::parse(const char* url, const String* originalString)
         return;
     }
 
-    int schemeEnd = 0;
+    unsigned schemeEnd = 0;
     while (isSchemeChar(url[schemeEnd]))
         schemeEnd++;
 
@@ -1226,29 +1526,29 @@ void URL::parse(const char* url, const String* originalString)
         return;
     }
 
-    int userStart = schemeEnd + 1;
-    int userEnd;
-    int passwordStart;
-    int passwordEnd;
-    int hostStart;
-    int hostEnd;
-    int portStart;
-    int portEnd;
+    unsigned userStart = schemeEnd + 1;
+    unsigned userEnd;
+    unsigned passwordStart;
+    unsigned passwordEnd;
+    unsigned hostStart;
+    unsigned hostEnd;
+    unsigned portStart;
+    unsigned portEnd;
 
     bool hierarchical = url[schemeEnd + 1] == '/';
     bool hasSecondSlash = hierarchical && url[schemeEnd + 2] == '/';
 
     bool isFile = schemeEnd == 4
-        && isLetterMatchIgnoringCase(url[0], 'f')
-        && isLetterMatchIgnoringCase(url[1], 'i')
-        && isLetterMatchIgnoringCase(url[2], 'l')
-        && isLetterMatchIgnoringCase(url[3], 'e');
+        && isASCIIAlphaCaselessEqual(url[0], 'f')
+        && isASCIIAlphaCaselessEqual(url[1], 'i')
+        && isASCIIAlphaCaselessEqual(url[2], 'l')
+        && isASCIIAlphaCaselessEqual(url[3], 'e');
 
-    m_protocolIsInHTTPFamily = isLetterMatchIgnoringCase(url[0], 'h')
-        && isLetterMatchIgnoringCase(url[1], 't')
-        && isLetterMatchIgnoringCase(url[2], 't')
-        && isLetterMatchIgnoringCase(url[3], 'p')
-        && (url[4] == ':' || (isLetterMatchIgnoringCase(url[4], 's') && url[5] == ':'));
+    m_protocolIsInHTTPFamily = isASCIIAlphaCaselessEqual(url[0], 'h')
+        && isASCIIAlphaCaselessEqual(url[1], 't')
+        && isASCIIAlphaCaselessEqual(url[2], 't')
+        && isASCIIAlphaCaselessEqual(url[3], 'p')
+        && (url[4] == ':' || (isASCIIAlphaCaselessEqual(url[4], 's') && url[5] == ':'));
 
     if ((hierarchical && hasSecondSlash) || isNonFileHierarchicalScheme(url, schemeEnd)) {
         // The part after the scheme is either a net_path or an abs_path whose first path segment is empty.
@@ -1268,7 +1568,7 @@ void URL::parse(const char* url, const String* originalString)
 
         userEnd = userStart;
 
-        int colonPos = 0;
+        unsigned colonPos = 0;
         while (isUserInfoChar(url[userEnd])) {
             if (url[userEnd] == ':' && colonPos == 0)
                 colonPos = userEnd;
@@ -1362,20 +1662,20 @@ void URL::parse(const char* url, const String* originalString)
         portStart = portEnd = hostEnd;
     }
 
-    int pathStart = portEnd;
-    int pathEnd = pathStart;
+    unsigned pathStart = portEnd;
+    unsigned pathEnd = pathStart;
     while (url[pathEnd] && url[pathEnd] != '?' && url[pathEnd] != '#')
         pathEnd++;
 
-    int queryStart = pathEnd;
-    int queryEnd = queryStart;
+    unsigned queryStart = pathEnd;
+    unsigned queryEnd = queryStart;
     if (url[queryStart] == '?') {
         while (url[queryEnd] && url[queryEnd] != '#')
             queryEnd++;
     }
 
-    int fragmentStart = queryEnd;
-    int fragmentEnd = fragmentStart;
+    unsigned fragmentStart = queryEnd;
+    unsigned fragmentEnd = fragmentStart;
     if (url[fragmentStart] == '#') {
         fragmentStart++;
         fragmentEnd = fragmentStart;
@@ -1384,14 +1684,28 @@ void URL::parse(const char* url, const String* originalString)
     }
 
     // assemble it all, remembering the real ranges
+    Checked<unsigned, RecordOverflow> bufferLength = fragmentEnd;
+    bufferLength *= 3;
 
-    Vector<char, 4096> buffer(fragmentEnd * 3 + 1);
+    // The magic number 10 comes from the worst-case addition of characters for password start,
+    // user info, and colon for port number, colon after scheme, plus inserting missing slashes
+    // after protocol, slash for empty path, and possible end-of-query '#' character. This
+    // yields a max of nine additional characters, plus a null.
+    bufferLength += 10;
 
-    char *p = buffer.data();
-    const char *strPtr = url;
+    if (bufferLength.hasOverflowed()) {
+        m_string = originalString ? *originalString : url;
+        invalidate();
+        return;
+    }
+
+    Vector<char, 4096> buffer(bufferLength.unsafeGet());
+
+    char* p = buffer.data();
+    const char* strPtr = url;
 
     // copy in the scheme
-    const char *schemeEndPtr = url + schemeEnd;
+    const char* schemeEndPtr = url + schemeEnd;
 #if PLATFORM(IOS)
     if (shouldCanonicalizeScheme || m_protocolIsInHTTPFamily) {
         while (strPtr < schemeEndPtr)
@@ -1407,15 +1721,15 @@ void URL::parse(const char* url, const String* originalString)
     m_schemeEnd = p - buffer.data();
 
     bool hostIsLocalHost = portEnd - userStart == 9
-        && isLetterMatchIgnoringCase(url[userStart], 'l')
-        && isLetterMatchIgnoringCase(url[userStart+1], 'o')
-        && isLetterMatchIgnoringCase(url[userStart+2], 'c')
-        && isLetterMatchIgnoringCase(url[userStart+3], 'a')
-        && isLetterMatchIgnoringCase(url[userStart+4], 'l')
-        && isLetterMatchIgnoringCase(url[userStart+5], 'h')
-        && isLetterMatchIgnoringCase(url[userStart+6], 'o')
-        && isLetterMatchIgnoringCase(url[userStart+7], 's')
-        && isLetterMatchIgnoringCase(url[userStart+8], 't');
+        && isASCIIAlphaCaselessEqual(url[userStart], 'l')
+        && isASCIIAlphaCaselessEqual(url[userStart+1], 'o')
+        && isASCIIAlphaCaselessEqual(url[userStart+2], 'c')
+        && isASCIIAlphaCaselessEqual(url[userStart+3], 'a')
+        && isASCIIAlphaCaselessEqual(url[userStart+4], 'l')
+        && isASCIIAlphaCaselessEqual(url[userStart+5], 'h')
+        && isASCIIAlphaCaselessEqual(url[userStart+6], 'o')
+        && isASCIIAlphaCaselessEqual(url[userStart+7], 's')
+        && isASCIIAlphaCaselessEqual(url[userStart+8], 't');
 
     // File URLs need a host part unless it is just file:// or file://localhost
     bool degenerateFilePath = pathStart == pathEnd && (hostStart == hostEnd || hostIsLocalHost);
@@ -1458,7 +1772,7 @@ void URL::parse(const char* url, const String* originalString)
         m_passwordEnd = p - buffer.data();
 
         // If we had any user info, add "@"
-        if (p - buffer.data() != m_userStart)
+        if (static_cast<unsigned>(p - buffer.data()) != m_userStart)
             *p++ = '@';
 
         // copy in the host, except in the case of a file URL with authority="localhost"
@@ -1515,7 +1829,7 @@ void URL::parse(const char* url, const String* originalString)
         appendEscapingBadChars(p, url + pathStart, pathEnd - pathStart);
     else {
         CharBuffer pathBuffer(pathEnd - pathStart + 1);
-        size_t length = copyPathRemovingDots(pathBuffer.data(), url, pathStart, pathEnd);
+        unsigned length = copyPathRemovingDots(pathBuffer.data(), url, pathStart, pathEnd);
         appendEscapingBadChars(p, pathBuffer.data(), length);
     }
 
@@ -1523,7 +1837,7 @@ void URL::parse(const char* url, const String* originalString)
 
     // Find the position after the last slash in the path, or
     // the position before the path if there are no slashes in it.
-    int i;
+    unsigned i;
     for (i = m_pathEnd; i > m_portEnd; --i) {
         if (buffer[i - 1] == '/')
             break;
@@ -1570,25 +1884,44 @@ bool protocolHostAndPortAreEqual(const URL& a, const URL& b)
     if (a.m_schemeEnd != b.m_schemeEnd)
         return false;
 
-    int hostStartA = a.hostStart();
-    int hostLengthA = a.hostEnd() - hostStartA;
-    int hostStartB = b.hostStart();
-    int hostLengthB = b.hostEnd() - b.hostStart();
+    unsigned hostStartA = a.hostStart();
+    unsigned hostLengthA = a.hostEnd() - hostStartA;
+    unsigned hostStartB = b.hostStart();
+    unsigned hostLengthB = b.hostEnd() - b.hostStart();
     if (hostLengthA != hostLengthB)
         return false;
 
     // Check the scheme
-    for (int i = 0; i < a.m_schemeEnd; ++i)
+    for (unsigned i = 0; i < a.m_schemeEnd; ++i) {
         if (a.string()[i] != b.string()[i])
             return false;
+    }
 
     // And the host
-    for (int i = 0; i < hostLengthA; ++i)
+    for (unsigned i = 0; i < hostLengthA; ++i) {
         if (a.string()[hostStartA + i] != b.string()[hostStartB + i])
             return false;
+    }
 
     if (a.port() != b.port())
         return false;
+
+    return true;
+}
+
+bool hostsAreEqual(const URL& a, const URL& b)
+{
+    unsigned hostStartA = a.hostStart();
+    unsigned hostLengthA = a.hostEnd() - hostStartA;
+    unsigned hostStartB = b.hostStart();
+    unsigned hostLengthB = b.hostEnd() - hostStartB;
+    if (hostLengthA != hostLengthB)
+        return false;
+
+    for (unsigned i = 0; i < hostLengthA; ++i) {
+        if (a.string()[hostStartA + i] != b.string()[hostStartB + i])
+            return false;
+    }
 
     return true;
 }
@@ -1637,53 +1970,20 @@ String encodeWithURLEscapeSequences(const String& notEncodedString)
     return String(buffer.data(), p - buffer.data());
 }
 
-static bool containsOnlyASCII(StringView string)
-{
-    if (string.is8Bit())
-        return charactersAreAllASCII(string.characters8(), string.length());
-    return charactersAreAllASCII(string.characters16(), string.length());
-}
-
 static bool protocolIs(StringView stringURL, const char* protocol)
 {
-    assertProtocolIsGood(protocol);
+    assertProtocolIsGood(StringView(reinterpret_cast<const LChar*>(protocol), strlen(protocol)));
     unsigned length = stringURL.length();
     for (unsigned i = 0; i < length; ++i) {
         if (!protocol[i])
             return stringURL[i] == ':';
-        if (!isLetterMatchIgnoringCase(stringURL[i], protocol[i]))
+        if (!isASCIIAlphaCaselessEqual(stringURL[i], protocol[i]))
             return false;
     }
     return false;
 }
 
-// Appends the punycoded hostname identified by the given string and length to
-// the output buffer. The result will not be null terminated.
-static void appendEncodedHostname(UCharBuffer& buffer, StringView string)
-{
-    // Needs to be big enough to hold an IDN-encoded name.
-    // For host names bigger than this, we won't do IDN encoding, which is almost certainly OK.
-    const unsigned hostnameBufferLength = 2048;
-
-    if (string.length() > hostnameBufferLength || containsOnlyASCII(string)) {
-        append(buffer, string);
-        return;
-    }
-//+EAWebKitChange
-//3/22/2015 
-    ASSERT(false); // We need to handle the code below if we run into this.
-#if !PLATFORM(EA)
-    UChar hostnameBuffer[hostnameBufferLength];
-    UErrorCode error = U_ZERO_ERROR;
-    int32_t numCharactersConverted = uidna_IDNToASCII(string.upconvertedCharacters(), string.length(), hostnameBuffer,
-        hostnameBufferLength, UIDNA_ALLOW_UNASSIGNED, 0, &error);
-    if (error == U_ZERO_ERROR)
-        buffer.append(hostnameBuffer, numCharactersConverted);
-#endif
-//-EAWebKitChange
-}
-
-static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, int>>& nameRanges)
+static void findHostnamesInMailToURL(StringView string, Vector<std::pair<unsigned, unsigned>>& nameRanges)
 {
     // In a mailto: URL, host names come after a '@' character and end with a '>' or ',' or '?' or end of string character.
     // Skip quoted strings so that characters in them don't confuse us.
@@ -1691,11 +1991,11 @@ static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, in
 
     nameRanges.clear();
 
-    int p = 0;
+    unsigned p = 0;
     while (1) {
         // Find start of host name or of quoted string.
-        int hostnameOrStringStart = findFirstOf(string, p, "\"@?");
-        if (hostnameOrStringStart == -1)
+        unsigned hostnameOrStringStart = findFirstOf(string, p, "\"@?");
+        if (hostnameOrStringStart == notFoundUnsigned)
             return;
         UChar c = string[hostnameOrStringStart];
         p = hostnameOrStringStart + 1;
@@ -1705,10 +2005,10 @@ static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, in
 
         if (c == '@') {
             // Find end of host name.
-            int hostnameStart = p;
-            int hostnameEnd = findFirstOf(string, p, ">,?");
+            unsigned hostnameStart = p;
+            unsigned hostnameEnd = findFirstOf(string, p, ">,?");
             bool done;
-            if (hostnameEnd == -1) {
+            if (hostnameEnd == notFoundUnsigned) {
                 hostnameEnd = string.length();
                 done = true;
             } else {
@@ -1724,8 +2024,8 @@ static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, in
             // Skip quoted string.
             ASSERT(c == '"');
             while (1) {
-                int escapedCharacterOrStringEnd = findFirstOf(string, p, "\"\\");
-                if (escapedCharacterOrStringEnd == -1)
+                unsigned escapedCharacterOrStringEnd = findFirstOf(string, p, "\"\\");
+                if (escapedCharacterOrStringEnd == notFoundUnsigned)
                     return;
 
                 c = string[escapedCharacterOrStringEnd];
@@ -1737,7 +2037,7 @@ static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, in
 
                 // Skip escaped character.
                 ASSERT(c == '\\');
-                if (p == static_cast<int>(string.length()))
+                if (p == string.length())
                     return;
 
                 ++p;
@@ -1746,31 +2046,31 @@ static void findHostnamesInMailToURL(StringView string, Vector<std::pair<int, in
     }
 }
 
-static bool findHostnameInHierarchicalURL(StringView string, int& startOffset, int& endOffset)
+static bool findHostnameInHierarchicalURL(StringView string, unsigned& startOffset, unsigned& endOffset)
 {
     // Find the host name in a hierarchical URL.
     // It comes after a "://" sequence, with scheme characters preceding, and
     // this should be the first colon in the string.
     // It ends with the end of the string or a ":" or a path segment ending character.
     // If there is a "@" character, the host part is just the part after the "@".
-    int separator = findFirstOf(string, 0, ":");
-    if (separator == -1 || separator + 2 >= static_cast<int>(string.length()) || string[separator + 1] != '/' || string[separator + 2] != '/')
+    unsigned separator = findFirstOf(string, 0, ":");
+    if (separator == notFoundUnsigned || separator + 2 >= string.length() || string[separator + 1] != '/' || string[separator + 2] != '/')
         return false;
 
     // Check that all characters before the :// are valid scheme characters.
     if (!isSchemeFirstChar(string[0]))
         return false;
-    for (int i = 1; i < separator; ++i) {
+    for (unsigned i = 1; i < separator; ++i) {
         if (!isSchemeChar(string[i]))
             return false;
     }
 
     // Start after the separator.
-    int authorityStart = separator + 3;
+    unsigned authorityStart = separator + 3;
 
     // Find terminating character.
-    int hostnameEnd = string.length();
-    for (int i = authorityStart; i < hostnameEnd; ++i) {
+    unsigned hostnameEnd = string.length();
+    for (unsigned i = authorityStart; i < hostnameEnd; ++i) {
         UChar c = string[i];
         if (c == ':' || (isPathSegmentEndChar(c) && c != 0)) {
             hostnameEnd = i;
@@ -1779,9 +2079,9 @@ static bool findHostnameInHierarchicalURL(StringView string, int& startOffset, i
     }
 
     // Find "@" for the start of the host name.
-    int userInfoTerminator = findFirstOf(string, authorityStart, "@");
-    int hostnameStart;
-    if (userInfoTerminator == -1 || userInfoTerminator > hostnameEnd)
+    unsigned userInfoTerminator = findFirstOf(string, authorityStart, "@");
+    unsigned hostnameStart;
+    if (userInfoTerminator == notFoundUnsigned || userInfoTerminator > hostnameEnd)
         hostnameStart = authorityStart;
     else
         hostnameStart = userInfoTerminator + 1;
@@ -1793,51 +2093,58 @@ static bool findHostnameInHierarchicalURL(StringView string, int& startOffset, i
 
 // Converts all hostnames found in the given input to punycode, preserving the
 // rest of the URL unchanged. The output will NOT be null-terminated.
-static void encodeHostnames(StringView string, UCharBuffer& buffer)
+// Return value of false means error in encoding.
+static bool encodeHostnames(StringView string, UCharBuffer& buffer)
 {
     buffer.clear();
 
     if (protocolIs(string, "mailto")) {
-        Vector<std::pair<int, int>> hostnameRanges;
+        Vector<std::pair<unsigned, unsigned>> hostnameRanges;
         findHostnamesInMailToURL(string, hostnameRanges);
-        int n = hostnameRanges.size();
-        int p = 0;
-        for (int i = 0; i < n; ++i) {
-            const std::pair<int, int>& r = hostnameRanges[i];
+        unsigned n = hostnameRanges.size();
+        unsigned p = 0;
+        for (unsigned i = 0; i < n; ++i) {
+            const std::pair<unsigned, unsigned>& r = hostnameRanges[i];
             append(buffer, string.substring(p, r.first - p));
-            appendEncodedHostname(buffer, string.substring(r.first, r.second - r.first));
+            if (!appendEncodedHostname(buffer, string.substring(r.first, r.second - r.first)))
+                return false;
             p = r.second;
         }
         // This will copy either everything after the last hostname, or the
         // whole thing if there is no hostname.
         append(buffer, string.substring(p));
     } else {
-        int hostStart, hostEnd;
+        unsigned hostStart, hostEnd;
         if (findHostnameInHierarchicalURL(string, hostStart, hostEnd)) {
             append(buffer, string.substring(0, hostStart)); // Before hostname.
-            appendEncodedHostname(buffer, string.substring(hostStart, hostEnd - hostStart));
+            if (!appendEncodedHostname(buffer, string.substring(hostStart, hostEnd - hostStart)))
+                return false;
             append(buffer, string.substring(hostEnd)); // After hostname.
         } else {
             // No hostname to encode, return the input.
             append(buffer, string);
         }
     }
+
+    return true;
 }
 
-static void encodeRelativeString(const String& rel, const TextEncoding& encoding, CharBuffer& output)
+// Return value of false means error in encoding.
+static bool encodeRelativeString(const String& rel, const TextEncoding& encoding, CharBuffer& output)
 {
     UCharBuffer s;
-    encodeHostnames(rel, s);
+    if (!encodeHostnames(rel, s))
+        return false;
 
     TextEncoding pathEncoding(UTF8Encoding()); // Path is always encoded as UTF-8; other parts may depend on the scheme.
 
-    int pathEnd = -1;
+    unsigned pathEnd = notFoundUnsigned;
     if (encoding != pathEncoding && encoding.isValid() && !protocolIs(rel, "mailto") && !protocolIs(rel, "data") && !protocolIsJavaScript(rel)) {
         // Find the first instance of either # or ?, keep pathEnd at -1 otherwise.
         pathEnd = findFirstOf(StringView(s.data(), s.size()), 0, "#?");
     }
 
-    if (pathEnd == -1) {
+    if (pathEnd == notFoundUnsigned) {
         CString decoded = pathEncoding.encode(StringView(s.data(), s.size()), URLEncodedEntitiesForUnencodables);
         output.resize(decoded.length());
         memcpy(output.data(), decoded.data(), decoded.length());
@@ -1852,6 +2159,8 @@ static void encodeRelativeString(const String& rel, const TextEncoding& encoding
         memcpy(output.data() + pathDecoded.length(), otherDecoded.data(), otherDecoded.length());
     }
     output.append('\0'); // null-terminate the output.
+
+    return true;
 }
 
 static String substituteBackslashes(const String& string)
@@ -1886,16 +2195,31 @@ void URL::copyToBuffer(Vector<char, 512>& buffer) const
     copyASCII(m_string, buffer.data());
 }
 
+// FIXME: Why is this different than protocolIs(StringView, const char*)?
 bool protocolIs(const String& url, const char* protocol)
 {
     // Do the comparison without making a new string object.
-    assertProtocolIsGood(protocol);
-    for (int i = 0; ; ++i) {
-        if (!protocol[i])
+    assertProtocolIsGood(StringView(reinterpret_cast<const LChar*>(protocol), strlen(protocol)));
+    bool isLeading = true;
+    for (unsigned i = 0, j = 0; url[i]; ++i) {
+        // skip leading whitespace and control characters.
+        if (isLeading && shouldTrimFromURL(url[i]))
+            continue;
+        isLeading = false;
+
+        // skip any tabs and newlines.
+        if (isTabNewline(url[i]))
+            continue;
+
+        if (!protocol[j])
             return url[i] == ':';
-        if (!isLetterMatchIgnoringCase(url[i], protocol[i]))
+        if (!isASCIIAlphaCaselessEqual(url[i], protocol[j]))
             return false;
+
+        ++j;
     }
+
+    return false;
 }
 
 bool isValidProtocol(const String& protocol)
@@ -1914,10 +2238,12 @@ bool isValidProtocol(const String& protocol)
 }
 
 #ifndef NDEBUG
+
 void URL::print() const
 {
     printf("%s\n", m_string.utf8().data());
 }
+
 #endif
 
 String URL::strippedForUseAsReferrer() const
@@ -1946,16 +2272,16 @@ bool protocolIsJavaScript(const String& url)
 bool protocolIsInHTTPFamily(const String& url)
 {
     // Do the comparison without making a new string object.
-    return isLetterMatchIgnoringCase(url[0], 'h')
-        && isLetterMatchIgnoringCase(url[1], 't')
-        && isLetterMatchIgnoringCase(url[2], 't')
-        && isLetterMatchIgnoringCase(url[3], 'p')
-        && (url[4] == ':' || (isLetterMatchIgnoringCase(url[4], 's') && url[5] == ':'));
+    return isASCIIAlphaCaselessEqual(url[0], 'h')
+        && isASCIIAlphaCaselessEqual(url[1], 't')
+        && isASCIIAlphaCaselessEqual(url[2], 't')
+        && isASCIIAlphaCaselessEqual(url[3], 'p')
+        && (url[4] == ':' || (isASCIIAlphaCaselessEqual(url[4], 's') && url[5] == ':'));
 }
 
 const URL& blankURL()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(URL, staticBlankURL, (ParsedURLString, "about:blank"));
+    static NeverDestroyed<URL> staticBlankURL(ParsedURLString, "about:blank");
     return staticBlankURL;
 }
 
@@ -1964,25 +2290,9 @@ bool URL::isBlankURL() const
     return protocolIs("about");
 }
 
-bool isDefaultPortForProtocol(unsigned short port, const String& protocol)
-{
-    if (protocol.isEmpty())
-        return false;
-
-    typedef HashMap<String, unsigned, CaseFoldingHash> DefaultPortsMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DefaultPortsMap, defaultPorts, ());
-    if (defaultPorts.isEmpty()) {
-        defaultPorts.set("http", 80);
-        defaultPorts.set("https", 443);
-        defaultPorts.set("ftp", 21);
-        defaultPorts.set("ftps", 990);
-    }
-    return defaultPorts.get(protocol) == port;
-}
-
 bool portAllowed(const URL& url)
 {
-    unsigned short port = url.port();
+    std::optional<uint16_t> port = url.port();
 
     // Since most URLs don't have a port, return early for the "no port" case.
     if (!port)
@@ -1990,7 +2300,7 @@ bool portAllowed(const URL& url)
 
     // This blocked port list matches the port blocking that Mozilla implements.
     // See http://www.mozilla.org/projects/netlib/PortBanning.html for more information.
-    static const unsigned short blockedPortList[] = {
+    static const uint16_t blockedPortList[] = {
         1,    // tcpmux
         7,    // echo
         9,    // discard
@@ -2049,6 +2359,7 @@ bool portAllowed(const URL& url)
         2049, // NFS
         3659, // apple-sasl / PasswordServer [Apple addition]
         4045, // lockd
+        4190, // ManageSieve [Apple addition]
         6000, // X11
         6665, // Alternate IRC [Apple addition]
         6666, // Alternate IRC [Apple addition]
@@ -2070,11 +2381,11 @@ bool portAllowed(const URL& url)
 #endif
 
     // If the port is not in the blocked port list, allow it.
-    if (!std::binary_search(blockedPortList, blockedPortListEnd, port))
+    if (!std::binary_search(blockedPortList, blockedPortListEnd, port.value()))
         return true;
 
     // Allow ports 21 and 22 for FTP URLs, as Mozilla does.
-    if ((port == 21 || port == 22) && url.protocolIs("ftp"))
+    if ((port.value() == 21 || port.value() == 22) && url.protocolIs("ftp"))
         return true;
 
     // Allow any port number in a file URL, since the port number is ignored.
@@ -2087,15 +2398,21 @@ bool portAllowed(const URL& url)
 String mimeTypeFromDataURL(const String& url)
 {
     ASSERT(protocolIs(url, "data"));
-    size_t index = url.find(';');
+
+    // FIXME: What's the right behavior when the URL has a comma first, but a semicolon later?
+    // Currently this code will break at the semicolon in that case. Not sure that's correct.
+    auto index = url.find(';', 5);
     if (index == notFound)
-        index = url.find(',');
-    if (index != notFound) {
-        if (index > 5)
-            return url.substring(5, index - 5).lower();
-        return "text/plain"; // Data URLs with no MIME type are considered text/plain.
+        index = url.find(',', 5);
+    if (index == notFound) {
+        // FIXME: There was an old comment here that made it sound like this should be returning text/plain.
+        // But we have been returning empty string here for some time, so not changing its behavior at this time.
+        return emptyString();
     }
-    return "";
+    if (index == 5)
+        return ASCIILiteral("text/plain");
+    ASSERT(index >= 5);
+    return url.substring(5, index - 5).convertToASCIILowercase();
 }
 
 String mimeTypeFromURL(const URL& url)
@@ -2105,11 +2422,6 @@ String mimeTypeFromURL(const URL& url)
 
     // We don't use MIMETypeRegistry::getMIMETypeForPath() because it returns "application/octet-stream" upon failure
     return MIMETypeRegistry::getMIMETypeForExtension(extension);
-}
-
-bool URL::isSafeToSendToAnotherThread() const
-{
-    return m_string.isSafeToSendToAnotherThread();
 }
 
 String URL::stringCenterEllipsizedToLength(unsigned length) const

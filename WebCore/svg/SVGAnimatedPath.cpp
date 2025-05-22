@@ -35,7 +35,7 @@ std::unique_ptr<SVGAnimatedType> SVGAnimatedPathAnimator::constructFromString(co
 {
     auto byteStream = std::make_unique<SVGPathByteStream>();
     buildSVGPathByteStreamFromString(string, *byteStream, UnalteredParsing);
-    return SVGAnimatedType::createPath(WTF::move(byteStream));
+    return SVGAnimatedType::createPath(WTFMove(byteStream));
 }
 
 std::unique_ptr<SVGAnimatedType> SVGAnimatedPathAnimator::startAnimValAnimation(const SVGElementAnimatedPropertyList& animatedTypes)
@@ -45,7 +45,7 @@ std::unique_ptr<SVGAnimatedType> SVGAnimatedPathAnimator::startAnimValAnimation(
     // Build initial path byte stream.
     auto byteStream = std::make_unique<SVGPathByteStream>();
     resetAnimValToBaseVal(animatedTypes, byteStream.get());
-    return SVGAnimatedType::createPath(WTF::move(byteStream));
+    return SVGAnimatedType::createPath(WTFMove(byteStream));
 }
 
 void SVGAnimatedPathAnimator::stopAnimValAnimation(const SVGElementAnimatedPropertyList& animatedTypes)
@@ -56,9 +56,9 @@ void SVGAnimatedPathAnimator::stopAnimValAnimation(const SVGElementAnimatedPrope
 void SVGAnimatedPathAnimator::resetAnimValToBaseVal(const SVGElementAnimatedPropertyList& animatedTypes, SVGPathByteStream* byteStream)
 {
     SVGAnimatedPathSegListPropertyTearOff* property = castAnimatedPropertyToActualType<SVGAnimatedPathSegListPropertyTearOff>(animatedTypes[0].properties[0].get());
-    const SVGPathSegList& baseValue = property->currentBaseValue();
+    const auto& baseValue = property->currentBaseValue();
 
-    buildSVGPathByteStreamFromSVGPathSegList(baseValue, *byteStream, UnalteredParsing);
+    buildSVGPathByteStreamFromSVGPathSegListValues(baseValue, *byteStream, UnalteredParsing);
 
     Vector<RefPtr<SVGAnimatedPathSegListPropertyTearOff>> result;
 
@@ -76,12 +76,11 @@ void SVGAnimatedPathAnimator::resetAnimValToBaseVal(const SVGElementAnimatedProp
     }
 }
 
-void SVGAnimatedPathAnimator::resetAnimValToBaseVal(const SVGElementAnimatedPropertyList& animatedTypes, SVGAnimatedType* type)
+void SVGAnimatedPathAnimator::resetAnimValToBaseVal(const SVGElementAnimatedPropertyList& animatedTypes, SVGAnimatedType& type)
 {
     ASSERT(animatedTypes.size() >= 1);
-    ASSERT(type);
-    ASSERT(type->type() == m_type);
-    resetAnimValToBaseVal(animatedTypes, type->path());
+    ASSERT(type.type() == m_type);
+    resetAnimValToBaseVal(animatedTypes, type.path());
 }
 
 void SVGAnimatedPathAnimator::animValWillChange(const SVGElementAnimatedPropertyList& animatedTypes)

@@ -56,7 +56,7 @@
 
 namespace WebCore {
 
-PassRefPtr<GraphicsContext3D> GraphicsContext3D::create(GraphicsContext3D::Attributes attributes, HostWindow* hostWindow, GraphicsContext3D::RenderStyle renderStyle)
+RefPtr<GraphicsContext3D> GraphicsContext3D::create(GraphicsContext3DAttributes attributes, HostWindow* hostWindow, GraphicsContext3D::RenderStyle renderStyle)
 {
     // This implementation doesn't currently support rendering directly to the HostWindow.
     if (renderStyle == RenderDirectlyToHostWindow)
@@ -73,19 +73,21 @@ PassRefPtr<GraphicsContext3D> GraphicsContext3D::create(GraphicsContext3D::Attri
     if (!success)
         return 0;
 
-    RefPtr<GraphicsContext3D> context = adoptRef(new GraphicsContext3D(attributes, hostWindow, renderStyle));
-    return context.release();
+    return adoptRef(new GraphicsContext3D(attributes, hostWindow, renderStyle));
 }
 
-GraphicsContext3D::GraphicsContext3D(GraphicsContext3D::Attributes attributes, HostWindow*, GraphicsContext3D::RenderStyle renderStyle)
+GraphicsContext3D::GraphicsContext3D(GraphicsContext3DAttributes attributes, HostWindow*, GraphicsContext3D::RenderStyle renderStyle)
     : m_currentWidth(0)
     , m_currentHeight(0)
-    , m_compiler(isGLES2Compliant() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT)
     , m_attrs(attributes)
     , m_texture(0)
     , m_compositorTexture(0)
     , m_fbo(0)
+#if USE(COORDINATED_GRAPHICS_THREADED)
+    , m_intermediateTexture(0)
+#endif
     , m_depthStencilBuffer(0)
+    , m_layerComposited(false)
     , m_multisampleFBO(0)
     , m_multisampleDepthStencilBuffer(0)
     , m_multisampleColorBuffer(0)
@@ -109,6 +111,24 @@ GraphicsContext3D::GraphicsContext3D(GraphicsContext3D::Attributes attributes, H
         ::glGenFramebuffers(1, &m_fbo);
         ::glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
+#if USE(COORDINATED_GRAPHICS_THREADED)
+        ::glGenTextures(1, &m_compositorTexture);
+        ::glBindTexture(GL_TEXTURE_2D, m_compositorTexture);
+        ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        ::glGenTextures(1, &m_intermediateTexture);
+        ::glBindTexture(GL_TEXTURE_2D, m_intermediateTexture);
+        ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        ::glBindTexture(GL_TEXTURE_2D, 0);
+#endif
+
         m_state.boundFBO = m_fbo;
         if (!m_attrs.antialias && (m_attrs.stencil || m_attrs.depth))
             ::glGenRenderbuffers(1, &m_depthStencilBuffer);
@@ -123,6 +143,36 @@ GraphicsContext3D::GraphicsContext3D(GraphicsContext3D::Attributes attributes, H
                 ::glGenRenderbuffers(1, &m_multisampleDepthStencilBuffer);
         }
     }
+
+#if !USE(OPENGL_ES_2)
+    ::glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    if (GLContext::current()->version() >= 320) {
+        m_usingCoreProfile = true;
+
+        // From version 3.2 on we use the OpenGL Core profile, so request that ouput to the shader compiler.
+        // OpenGL version 3.2 uses GLSL version 1.50.
+        m_compiler = ANGLEWebKitBridge(SH_GLSL_150_CORE_OUTPUT);
+
+        // From version 3.2 on we use the OpenGL Core profile, and we need a VAO for rendering.
+        // A VAO could be created and bound by each component using GL rendering (TextureMapper, WebGL, etc). This is
+        // a simpler solution: the first GraphicsContext3D created on a GLContext will create and bind a VAO for that context.
+        GC3Dint currentVAO = 0;
+        getIntegerv(GraphicsContext3D::VERTEX_ARRAY_BINDING, &currentVAO);
+        if (!currentVAO) {
+            m_vao = createVertexArray();
+            bindVertexArray(m_vao);
+        }
+    } else {
+        // For lower versions request the compatibility output to the shader compiler.
+        m_compiler = ANGLEWebKitBridge(SH_GLSL_COMPATIBILITY_OUTPUT);
+
+        // GL_POINT_SPRITE is needed in lower versions.
+        ::glEnable(GL_POINT_SPRITE);
+    }
+#else
+    m_compiler = ANGLEWebKitBridge(SH_ESSL_OUTPUT);
+#endif
 
     // ANGLE initialization.
     ShBuiltInResources ANGLEResources;
@@ -144,11 +194,6 @@ GraphicsContext3D::GraphicsContext3D(GraphicsContext3D::Attributes attributes, H
     ANGLEResources.FragmentPrecisionHigh = (range[0] || range[1] || precision);
 
     m_compiler.setResources(ANGLEResources);
-
-#if !USE(OPENGL_ES_2)
-    ::glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    ::glEnable(GL_POINT_SPRITE);
-#endif
 
     ::glClearColor(0, 0, 0, 0);
 }
@@ -174,6 +219,12 @@ GraphicsContext3D::~GraphicsContext3D()
             ::glDeleteRenderbuffers(1, &m_depthStencilBuffer);
     }
     ::glDeleteFramebuffers(1, &m_fbo);
+#if USE(COORDINATED_GRAPHICS_THREADED)
+    ::glDeleteTextures(1, &m_intermediateTexture);
+#endif
+
+    if (m_vao)
+        deleteVertexArray(m_vao);
 }
 
 GraphicsContext3D::ImageExtractor::~ImageExtractor()
@@ -187,17 +238,21 @@ bool GraphicsContext3D::ImageExtractor::extractImage(bool premultiplyAlpha, bool
     if (!m_image)
         return false;
     // We need this to stay in scope because the native image is just a shallow copy of the data.
-    m_decoder = new ImageSource(premultiplyAlpha ? ImageSource::AlphaPremultiplied : ImageSource::AlphaNotPremultiplied, ignoreGammaAndColorProfile ? ImageSource::GammaAndColorProfileIgnored : ImageSource::GammaAndColorProfileApplied);
+    AlphaOption alphaOption = premultiplyAlpha ? AlphaOption::Premultiplied : AlphaOption::NotPremultiplied;
+    GammaAndColorProfileOption gammaAndColorProfileOption = ignoreGammaAndColorProfile ? GammaAndColorProfileOption::Ignored : GammaAndColorProfileOption::Applied;
+    m_decoder = new ImageSource(nullptr, alphaOption, gammaAndColorProfileOption);
+    
     if (!m_decoder)
         return false;
-    ImageSource& decoder = *m_decoder;
 
+    ImageSource& decoder = *m_decoder;
     m_alphaOp = AlphaDoNothing;
+
     if (m_image->data()) {
         decoder.setData(m_image->data(), true);
-        if (!decoder.frameCount() || !decoder.frameIsCompleteAtIndex(0))
+        if (!decoder.frameCount())
             return false;
-        m_imageSurface = decoder.createFrameAtIndex(0);
+        m_imageSurface = decoder.createFrameImageAtIndex(0);
     } else {
         m_imageSurface = m_image->nativeImageForCurrentFrame();
         // 1. For texImage2D with HTMLVideoElment input, assume no PremultiplyAlpha had been applied and the alpha value is 0xFF for each pixel,
@@ -209,9 +264,10 @@ bool GraphicsContext3D::ImageExtractor::extractImage(bool premultiplyAlpha, bool
 
         // if m_imageSurface is not an image, extract a copy of the surface
         if (m_imageSurface && cairo_surface_get_type(m_imageSurface.get()) != CAIRO_SURFACE_TYPE_IMAGE) {
-            RefPtr<cairo_surface_t> tmpSurface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, m_imageWidth, m_imageHeight));
-            copyRectFromOneSurfaceToAnother(m_imageSurface.get(), tmpSurface.get(), IntSize(), IntRect(0, 0, m_imageWidth, m_imageHeight), IntSize(), CAIRO_OPERATOR_SOURCE);
-            m_imageSurface = tmpSurface.release();
+            IntSize surfaceSize = cairoSurfaceSize(m_imageSurface.get());
+            auto tmpSurface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, surfaceSize.width(), surfaceSize.height()));
+            copyRectFromOneSurfaceToAnother(m_imageSurface.get(), tmpSurface.get(), IntSize(), IntRect(IntPoint(), surfaceSize), IntSize(), CAIRO_OPERATOR_SOURCE);
+            m_imageSurface = WTFMove(tmpSurface);
         }
     }
 
@@ -314,6 +370,22 @@ PlatformLayer* GraphicsContext3D::platformLayer() const
 {
     return m_private.get();
 }
+
+#if PLATFORM(GTK)
+Extensions3D& GraphicsContext3D::getExtensions()
+{
+    if (!m_extensions) {
+#if USE(OPENGL_ES_2)
+        // glGetStringi is not available on GLES2.
+        m_extensions = std::make_unique<Extensions3DOpenGLES>(this,  false);
+#else
+        // From OpenGL 3.2 on we use the Core profile, and there we must use glGetStringi.
+        m_extensions = std::make_unique<Extensions3DOpenGL>(this, GLContext::current()->version() >= 320);
+#endif
+    }
+    return *m_extensions;
+}
+#endif
 
 } // namespace WebCore
 

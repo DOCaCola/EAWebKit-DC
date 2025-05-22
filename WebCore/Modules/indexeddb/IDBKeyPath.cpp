@@ -24,11 +24,10 @@
  */
 
 #include "config.h"
-#include "IDBKeyPath.h"
 
 #if ENABLE(INDEXED_DATABASE)
+#include "IDBKeyPath.h"
 
-#include "KeyedCoding.h"
 #include <wtf/ASCIICType.h>
 #include <wtf/dtoa.h>
 
@@ -125,7 +124,7 @@ static bool IDBIsValidKeyPath(const String& keyPath)
     IDBKeyPathParseError error;
     Vector<String> keyPathElements;
     IDBParseKeyPath(keyPath, keyPathElements, error);
-    return error == IDBKeyPathParseErrorNone;
+    return error == IDBKeyPathParseError::None;
 }
 
 void IDBParseKeyPath(const String& keyPath, Vector<String>& elements, IDBKeyPathParseError& error)
@@ -146,7 +145,7 @@ void IDBParseKeyPath(const String& keyPath, Vector<String>& elements, IDBKeyPath
     else if (tokenType == IDBKeyPathLexer::TokenEnd)
         state = End;
     else {
-        error = IDBKeyPathParseErrorStart;
+        error = IDBKeyPathParseError::Start;
         return;
     }
 
@@ -165,7 +164,7 @@ void IDBParseKeyPath(const String& keyPath, Vector<String>& elements, IDBKeyPath
             else if (tokenType == IDBKeyPathLexer::TokenEnd)
                 state = End;
             else {
-                error = IDBKeyPathParseErrorIdentifier;
+                error = IDBKeyPathParseError::Identifier;
                 return;
             }
             break;
@@ -178,130 +177,48 @@ void IDBParseKeyPath(const String& keyPath, Vector<String>& elements, IDBKeyPath
             if (tokenType == IDBKeyPathLexer::TokenIdentifier)
                 state = Identifier;
             else {
-                error = IDBKeyPathParseErrorDot;
+                error = IDBKeyPathParseError::Dot;
                 return;
             }
             break;
         }
         case End: {
-            error = IDBKeyPathParseErrorNone;
+            error = IDBKeyPathParseError::None;
             return;
         }
         }
     }
 }
 
-IDBKeyPath::IDBKeyPath(const String& string)
-    : m_type(StringType)
-    , m_string(string)
+bool isIDBKeyPathValid(const IDBKeyPath& keyPath)
 {
-    ASSERT(!m_string.isNull());
-}
-
-IDBKeyPath::IDBKeyPath(const Vector<String>& array)
-    : m_type(ArrayType)
-    , m_array(array)
-{
-#ifndef NDEBUG
-    for (auto& key : array)
-        ASSERT(!key.isNull());
-#endif
-}
-
-bool IDBKeyPath::isValid() const
-{
-    switch (m_type) {
-    case NullType:
-        return false;
-
-    case StringType:
-        return IDBIsValidKeyPath(m_string);
-
-    case ArrayType:
-        if (m_array.isEmpty())
+    auto visitor = WTF::makeVisitor([](const String& string) {
+        return IDBIsValidKeyPath(string);
+    }, [](const Vector<String>& vector) {
+        if (vector.isEmpty())
             return false;
-        for (auto& key : m_array) {
+        for (auto& key : vector) {
             if (!IDBIsValidKeyPath(key))
                 return false;
         }
         return true;
-    }
-    ASSERT_NOT_REACHED();
-    return false;
+    });
+    return WTF::visit(visitor, keyPath);
 }
 
-bool IDBKeyPath::operator==(const IDBKeyPath& other) const
+IDBKeyPath isolatedCopy(const IDBKeyPath& keyPath)
 {
-    if (m_type != other.m_type)
-        return false;
+    auto visitor = WTF::makeVisitor([](const String& string) -> IDBKeyPath {
+        return string.isolatedCopy();
+    }, [](const Vector<String>& vector) -> IDBKeyPath {
+        Vector<String> vectorCopy;
+        vectorCopy.reserveInitialCapacity(vector.size());
+        for (auto& string : vector)
+            vectorCopy.uncheckedAppend(string.isolatedCopy());
+        return vectorCopy;
+    });
 
-    switch (m_type) {
-    case NullType:
-        return true;
-    case StringType:
-        return m_string == other.m_string;
-    case ArrayType:
-        return m_array == other.m_array;
-    }
-    ASSERT_NOT_REACHED();
-    return false;
-}
-
-IDBKeyPath IDBKeyPath::isolatedCopy() const
-{
-    IDBKeyPath result;
-    result.m_type = m_type;
-    result.m_string = m_string.isolatedCopy();
-
-    result.m_array.reserveInitialCapacity(m_array.size());
-    for (auto& key : m_array)
-        result.m_array.uncheckedAppend(key.isolatedCopy());
-
-    return result;
-}
-
-void IDBKeyPath::encode(KeyedEncoder& encoder) const
-{
-    encoder.encodeEnum("type", m_type);
-    switch (m_type) {
-    case IDBKeyPath::NullType:
-        break;
-    case IDBKeyPath::StringType:
-        encoder.encodeString("string", m_string);
-        break;
-    case IDBKeyPath::ArrayType:
-        encoder.encodeObjects("array", m_array.begin(), m_array.end(), [](WebCore::KeyedEncoder& encoder, const String& string) {
-            encoder.encodeString("string", string);
-        });
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    };
-}
-
-bool IDBKeyPath::decode(KeyedDecoder& decoder, IDBKeyPath& result)
-{
-    auto enumFunction = [](int64_t value) {
-        return value == NullType || value == StringType || value == ArrayType;
-    };
-
-    if (!decoder.decodeEnum("type", result.m_type, enumFunction))
-        return false;
-
-    if (result.m_type == NullType)
-        return true;
-
-    if (result.m_type == StringType)
-        return decoder.decodeString("string", result.m_string);
-
-    ASSERT(result.m_type == ArrayType);
-
-    auto arrayFunction = [](KeyedDecoder& decoder, String& result) {
-        return decoder.decodeString("string", result);
-    };
-
-    result.m_array.clear();
-    return decoder.decodeObjects("array", result.m_array, arrayFunction);
+    return WTF::visit(visitor, keyPath);
 }
 
 } // namespace WebCore

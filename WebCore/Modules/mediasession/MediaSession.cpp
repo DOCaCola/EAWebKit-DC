@@ -30,48 +30,23 @@
 
 #include "Chrome.h"
 #include "ChromeClient.h"
-#include "Dictionary.h"
 #include "Event.h"
+#include "EventNames.h"
 #include "HTMLMediaElement.h"
 #include "MediaSessionManager.h"
+#include "Page.h"
 
 namespace WebCore {
 
-static const char* defaultKind = "";
-static const char* ambientKind = "ambient";
-static const char* transientKind = "transient";
-static const char* transientSoloKind = "transient-solo";
-static const char* contentKind = "content";
-
-MediaSession::Kind MediaSession::parseKind(const String& kind)
-{
-    // 4. Media Session
-    // 2. If no corresponding media session type can be found for the provided media session category or media session
-    //    category is empty, then set media session's current media session type to "content".
-    if (kind == ambientKind)
-        return MediaSession::Kind::Ambient;
-    if (kind == transientKind)
-        return MediaSession::Kind::Transient;
-    if (kind == transientSoloKind)
-        return MediaSession::Kind::TransientSolo;
-    return MediaSession::Kind::Content;
-}
-
-MediaSession::MediaSession(Document& document)
+MediaSession::MediaSession(Document& document, Kind kind)
     : m_document(document)
-{
-    MediaSessionManager::singleton().addMediaSession(*this);
-}
-
-MediaSession::MediaSession(ScriptExecutionContext& context, const String& kind)
-    : m_document(downcast<Document>(context))
-    , m_kind(parseKind(kind))
+    , m_kind(kind)
 {
     // 4. Media Sessions
     // 3. If media session's current media session type is "content", then create a new media remote controller for media
     //    session. (Otherwise media session has no media remote controller.)
     if (m_kind == Kind::Content)
-        m_controls = MediaRemoteControls::create(context, this);
+        m_controls = MediaRemoteControls::create(document, this);
 
     MediaSessionManager::singleton().addMediaSession(*this);
 }
@@ -84,27 +59,9 @@ MediaSession::~MediaSession()
         m_controls->clearSession();
 }
 
-String MediaSession::kind() const
+MediaRemoteControls* MediaSession::controls()
 {
-    switch (m_kind) {
-    case MediaSession::Kind::Default:
-        return defaultKind;
-    case MediaSession::Kind::Ambient:
-        return ambientKind;
-    case MediaSession::Kind::Transient:
-        return transientKind;
-    case MediaSession::Kind::TransientSolo:
-        return transientSoloKind;
-    case MediaSession::Kind::Content:
-        return contentKind;
-    }
-}
-
-MediaRemoteControls* MediaSession::controls(bool& isNull)
-{
-    MediaRemoteControls* controls = m_controls.get();
-    isNull = !controls;
-    return controls;
+    return m_controls.get();
 }
 
 void MediaSession::addMediaElement(HTMLMediaElement& element)
@@ -157,48 +114,33 @@ bool MediaSession::hasActiveMediaElements() const
     return !m_activeParticipatingElements.isEmpty();
 }
 
-void MediaSession::setMetadata(const Dictionary& metadata)
+void MediaSession::setMetadata(const std::optional<Metadata>& optionalMetadata)
 {
-    // 5.1.3
-    // 1. Let media session be the current media session.
-    // 2. Let baseURL be the API base URL specified by the entry settings object.
-    // 3. Set media session's title to metadata's title.
-    String title;
-    metadata.get("title", title);
+    if (!optionalMetadata)
+        m_metadata = { };
+    else {
+        auto& metadata = optionalMetadata.value();
+        m_metadata = { metadata.title, metadata.artist, metadata.album, m_document.completeURL(metadata.artwork) };
+    }
 
-    // 4. Set media session's artist name to metadata's artist.
-    String artist;
-    metadata.get("artist", artist);
-
-    // 5. Set media session's album name to metadata's album.
-    String album;
-    metadata.get("album", album);
-
-    // 6. If metadata's artwork is present, parse it using baseURL, and if that does not return failure, set media
-    //    session's artwork URL to the return value.
-    URL artworkURL;
-    String artworkPath;
-    if (metadata.get("artwork", artworkPath))
-        artworkURL = m_document.completeURL(artworkPath);
-
-    m_metadata = MediaSessionMetadata(title, artist, album, artworkURL);
-
-    if (Page *page = m_document.page())
+    if (auto* page = m_document.page())
         page->chrome().client().mediaSessionMetadataDidChange(m_metadata);
 }
 
-void MediaSession::releaseSession()
+void MediaSession::deactivate()
 {
-    // 5.1.3
+    // 5.1.2. Object members
+    // When the deactivate() method is invoked, the user agent must run the following steps:
     // 1. Let media session be the current media session.
-    // 2. Indefinitely pause all of media session's active participating media elements.
-    // 3. Reset media session's active participating media elements to an empty list.
+    // 2. Indefinitely pause all of media session’s audio-producing participants.
+    // 3. Set media session's resume list to an empty list.
+    // 4. Set media session's audio-producing participants to an empty list.
     changeActiveMediaElements([&]() {
         while (!m_activeParticipatingElements.isEmpty())
             m_activeParticipatingElements.takeAny()->pause();
     });
 
-    // 4. Run the media session release algorithm for media session.
+    // 5. Run the media session deactivation algorithm for media session.
     releaseInternal();
 }
 

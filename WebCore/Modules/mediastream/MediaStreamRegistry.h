@@ -23,38 +23,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MediaStreamRegistry_h
-#define MediaStreamRegistry_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
 #include "URLRegistry.h"
 #include <wtf/HashMap.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/text/StringHash.h>
 
 namespace WebCore {
 
-class URL;
 class MediaStream;
+class MediaStreamPrivate;
+class URL;
 
 class MediaStreamRegistry final : public URLRegistry {
 public:
+    friend class NeverDestroyed<MediaStreamRegistry>;
+
     // Returns a single instance of MediaStreamRegistry.
-    static MediaStreamRegistry& registry();
+    static MediaStreamRegistry& shared();
 
     // Registers a blob URL referring to the specified stream data.
-    virtual void registerURL(SecurityOrigin*, const URL&, URLRegistrable*) override;
-    virtual void unregisterURL(const URL&) override;
+    void registerURL(SecurityOrigin*, const URL&, URLRegistrable&) override;
+    void unregisterURL(const URL&) override;
 
-    virtual URLRegistrable* lookup(const String&) const override;
+    URLRegistrable* lookup(const String&) const override;
+
+    void registerStream(MediaStream&);
+    void unregisterStream(MediaStream&);
+
+    MediaStream* lookUp(const URL&) const;
+    MediaStream* lookUp(const MediaStreamPrivate&) const;
 
 private:
+    MediaStreamRegistry();
     HashMap<String, RefPtr<MediaStream>> m_mediaStreams;
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif // MediaStreamRegistry_h

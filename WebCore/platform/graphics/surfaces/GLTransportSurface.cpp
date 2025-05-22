@@ -53,7 +53,7 @@ std::unique_ptr<GLTransportSurface> GLTransportSurface::createTransportSurface(c
 #endif
 
     if (surface && surface->handle() && surface->drawable())
-        return WTF::move(surface);
+        return surface;
 
     return nullptr;
 }
@@ -105,8 +105,8 @@ void GLTransportSurface::destroy()
         ::glDeleteBuffers(1, &m_vbo);
 
     if (m_vertexHandle) {
-        m_context3D->getExtensions()->bindVertexArrayOES(0);
-        m_context3D->getExtensions()->deleteVertexArrayOES(m_vertexHandle);
+        m_context3D->getExtensions().bindVertexArrayOES(0);
+        m_context3D->getExtensions().deleteVertexArrayOES(m_vertexHandle);
     } else if (m_shaderProgram)
         ::glDisableVertexAttribArray(m_shaderProgram->vertexLocation());
 
@@ -167,10 +167,10 @@ void GLTransportSurface::initializeShaderProgram()
     if (!m_context3D)
         m_context3D = GraphicsContext3D::createForCurrentGLContext();
 
-    vertexArrayObjectSupported = m_context3D->getExtensions()->supports("GL_OES_vertex_array_object");
+    vertexArrayObjectSupported = m_context3D->getExtensions().supports("GL_OES_vertex_array_object");
 
     TextureMapperShaderProgram::Options options = TextureMapperShaderProgram::Texture;
-    m_shaderProgram = TextureMapperShaderProgram::create(m_context3D, options);
+    m_shaderProgram = TextureMapperShaderProgram::create(*m_context3D, options);
 
     ::glUseProgram(m_shaderProgram->programID());
     ::glUniform1i(m_shaderProgram->samplerLocation(), 0);
@@ -194,10 +194,10 @@ void GLTransportSurface::initializeShaderProgram()
 
     // Create and set-up vertex array object.
     if (vertexArrayObjectSupported) {
-        m_vertexHandle = m_context3D->getExtensions()->createVertexArrayOES();
+        m_vertexHandle = m_context3D->getExtensions().createVertexArrayOES();
 
         if (m_vertexHandle) {
-            m_context3D->getExtensions()->bindVertexArrayOES(m_vertexHandle);
+            m_context3D->getExtensions().bindVertexArrayOES(m_vertexHandle);
             bindArrayBuffer();
         }
     }
@@ -220,7 +220,7 @@ std::unique_ptr<GLTransportSurfaceClient> GLTransportSurfaceClient::createTransp
         return nullptr;
     }
 
-    return WTF::move(client);
+    return client;
 }
 
 

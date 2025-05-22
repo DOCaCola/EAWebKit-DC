@@ -1,166 +1,180 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2015, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- * 2.  Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- * 3.  Neither the name of Apple Inc. ("Apple") nor the names of
- *     its contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBRequest_h
-#define IDBRequest_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
-#include "ActiveDOMObject.h"
-#include "DOMError.h"
-#include "DOMRequestState.h"
-#include "DOMStringList.h"
-#include "Event.h"
-#include "EventListener.h"
 #include "EventTarget.h"
-#include "IDBAny.h"
-#include "IDBCallbacks.h"
-#include "IDBCursor.h"
-#include "IDBDatabaseBackend.h"
-#include "IDBDatabaseCallbacks.h"
-#include "ScriptWrappable.h"
+#include "ExceptionOr.h"
+#include "IDBActiveDOMObject.h"
+#include "IDBError.h"
+#include "IDBResourceIdentifier.h"
+#include "IndexedDB.h"
+#include <heap/Strong.h>
 
 namespace WebCore {
 
+class DOMError;
+class Event;
+class IDBCursor;
+class IDBDatabase;
+class IDBIndex;
+class IDBKeyData;
+class IDBObjectStore;
+class IDBResultData;
 class IDBTransaction;
+class IDBValue;
+class ScopeGuard;
+class ThreadSafeDataBuffer;
 
-typedef int ExceptionCode;
+namespace IDBClient {
+class IDBConnectionProxy;
+class IDBConnectionToServer;
+}
 
-class IDBRequest : public ScriptWrappable, public IDBCallbacks, public EventTargetWithInlineData, public ActiveDOMObject {
+class IDBRequest : public EventTargetWithInlineData, public IDBActiveDOMObject, public RefCounted<IDBRequest> {
 public:
-    static Ref<IDBRequest> create(ScriptExecutionContext*, PassRefPtr<IDBAny> source, IDBTransaction*);
-    static Ref<IDBRequest> create(ScriptExecutionContext*, PassRefPtr<IDBAny> source, IDBDatabaseBackend::TaskType, IDBTransaction*);
+    static Ref<IDBRequest> create(ScriptExecutionContext&, IDBObjectStore&, IDBTransaction&);
+    static Ref<IDBRequest> create(ScriptExecutionContext&, IDBCursor&, IDBTransaction&);
+    static Ref<IDBRequest> create(ScriptExecutionContext&, IDBIndex&, IDBTransaction&);
+    static Ref<IDBRequest> createObjectStoreGet(ScriptExecutionContext&, IDBObjectStore&, IndexedDB::ObjectStoreRecordType, IDBTransaction&);
+    static Ref<IDBRequest> createIndexGet(ScriptExecutionContext&, IDBIndex&, IndexedDB::IndexRecordType, IDBTransaction&);
+
+    const IDBResourceIdentifier& resourceIdentifier() const { return m_resourceIdentifier; }
+
     virtual ~IDBRequest();
 
-    PassRefPtr<IDBAny> result(ExceptionCode&) const;
-    unsigned short errorCode(ExceptionCode&) const;
-    PassRefPtr<DOMError> error(ExceptionCode&) const;
-    PassRefPtr<IDBAny> source() const;
-    PassRefPtr<IDBTransaction> transaction() const;
-    void preventPropagation() { m_preventPropagation = true; }
+    using Result = Variant<RefPtr<IDBCursor>, RefPtr<IDBDatabase>, JSC::Strong<JSC::Unknown>>;
+    ExceptionOr<std::optional<Result>> result() const;
 
-    // Defined in the IDL
-    enum ReadyState {
-        PENDING = 1,
-        DONE = 2,
-        EarlyDeath = 3
-    };
+    using Source = Variant<RefPtr<IDBObjectStore>, RefPtr<IDBIndex>, RefPtr<IDBCursor>>;
+    const std::optional<Source>& source() const { return m_source; }
 
-    const String& readyState() const;
+    ExceptionOr<DOMError*> error() const;
 
-    void markEarlyDeath();
-    void setCursorDetails(IndexedDB::CursorType, IndexedDB::CursorDirection);
-    void setPendingCursor(PassRefPtr<IDBCursor>);
-    void finishCursor();
-    void abort();
+    RefPtr<IDBTransaction> transaction() const;
+    
+    enum class ReadyState { Pending, Done };
+    ReadyState readyState() const { return m_readyState; }
 
-    // IDBCallbacks
-    virtual void onError(PassRefPtr<IDBDatabaseError>) override;
-    virtual void onSuccess(PassRefPtr<DOMStringList>) override;
-    virtual void onSuccess(PassRefPtr<IDBCursorBackend>) override;
-    virtual void onSuccess(PassRefPtr<IDBKey>) override;
-    virtual void onSuccess(PassRefPtr<SharedBuffer>) override;
-    virtual void onSuccess(PassRefPtr<SharedBuffer>, PassRefPtr<IDBKey>, const IDBKeyPath&) override;
-    virtual void onSuccess(int64_t) override;
-    virtual void onSuccess() override;
-    virtual void onSuccess(PassRefPtr<IDBKey>, PassRefPtr<IDBKey> primaryKey, PassRefPtr<SharedBuffer>) override;
+    bool isDone() const { return m_readyState == ReadyState::Done; }
 
-    // EventTarget
-    virtual EventTargetInterface eventTargetInterface() const override;
-    virtual ScriptExecutionContext* scriptExecutionContext() const override final { return ActiveDOMObject::scriptExecutionContext(); }
-    virtual void uncaughtExceptionInEventHandler() override final;
+    uint64_t sourceObjectStoreIdentifier() const;
+    uint64_t sourceIndexIdentifier() const;
+    IndexedDB::ObjectStoreRecordType requestedObjectStoreRecordType() const;
+    IndexedDB::IndexRecordType requestedIndexRecordType() const;
 
-    using EventTarget::dispatchEvent;
-    virtual bool dispatchEvent(PassRefPtr<Event>) override;
+    ScriptExecutionContext* scriptExecutionContext() const final { return ActiveDOMObject::scriptExecutionContext(); }
 
-    void transactionDidFinishAndDispatch();
+    using RefCounted::ref;
+    using RefCounted::deref;
 
-    using RefCounted<IDBCallbacks>::ref;
-    using RefCounted<IDBCallbacks>::deref;
+    void completeRequestAndDispatchEvent(const IDBResultData&);
 
-    IDBDatabaseBackend::TaskType taskType() { return m_taskType; }
+    void setResult(const IDBKeyData&);
+    void setResult(const Vector<IDBKeyData>&);
+    void setResult(const Vector<IDBValue>&);
+    void setResult(uint64_t);
+    void setResultToStructuredClone(const IDBValue&);
+    void setResultToUndefined();
 
-    DOMRequestState* requestState() { return &m_requestState; }
+    void willIterateCursor(IDBCursor&);
+    void didOpenOrIterateCursor(const IDBResultData&);
 
-    // ActiveDOMObject API.
-    bool hasPendingActivity() const override;
+    const IDBCursor* pendingCursor() const { return m_pendingCursor.get(); }
+
+    void setSource(IDBCursor&);
+    void setVersionChangeTransaction(IDBTransaction&);
+
+    IndexedDB::RequestType requestType() const { return m_requestType; }
+
+    bool hasPendingActivity() const final;
 
 protected:
-    IDBRequest(ScriptExecutionContext*, PassRefPtr<IDBAny> source, IDBDatabaseBackend::TaskType, IDBTransaction*);
-    void enqueueEvent(PassRefPtr<Event>);
-    virtual bool shouldEnqueueEvent() const;
-    void onSuccessInternal(PassRefPtr<SerializedScriptValue>);
-    void onSuccessInternal(const Deprecated::ScriptValue&);
+    IDBRequest(ScriptExecutionContext&, IDBClient::IDBConnectionProxy&);
 
-    RefPtr<IDBAny> m_result;
-    unsigned short m_errorCode;
-    String m_errorMessage;
-    RefPtr<DOMError> m_error;
-    bool m_contextStopped;
+    void enqueueEvent(Ref<Event>&&);
+    bool dispatchEvent(Event&) override;
+
+    void setResult(Ref<IDBDatabase>&&);
+
+    IDBClient::IDBConnectionProxy& connectionProxy() { return m_connectionProxy.get(); }
+
+    // FIXME: Protected data members aren't great for maintainability.
+    // Consider adding protected helper functions and making these private.
+    ReadyState m_readyState { ReadyState::Pending };
     RefPtr<IDBTransaction> m_transaction;
-    ReadyState m_readyState;
-    bool m_requestAborted; // May be aborted by transaction then receive async onsuccess; ignore vs. assert.
+    bool m_shouldExposeTransactionToDOM { true };
+    RefPtr<DOMError> m_domError;
+    IndexedDB::RequestType m_requestType { IndexedDB::RequestType::Other };
+    bool m_contextStopped { false };
+    Event* m_openDatabaseSuccessEvent { nullptr };
 
 private:
-    // ActiveDOMObject API.
-    void stop() override;
-    const char* activeDOMObjectName() const override;
-    bool canSuspendForPageCache() const override;
+    IDBRequest(ScriptExecutionContext&, IDBObjectStore&, IDBTransaction&);
+    IDBRequest(ScriptExecutionContext&, IDBCursor&, IDBTransaction&);
+    IDBRequest(ScriptExecutionContext&, IDBIndex&, IDBTransaction&);
+    IDBRequest(ScriptExecutionContext&, IDBObjectStore&, IndexedDB::ObjectStoreRecordType, IDBTransaction&);
+    IDBRequest(ScriptExecutionContext&, IDBIndex&, IndexedDB::IndexRecordType, IDBTransaction&);
 
-    // EventTarget API.
-    virtual void refEventTarget() override final { ref(); }
-    virtual void derefEventTarget() override final { deref(); }
+    EventTargetInterface eventTargetInterface() const override;
 
-    RefPtr<IDBCursor> getResultCursor();
-    void setResultCursor(PassRefPtr<IDBCursor>, PassRefPtr<IDBKey>, PassRefPtr<IDBKey> primaryKey, const Deprecated::ScriptValue&);
+    const char* activeDOMObjectName() const final;
+    bool canSuspendForDocumentSuspension() const final;
+    void stop() final;
+    virtual void cancelForStop();
 
-    RefPtr<IDBAny> m_source;
-    const IDBDatabaseBackend::TaskType m_taskType;
+    void refEventTarget() final { RefCounted::ref(); }
+    void derefEventTarget() final { RefCounted::deref(); }
+    void uncaughtExceptionInEventHandler() final;
 
-    bool m_hasPendingActivity;
-    Vector<RefPtr<Event>> m_enqueuedEvents;
+    virtual bool isOpenDBRequest() const { return false; }
 
-    // Only used if the result type will be a cursor.
-    IndexedDB::CursorType m_cursorType;
-    IndexedDB::CursorDirection m_cursorDirection;
-    bool m_cursorFinished;
+    void onError();
+    void onSuccess();
+
+    IDBCursor* resultCursor();
+
+    IDBError m_idbError;
+    IDBResourceIdentifier m_resourceIdentifier;
+
+    std::optional<Result> m_result;
+    std::optional<Source> m_source;
+
+    bool m_hasPendingActivity { true };
+    IndexedDB::ObjectStoreRecordType m_requestedObjectStoreRecordType { IndexedDB::ObjectStoreRecordType::ValueOnly };
+    IndexedDB::IndexRecordType m_requestedIndexRecordType { IndexedDB::IndexRecordType::Key };
+
     RefPtr<IDBCursor> m_pendingCursor;
-    RefPtr<IDBKey> m_cursorKey;
-    RefPtr<IDBKey> m_cursorPrimaryKey;
-    Deprecated::ScriptValue m_cursorValue;
-    bool m_didFireUpgradeNeededEvent;
-    bool m_preventPropagation;
 
-    DOMRequestState m_requestState;
+    std::unique_ptr<ScopeGuard> m_cursorRequestNotifier;
+
+    Ref<IDBClient::IDBConnectionProxy> m_connectionProxy;
 };
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif // IDBRequest_h

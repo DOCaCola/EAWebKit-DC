@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorOverlay_h
-#define InspectorOverlay_h
+#pragma once
 
 #include "Color.h"
 #include "FloatQuad.h"
@@ -120,7 +119,7 @@ public:
     void setPausedInDebuggerMessage(const String*);
 
     void hideHighlight();
-    void highlightNodeList(PassRefPtr<NodeList>, const HighlightConfig&);
+    void highlightNodeList(RefPtr<NodeList>&&, const HighlightConfig&);
     void highlightNode(Node*, const HighlightConfig&);
     void highlightQuad(std::unique_ptr<FloatQuad>, const HighlightConfig&);
     
@@ -172,6 +171,3 @@ private:
 };
 
 } // namespace WebCore
-
-
-#endif // InspectorOverlay_h

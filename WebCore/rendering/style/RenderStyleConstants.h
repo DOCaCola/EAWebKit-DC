@@ -23,12 +23,13 @@
  *
  */
 
-#ifndef RenderStyleConstants_h
-#define RenderStyleConstants_h
+#pragma once
 
 #include <initializer_list>
 
 namespace WebCore {
+
+class TextStream;
 
 static const size_t PrintColorAdjustBits = 1;
 enum PrintColorAdjust {
@@ -69,13 +70,14 @@ enum StyleDifferenceContextSensitiveProperty {
     ContextSensitivePropertyOpacity     = 1 << 1,
     ContextSensitivePropertyFilter      = 1 << 2,
     ContextSensitivePropertyClipRect    = 1 << 3,
-    ContextSensitivePropertyClipPath    = 1 << 4
+    ContextSensitivePropertyClipPath    = 1 << 4,
+    ContextSensitivePropertyWillChange  = 1 << 5,
 };
 
 // Static pseudo styles. Dynamic ones are produced on the fly.
 enum PseudoId : unsigned char {
     // The order must be NOP ID, public IDs, and then internal IDs.
-    NOPSEUDO, FIRST_LINE, FIRST_LETTER, BEFORE, AFTER, SELECTION, FIRST_LINE_INHERITED, SCROLLBAR,
+    NOPSEUDO, FIRST_LINE, FIRST_LETTER, BEFORE, AFTER, SELECTION, SCROLLBAR,
     // Internal IDs follow:
     SCROLLBAR_THUMB, SCROLLBAR_BUTTON, SCROLLBAR_TRACK, SCROLLBAR_TRACK_PIECE, SCROLLBAR_CORNER, RESIZER,
     AFTER_LAST_INTERNAL_PSEUDOID,
@@ -136,6 +138,9 @@ public:
     }
 
     unsigned data() const { return m_data; }
+
+    static ptrdiff_t dataMemoryOffset() { return OBJECT_OFFSETOF(PseudoIdSet, m_data); }
+
 private:
     explicit PseudoIdSet(unsigned rawPseudoIdSet)
         : m_data(rawPseudoIdSet)
@@ -185,7 +190,7 @@ enum EBoxSizing { CONTENT_BOX, BORDER_BOX };
 // Random visual rendering model attributes. Not inherited.
 
 enum EOverflow {
-    OVISIBLE, OHIDDEN, OSCROLL, OAUTO, OOVERLAY, OMARQUEE, OPAGEDX, OPAGEDY
+    OVISIBLE, OHIDDEN, OSCROLL, OAUTO, OOVERLAY, OPAGEDX, OPAGEDY
 };
 
 enum EVerticalAlign {
@@ -224,8 +229,8 @@ enum EFillLayerType {
 // CSS3 Background Values
 enum EFillSizeType { Contain, Cover, SizeLength, SizeNone };
 
-// CSS3 Background Position
-enum BackgroundEdgeOrigin { TopEdge, RightEdge, BottomEdge, LeftEdge };
+// CSS3 <position>
+enum class Edge { Top, Right, Bottom, Left };
 
 // CSS3 Mask Source Types
 enum EMaskSourceType { MaskAlpha, MaskLuminance };
@@ -248,11 +253,11 @@ enum EBoxDirection { BNORMAL, BREVERSE };
 enum EAlignContent { AlignContentFlexStart, AlignContentFlexEnd, AlignContentCenter, AlignContentSpaceBetween, AlignContentSpaceAround, AlignContentStretch };
 enum EFlexDirection { FlowRow, FlowRowReverse, FlowColumn, FlowColumnReverse };
 enum EFlexWrap { FlexNoWrap, FlexWrap, FlexWrapReverse };
-enum ItemPosition {ItemPositionAuto, ItemPositionStretch, ItemPositionBaseline, ItemPositionLastBaseline, ItemPositionCenter, ItemPositionStart, ItemPositionEnd, ItemPositionSelfStart, ItemPositionSelfEnd, ItemPositionFlexStart, ItemPositionFlexEnd, ItemPositionLeft, ItemPositionRight};
-enum OverflowAlignment {OverflowAlignmentDefault, OverflowAlignmentTrue, OverflowAlignmentSafe};
-enum ItemPositionType {NonLegacyPosition, LegacyPosition};
-enum ContentPosition {ContentPositionAuto, ContentPositionBaseline, ContentPositionLastBaseline, ContentPositionCenter, ContentPositionStart, ContentPositionEnd, ContentPositionFlexStart, ContentPositionFlexEnd, ContentPositionLeft, ContentPositionRight};
-enum ContentDistributionType {ContentDistributionDefault, ContentDistributionSpaceBetween, ContentDistributionSpaceAround, ContentDistributionSpaceEvenly, ContentDistributionStretch};
+enum ItemPosition { ItemPositionAuto, ItemPositionNormal, ItemPositionStretch, ItemPositionBaseline, ItemPositionLastBaseline, ItemPositionCenter, ItemPositionStart, ItemPositionEnd, ItemPositionSelfStart, ItemPositionSelfEnd, ItemPositionFlexStart, ItemPositionFlexEnd, ItemPositionLeft, ItemPositionRight };
+enum OverflowAlignment { OverflowAlignmentDefault, OverflowAlignmentUnsafe, OverflowAlignmentSafe };
+enum ItemPositionType { NonLegacyPosition, LegacyPosition };
+enum ContentPosition { ContentPositionNormal, ContentPositionBaseline, ContentPositionLastBaseline, ContentPositionCenter, ContentPositionStart, ContentPositionEnd, ContentPositionFlexStart, ContentPositionFlexEnd, ContentPositionLeft, ContentPositionRight };
+enum ContentDistributionType { ContentDistributionDefault, ContentDistributionSpaceBetween, ContentDistributionSpaceAround, ContentDistributionSpaceEvenly, ContentDistributionStretch };
 
 enum ETextSecurity {
     TSNONE, TSDISC, TSCIRCLE, TSSQUARE
@@ -469,9 +474,24 @@ enum TextZoom {
     TextZoomNormal, TextZoomReset
 };
 
-enum EPageBreak {
-    PBAUTO, PBALWAYS, PBAVOID
+enum BreakBetween {
+    AutoBreakBetween, AvoidBreakBetween, AvoidColumnBreakBetween, AvoidPageBreakBetween, AvoidRegionBreakBetween, ColumnBreakBetween, RegionBreakBetween, PageBreakBetween, LeftPageBreakBetween, RightPageBreakBetween, RectoPageBreakBetween, VersoPageBreakBetween
 };
+bool alwaysPageBreak(BreakBetween);
+    
+enum BreakInside {
+    AutoBreakInside, AvoidBreakInside, AvoidColumnBreakInside, AvoidPageBreakInside, AvoidRegionBreakInside
+};
+
+enum HangingPunctuation {
+    NoHangingPunctuation = 0,
+    FirstHangingPunctuation = 1 << 0,
+    LastHangingPunctuation = 1 << 1,
+    AllowEndHangingPunctuation = 1 << 2,
+    ForceEndHangingPunctuation = 1 << 3
+};
+inline HangingPunctuation operator| (HangingPunctuation a, HangingPunctuation b) { return HangingPunctuation(int(a) | int(b)); }
+inline HangingPunctuation& operator|= (HangingPunctuation& a, HangingPunctuation b) { return a = a | b; }
 
 enum EEmptyCell {
     SHOW, HIDE
@@ -542,6 +562,7 @@ enum EDisplay {
     TABLE_COLUMN_GROUP, TABLE_COLUMN, TABLE_CELL,
     TABLE_CAPTION, BOX, INLINE_BOX,
     FLEX, WEBKIT_FLEX, INLINE_FLEX, WEBKIT_INLINE_FLEX,
+    CONTENTS,
 #if ENABLE(CSS_GRID_LAYOUT)
     GRID, INLINE_GRID,
 #endif
@@ -583,11 +604,17 @@ enum TextEmphasisPositions {
 };
 typedef unsigned TextEmphasisPosition;
 
-enum TextOrientation { TextOrientationVerticalRight, TextOrientationUpright, TextOrientationSideways, TextOrientationSidewaysRight };
+enum class TextOrientation { Mixed, Upright, Sideways };
 
 enum TextOverflow { TextOverflowClip = 0, TextOverflowEllipsis };
 
-enum EImageRendering { ImageRenderingAuto = 0, ImageRenderingOptimizeSpeed, ImageRenderingOptimizeQuality, ImageRenderingCrispEdges };
+enum EImageRendering {
+    ImageRenderingAuto = 0,
+    ImageRenderingOptimizeSpeed,
+    ImageRenderingOptimizeQuality,
+    ImageRenderingCrispEdges,
+    ImageRenderingPixelated
+};
 
 enum ImageResolutionSource { ImageResolutionSpecified = 0, ImageResolutionFromImage };
 
@@ -625,6 +652,12 @@ enum GridAutoFlow {
     AutoFlowRowDense = InternalAutoFlowAlgorithmDense | InternalAutoFlowDirectionRow,
     AutoFlowColumnDense = InternalAutoFlowAlgorithmDense | InternalAutoFlowDirectionColumn
 };
+
+enum AutoRepeatType {
+    NoAutoRepeat,
+    AutoFill,
+    AutoFit
+};
 #endif
 
 // Reasonable maximum to prevent insane font sizes from causing crashes on some platforms (such as Windows).
@@ -640,11 +673,33 @@ enum Isolation { IsolationAuto, IsolationIsolate };
 // Fill, Stroke, ViewBox are just used for SVG.
 enum CSSBoxType { BoxMissing = 0, MarginBox, BorderBox, PaddingBox, ContentBox, Fill, Stroke, ViewBox };
 
+#if ENABLE(TOUCH_EVENTS)
+enum class TouchAction {
+    Auto,
+    Manipulation
+};
+#endif
+
 #if ENABLE(CSS_SCROLL_SNAP)
-enum class ScrollSnapType {
+enum class ScrollSnapStrictness {
     None,
     Proximity,
     Mandatory
+};
+
+enum class ScrollSnapAxis {
+    XAxis,
+    YAxis,
+    Block,
+    Inline,
+    Both
+};
+
+enum class ScrollSnapAxisAlignType {
+    None,
+    Start,
+    Center,
+    End
 };
 #endif
 
@@ -655,6 +710,26 @@ enum class TrailingWord {
 };
 #endif
 
-} // namespace WebCore
+#if ENABLE(APPLE_PAY)
+enum class ApplePayButtonStyle {
+    White,
+    WhiteOutline,
+    Black,
+};
 
-#endif // RenderStyleConstants_h
+enum class ApplePayButtonType {
+    Plain,
+    Buy,
+    SetUp,
+    Donate,
+};
+#endif
+
+TextStream& operator<<(TextStream&, EFillSizeType);
+TextStream& operator<<(TextStream&, EFillAttachment);
+TextStream& operator<<(TextStream&, EFillBox);
+TextStream& operator<<(TextStream&, EFillRepeat);
+TextStream& operator<<(TextStream&, EMaskSourceType);
+TextStream& operator<<(TextStream&, Edge);
+
+} // namespace WebCore

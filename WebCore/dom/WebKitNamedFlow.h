@@ -27,19 +27,15 @@
  * SUCH DAMAGE.
  */
 
-#ifndef WebKitNamedFlow_h
-#define WebKitNamedFlow_h
+#pragma once
 
 #include "EventTarget.h"
-
-#include <wtf/ListHashSet.h>
 #include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 #include <wtf/text/AtomicString.h>
 
 namespace WebCore {
 
-class Document;
 class NamedFlowCollection;
 class Node;
 class NodeList;
@@ -48,22 +44,22 @@ class ScriptExecutionContext;
 
 class WebKitNamedFlow final : public RefCounted<WebKitNamedFlow>, public EventTargetWithInlineData {
 public:
-    static Ref<WebKitNamedFlow> create(PassRefPtr<NamedFlowCollection> manager, const AtomicString& flowThreadName);
+    static Ref<WebKitNamedFlow> create(NamedFlowCollection& manager, const AtomicString& flowThreadName);
 
     ~WebKitNamedFlow();
 
     const AtomicString& name() const;
     bool overset() const;
     int firstEmptyRegionIndex() const;
-    PassRefPtr<NodeList> getRegionsByContent(Node*);
-    PassRefPtr<NodeList> getRegions();
-    PassRefPtr<NodeList> getContent();
+    Ref<NodeList> getRegionsByContent(Node*);
+    Ref<NodeList> getRegions();
+    Ref<NodeList> getContent();
 
     using RefCounted<WebKitNamedFlow>::ref;
     using RefCounted<WebKitNamedFlow>::deref;
 
-    virtual EventTargetInterface eventTargetInterface() const override { return WebKitNamedFlowEventTargetInterfaceType; }
-    virtual ScriptExecutionContext* scriptExecutionContext() const override;
+    EventTargetInterface eventTargetInterface() const override { return WebKitNamedFlowEventTargetInterfaceType; }
+    ScriptExecutionContext* scriptExecutionContext() const override;
 
     // This function is called from the JS binding code to determine if the NamedFlow object is reachable or not.
     // If the object has listeners, the object should only be discarded if the parent Document is not reachable.
@@ -81,11 +77,11 @@ public:
     void dispatchRegionOversetChangeEvent();
 
 private:
-    WebKitNamedFlow(PassRefPtr<NamedFlowCollection>, const AtomicString&);
+    WebKitNamedFlow(NamedFlowCollection&, const AtomicString&);
 
     // EventTarget implementation.
-    virtual void refEventTarget() override { ref(); }
-    virtual void derefEventTarget() override { deref(); }
+    void refEventTarget() override { ref(); }
+    void derefEventTarget() override { deref(); }
 
     // The name of the flow thread as specified in CSS.
     AtomicString m_flowThreadName;
@@ -94,6 +90,4 @@ private:
     RenderNamedFlowThread* m_parentFlowThread;
 };
 
-}
-
-#endif
+} // namespace WebCore

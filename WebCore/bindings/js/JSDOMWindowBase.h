@@ -17,8 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef JSDOMWindowBase_h
-#define JSDOMWindowBase_h
+#pragma once
 
 #include "JSDOMBinding.h"
 #include "JSDOMGlobalObject.h"
@@ -37,7 +36,7 @@ namespace WebCore {
     class WEBCORE_EXPORT JSDOMWindowBase : public JSDOMGlobalObject {
         typedef JSDOMGlobalObject Base;
     protected:
-        JSDOMWindowBase(JSC::VM&, JSC::Structure*, PassRefPtr<DOMWindow>, JSDOMWindowShell*);
+        JSDOMWindowBase(JSC::VM&, JSC::Structure*, RefPtr<DOMWindow>&&, JSDOMWindowShell*);
         void finishCreation(JSC::VM&, JSDOMWindowShell*);
 
         static void destroy(JSCell*);
@@ -45,7 +44,7 @@ namespace WebCore {
     public:
         void updateDocument();
 
-        DOMWindow& impl() const { return *m_impl; }
+        DOMWindow& wrapped() const { return *m_wrapped; }
         ScriptExecutionContext* scriptExecutionContext() const;
 
         // Called just before removing this window from the JSDOMWindowShell.
@@ -60,38 +59,41 @@ namespace WebCore {
 
         static const JSC::GlobalObjectMethodTable s_globalObjectMethodTable;
 
-        static bool supportsProfiling(const JSC::JSGlobalObject*);
         static bool supportsRichSourceInfo(const JSC::JSGlobalObject*);
         static bool shouldInterruptScript(const JSC::JSGlobalObject*);
         static bool shouldInterruptScriptBeforeTimeout(const JSC::JSGlobalObject*);
         static JSC::RuntimeFlags javaScriptRuntimeFlags(const JSC::JSGlobalObject*);
-        static void queueTaskToEventLoop(const JSC::JSGlobalObject*, PassRefPtr<JSC::Microtask>);
+        static void queueTaskToEventLoop(const JSC::JSGlobalObject*, Ref<JSC::Microtask>&&);
         
         void printErrorMessage(const String&) const;
 
         JSDOMWindowShell* shell() const;
 
-        static JSC::VM& commonVM();
         static void fireFrameClearedWatchpointsForWindow(DOMWindow*);
+        static void visitChildren(JSC::JSCell*, JSC::SlotVisitor&);
 
     protected:
         JSC::WatchpointSet m_windowCloseWatchpoints;
 
     private:
-        RefPtr<DOMWindow> m_impl;
+        static JSC::JSInternalPromise* moduleLoaderResolve(JSC::JSGlobalObject*, JSC::ExecState*, JSC::JSModuleLoader*, JSC::JSValue, JSC::JSValue, JSC::JSValue);
+        static JSC::JSInternalPromise* moduleLoaderFetch(JSC::JSGlobalObject*, JSC::ExecState*, JSC::JSModuleLoader*, JSC::JSValue, JSC::JSValue);
+        static JSC::JSValue moduleLoaderEvaluate(JSC::JSGlobalObject*, JSC::ExecState*, JSC::JSModuleLoader*, JSC::JSValue, JSC::JSValue, JSC::JSValue);
+
+        RefPtr<DOMWindow> m_wrapped;
         JSDOMWindowShell* m_shell;
     };
 
     // Returns a JSDOMWindow or jsNull()
     // JSDOMGlobalObject* is ignored, accessing a window in any context will
     // use that DOMWindow's prototype chain.
-    WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMWindow*);
-    JSC::JSValue toJS(JSC::ExecState*, DOMWindow*);
+    WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMWindow&);
+    inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMWindow* window) { return window ? toJS(exec, globalObject, *window) : JSC::jsNull(); }
+    JSC::JSValue toJS(JSC::ExecState*, DOMWindow&);
+    inline JSC::JSValue toJS(JSC::ExecState* exec, DOMWindow* window) { return window ? toJS(exec, *window) : JSC::jsNull(); }
 
     // Returns JSDOMWindow or 0
     JSDOMWindow* toJSDOMWindow(Frame*, DOMWrapperWorld&);
     WEBCORE_EXPORT JSDOMWindow* toJSDOMWindow(JSC::JSValue);
 
 } // namespace WebCore
-
-#endif // JSDOMWindowBase_h

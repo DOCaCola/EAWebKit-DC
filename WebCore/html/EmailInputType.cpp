@@ -28,15 +28,14 @@
 #include "HTMLParserIdioms.h"
 #include "InputTypeNames.h"
 #include "LocalizedStrings.h"
+#include <wtf/NeverDestroyed.h>
 #include <wtf/text/StringBuilder.h>
 #include <yarr/RegularExpression.h>
 
 namespace WebCore {
 
-static const char emailPattern[] =
-    "[a-z0-9!#$%&'*+/=?^_`{|}~.-]+" // local part
-    "@"
-    "[a-z0-9-]+(\\.[a-z0-9-]+)*"; // domain part
+// From https://html.spec.whatwg.org/#valid-e-mail-address.
+static const char emailPattern[] = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 
 static bool isValidEmailAddress(const String& address)
 {
@@ -44,10 +43,10 @@ static bool isValidEmailAddress(const String& address)
     if (!addressLength)
         return false;
 
-    DEPRECATED_DEFINE_STATIC_LOCAL(const JSC::Yarr::RegularExpression, regExp, (emailPattern, TextCaseInsensitive));
+    static NeverDestroyed<const JSC::Yarr::RegularExpression> regExp(emailPattern, TextCaseInsensitive);
 
     int matchLength;
-    int matchOffset = regExp.match(address, 0, &matchLength);
+    int matchOffset = regExp.get().match(address, 0, &matchLength);
 
     return !matchOffset && matchLength == addressLength;
 }
@@ -65,8 +64,8 @@ bool EmailInputType::typeMismatchFor(const String& value) const
         return !isValidEmailAddress(value);
     Vector<String> addresses;
     value.split(',', true, addresses);
-    for (unsigned i = 0; i < addresses.size(); ++i) {
-        if (!isValidEmailAddress(stripLeadingAndTrailingHTMLSpaces(addresses[i])))
+    for (auto& address : addresses) {
+        if (!isValidEmailAddress(stripLeadingAndTrailingHTMLSpaces(address)))
             return true;
     }
     return false;

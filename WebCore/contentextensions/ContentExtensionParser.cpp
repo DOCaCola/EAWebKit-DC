@@ -28,15 +28,16 @@
 
 #if ENABLE(CONTENT_EXTENSIONS)
 
+#include "CSSParser.h"
+#include "CSSParserMode.h"
+#include "CSSSelectorList.h"
 #include "ContentExtensionError.h"
 #include "ContentExtensionRule.h"
 #include "ContentExtensionsBackend.h"
 #include "ContentExtensionsDebugging.h"
-#include <JavaScriptCore/IdentifierInlines.h>
-#include <JavaScriptCore/JSCJSValueInlines.h>
+#include <JavaScriptCore/JSCInlines.h>
 #include <JavaScriptCore/JSGlobalObject.h>
 #include <JavaScriptCore/JSONObject.h>
-#include <JavaScriptCore/StructureInlines.h>
 #include <JavaScriptCore/VM.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/text/WTFString.h>
@@ -57,22 +58,24 @@ static bool containsOnlyASCIIWithNoUppercase(const String& domain)
     return true;
 }
     
-static std::error_code getDomainList(ExecState& exec, JSObject* arrayObject, Vector<String>& vector)
+static std::error_code getDomainList(ExecState& exec, const JSObject* arrayObject, Vector<String>& vector)
 {
+    VM& vm = exec.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     ASSERT(vector.isEmpty());
     if (!arrayObject || !isJSArray(arrayObject))
         return ContentExtensionError::JSONInvalidDomainList;
-    JSArray* array = jsCast<JSArray*>(arrayObject);
+    const JSArray* array = jsCast<const JSArray*>(arrayObject);
     
     unsigned length = array->length();
     for (unsigned i = 0; i < length; ++i) {
-        // FIXME: JSObject::getIndex should be marked as const.
-        JSValue value = array->getIndex(&exec, i);
-        if (exec.hadException() || !value.isString())
+        const JSValue value = array->getIndex(&exec, i);
+        if (scope.exception() || !value.isString())
             return ContentExtensionError::JSONInvalidDomainList;
         
         // Domains should be punycode encoded lower case.
-        const String& domain = jsCast<JSString*>(value)->value(&exec);
+        const String& domain = asString(value)->value(&exec);
         if (domain.isEmpty())
             return ContentExtensionError::JSONInvalidDomainList;
         if (!containsOnlyASCIIWithNoUppercase(domain))
@@ -84,19 +87,23 @@ static std::error_code getDomainList(ExecState& exec, JSObject* arrayObject, Vec
 
 static std::error_code getTypeFlags(ExecState& exec, const JSValue& typeValue, ResourceFlags& flags, uint16_t (*stringToType)(const String&))
 {
+    VM& vm = exec.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     if (!typeValue.isObject())
         return { };
 
-    JSObject* object = typeValue.toObject(&exec);
+    const JSObject* object = typeValue.toObject(&exec);
+    ASSERT(!scope.exception());
     if (!isJSArray(object))
         return ContentExtensionError::JSONInvalidTriggerFlagsArray;
 
-    JSArray* array = jsCast<JSArray*>(object);
+    const JSArray* array = jsCast<const JSArray*>(object);
     
     unsigned length = array->length();
     for (unsigned i = 0; i < length; ++i) {
-        JSValue value = array->getIndex(&exec, i);
-        if (exec.hadException() || !value)
+        const JSValue value = array->getIndex(&exec, i);
+        if (scope.exception() || !value)
             return ContentExtensionError::JSONInvalidObjectInTriggerFlagsArray;
         
         String name = value.toWTFString(&exec);
@@ -110,44 +117,47 @@ static std::error_code getTypeFlags(ExecState& exec, const JSValue& typeValue, R
     return { };
 }
     
-static std::error_code loadTrigger(ExecState& exec, JSObject& ruleObject, Trigger& trigger)
+static std::error_code loadTrigger(ExecState& exec, const JSObject& ruleObject, Trigger& trigger)
 {
-    JSValue triggerObject = ruleObject.get(&exec, Identifier::fromString(&exec, "trigger"));
-    if (!triggerObject || exec.hadException() || !triggerObject.isObject())
+    VM& vm = exec.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    const JSValue triggerObject = ruleObject.get(&exec, Identifier::fromString(&exec, "trigger"));
+    if (!triggerObject || scope.exception() || !triggerObject.isObject())
         return ContentExtensionError::JSONInvalidTrigger;
     
-    JSValue urlFilterObject = triggerObject.get(&exec, Identifier::fromString(&exec, "url-filter"));
-    if (!urlFilterObject || exec.hadException() || !urlFilterObject.isString())
+    const JSValue urlFilterObject = triggerObject.get(&exec, Identifier::fromString(&exec, "url-filter"));
+    if (!urlFilterObject || scope.exception() || !urlFilterObject.isString())
         return ContentExtensionError::JSONInvalidURLFilterInTrigger;
 
-    String urlFilter = urlFilterObject.toWTFString(&exec);
+    String urlFilter = asString(urlFilterObject)->value(&exec);
     if (urlFilter.isEmpty())
         return ContentExtensionError::JSONInvalidURLFilterInTrigger;
 
     trigger.urlFilter = urlFilter;
 
-    JSValue urlFilterCaseValue = triggerObject.get(&exec, Identifier::fromString(&exec, "url-filter-is-case-sensitive"));
-    if (urlFilterCaseValue && !exec.hadException() && urlFilterCaseValue.isBoolean())
+    const JSValue urlFilterCaseValue = triggerObject.get(&exec, Identifier::fromString(&exec, "url-filter-is-case-sensitive"));
+    if (urlFilterCaseValue && !scope.exception() && urlFilterCaseValue.isBoolean())
         trigger.urlFilterIsCaseSensitive = urlFilterCaseValue.toBoolean(&exec);
 
-    JSValue resourceTypeValue = triggerObject.get(&exec, Identifier::fromString(&exec, "resource-type"));
-    if (!exec.hadException() && resourceTypeValue.isObject()) {
+    const JSValue resourceTypeValue = triggerObject.get(&exec, Identifier::fromString(&exec, "resource-type"));
+    if (!scope.exception() && resourceTypeValue.isObject()) {
         auto typeFlagsError = getTypeFlags(exec, resourceTypeValue, trigger.flags, readResourceType);
         if (typeFlagsError)
             return typeFlagsError;
     } else if (!resourceTypeValue.isUndefined())
         return ContentExtensionError::JSONInvalidTriggerFlagsArray;
 
-    JSValue loadTypeValue = triggerObject.get(&exec, Identifier::fromString(&exec, "load-type"));
-    if (!exec.hadException() && loadTypeValue.isObject()) {
+    const JSValue loadTypeValue = triggerObject.get(&exec, Identifier::fromString(&exec, "load-type"));
+    if (!scope.exception() && loadTypeValue.isObject()) {
         auto typeFlagsError = getTypeFlags(exec, loadTypeValue, trigger.flags, readLoadType);
         if (typeFlagsError)
             return typeFlagsError;
     } else if (!loadTypeValue.isUndefined())
         return ContentExtensionError::JSONInvalidTriggerFlagsArray;
 
-    JSValue ifDomain = triggerObject.get(&exec, Identifier::fromString(&exec, "if-domain"));
-    if (!exec.hadException() && ifDomain.isObject()) {
+    const JSValue ifDomain = triggerObject.get(&exec, Identifier::fromString(&exec, "if-domain"));
+    if (!scope.exception() && ifDomain.isObject()) {
         auto ifDomainError = getDomainList(exec, asObject(ifDomain), trigger.domains);
         if (ifDomainError)
             return ifDomainError;
@@ -158,8 +168,8 @@ static std::error_code loadTrigger(ExecState& exec, JSObject& ruleObject, Trigge
     } else if (!ifDomain.isUndefined())
         return ContentExtensionError::JSONInvalidDomainList;
     
-    JSValue unlessDomain = triggerObject.get(&exec, Identifier::fromString(&exec, "unless-domain"));
-    if (!exec.hadException() && unlessDomain.isObject()) {
+    const JSValue unlessDomain = triggerObject.get(&exec, Identifier::fromString(&exec, "unless-domain"));
+    if (!scope.exception() && unlessDomain.isObject()) {
         if (trigger.domainCondition != Trigger::DomainCondition::None)
             return ContentExtensionError::JSONUnlessAndIfDomain;
         auto unlessDomainError = getDomainList(exec, asObject(unlessDomain), trigger.domains);
@@ -174,17 +184,30 @@ static std::error_code loadTrigger(ExecState& exec, JSObject& ruleObject, Trigge
     return { };
 }
 
-static std::error_code loadAction(ExecState& exec, JSObject& ruleObject, Action& action)
+static bool isValidSelector(const String& selector)
 {
-    JSValue actionObject = ruleObject.get(&exec, Identifier::fromString(&exec, "action"));
-    if (!actionObject || exec.hadException() || !actionObject.isObject())
+    CSSParserContext context(HTMLQuirksMode);
+    CSSParser parser(context);
+    CSSSelectorList selectorList;
+    parser.parseSelector(selector, selectorList);
+    return selectorList.isValid();
+}
+
+static std::error_code loadAction(ExecState& exec, const JSObject& ruleObject, Action& action, bool& validSelector)
+{
+    VM& vm = exec.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    validSelector = true;
+    const JSValue actionObject = ruleObject.get(&exec, Identifier::fromString(&exec, "action"));
+    if (!actionObject || scope.exception() || !actionObject.isObject())
         return ContentExtensionError::JSONInvalidAction;
 
-    JSValue typeObject = actionObject.get(&exec, Identifier::fromString(&exec, "type"));
-    if (!typeObject || exec.hadException() || !typeObject.isString())
+    const JSValue typeObject = actionObject.get(&exec, Identifier::fromString(&exec, "type"));
+    if (!typeObject || scope.exception() || !typeObject.isString())
         return ContentExtensionError::JSONInvalidActionType;
 
-    String actionType = typeObject.toWTFString(&exec);
+    String actionType = asString(typeObject)->value(&exec);
 
     if (actionType == "block")
         action = ActionType::BlockLoad;
@@ -194,17 +217,25 @@ static std::error_code loadAction(ExecState& exec, JSObject& ruleObject, Action&
         action = ActionType::BlockCookies;
     else if (actionType == "css-display-none") {
         JSValue selector = actionObject.get(&exec, Identifier::fromString(&exec, "selector"));
-        if (!selector || exec.hadException() || !selector.isString())
+        if (!selector || scope.exception() || !selector.isString())
             return ContentExtensionError::JSONInvalidCSSDisplayNoneActionType;
 
-        action = Action(ActionType::CSSDisplayNoneSelector, selector.toWTFString(&exec));
+        String selectorString = asString(selector)->value(&exec);
+        if (!isValidSelector(selectorString)) {
+            // Skip rules with invalid selectors to be backwards-compatible.
+            validSelector = false;
+            return { };
+        }
+        action = Action(ActionType::CSSDisplayNoneSelector, selectorString);
+    } else if (actionType == "make-https") {
+        action = ActionType::MakeHTTPS;
     } else
         return ContentExtensionError::JSONInvalidActionType;
 
     return { };
 }
 
-static std::error_code loadRule(ExecState& exec, JSObject& ruleObject, Vector<ContentExtensionRule>& ruleList)
+static std::error_code loadRule(ExecState& exec, const JSObject& ruleObject, Vector<ContentExtensionRule>& ruleList)
 {
     Trigger trigger;
     auto triggerError = loadTrigger(exec, ruleObject, trigger);
@@ -212,33 +243,38 @@ static std::error_code loadRule(ExecState& exec, JSObject& ruleObject, Vector<Co
         return triggerError;
 
     Action action;
-    auto actionError = loadAction(exec, ruleObject, action);
+    bool validSelector;
+    auto actionError = loadAction(exec, ruleObject, action, validSelector);
     if (actionError)
         return actionError;
 
-    ruleList.append(ContentExtensionRule(trigger, action));
+    if (validSelector)
+        ruleList.append(ContentExtensionRule(trigger, action));
     return { };
 }
 
 static std::error_code loadEncodedRules(ExecState& exec, const String& rules, Vector<ContentExtensionRule>& ruleList)
 {
-    // FIXME: JSONParse should require callbacks instead of an ExecState.
-    JSValue decodedRules = JSONParse(&exec, rules);
+    VM& vm = exec.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-    if (exec.hadException() || !decodedRules)
+    // FIXME: JSONParse should require callbacks instead of an ExecState.
+    const JSValue decodedRules = JSONParse(&exec, rules);
+
+    if (scope.exception() || !decodedRules)
         return ContentExtensionError::JSONInvalid;
 
     if (!decodedRules.isObject())
         return ContentExtensionError::JSONTopLevelStructureNotAnObject;
 
-    JSObject* topLevelObject = decodedRules.toObject(&exec);
-    if (!topLevelObject || exec.hadException())
+    const JSObject* topLevelObject = decodedRules.toObject(&exec);
+    if (!topLevelObject || scope.exception())
         return ContentExtensionError::JSONTopLevelStructureNotAnObject;
     
     if (!isJSArray(topLevelObject))
         return ContentExtensionError::JSONTopLevelStructureNotAnArray;
 
-    JSArray* topLevelArray = jsCast<JSArray*>(topLevelObject);
+    const JSArray* topLevelArray = jsCast<const JSArray*>(topLevelObject);
 
     Vector<ContentExtensionRule> localRuleList;
 
@@ -247,12 +283,12 @@ static std::error_code loadEncodedRules(ExecState& exec, const String& rules, Ve
     if (length > maxRuleCount)
         return ContentExtensionError::JSONTooManyRules;
     for (unsigned i = 0; i < length; ++i) {
-        JSValue value = topLevelArray->getIndex(&exec, i);
-        if (exec.hadException() || !value)
+        const JSValue value = topLevelArray->getIndex(&exec, i);
+        if (scope.exception() || !value)
             return ContentExtensionError::JSONInvalidObjectInTopLevelArray;
 
-        JSObject* ruleObject = value.toObject(&exec);
-        if (!ruleObject || exec.hadException())
+        const JSObject* ruleObject = value.toObject(&exec);
+        if (!ruleObject || scope.exception())
             return ContentExtensionError::JSONInvalidRule;
 
         auto error = loadRule(exec, *ruleObject, localRuleList);
@@ -260,7 +296,7 @@ static std::error_code loadEncodedRules(ExecState& exec, const String& rules, Ve
             return error;
     }
 
-    ruleList = WTF::move(localRuleList);
+    ruleList = WTFMove(localRuleList);
     return { };
 }
 

@@ -23,33 +23,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef AnimationEvent_h
-#define AnimationEvent_h
+#pragma once
 
 #include "Event.h"
 
 namespace WebCore {
 
-struct AnimationEventInit : public EventInit {
-    AnimationEventInit();
-
-    String animationName;
-    double elapsedTime;
-};
-
 class AnimationEvent final : public Event {
 public:
-    static Ref<AnimationEvent> create()
-    {
-        return adoptRef(*new AnimationEvent);
-    }
     static Ref<AnimationEvent> create(const AtomicString& type, const String& animationName, double elapsedTime)
     {
         return adoptRef(*new AnimationEvent(type, animationName, elapsedTime));
     }
-    static Ref<AnimationEvent> create(const AtomicString& type, const AnimationEventInit& initializer)
+
+    struct Init : EventInit {
+        String animationName;
+        double elapsedTime { 0 };
+    };
+
+    static Ref<AnimationEvent> create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
     {
-        return adoptRef(*new AnimationEvent(type, initializer));
+        return adoptRef(*new AnimationEvent(type, initializer, isTrusted));
     }
 
     virtual ~AnimationEvent();
@@ -57,17 +51,14 @@ public:
     const String& animationName() const;
     double elapsedTime() const;
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
-    AnimationEvent();
     AnimationEvent(const AtomicString& type, const String& animationName, double elapsedTime);
-    AnimationEvent(const AtomicString&, const AnimationEventInit&);
+    AnimationEvent(const AtomicString&, const Init&, IsTrusted);
 
     String m_animationName;
     double m_elapsedTime;
 };
 
 } // namespace WebCore
-
-#endif // AnimationEvent_h

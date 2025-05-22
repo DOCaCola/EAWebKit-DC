@@ -23,9 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SimpleLineLayout_h
-#define SimpleLineLayout_h
+#pragma once
 
+#include "TextFlags.h"
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
@@ -46,19 +46,24 @@ struct Run {
 #if COMPILER(MSVC)
     Run() { }
 #endif
-    Run(unsigned start, unsigned end, float logicalLeft, float logicalRight, bool isEndOfLine)
-        : start(start)
-        , end(end)
+    Run(unsigned start, unsigned end, float logicalLeft, float logicalRight, bool isEndOfLine, bool hasHyphen)
+        : end(end)
+        , start(start)
         , isEndOfLine(isEndOfLine)
+        , hasHyphen(hasHyphen)
         , logicalLeft(logicalLeft)
         , logicalRight(logicalRight)
     { }
 
-    unsigned start;
-    unsigned end : 31;
+    unsigned end;
+    unsigned start : 30;
     unsigned isEndOfLine : 1;
+    unsigned hasHyphen : 1;
     float logicalLeft;
     float logicalRight;
+    // TODO: Move these optional items out of SimpleLineLayout::Run to a supplementary structure.
+    float expansion { 0 };
+    ExpansionBehavior expansionBehavior { ForbidLeadingExpansion | ForbidTrailingExpansion };
 };
 
 class Layout {
@@ -87,6 +92,4 @@ std::unique_ptr<Layout> create(RenderBlockFlow&);
 
 #if COMPILER(MSVC)
 #pragma warning(pop)
-#endif
-
 #endif

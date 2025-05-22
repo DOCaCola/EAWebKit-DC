@@ -34,21 +34,17 @@
 
 namespace WebCore {
 
-GeoNotifier::GeoNotifier(Geolocation& geolocation, PassRefPtr<PositionCallback> successCallback, PassRefPtr<PositionErrorCallback> errorCallback, PassRefPtr<PositionOptions> options)
+GeoNotifier::GeoNotifier(Geolocation& geolocation, Ref<PositionCallback>&& successCallback, RefPtr<PositionErrorCallback>&& errorCallback, PositionOptions&& options)
     : m_geolocation(geolocation)
-    , m_successCallback(successCallback)
-    , m_errorCallback(errorCallback)
-    , m_options(options)
+    , m_successCallback(WTFMove(successCallback))
+    , m_errorCallback(WTFMove(errorCallback))
+    , m_options(WTFMove(options))
     , m_timer(*this, &GeoNotifier::timerFired)
     , m_useCachedPosition(false)
 {
-    ASSERT(m_successCallback);
-    // If no options were supplied from JS, we should have created a default set
-    // of options in JSGeolocationCustom.cpp.
-    ASSERT(m_options);
 }
 
-void GeoNotifier::setFatalError(PassRefPtr<PositionError> error)
+void GeoNotifier::setFatalError(RefPtr<PositionError>&& error)
 {
     // If a fatal error has already been set, stick with it. This makes sure that
     // when permission is denied, this is the error reported, as required by the
@@ -56,7 +52,7 @@ void GeoNotifier::setFatalError(PassRefPtr<PositionError> error)
     if (m_fatalError)
         return;
 
-    m_fatalError = error;
+    m_fatalError = WTFMove(error);
     // An existing timer may not have a zero timeout.
     m_timer.stop();
     m_timer.startOneShot(0);
@@ -70,7 +66,7 @@ void GeoNotifier::setUseCachedPosition()
 
 bool GeoNotifier::hasZeroTimeout() const
 {
-    return m_options->hasTimeout() && !m_options->timeout();
+    return !m_options.timeout;
 }
 
 void GeoNotifier::runSuccessCallback(Geoposition* position)
@@ -91,8 +87,7 @@ void GeoNotifier::runErrorCallback(PositionError* error)
 
 void GeoNotifier::startTimerIfNeeded()
 {
-    if (m_options->hasTimeout())
-        m_timer.startOneShot(m_options->timeout() / 1000.0);
+    m_timer.startOneShot(m_options.timeout / 1000.0);
 }
 
 void GeoNotifier::stopTimer()
@@ -106,7 +101,7 @@ void GeoNotifier::timerFired()
 
     // Protect this GeoNotifier object, since it
     // could be deleted by a call to clearWatch in a callback.
-    Ref<GeoNotifier> protect(*this);
+    Ref<GeoNotifier> protectedThis(*this);
 
     // Test for fatal error first. This is required for the case where the Frame is
     // disconnected and requests are cancelled.

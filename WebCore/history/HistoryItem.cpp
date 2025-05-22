@@ -62,11 +62,6 @@ HistoryItem::HistoryItem()
     , m_itemSequenceNumber(generateSequenceNumber())
     , m_documentSequenceNumber(generateSequenceNumber())
     , m_pruningReason(PruningReason::None)
-#if PLATFORM(IOS)
-    , m_scale(0)
-    , m_scaleIsInitial(false)
-    , m_bookmarkID(0)
-#endif
 {
 }
 
@@ -80,12 +75,7 @@ HistoryItem::HistoryItem(const String& urlString, const String& title)
     , m_itemSequenceNumber(generateSequenceNumber())
     , m_documentSequenceNumber(generateSequenceNumber())
     , m_pruningReason(PruningReason::None)
-#if PLATFORM(IOS)
-    , m_scale(0)
-    , m_scaleIsInitial(false)
-    , m_bookmarkID(0)
-#endif
-{    
+{
     iconDatabase().retainIconForPageURL(m_urlString);
 }
 
@@ -100,33 +90,7 @@ HistoryItem::HistoryItem(const String& urlString, const String& title, const Str
     , m_itemSequenceNumber(generateSequenceNumber())
     , m_documentSequenceNumber(generateSequenceNumber())
     , m_pruningReason(PruningReason::None)
-#if PLATFORM(IOS)
-    , m_scale(0)
-    , m_scaleIsInitial(false)
-    , m_bookmarkID(0)
-#endif
 {
-    iconDatabase().retainIconForPageURL(m_urlString);
-}
-
-HistoryItem::HistoryItem(const URL& url, const String& target, const String& parent, const String& title)
-    : m_urlString(url.string())
-    , m_originalURLString(url.string())
-    , m_target(target)
-    , m_parent(parent)
-    , m_title(title)
-    , m_pageScaleFactor(0)
-    , m_lastVisitWasFailure(false)
-    , m_isTargetItem(false)
-    , m_itemSequenceNumber(generateSequenceNumber())
-    , m_documentSequenceNumber(generateSequenceNumber())
-    , m_pruningReason(PruningReason::None)
-#if PLATFORM(IOS)
-    , m_scale(0)
-    , m_scaleIsInitial(false)
-    , m_bookmarkID(0)
-#endif
-{    
     iconDatabase().retainIconForPageURL(m_urlString);
 }
 
@@ -142,10 +106,9 @@ inline HistoryItem::HistoryItem(const HistoryItem& item)
     , m_originalURLString(item.m_originalURLString)
     , m_referrer(item.m_referrer)
     , m_target(item.m_target)
-    , m_parent(item.m_parent)
     , m_title(item.m_title)
     , m_displayTitle(item.m_displayTitle)
-    , m_scrollPoint(item.m_scrollPoint)
+    , m_scrollPosition(item.m_scrollPosition)
     , m_pageScaleFactor(item.m_pageScaleFactor)
     , m_lastVisitWasFailure(item.m_lastVisitWasFailure)
     , m_isTargetItem(item.m_isTargetItem)
@@ -154,10 +117,9 @@ inline HistoryItem::HistoryItem(const HistoryItem& item)
     , m_formContentType(item.m_formContentType)
     , m_pruningReason(PruningReason::None)
 #if PLATFORM(IOS)
+    , m_obscuredInset(item.m_obscuredInset)
     , m_scale(item.m_scale)
     , m_scaleIsInitial(item.m_scaleIsInitial)
-    , m_bookmarkID(item.m_bookmarkID)
-    , m_sharedLinkUniqueIdentifier(item.m_sharedLinkUniqueIdentifier)
 #endif
 {
     if (item.m_formData)
@@ -167,9 +129,6 @@ inline HistoryItem::HistoryItem(const HistoryItem& item)
     m_children.reserveInitialCapacity(size);
     for (unsigned i = 0; i < size; ++i)
         m_children.uncheckedAppend(item.m_children[i]->copy());
-
-    if (item.m_redirectURLs)
-        m_redirectURLs = std::make_unique<Vector<String>>(*item.m_redirectURLs);
 }
 
 Ref<HistoryItem> HistoryItem::copy() const
@@ -185,14 +144,11 @@ void HistoryItem::reset()
     m_originalURLString = String();
     m_referrer = String();
     m_target = String();
-    m_parent = String();
     m_title = String();
     m_displayTitle = String();
 
     m_lastVisitWasFailure = false;
     m_isTargetItem = false;
-
-    m_redirectURLs = nullptr;
 
     m_itemSequenceNumber = generateSequenceNumber();
 
@@ -252,11 +208,6 @@ const String& HistoryItem::target() const
     return m_target;
 }
 
-const String& HistoryItem::parent() const
-{
-    return m_parent;
-}
-
 void HistoryItem::setAlternateTitle(const String& alternateTitle)
 {
     m_displayTitle = alternateTitle;
@@ -305,25 +256,19 @@ void HistoryItem::setTarget(const String& target)
     notifyHistoryItemChanged(this);
 }
 
-void HistoryItem::setParent(const String& parent)
+const IntPoint& HistoryItem::scrollPosition() const
 {
-    m_parent = parent;
+    return m_scrollPosition;
 }
 
-const IntPoint& HistoryItem::scrollPoint() const
+void HistoryItem::setScrollPosition(const IntPoint& position)
 {
-    return m_scrollPoint;
+    m_scrollPosition = position;
 }
 
-void HistoryItem::setScrollPoint(const IntPoint& point)
+void HistoryItem::clearScrollPosition()
 {
-    m_scrollPoint = point;
-}
-
-void HistoryItem::clearScrollPoint()
-{
-    m_scrollPoint.setX(0);
-    m_scrollPoint.setY(0);
+    m_scrollPosition = IntPoint();
 }
 
 float HistoryItem::pageScaleFactor() const
@@ -371,15 +316,15 @@ void HistoryItem::setIsTargetItem(bool flag)
     m_isTargetItem = flag;
 }
 
-void HistoryItem::setStateObject(PassRefPtr<SerializedScriptValue> object)
+void HistoryItem::setStateObject(RefPtr<SerializedScriptValue>&& object)
 {
-    m_stateObject = object;
+    m_stateObject = WTFMove(object);
 }
 
 void HistoryItem::addChildItem(Ref<HistoryItem>&& child)
 {
     ASSERT(!childItemWithTarget(child->target()));
-    m_children.append(WTF::move(child));
+    m_children.append(WTFMove(child));
 }
 
 void HistoryItem::setChildItem(Ref<HistoryItem>&& child)
@@ -389,11 +334,11 @@ void HistoryItem::setChildItem(Ref<HistoryItem>&& child)
     for (unsigned i = 0; i < size; ++i)  {
         if (m_children[i]->target() == child->target()) {
             child->setIsTargetItem(m_children[i]->isTargetItem());
-            m_children[i] = WTF::move(child);
+            m_children[i] = WTFMove(child);
             return;
         }
     }
-    m_children.append(WTF::move(child));
+    m_children.append(WTFMove(child));
 }
 
 HistoryItem* HistoryItem::childItemWithTarget(const String& target)
@@ -416,28 +361,7 @@ HistoryItem* HistoryItem::childItemWithDocumentSequenceNumber(long long number)
     return nullptr;
 }
 
-// <rdar://problem/4895849> HistoryItem::findTargetItem() should be replaced with a non-recursive method.
-HistoryItem* HistoryItem::findTargetItem()
-{
-    if (m_isTargetItem)
-        return this;
-    unsigned size = m_children.size();
-    for (unsigned i = 0; i < size; ++i) {
-        // FIXME: targetItem() cannot return null currently, which is wrong.
-        if (HistoryItem* match = m_children[i]->targetItem())
-            return match;
-    }
-    return nullptr;
-}
-
-HistoryItem* HistoryItem::targetItem()
-{
-    HistoryItem* foundItem = findTargetItem();
-    // FIXME: This should probably not fall back to |this|.
-    return foundItem ? foundItem : this;
-}
-
-const HistoryItemVector& HistoryItem::children() const
+const Vector<Ref<HistoryItem>>& HistoryItem::children() const
 {
     return m_children;
 }
@@ -450,18 +374,6 @@ bool HistoryItem::hasChildren() const
 void HistoryItem::clearChildren()
 {
     m_children.clear();
-}
-
-bool HistoryItem::isAncestorOf(const HistoryItem& item) const
-{
-    for (size_t i = 0; i < m_children.size(); ++i) {
-        auto& child = m_children[i].get();
-        if (&child == &item)
-            return true;
-        if (child.isAncestorOf(item))
-            return true;
-    }
-    return false;
 }
 
 // We do same-document navigation if going to a different item and if either of the following is true:
@@ -528,7 +440,7 @@ void HistoryItem::setFormInfoFromRequest(const ResourceRequest& request)
 {
     m_referrer = request.httpReferrer();
     
-    if (equalIgnoringCase(request.httpMethod(), "POST")) {
+    if (equalLettersIgnoringASCIICase(request.httpMethod(), "post")) {
         // FIXME: Eventually we have to make this smart enough to handle the case where
         // we have a stream for the body to handle the "data interspersed with files" feature.
         m_formData = request.httpBody();
@@ -539,9 +451,9 @@ void HistoryItem::setFormInfoFromRequest(const ResourceRequest& request)
     }
 }
 
-void HistoryItem::setFormData(PassRefPtr<FormData> formData)
+void HistoryItem::setFormData(RefPtr<FormData>&& formData)
 {
-    m_formData = formData;
+    m_formData = WTFMove(formData);
 }
 
 void HistoryItem::setFormContentType(const String& formContentType)
@@ -558,27 +470,6 @@ bool HistoryItem::isCurrentDocument(Document& document) const
 {
     // FIXME: We should find a better way to check if this is the current document.
     return equalIgnoringFragmentIdentifier(url(), document.url());
-}
-
-void HistoryItem::addRedirectURL(const String& url)
-{
-    if (!m_redirectURLs)
-        m_redirectURLs = std::make_unique<Vector<String>>();
-
-    // Our API allows us to store all the URLs in the redirect chain, but for
-    // now we only have a use for the final URL.
-    (*m_redirectURLs).resize(1);
-    (*m_redirectURLs)[0] = url;
-}
-
-Vector<String>* HistoryItem::redirectURLs() const
-{
-    return m_redirectURLs.get();
-}
-
-void HistoryItem::setRedirectURLs(std::unique_ptr<Vector<String>> redirectURLs)
-{
-    m_redirectURLs = WTF::move(redirectURLs);
 }
 
 void HistoryItem::notifyChanged()

@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef InlineBox_h
-#define InlineBox_h
+#pragma once
 
 #include "RenderBoxModelObject.h"
 #include "RenderText.h"
@@ -188,10 +187,6 @@ public:
         else
             setY(left);
     }
-    int pixelSnappedLogicalLeft() const { return logicalLeft(); }
-    int pixelSnappedLogicalRight() const { return ceilf(logicalRight()); }
-    int pixelSnappedLogicalTop() const { return logicalTop(); }
-    int pixelSnappedLogicalBottom() const { return ceilf(logicalBottom()); }
 
     // The logicalTop[ position is the top edge of the line box in a horizontal line and the left edge in a vertical line.
     float logicalTop() const { return isHorizontal() ? m_topLeft.y() : m_topLeft.x(); }
@@ -459,9 +454,7 @@ SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::ToValueTypeName) \
 SPECIALIZE_TYPE_TRAITS_END()
 
 #if ENABLE(TREE_DEBUGGING)
-// Outside the WebCore namespace for ease of invocation from gdb.
+// Outside the WebCore namespace for ease of invocation from the debugger.
 void showNodeTree(const WebCore::InlineBox*);
 void showLineTree(const WebCore::InlineBox*);
 #endif
-
-#endif // InlineBox_h

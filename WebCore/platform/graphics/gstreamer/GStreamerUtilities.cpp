@@ -1,5 +1,6 @@
 /*
- *  Copyright (C) 2012 Igalia S.L
+ *  Copyright (C) 2012, 2015, 2016 Igalia S.L
+ *  Copyright (C) 2015, 2016 Metrological Group B.V.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,11 +23,11 @@
 #if USE(GSTREAMER)
 #include "GStreamerUtilities.h"
 
+#include "GRefPtrGStreamer.h"
 #include "IntSize.h"
 
 #include <gst/audio/audio-info.h>
 #include <gst/gst.h>
-#include <gst/video/video-info.h>
 #include <wtf/MathExtras.h>
 #include <wtf/glib/GUniquePtr.h>
 
@@ -73,6 +74,22 @@ bool getVideoSizeAndFormatFromCaps(GstCaps* caps, WebCore::IntSize& size, GstVid
 
     return true;
 }
+
+bool getSampleVideoInfo(GstSample* sample, GstVideoInfo& videoInfo)
+{
+    if (!GST_IS_SAMPLE(sample))
+        return false;
+
+    GstCaps* caps = gst_sample_get_caps(sample);
+    if (!caps)
+        return false;
+
+    gst_video_info_init(&videoInfo);
+    if (!gst_video_info_from_caps(&videoInfo, caps))
+        return false;
+
+    return true;
+}
 #endif
 
 GstBuffer* createGstBuffer(GstBuffer* buffer)
@@ -103,17 +120,17 @@ char* getGstBufferDataPointer(GstBuffer* buffer)
     return reinterpret_cast<char*>(mapInfo->data);
 }
 
-void mapGstBuffer(GstBuffer* buffer)
+void mapGstBuffer(GstBuffer* buffer, uint32_t flags)
 {
     GstMapInfo* mapInfo = static_cast<GstMapInfo*>(fastMalloc(sizeof(GstMapInfo)));
-    if (!gst_buffer_map(buffer, mapInfo, GST_MAP_WRITE)) {
+    if (!gst_buffer_map(buffer, mapInfo, static_cast<GstMapFlags>(flags))) {
         fastFree(mapInfo);
         gst_buffer_unref(buffer);
         return;
     }
 
     GstMiniObject* miniObject = reinterpret_cast<GstMiniObject*>(buffer);
-    gst_mini_object_set_qdata(miniObject, g_quark_from_static_string(webkitGstMapInfoQuarkString), mapInfo, 0);
+    gst_mini_object_set_qdata(miniObject, g_quark_from_static_string(webkitGstMapInfoQuarkString), mapInfo, nullptr);
 }
 
 void unmapGstBuffer(GstBuffer* buffer)
@@ -166,9 +183,59 @@ GstClockTime toGstClockTime(float time)
     float microSeconds = modff(time, &seconds) * 1000000;
     GTimeVal timeValue;
     timeValue.tv_sec = static_cast<glong>(seconds);
-    timeValue.tv_usec = static_cast<glong>(roundf(microSeconds / 10000) * 10000);
+    timeValue.tv_usec = static_cast<glong>(floor(microSeconds + 0.5));
     return GST_TIMEVAL_TO_TIME(timeValue);
 }
+
+bool gstRegistryHasElementForMediaType(GList* elementFactories, const char* capsString)
+{
+    GRefPtr<GstCaps> caps = adoptGRef(gst_caps_from_string(capsString));
+    GList* candidates = gst_element_factory_list_filter(elementFactories, caps.get(), GST_PAD_SINK, false);
+    bool result = candidates;
+
+    gst_plugin_feature_list_free(candidates);
+    return result;
+}
+
+#if GST_CHECK_VERSION(1, 5, 3) && (ENABLE(LEGACY_ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA))
+GstElement* createGstDecryptor(const gchar* protectionSystem)
+{
+    GstElement* decryptor = nullptr;
+    GList* decryptors = gst_element_factory_list_get_elements(GST_ELEMENT_FACTORY_TYPE_DECRYPTOR, GST_RANK_MARGINAL);
+
+    GST_TRACE("looking for decryptor for %s", protectionSystem);
+
+    for (GList* walk = decryptors; !decryptor && walk; walk = g_list_next(walk)) {
+        GstElementFactory* factory = reinterpret_cast<GstElementFactory*>(walk->data);
+
+        GST_TRACE("checking factory %s", GST_OBJECT_NAME(factory));
+
+        for (const GList* current = gst_element_factory_get_static_pad_templates(factory); current && !decryptor; current = g_list_next(current)) {
+            GstStaticPadTemplate* staticPadTemplate = static_cast<GstStaticPadTemplate*>(current->data);
+            GRefPtr<GstCaps> caps = adoptGRef(gst_static_pad_template_get_caps(staticPadTemplate));
+            unsigned length = gst_caps_get_size(caps.get());
+
+            GST_TRACE("factory %s caps has size %u", GST_OBJECT_NAME(factory), length);
+            for (unsigned i = 0; !decryptor && i < length; ++i) {
+                GstStructure* structure = gst_caps_get_structure(caps.get(), i);
+                GST_TRACE("checking structure %s", gst_structure_get_name(structure));
+                if (gst_structure_has_field_typed(structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING)) {
+                    const gchar* sysId = gst_structure_get_string(structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD);
+                    GST_TRACE("structure %s has protection system %s", gst_structure_get_name(structure), sysId);
+                    if (!g_ascii_strcasecmp(protectionSystem, sysId)) {
+                        GST_DEBUG("found decryptor %s for %s", GST_OBJECT_NAME(factory), protectionSystem);
+                        decryptor = gst_element_factory_create(factory, nullptr);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    gst_plugin_feature_list_free(decryptors);
+    GST_TRACE("returning decryptor %p", decryptor);
+    return decryptor;
+}
+#endif
 
 }
 

@@ -44,8 +44,8 @@ namespace WebCore {
 
 using namespace std;
 
-RenderRubyRun::RenderRubyRun(Document& document, Ref<RenderStyle>&& style)
-    : RenderBlockFlow(document, WTF::move(style))
+RenderRubyRun::RenderRubyRun(Document& document, RenderStyle&& style)
+    : RenderBlockFlow(document, WTFMove(style))
     , m_lastCharacter(0)
     , m_secondToLastCharacter(0)
 {
@@ -69,11 +69,6 @@ bool RenderRubyRun::hasRubyBase() const
     // The only place where a ruby base can be is in the last position
     // Note: As anonymous blocks, ruby runs do not have ':before' or ':after' content themselves.
     return lastChild() && lastChild()->isRubyBase();
-}
-
-bool RenderRubyRun::isEmpty() const
-{
-    return !hasRubyText() && !hasRubyBase();
 }
 
 RenderRubyText* RenderRubyRun::rubyText() const
@@ -106,7 +101,7 @@ RenderBlock* RenderRubyRun::firstLineBlock() const
     return 0;
 }
 
-void RenderRubyRun::updateFirstLetter()
+void RenderRubyRun::updateFirstLetter(RenderTreeMutationIsAllowed)
 {
 }
 
@@ -172,7 +167,7 @@ void RenderRubyRun::removeChild(RenderObject& child)
             if (rightRun.hasRubyBase()) {
                 RenderRubyBase* rightBase = rightRun.rubyBaseSafe();
                 // Collect all children in a single base, then swap the bases.
-                rightBase->mergeChildrenWithBase(base);
+                rightBase->mergeChildrenWithBase(*base);
                 moveChildTo(&rightRun, base);
                 rightRun.moveChildTo(this, rightBase);
                 // The now empty ruby base will be removed below.
@@ -193,7 +188,7 @@ void RenderRubyRun::removeChild(RenderObject& child)
         }
 
         // If any of the above leaves the run empty, destroy it as well.
-        if (isEmpty()) {
+        if (!hasRubyText() && !hasRubyBase()) {
             parent()->removeChild(*this);
             deleteLines();
             destroy();
@@ -203,9 +198,9 @@ void RenderRubyRun::removeChild(RenderObject& child)
 
 RenderRubyBase* RenderRubyRun::createRubyBase() const
 {
-    auto newStyle = RenderStyle::createAnonymousStyleWithDisplay(&style(), BLOCK);
-    newStyle.get().setTextAlign(CENTER); // FIXME: use WEBKIT_CENTER?
-    auto renderer = new RenderRubyBase(document(), WTF::move(newStyle));
+    auto newStyle = RenderStyle::createAnonymousStyleWithDisplay(style(), BLOCK);
+    newStyle.setTextAlign(CENTER); // FIXME: use WEBKIT_CENTER?
+    auto renderer = new RenderRubyBase(document(), WTFMove(newStyle));
     renderer->initializeStyle();
     return renderer;
 }
@@ -213,7 +208,7 @@ RenderRubyBase* RenderRubyRun::createRubyBase() const
 RenderRubyRun* RenderRubyRun::staticCreateRubyRun(const RenderObject* parentRuby)
 {
     ASSERT(isRuby(parentRuby));
-    auto renderer = new RenderRubyRun(parentRuby->document(), RenderStyle::createAnonymousStyleWithDisplay(&parentRuby->style(), INLINE_BLOCK));
+    auto renderer = new RenderRubyRun(parentRuby->document(), RenderStyle::createAnonymousStyleWithDisplay(parentRuby->style(), INLINE_BLOCK));
     renderer->initializeStyle();
     return renderer;
 }
@@ -235,15 +230,26 @@ void RenderRubyRun::layout()
 {
     if (RenderRubyBase* base = rubyBase())
         base->reset();
-
     RenderBlockFlow::layout();
-    
+}
+
+void RenderRubyRun::layoutBlock(bool relayoutChildren, LayoutUnit pageHeight)
+{
+    if (!relayoutChildren) {
+        // Since the extra relayout in RenderBlockFlow::updateRubyForJustifiedText() causes the size of the RenderRubyText/RenderRubyBase
+        // dependent on the line's current expansion, whenever we relayout the RenderRubyRun, we need to relayout the RenderRubyBase/RenderRubyText as well.
+        // FIXME: We should take the expansion opportunities into account if possible.
+        relayoutChildren = style().textAlign() == JUSTIFY;
+    }
+
+    RenderBlockFlow::layoutBlock(relayoutChildren, pageHeight);
+
     RenderRubyText* rt = rubyText();
     if (!rt)
         return;
 
     rt->setLogicalLeft(0);
-    
+
     // Place the RenderRubyText such that its bottom is flush with the lineTop of the first line of the RenderRubyBase.
     LayoutUnit lastLineRubyTextBottom = rt->logicalHeight();
     LayoutUnit firstLineRubyTextTop = 0;

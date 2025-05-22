@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HTMLMediaElementMediaSession_h
-#define HTMLMediaElementMediaSession_h
+#pragma once
 
 #if ENABLE(MEDIA_SESSION) && ENABLE(VIDEO)
 
@@ -37,12 +36,10 @@ public:
     static const String& kind(HTMLMediaElement*);
     static void setKind(HTMLMediaElement*, const String&);
 
-    static MediaSession* session(HTMLMediaElement*, bool&);
+    static MediaSession* session(HTMLMediaElement*);
     static void setSession(HTMLMediaElement*, MediaSession*);
 };
 
 } // namespace WebCore
 
-#endif /* ENABLE(MEDIA_SESSION) && ENABLE(VIDEO) */
-
-#endif /* HTMLMediaElementMediaSession_h */
+#endif // ENABLE(MEDIA_SESSION) && ENABLE(VIDEO)

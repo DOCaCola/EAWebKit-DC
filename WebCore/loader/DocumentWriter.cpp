@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010. Adam Barth. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,6 +30,7 @@
 #include "config.h"
 #include "DocumentWriter.h"
 
+#include "ContentSecurityPolicy.h"
 #include "DOMImplementation.h"
 #include "DOMWindow.h"
 #include "Frame.h"
@@ -54,7 +56,7 @@ namespace WebCore {
 
 static inline bool canReferToParentFrameEncoding(const Frame* frame, const Frame* parentFrame) 
 {
-    return parentFrame && parentFrame->document()->securityOrigin()->canAccess(frame->document()->securityOrigin());
+    return parentFrame && parentFrame->document()->securityOrigin().canAccess(frame->document()->securityOrigin());
 }
     
 DocumentWriter::DocumentWriter(Frame* frame)
@@ -71,7 +73,18 @@ DocumentWriter::DocumentWriter(Frame* frame)
 void DocumentWriter::replaceDocument(const String& source, Document* ownerDocument)
 {
     m_frame->loader().stopAllLoaders();
+
+    // If we are in the midst of changing the frame's document, don't execute script
+    // that modifes the document further:
+    if (m_frame->documentIsBeingReplaced())
+        return;
+
     begin(m_frame->document()->url(), true, ownerDocument);
+
+    // begin() might fire an unload event, which will result in a situation where no new document has been attached,
+    // and the old document has been detached. Therefore, bail out if no document is attached.
+    if (!m_frame->document())
+        return;
 
     if (!source.isNull()) {
         if (!m_hasReceivedSomeData) {
@@ -138,8 +151,21 @@ void DocumentWriter::begin(const URL& urlReference, bool dispatch, Document* own
     else
         document->createDOMWindow();
 
+    // Per <http://www.w3.org/TR/upgrade-insecure-requests/>, we need to retain an ongoing set of upgraded
+    // requests in new navigation contexts. Although this information is present when we construct the
+    // Document object, it is discard in the subsequent 'clear' statements below. So, we must capture it
+    // so we can restore it.
+    HashSet<RefPtr<SecurityOrigin>> insecureNavigationRequestsToUpgrade;
+    if (auto* existingDocument = m_frame->document())
+        insecureNavigationRequestsToUpgrade = existingDocument->contentSecurityPolicy()->takeNavigationRequestsToUpgrade();
+    
     m_frame->loader().clear(document.ptr(), !shouldReuseDefaultView, !shouldReuseDefaultView);
     clear();
+
+    // m_frame->loader().clear() might fire unload event which could remove the view of the document.
+    // Bail out if document has no view.
+    if (!document->view())
+        return;
 
     if (!shouldReuseDefaultView)
         m_frame->script().updatePlatformScriptObjects();
@@ -147,11 +173,14 @@ void DocumentWriter::begin(const URL& urlReference, bool dispatch, Document* own
     m_frame->loader().setOutgoingReferrer(url);
     m_frame->setDocument(document.copyRef());
 
+    document->contentSecurityPolicy()->setInsecureNavigationRequestsToUpgrade(WTFMove(insecureNavigationRequestsToUpgrade));
+
     if (m_decoder)
         document->setDecoder(m_decoder.get());
     if (ownerDocument) {
         document->setCookieURL(ownerDocument->cookieURL());
         document->setSecurityOriginPolicy(ownerDocument->securityOriginPolicy());
+        document->setStrictMixedContentMode(ownerDocument->isStrictMixedContentMode());
     }
 
     m_frame->loader().didBeginDocument(dispatch);
@@ -189,7 +218,7 @@ TextResourceDecoder* DocumentWriter::createDecoderIfNeeded()
             m_decoder->setHintEncoding(parentFrame->document()->decoder());
         if (m_encoding.isEmpty()) {
             if (canReferToParentFrameEncoding(m_frame, parentFrame))
-                m_decoder->setEncoding(parentFrame->document()->inputEncoding(), TextResourceDecoder::EncodingFromParentFrame);
+                m_decoder->setEncoding(parentFrame->document()->textEncoding(), TextResourceDecoder::EncodingFromParentFrame);
         } else {
             m_decoder->setEncoding(m_encoding,
                 m_encodingWasChosenByUser ? TextResourceDecoder::UserChosenEncoding : TextResourceDecoder::EncodingFromHTTPHeader);

@@ -1,276 +1,303 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2016 Metrological Group B.V.
+ * Copyright (C) 2016 Igalia S.L.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials provided
+ *    with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
 #include "MediaKeySession.h"
 
-#if ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(ENCRYPTED_MEDIA)
 
 #include "CDM.h"
-#include "CDMSession.h"
-#include "Document.h"
-#include "Event.h"
-#include "GenericEventQueue.h"
-#include "MediaKeyError.h"
+#include "CDMInstance.h"
+#include "EventNames.h"
 #include "MediaKeyMessageEvent.h"
-#include "MediaKeys.h"
-#include "Settings.h"
+#include "MediaKeyMessageType.h"
+#include "MediaKeyStatusMap.h"
+#include "NotImplemented.h"
+#include "SharedBuffer.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-Ref<MediaKeySession> MediaKeySession::create(ScriptExecutionContext* context, MediaKeys* keys, const String& keySystem)
+Ref<MediaKeySession> MediaKeySession::create(ScriptExecutionContext& context, MediaKeySessionType sessionType, bool useDistinctiveIdentifier, Ref<CDM>&& implementation, Ref<CDMInstance>&& instance)
 {
-    auto session = adoptRef(*new MediaKeySession(context, keys, keySystem));
+    auto session = adoptRef(*new MediaKeySession(context, sessionType, useDistinctiveIdentifier, WTFMove(implementation), WTFMove(instance)));
     session->suspendIfNeeded();
     return session;
 }
 
-MediaKeySession::MediaKeySession(ScriptExecutionContext* context, MediaKeys* keys, const String& keySystem)
-    : ActiveDOMObject(context)
-    , m_keys(keys)
-    , m_keySystem(keySystem)
-    , m_asyncEventQueue(*this)
-    , m_session(keys->cdm()->createSession())
-    , m_keyRequestTimer(*this, &MediaKeySession::keyRequestTimerFired)
-    , m_addKeyTimer(*this, &MediaKeySession::addKeyTimerFired)
+MediaKeySession::MediaKeySession(ScriptExecutionContext& context, MediaKeySessionType sessionType, bool useDistinctiveIdentifier, Ref<CDM>&& implementation, Ref<CDMInstance>&& instance)
+    : ActiveDOMObject(&context)
+    , m_expiration(std::numeric_limits<double>::quiet_NaN())
+    , m_keyStatuses(MediaKeyStatusMap::create())
+    , m_useDistinctiveIdentifier(useDistinctiveIdentifier)
+    , m_sessionType(sessionType)
+    , m_implementation(WTFMove(implementation))
+    , m_instance(WTFMove(instance))
+    , m_eventQueue(*this)
+    , m_weakPtrFactory(this)
 {
-    m_session->setClient(this);
+    // https://w3c.github.io/encrypted-media/#dom-mediakeys-setservercertificate
+    // W3C Editor's Draft 09 November 2016
+    // createSession(), ctd.
+
+    // 3.1. Let the sessionId attribute be the empty string.
+    // 3.2. Let the expiration attribute be NaN.
+    // 3.3. Let the closed attribute be a new promise.
+    // 3.4. Let key status be a new empty MediaKeyStatusMap object, and initialize it as follows:
+    // 3.4.1. Let the size attribute be 0.
+    // 3.5. Let the session type value be sessionType.
+    // 3.6. Let the uninitialized value be true.
+    // 3.7. Let the callable value be false.
+    // 3.8. Let the use distinctive identifier value be this object's use distinctive identifier value.
+    // 3.9. Let the cdm implementation value be this object's cdm implementation.
+    // 3.10. Let the cdm instance value be this object's cdm instance.
+
+    UNUSED_PARAM(m_callable);
+    UNUSED_PARAM(m_sessionType);
+    UNUSED_PARAM(m_useDistinctiveIdentifier);
+    UNUSED_PARAM(m_closed);
+    UNUSED_PARAM(m_uninitialized);
 }
 
-MediaKeySession::~MediaKeySession()
-{
-    if (m_session) {
-        m_session->setClient(nullptr);
-        m_session = nullptr;
-    }
-
-    m_asyncEventQueue.cancelAllEvents();
-}
-
-void MediaKeySession::setError(MediaKeyError* error)
-{
-    m_error = error;
-}
-
-void MediaKeySession::close()
-{
-    if (m_session)
-        m_session->releaseKeys();
-}
-
-RefPtr<ArrayBuffer> MediaKeySession::cachedKeyForKeyId(const String& keyId) const
-{
-    return m_session ? m_session->cachedKeyForKeyID(keyId) : nullptr;
-}
+MediaKeySession::~MediaKeySession() = default;
 
 const String& MediaKeySession::sessionId() const
 {
-    return m_session->sessionId();
+    return m_sessionId;
 }
 
-void MediaKeySession::generateKeyRequest(const String& mimeType, Uint8Array* initData)
+double MediaKeySession::expiration() const
 {
-    m_pendingKeyRequests.append(PendingKeyRequest(mimeType, initData));
-    m_keyRequestTimer.startOneShot(0);
+    return m_expiration;
 }
 
-void MediaKeySession::keyRequestTimerFired()
+Ref<MediaKeyStatusMap> MediaKeySession::keyStatuses() const
 {
-    ASSERT(m_pendingKeyRequests.size());
-    if (!m_session)
-        return;
-
-    while (!m_pendingKeyRequests.isEmpty()) {
-        PendingKeyRequest request = m_pendingKeyRequests.takeFirst();
-
-        // NOTE: Continued from step 5 in MediaKeys::createSession().
-        // The user agent will asynchronously execute the following steps in the task:
-
-        // 1. Let cdm be the cdm loaded in the MediaKeys constructor.
-        // 2. Let destinationURL be null.
-        String destinationURL;
-        MediaKeyError::Code errorCode = 0;
-        unsigned long systemCode = 0;
-
-        // 3. Use cdm to generate a key request and follow the steps for the first matching condition from the following list:
-
-        RefPtr<Uint8Array> keyRequest = m_session->generateKeyRequest(request.mimeType, request.initData.get(), destinationURL, errorCode, systemCode);
-
-        // Otherwise [if a request is not successfully generated]:
-        if (!keyRequest) {
-            // 3.1. Create a new MediaKeyError object with the following attributes:
-            //      code = the appropriate MediaKeyError code
-            //      systemCode = a Key System-specific value, if provided, and 0 otherwise
-            // 3.2. Set the MediaKeySession object's error attribute to the error object created in the previous step.
-            // 3.3. queue a task to fire a simple event named keyerror at the MediaKeySession object.
-            sendError(errorCode, systemCode);
-            // 3.4. Abort the task.
-            continue;
-        }
-
-        // 4. queue a task to fire a simple event named keymessage at the new object
-        //    The event is of type MediaKeyMessageEvent and has:
-        //    message = key request
-        //    destinationURL = destinationURL
-        sendMessage(keyRequest.get(), destinationURL);
-    }
+    return m_keyStatuses.copyRef();
 }
 
-void MediaKeySession::update(Uint8Array* key, ExceptionCode& ec)
+void MediaKeySession::generateRequest(const AtomicString& initDataType, const BufferSource& initData, Ref<DeferredPromise>&& promise)
 {
-    // From <http://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/encrypted-media.html#dom-addkey>:
-    // The addKey(key) method must run the following steps:
-    // 1. If the first or second argument [sic] is null or an empty array, throw an INVALID_ACCESS_ERR.
-    // NOTE: the reference to a "second argument" is a spec bug.
-    if (!key || !key->length()) {
-        ec = INVALID_ACCESS_ERR;
+    // https://w3c.github.io/encrypted-media/#dom-mediakeysession-generaterequest
+    // W3C Editor's Draft 09 November 2016
+
+    // When this method is invoked, the user agent must run the following steps:
+    // 1. If this object is closed, return a promise rejected with an InvalidStateError.
+    // 2. If this object's uninitialized value is false, return a promise rejected with an InvalidStateError.
+    if (m_closed || !m_uninitialized) {
+        promise->reject(INVALID_STATE_ERR);
         return;
     }
 
-    // 2. Schedule a task to handle the call, providing key.
-    m_pendingKeys.append(key);
-    m_addKeyTimer.startOneShot(0);
-}
+    // 3. Let this object's uninitialized value be false.
+    m_uninitialized = false;
 
-void MediaKeySession::addKeyTimerFired()
-{
-    ASSERT(m_pendingKeys.size());
-    if (!m_session)
+    // 4. If initDataType is the empty string, return a promise rejected with a newly created TypeError.
+    // 5. If initData is an empty array, return a promise rejected with a newly created TypeError.
+    if (initDataType.isEmpty() || !initData.length()) {
+        promise->reject(TypeError);
         return;
-
-    while (!m_pendingKeys.isEmpty()) {
-        RefPtr<Uint8Array> pendingKey = m_pendingKeys.takeFirst();
-        unsigned short errorCode = 0;
-        unsigned long systemCode = 0;
-
-        // NOTE: Continued from step 2. of MediaKeySession::update()
-        // 2.1. Let cdm be the cdm loaded in the MediaKeys constructor.
-        // NOTE: This is m_session.
-        // 2.2. Let 'did store key' be false.
-        bool didStoreKey = false;
-        // 2.3. Let 'next message' be null.
-        RefPtr<Uint8Array> nextMessage;
-        // 2.4. Use cdm to handle key.
-        didStoreKey = m_session->update(pendingKey.get(), nextMessage, errorCode, systemCode);
-        // 2.5. If did store key is true and the media element is waiting for a key, queue a task to attempt to resume playback.
-        // TODO: Find and restart the media element
-
-        // 2.6. If next message is not null, queue a task to fire a simple event named keymessage at the MediaKeySession object.
-        //      The event is of type MediaKeyMessageEvent and has:
-        //      message = next message
-        //      destinationURL = null
-        if (nextMessage)
-            sendMessage(nextMessage.get(), emptyString());
-
-        // 2.7. If did store key is true, queue a task to fire a simple event named keyadded at the MediaKeySession object.
-        if (didStoreKey) {
-            RefPtr<Event> keyaddedEvent = Event::create(eventNames().webkitkeyaddedEvent, false, false);
-            keyaddedEvent->setTarget(this);
-            m_asyncEventQueue.enqueueEvent(keyaddedEvent.release());
-
-            keys()->keyAdded();
-        }
-
-        // 2.8. If any of the preceding steps in the task failed
-        if (errorCode) {
-            // 2.8.1. Create a new MediaKeyError object with the following attributes:
-            //        code = the appropriate MediaKeyError code
-            //        systemCode = a Key System-specific value, if provided, and 0 otherwise
-            // 2.8.2. Set the MediaKeySession object's error attribute to the error object created in the previous step.
-            // 2.8.3. queue a task to fire a simple event named keyerror at the MediaKeySession object.
-            sendError(errorCode, systemCode);
-            // 2.8.4. Abort the task.
-            // NOTE: no-op
-        }
     }
+
+    // 6. If the Key System implementation represented by this object's cdm implementation value does not support
+    //    initDataType as an Initialization Data Type, return a promise rejected with a NotSupportedError. String
+    //    comparison is case-sensitive.
+    if (!m_implementation->supportsInitDataType(initDataType)) {
+        promise->reject(NOT_SUPPORTED_ERR);
+        return;
+    }
+
+    // 7. Let init data be a copy of the contents of the initData parameter.
+    // 8. Let session type be this object's session type.
+    // 9. Let promise be a new promise.
+    // 10. Run the following steps in parallel:
+    m_taskQueue.enqueueTask([this, initData = SharedBuffer::create(initData.data(), initData.length()), initDataType, promise = WTFMove(promise)] () mutable {
+        // 10.1. If the init data is not valid for initDataType, reject promise with a newly created TypeError.
+        // 10.2. Let sanitized init data be a validated and sanitized version of init data.
+        RefPtr<SharedBuffer> sanitizedInitData = m_implementation->sanitizeInitData(initDataType, initData);
+
+        // 10.3. If the preceding step failed, reject promise with a newly created TypeError.
+        if (!sanitizedInitData) {
+            promise->reject(TypeError);
+            return;
+        }
+
+        // 10.4. If sanitized init data is empty, reject promise with a NotSupportedError.
+        if (sanitizedInitData->isEmpty()) {
+            promise->reject(NOT_SUPPORTED_ERR);
+            return;
+        }
+
+        // 10.5. Let session id be the empty string.
+        // 10.6. Let message be null.
+        // 10.7. Let message type be null.
+        // 10.8. Let cdm be the CDM instance represented by this object's cdm instance value.
+        // 10.9. Use the cdm to execute the following steps:
+        // 10.9.1. If the sanitized init data is not supported by the cdm, reject promise with a NotSupportedError.
+        if (!m_implementation->supportsInitData(initDataType, *sanitizedInitData)) {
+            promise->reject(NOT_SUPPORTED_ERR);
+            return;
+        }
+
+        // 10.9.2 Follow the steps for the value of session type from the following list:
+        CDMInstance::LicenseType requestedLicenseType;
+        switch (m_sessionType) {
+        case MediaKeySessionType::Temporary:
+            // ↳ "temporary"
+            // Let requested license type be a temporary non-persistable license.
+            requestedLicenseType = CDMInstance::LicenseType::Temporary;
+            break;
+        case MediaKeySessionType::PersistentLicense:
+            // ↳ "persistent-license"
+            // Let requested license type be a persistable license.
+            requestedLicenseType = CDMInstance::LicenseType::Persistable;
+            break;
+        case MediaKeySessionType::PersistentUsageRecord:
+            // ↳ "persistent-usage-record"
+            // 1. Initialize this object's record of key usage as follows.
+            //    Set the list of key IDs known to the session to an empty list.
+            m_recordOfKeyUsage.clear();
+
+            //    Set the first decrypt time to null.
+            m_firstDecryptTime = 0;
+
+            //    Set the latest decrypt time to null.
+            m_latestDecryptTime = 0;
+
+            // 2. Let requested license type be a non-persistable license that will
+            //    persist a record of key usage.
+            requestedLicenseType = CDMInstance::LicenseType::UsageRecord;
+            break;
+        }
+
+        m_instance->requestLicense(requestedLicenseType, initDataType, WTFMove(initData), [this, weakThis = m_weakPtrFactory.createWeakPtr(), promise = WTFMove(promise)] (Ref<SharedBuffer>&& message, const String& sessionId, bool needsIndividualization, CDMInstance::SuccessValue succeeded) mutable {
+            if (!weakThis)
+                return;
+
+            // 10.9.3. Let session id be a unique Session ID string.
+
+            MediaKeyMessageType messageType;
+            if (!needsIndividualization) {
+                // 10.9.4. If a license request for the requested license type can be generated based on the sanitized init data:
+                // 10.9.4.1. Let message be a license request for the requested license type generated based on the sanitized init data interpreted per initDataType.
+                // 10.9.4.2. Let message type be "license-request".
+                messageType = MediaKeyMessageType::LicenseRequest;
+            } else {
+                // 10.9.5. Otherwise:
+                // 10.9.5.1. Let message be the request that needs to be processed before a license request request for the requested license
+                //           type can be generated based on the sanitized init data.
+                // 10.9.5.2. Let message type reflect the type of message, either "license-request" or "individualization-request".
+                messageType = MediaKeyMessageType::IndividualizationRequest;
+            }
+
+            // 10.10. Queue a task to run the following steps:
+            m_taskQueue.enqueueTask([this, promise = WTFMove(promise), message = WTFMove(message), messageType, sessionId, succeeded] () mutable {
+                // 10.10.1. If any of the preceding steps failed, reject promise with a new DOMException whose name is the appropriate error name.
+                if (succeeded == CDMInstance::SuccessValue::Failed) {
+                    promise->reject(NOT_SUPPORTED_ERR);
+                    return;
+                }
+                // 10.10.2. Set the sessionId attribute to session id.
+                m_sessionId = sessionId;
+
+                // 10.9.3. Let this object's callable value be true.
+                m_callable = true;
+
+                // 10.9.3. Run the Queue a "message" Event algorithm on the session, providing message type and message.
+                enqueueMessage(messageType, message);
+
+                // 10.9.3. Resolve promise.
+                promise->resolve();
+            });
+        });
+    });
+
+    // 11. Return promise.
 }
 
-void MediaKeySession::sendMessage(Uint8Array* message, String destinationURL)
+void MediaKeySession::load(const String&, Ref<DeferredPromise>&&)
 {
-    MediaKeyMessageEventInit init;
-    init.bubbles = false;
-    init.cancelable = false;
-    init.message = message;
-    init.destinationURL = destinationURL;
-    RefPtr<MediaKeyMessageEvent> event = MediaKeyMessageEvent::create(eventNames().webkitkeymessageEvent, init);
-    event->setTarget(this);
-    m_asyncEventQueue.enqueueEvent(event.release());
+    notImplemented();
 }
 
-void MediaKeySession::sendError(CDMSessionClient::MediaKeyErrorCode errorCode, unsigned long systemCode)
+void MediaKeySession::update(const BufferSource&, Ref<DeferredPromise>&&)
 {
-    Ref<MediaKeyError> error = MediaKeyError::create(errorCode, systemCode).get();
-    setError(error.ptr());
-
-    RefPtr<Event> keyerrorEvent = Event::create(eventNames().webkitkeyerrorEvent, false, false);
-    keyerrorEvent->setTarget(this);
-    m_asyncEventQueue.enqueueEvent(keyerrorEvent.release());
+    notImplemented();
 }
 
-String MediaKeySession::mediaKeysStorageDirectory() const
+void MediaKeySession::close(Ref<DeferredPromise>&&)
 {
-    Document* document = downcast<Document>(scriptExecutionContext());
-    if (!document)
-        return emptyString();
+    notImplemented();
+}
 
-    Settings* settings = document->settings();
-    if (!settings)
-        return emptyString();
+void MediaKeySession::remove(Ref<DeferredPromise>&&)
+{
+    notImplemented();
+}
 
-    String storageDirectory = settings->mediaKeysStorageDirectory();
-    if (storageDirectory.isEmpty())
-        return emptyString();
+void MediaKeySession::enqueueMessage(MediaKeyMessageType messageType, const SharedBuffer& message)
+{
+    // 6.4.1 Queue a "message" Event
+    // https://w3c.github.io/encrypted-media/#queue-message
+    // W3C Editor's Draft 09 November 2016
 
-    SecurityOrigin* origin = document->securityOrigin();
-    if (!origin)
-        return emptyString();
-
-    return pathByAppendingComponent(storageDirectory, origin->databaseIdentifier());
+    // The following steps are run:
+    // 1. Let the session be the specified MediaKeySession object.
+    // 2. Queue a task to create an event named message that does not bubble and is not cancellable using the MediaKeyMessageEvent
+    //    interface with its type attribute set to message and its isTrusted attribute initialized to true, and dispatch it at the
+    //    session.
+    auto messageEvent = MediaKeyMessageEvent::create(eventNames().messageEvent, {messageType, message.createArrayBuffer()}, Event::IsTrusted::Yes);
+    m_eventQueue.enqueueEvent(WTFMove(messageEvent));
 }
 
 bool MediaKeySession::hasPendingActivity() const
 {
-    return (m_keys && !isClosed()) || m_asyncEventQueue.hasPendingEvents();
-}
-
-void MediaKeySession::stop()
-{
-    close();
+    notImplemented();
+    return false;
 }
 
 const char* MediaKeySession::activeDOMObjectName() const
 {
+    notImplemented();
     return "MediaKeySession";
 }
 
-bool MediaKeySession::canSuspendForPageCache() const
+bool MediaKeySession::canSuspendForDocumentSuspension() const
 {
-    // FIXME: We should try and do better here.
+    notImplemented();
     return false;
 }
 
+void MediaKeySession::stop()
+{
+    notImplemented();
 }
+
+} // namespace WebCore
 
 #endif

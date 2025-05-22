@@ -18,21 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef Pair_h
-#define Pair_h
+#pragma once
 
 #include <wtf/RefCounted.h>
-#include "CSSPrimitiveValue.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
+
+class CSSPrimitiveValue;
 
 // A primitive value representing a pair.  This is useful for properties like border-radius, background-size/position,
 // and border-spacing (all of which are space-separated sets of two values).  At the moment we are only using it for
 // border-radius and background-size, but (FIXME) border-spacing and background-position could be converted over to use
 // it (eliminating some extra -webkit- internal properties).
-class Pair : public RefCounted<Pair> {
+class Pair final : public RefCounted<Pair> {
 public:
     enum class IdenticalValueEncoding {
         DoNotCoalesce,
@@ -41,11 +39,11 @@ public:
 
     static Ref<Pair> create(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second)
     {
-        return adoptRef(*new Pair(WTF::move(first), WTF::move(second)));
+        return adoptRef(*new Pair(WTFMove(first), WTFMove(second)));
     }
     static Ref<Pair> create(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second, IdenticalValueEncoding encoding)
     {
-        return adoptRef(*new Pair(WTF::move(first), WTF::move(second), encoding));
+        return adoptRef(*new Pair(WTFMove(first), WTFMove(second), encoding));
     }
     virtual ~Pair() { }
 
@@ -64,8 +62,8 @@ public:
     bool equals(const Pair& other) const { return compareCSSValuePtr(m_first, other.m_first) && compareCSSValuePtr(m_second, other.m_second); }
 
 private:
-    Pair(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second) : m_first(WTF::move(first)), m_second(WTF::move(second)) { }
-    Pair(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second, IdenticalValueEncoding encoding) : m_first(WTF::move(first)), m_second(WTF::move(second)), m_encoding(encoding) { }
+    Pair(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second) : m_first(WTFMove(first)), m_second(WTFMove(second)) { }
+    Pair(RefPtr<CSSPrimitiveValue>&& first, RefPtr<CSSPrimitiveValue>&& second, IdenticalValueEncoding encoding) : m_first(WTFMove(first)), m_second(WTFMove(second)), m_encoding(encoding) { }
 
     RefPtr<CSSPrimitiveValue> m_first;
     RefPtr<CSSPrimitiveValue> m_second;
@@ -73,5 +71,3 @@ private:
 };
 
 } // namespace
-
-#endif

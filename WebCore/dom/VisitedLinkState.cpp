@@ -33,7 +33,6 @@
 #include "Frame.h"
 #include "HTMLAnchorElement.h"
 #include "Page.h"
-#include "PageGroup.h"
 #include "VisitedLinkStore.h"
 #include "XLinkNames.h"
 
@@ -41,12 +40,12 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-inline static const AtomicString* linkAttribute(Element& element)
+inline static const AtomicString* linkAttribute(const Element& element)
 {
     if (!element.isLink())
         return 0;
     if (element.isHTMLElement())
-        return &element.fastGetAttribute(HTMLNames::hrefAttr);
+        return &element.attributeWithoutSynchronization(HTMLNames::hrefAttr);
     if (element.isSVGElement())
         return &element.getAttribute(XLinkNames::hrefAttr);
     return 0;
@@ -63,11 +62,11 @@ void VisitedLinkState::invalidateStyleForAllLinks()
         return;
     for (auto& element : descendantsOfType<Element>(m_document)) {
         if (element.isLink())
-            element.setNeedsStyleRecalc();
+            element.invalidateStyleForSubtree();
     }
 }
 
-inline static LinkHash linkHashForElement(Document& document, Element& element)
+inline static LinkHash linkHashForElement(Document& document, const Element& element)
 {
     if (is<HTMLAnchorElement>(element))
         return downcast<HTMLAnchorElement>(element).visitedLinkHash();
@@ -82,11 +81,11 @@ void VisitedLinkState::invalidateStyleForLink(LinkHash linkHash)
         return;
     for (auto& element : descendantsOfType<Element>(m_document)) {
         if (linkHashForElement(m_document, element) == linkHash)
-            element.setNeedsStyleRecalc();
+            element.invalidateStyleForSubtree();
     }
 }
 
-EInsideLink VisitedLinkState::determineLinkStateSlowCase(Element& element)
+EInsideLink VisitedLinkState::determineLinkStateSlowCase(const Element& element)
 {
     ASSERT(element.isLink());
 

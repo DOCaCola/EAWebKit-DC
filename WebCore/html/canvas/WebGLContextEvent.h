@@ -23,47 +23,38 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebGLContextEvent_h
-#define WebGLContextEvent_h
+#pragma once
 
 #include "Event.h"
 
 namespace WebCore {
 
-struct WebGLContextEventInit : public EventInit {
-    WebGLContextEventInit();
-
-    String statusMessage;
-};
-
 class WebGLContextEvent final : public Event {
 public:
-    static Ref<WebGLContextEvent> create()
-    {
-        return adoptRef(*new WebGLContextEvent);
-    }
     static Ref<WebGLContextEvent> create(const AtomicString& type, bool canBubble, bool cancelable, const String& statusMessage)
     {
         return adoptRef(*new WebGLContextEvent(type, canBubble, cancelable, statusMessage));
     }
-    static Ref<WebGLContextEvent> create(const AtomicString& type, const WebGLContextEventInit& initializer)
+
+    struct Init : EventInit {
+        String statusMessage;
+    };
+
+    static Ref<WebGLContextEvent> create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
     {
-        return adoptRef(*new WebGLContextEvent(type, initializer));
+        return adoptRef(*new WebGLContextEvent(type, initializer, isTrusted));
     }
     virtual ~WebGLContextEvent();
 
     const String& statusMessage() const { return m_statusMessage; }
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
-    WebGLContextEvent();
     WebGLContextEvent(const AtomicString& type, bool canBubble, bool cancelable, const String& statusMessage);
-    WebGLContextEvent(const AtomicString&, const WebGLContextEventInit&);
+    WebGLContextEvent(const AtomicString&, const Init&, IsTrusted);
 
     String m_statusMessage;
 };
 
 } // namespace WebCore
-
-#endif // WebGLContextEvent_h

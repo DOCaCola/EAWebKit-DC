@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Google Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,23 +36,20 @@ using namespace JSC;
 
 namespace WebCore {
 
-JSValue JSCrypto::getRandomValues(ExecState* exec)
+JSValue JSCrypto::getRandomValues(ExecState& state)
 {
-    if (exec->argumentCount() < 1)
-        return exec->vm().throwException(exec, createNotEnoughArgumentsError(exec));
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-    JSValue buffer = exec->argument(0);
-    RefPtr<ArrayBufferView> arrayBufferView = toArrayBufferView(buffer);
+    if (state.argumentCount() < 1)
+        return throwException(&state, scope, createNotEnoughArgumentsError(&state));
+
+    JSValue buffer = state.argument(0);
+    auto arrayBufferView = toUnsharedArrayBufferView(buffer);
     if (!arrayBufferView)
-        return throwTypeError(exec);
+        return throwTypeError(&state, scope);
 
-    ExceptionCode ec = 0;
-    impl().getRandomValues(arrayBufferView.get(), ec);
-
-    if (ec) {
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
+    propagateException(state, scope, wrapped().getRandomValues(*arrayBufferView));
 
     return buffer;
 }

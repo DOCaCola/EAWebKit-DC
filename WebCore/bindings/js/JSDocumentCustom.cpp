@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008, 2009, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2007-2009, 2011, 2016 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,16 +25,17 @@
 #include "FrameLoader.h"
 #include "HTMLDocument.h"
 #include "JSCanvasRenderingContext2D.h"
+#include "JSDOMConvert.h"
 #include "JSDOMWindowCustom.h"
 #include "JSHTMLDocument.h"
 #include "JSLocation.h"
-#include "JSNodeOrString.h"
-#include "JSSVGDocument.h"
+#include "JSXMLDocument.h"
 #include "Location.h"
 #include "NodeTraversal.h"
 #include "SVGDocument.h"
 #include "ScriptController.h"
 #include "TouchList.h"
+#include "XMLDocument.h"
 #include <wtf/GetPtr.h>
 
 #if ENABLE(WEBGL)
@@ -50,102 +51,112 @@ using namespace JSC;
 
 namespace WebCore {
 
-JSValue JSDocument::location(ExecState* exec) const
+static inline JSValue createNewDocumentWrapper(ExecState& state, JSDOMGlobalObject& globalObject, Ref<Document>&& passedDocument)
 {
-    RefPtr<Frame> frame = impl().frame();
-    if (!frame)
-        return jsNull();
-
-    RefPtr<Location> location = frame->document()->domWindow()->location();
-    if (JSObject* wrapper = getCachedWrapper(globalObject()->world(), location.get()))
-        return wrapper;
-
-    JSLocation* jsLocation = JSLocation::create(getDOMStructure<JSLocation>(exec->vm(), globalObject()), globalObject(), *location);
-    cacheWrapper(globalObject()->world(), location.get(), jsLocation);
-    return jsLocation;
-}
-
-void JSDocument::setLocation(ExecState* exec, JSValue value)
-{
-    String locationString = value.toString(exec)->value(exec);
-    if (exec->hadException())
-        return;
-
-    RefPtr<Frame> frame = impl().frame();
-    if (!frame)
-        return;
-
-    if (RefPtr<Location> location = frame->document()->domWindow()->location())
-        location->setHref(locationString, activeDOMWindow(exec), firstDOMWindow(exec));
-}
-
-JSValue toJS(ExecState* exec, JSDOMGlobalObject* globalObject, Document* document)
-{
-    if (!document)
-        return jsNull();
-
-    JSObject* wrapper = getCachedWrapper(globalObject->world(), document);
-    if (wrapper)
-        return wrapper;
-
-    if (DOMWindow* domWindow = document->domWindow()) {
-        globalObject = toJSDOMWindow(toJS(exec, domWindow));
-        // Creating a wrapper for domWindow might have created a wrapper for document as well.
-        wrapper = getCachedWrapper(globalObject->world(), document);
-        if (wrapper)
-            return wrapper;
-    }
-
-    if (document->isHTMLDocument())
-        wrapper = CREATE_DOM_WRAPPER(globalObject, HTMLDocument, document);
-    else if (document->isSVGDocument())
-        wrapper = CREATE_DOM_WRAPPER(globalObject, SVGDocument, document);
+    auto& document = passedDocument.get();
+    JSObject* wrapper;
+    if (document.isHTMLDocument())
+        wrapper = createWrapper<HTMLDocument>(&globalObject, WTFMove(passedDocument));
+    else if (document.isXMLDocument())
+        wrapper = createWrapper<XMLDocument>(&globalObject, WTFMove(passedDocument));
     else
-        wrapper = CREATE_DOM_WRAPPER(globalObject, Document, document);
+        wrapper = createWrapper<Document>(&globalObject, WTFMove(passedDocument));
 
-    // Make sure the document is kept around by the window object, and works right with the
-    // back/forward cache.
-    if (!document->frame()) {
-        size_t nodeCount = 0;
-        for (Node* n = document; n; n = NodeTraversal::next(*n))
-            nodeCount++;
-        
-        // FIXME: Adopt reportExtraMemoryVisited, and switch to reportExtraMemoryAllocated.
-        // https://bugs.webkit.org/show_bug.cgi?id=142595
-        exec->heap()->deprecatedReportExtraMemory(nodeCount * sizeof(Node));
-    }
+    reportMemoryForDocumentIfFrameless(state, document);
 
     return wrapper;
 }
 
-JSValue JSDocument::prepend(ExecState* state)
+JSObject* cachedDocumentWrapper(ExecState& state, JSDOMGlobalObject& globalObject, Document& document)
 {
-    ExceptionCode ec = 0;
-    impl().prepend(toNodeOrStringVector(*state), ec);
-    setDOMException(state, ec);
+    if (auto* wrapper = getCachedWrapper(globalObject.world(), document))
+        return wrapper;
 
-    return jsUndefined();
+    auto* window = document.domWindow();
+    if (!window)
+        return nullptr;
+
+    // Creating a wrapper for domWindow might have created a wrapper for document as well.
+    return getCachedWrapper(toJSDOMWindow(toJS(&state, *window))->world(), document);
 }
 
-JSValue JSDocument::append(ExecState* state)
+void reportMemoryForDocumentIfFrameless(ExecState& state, Document& document)
 {
-    ExceptionCode ec = 0;
-    impl().append(toNodeOrStringVector(*state), ec);
-    setDOMException(state, ec);
+    // Make sure the document is kept around by the window object, and works right with the back/forward cache.
+    if (document.frame())
+        return;
 
-    return jsUndefined();
+    size_t memoryCost = 0;
+    for (Node* node = &document; node; node = NodeTraversal::next(*node))
+        memoryCost += node->approximateMemoryCost();
+
+    // FIXME: Adopt reportExtraMemoryVisited, and switch to reportExtraMemoryAllocated.
+    // https://bugs.webkit.org/show_bug.cgi?id=142595
+    state.heap()->deprecatedReportExtraMemory(memoryCost);
+}
+
+JSValue toJSNewlyCreated(ExecState* state, JSDOMGlobalObject* globalObject, Ref<Document>&& document)
+{
+    return createNewDocumentWrapper(*state, *globalObject, WTFMove(document));
+}
+
+JSValue toJS(ExecState* state, JSDOMGlobalObject* globalObject, Document& document)
+{
+    if (auto* wrapper = cachedDocumentWrapper(*state, *globalObject, document))
+        return wrapper;
+    return toJSNewlyCreated(state, globalObject, Ref<Document>(document));
 }
 
 #if ENABLE(TOUCH_EVENTS)
-JSValue JSDocument::createTouchList(ExecState* exec)
+JSValue JSDocument::createTouchList(ExecState& state)
 {
-    RefPtr<TouchList> touchList = TouchList::create();
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
 
-    for (size_t i = 0; i < exec->argumentCount(); i++)
-        touchList->append(JSTouch::toWrapped(exec->argument(i)));
+    auto touchList = TouchList::create();
 
-    return toJS(exec, globalObject(), touchList.release());
+    for (size_t i = 0; i < state.argumentCount(); ++i) {
+        auto* item = JSTouch::toWrapped(state.uncheckedArgument(i));
+        if (!item)
+            return JSValue::decode(throwArgumentTypeError(state, scope, i, "touches", "Document", "createTouchList", "Touch"));
+
+        touchList->append(*item);
+    }
+    return toJSNewlyCreated(&state, globalObject(), WTFMove(touchList));
 }
 #endif
+
+JSValue JSDocument::getCSSCanvasContext(JSC::ExecState& state)
+{
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    if (UNLIKELY(state.argumentCount() < 4))
+        return throwException(&state, scope, createNotEnoughArgumentsError(&state));
+    auto contextId = state.uncheckedArgument(0).toWTFString(&state);
+    RETURN_IF_EXCEPTION(scope, JSValue());
+    auto name = state.uncheckedArgument(1).toWTFString(&state);
+    RETURN_IF_EXCEPTION(scope, JSValue());
+    auto width = convert<IDLLong>(state, state.uncheckedArgument(2), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(scope, JSValue());
+    auto height = convert<IDLLong>(state, state.uncheckedArgument(3), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(scope, JSValue());
+
+    auto* context = wrapped().getCSSCanvasContext(WTFMove(contextId), WTFMove(name), WTFMove(width), WTFMove(height));
+    if (!context)
+        return jsNull();
+
+#if ENABLE(WEBGL)
+    if (is<WebGLRenderingContextBase>(*context))
+        return toJS(&state, globalObject(), downcast<WebGLRenderingContextBase>(*context));
+#endif
+
+    return toJS(&state, globalObject(), downcast<CanvasRenderingContext2D>(*context));
+}
+
+void JSDocument::visitAdditionalChildren(SlotVisitor& visitor)
+{
+    visitor.addOpaqueRoot(static_cast<ScriptExecutionContext*>(&wrapped()));
+}
 
 } // namespace WebCore

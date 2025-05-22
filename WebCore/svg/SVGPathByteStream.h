@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGPathByteStream_h
-#define SVGPathByteStream_h
+#pragma once
 
 #include <wtf/Noncopyable.h>
 #include <wtf/Vector.h>
@@ -49,6 +48,16 @@ public:
 
     SVGPathByteStream() { }
     SVGPathByteStream(const Data& data) : m_data(data) { }
+    
+    bool operator==(const SVGPathByteStream& other) const
+    {
+        return m_data == other.m_data;
+    }
+
+    bool operator!=(const SVGPathByteStream& other) const
+    {
+        return !(*this == other);
+    }
 
     std::unique_ptr<SVGPathByteStream> copy() const
     {
@@ -76,5 +85,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // SVGPathByteStream_h

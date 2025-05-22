@@ -23,14 +23,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-enum RTCIceTransportsEnum { "none", "relay", "all" };
-enum RTCIdentityOptionEnum { "yes", "no", "ifconfigured" };
+enum RTCIceTransportPolicy { "relay", "all" };
+enum RTCBundlePolicy { "balanced", "max-compat", "max-bundle" };
 
 [
-    Conditional=MEDIA_STREAM,
-    NoInterfaceObject,
-] interface RTCConfiguration {
-    readonly attribute RTCIceServer[] iceServers;
-    readonly attribute RTCIceTransportsEnum iceTransports;
-    readonly attribute RTCIdentityOptionEnum requestIdentity;
+    Conditional=WEB_RTC,
+    JSGenerateToJSObject,
+] dictionary RTCConfiguration {
+    sequence<RTCIceServer> iceServers;
+    RTCIceTransportPolicy iceTransportPolicy = "all";
+    RTCBundlePolicy bundlePolicy = "balanced";
 };

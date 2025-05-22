@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef ThemeTypes_h
-#define ThemeTypes_h
+#pragma once
 
 namespace WebCore {
 
@@ -38,8 +37,8 @@ enum ControlPart {
     MediaFullScreenVolumeSliderThumbPart, MediaMuteButtonPart, MediaOverlayPlayButtonPart,
     MediaPlayButtonPart, MediaReturnToRealtimeButtonPart, MediaRewindButtonPart, MediaSeekBackButtonPart,
     MediaSeekForwardButtonPart, MediaSliderPart, MediaSliderThumbPart, MediaTimeRemainingPart,
-    MediaToggleClosedCaptionsButtonPart, MediaVolumeSliderContainerPart, MediaVolumeSliderMuteButtonPart,
-    MediaVolumeSliderPart, MediaVolumeSliderThumbPart,
+    MediaToggleClosedCaptionsButtonPart, MediaVolumeSliderPart, MediaVolumeSliderContainerPart,
+    MediaVolumeSliderMuteButtonPart, MediaVolumeSliderThumbPart,
     MenulistPart, MenulistButtonPart, MenulistTextPart, MenulistTextFieldPart, MeterPart, ProgressBarPart, ProgressBarValuePart,
     SliderHorizontalPart, SliderVerticalPart, SliderThumbHorizontalPart,
     SliderThumbVerticalPart, CaretPart, SearchFieldPart, SearchFieldDecorationPart,
@@ -48,6 +47,9 @@ enum ControlPart {
     RelevancyLevelIndicatorPart, ContinuousCapacityLevelIndicatorPart, DiscreteCapacityLevelIndicatorPart, RatingLevelIndicatorPart,
 #if ENABLE(SERVICE_CONTROLS)
     ImageControlsButtonPart,
+#endif
+#if ENABLE(APPLE_PAY)
+    ApplePayButtonPart,
 #endif
     TextAreaPart,
 #if ENABLE(ATTACHMENT_ELEMENT)
@@ -73,4 +75,3 @@ enum ThemeColor {
 };
 
 }
-#endif

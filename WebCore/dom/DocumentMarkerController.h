@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef DocumentMarkerController_h
-#define DocumentMarkerController_h
+#pragma once
 
 #include "DocumentMarker.h"
 #include "IntRect.h"
@@ -35,6 +34,7 @@
 
 namespace WebCore {
 
+class Document;
 class LayoutPoint;
 class LayoutRect;
 class Node;
@@ -45,14 +45,14 @@ class DocumentMarkerController {
     WTF_MAKE_NONCOPYABLE(DocumentMarkerController); WTF_MAKE_FAST_ALLOCATED;
 public:
 
-    DocumentMarkerController();
+    DocumentMarkerController(Document&);
     ~DocumentMarkerController();
 
     void detach();
     void addMarker(Range*, DocumentMarker::MarkerType);
     void addMarker(Range*, DocumentMarker::MarkerType, const String& description);
     void addMarkerToNode(Node*, unsigned startOffset, unsigned length, DocumentMarker::MarkerType);
-    void addMarkerToNode(Node*, unsigned startOffset, unsigned length, DocumentMarker::MarkerType, PassRefPtr<DocumentMarkerDetails>);
+    void addMarkerToNode(Node*, unsigned startOffset, unsigned length, DocumentMarker::MarkerType, DocumentMarker::Data&&);
     WEBCORE_EXPORT void addTextMatchMarker(const Range*, bool activeMatch);
 #if PLATFORM(IOS)
     void addMarker(Range*, DocumentMarker::MarkerType, const String& description, const Vector<String>& interpretations, const RetainPtr<id>& metadata);
@@ -78,16 +78,21 @@ public:
     WEBCORE_EXPORT void removeMarkers(DocumentMarker::MarkerTypes = DocumentMarker::AllMarkers());
     void removeMarkers(Node*, DocumentMarker::MarkerTypes = DocumentMarker::AllMarkers());
     void repaintMarkers(DocumentMarker::MarkerTypes = DocumentMarker::AllMarkers());
-    void invalidateRenderedRectsForMarkersInRect(const LayoutRect&);
     void shiftMarkers(Node*, unsigned startOffset, int delta);
     void setMarkersActive(Range*, bool);
     void setMarkersActive(Node*, unsigned startOffset, unsigned endOffset, bool);
 
-    DocumentMarker* markerContainingPoint(const LayoutPoint&, DocumentMarker::MarkerType);
     WEBCORE_EXPORT Vector<RenderedDocumentMarker*> markersFor(Node*, DocumentMarker::MarkerTypes = DocumentMarker::AllMarkers());
     WEBCORE_EXPORT Vector<RenderedDocumentMarker*> markersInRange(Range*, DocumentMarker::MarkerTypes);
-    WEBCORE_EXPORT Vector<IntRect> renderedRectsForMarkers(DocumentMarker::MarkerType);
     void clearDescriptionOnMarkersIntersectingRange(Range*, DocumentMarker::MarkerTypes);
+
+    WEBCORE_EXPORT void updateRectsForInvalidatedMarkersOfType(DocumentMarker::MarkerType);
+
+    void invalidateRectsForAllMarkers();
+    void invalidateRectsForMarkersInNode(Node&);
+
+    DocumentMarker* markerContainingPoint(const LayoutPoint&, DocumentMarker::MarkerType);
+    WEBCORE_EXPORT Vector<FloatRect> renderedRectsForMarkers(DocumentMarker::MarkerType);
 
 #if ENABLE(TREE_DEBUGGING)
     void showMarkers() const;
@@ -103,7 +108,8 @@ private:
 
     MarkerMap m_markers;
     // Provide a quick way to determine whether a particular marker type is absent without going through the map.
-    DocumentMarker::MarkerTypes m_possiblyExistingMarkerTypes;
+    DocumentMarker::MarkerTypes m_possiblyExistingMarkerTypes { 0 };
+    Document& m_document;
 };
 
 } // namespace WebCore
@@ -111,5 +117,3 @@ private:
 #if ENABLE(TREE_DEBUGGING)
 void showDocumentMarkers(const WebCore::DocumentMarkerController*);
 #endif
-
-#endif // DocumentMarkerController_h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2004-2016 Apple Inc.  All rights reserved.
  * Copyright (C) 2005 Nokia.  All rights reserved.
  * Copyright (C) 2012 Electronic Arts, Inc. All rights reserved.
  *
@@ -55,16 +55,22 @@ namespace EA{namespace WebKit{class FloatPoint;}}
 #endif
 //-EAWebKitChange
 
+#if PLATFORM(WIN)
+struct D2D_POINT_2F;
+typedef D2D_POINT_2F D2D1_POINT_2F;
+#endif
+
 namespace WebCore {
 
 class AffineTransform;
 class TransformationMatrix;
 class IntPoint;
 class IntSize;
+class TextStream;
 
 class FloatPoint {
 public:
-    FloatPoint() : m_x(0), m_y(0) { }
+    FloatPoint() { }
     FloatPoint(float x, float y) : m_x(x), m_y(y) { }
     WEBCORE_EXPORT FloatPoint(const IntPoint&);
     explicit FloatPoint(const FloatSize& size) : m_x(size.width()), m_y(size.height()) { }
@@ -78,43 +84,56 @@ public:
 
     void setX(float x) { m_x = x; }
     void setY(float y) { m_y = y; }
+
     void set(float x, float y)
     {
         m_x = x;
         m_y = y;
     }
+
     void move(float dx, float dy)
     {
         m_x += dx;
         m_y += dy;
     }
+
     void move(const IntSize& a)
     {
         m_x += a.width();
         m_y += a.height();
     }
+
     void move(const FloatSize& a)
     {
         m_x += a.width();
         m_y += a.height();
     }
+
     void moveBy(const IntPoint& a)
     {
         m_x += a.x();
         m_y += a.y();
     }
+
     void moveBy(const FloatPoint& a)
     {
         m_x += a.x();
         m_y += a.y();
     }
+
+    void scale(float scale)
+    {
+        m_x *= scale;
+        m_y *= scale;
+    }
+
     void scale(float sx, float sy)
     {
         m_x *= sx;
         m_y *= sy;
     }
 
-    void normalize();
+    WEBCORE_EXPORT void normalize();
 
     float dot(const FloatPoint& a) const
     {
@@ -123,24 +142,27 @@ public:
 
     float slopeAngleRadians() const;
     float length() const;
+
     float lengthSquared() const
     {
         return m_x * m_x + m_y * m_y;
     }
 
+    WEBCORE_EXPORT FloatPoint constrainedBetween(const FloatPoint& min, const FloatPoint& max) const;
+
     FloatPoint shrunkTo(const FloatPoint& other) const
     {
-        return FloatPoint(std::min(m_x, other.m_x), std::min(m_y, other.m_y));
+        return { std::min(m_x, other.m_x), std::min(m_y, other.m_y) };
     }
 
     FloatPoint expandedTo(const FloatPoint& other) const
     {
-        return FloatPoint(std::max(m_x, other.m_x), std::max(m_y, other.m_y));
+        return { std::max(m_x, other.m_x), std::max(m_y, other.m_y) };
     }
 
     FloatPoint transposedPoint() const
     {
-        return FloatPoint(m_y, m_x);
+        return { m_y, m_x };
     }
 
 #if USE(CG)
@@ -160,13 +182,17 @@ public:
 #endif
 //-EAWebKitChange
 
-    FloatPoint matrixTransform(const TransformationMatrix&) const;
-    FloatPoint matrixTransform(const AffineTransform&) const;
+#if PLATFORM(WIN)
+    WEBCORE_EXPORT FloatPoint(const D2D1_POINT_2F&);
+    WEBCORE_EXPORT operator D2D1_POINT_2F() const;
+#endif
 
-    void dump(WTF::PrintStream& out) const;
+    WEBCORE_EXPORT FloatPoint matrixTransform(const TransformationMatrix&) const;
+    WEBCORE_EXPORT FloatPoint matrixTransform(const AffineTransform&) const;
 
 private:
-    float m_x, m_y;
+    float m_x { 0 };
+    float m_y { 0 };
 };
 
 
@@ -273,6 +299,8 @@ inline bool areEssentiallyEqual(const FloatPoint& a, const FloatPoint& b)
 {
     return WTF::areEssentiallyEqual(a.x(), b.x()) && WTF::areEssentiallyEqual(a.y(), b.y());
 }
+
+WEBCORE_EXPORT TextStream& operator<<(TextStream&, const FloatPoint&);
 
 }
 

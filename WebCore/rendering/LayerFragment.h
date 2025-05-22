@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LayerFragment_h
-#define LayerFragment_h
+#pragma once
 
 #include "ClipRect.h"
 
@@ -34,12 +33,11 @@ class LayerFragment {
 public:
     LayerFragment() = default;
     
-    void setRects(const LayoutRect& bounds, const ClipRect& background, const ClipRect& foreground, const ClipRect& outline, const LayoutRect* bbox)
+    void setRects(const LayoutRect& bounds, const ClipRect& background, const ClipRect& foreground, const LayoutRect* bbox)
     {
         layerBounds = bounds;
         backgroundRect = background;
         foregroundRect = foreground;
-        outlineRect = outline;
         if (bbox) {
             boundingBox = *bbox;
             hasBoundingBox = true;
@@ -51,7 +49,6 @@ public:
         layerBounds.moveBy(offset);
         backgroundRect.moveBy(offset);
         foregroundRect.moveBy(offset);
-        outlineRect.moveBy(offset);
         paginationClip.moveBy(offset);
         boundingBox.moveBy(offset);
     }
@@ -60,7 +57,6 @@ public:
     {
         backgroundRect.intersect(rect);
         foregroundRect.intersect(rect);
-        outlineRect.intersect(rect);
         boundingBox.intersect(rect);
     }
     
@@ -68,7 +64,6 @@ public:
     {
         backgroundRect.intersect(clipRect);
         foregroundRect.intersect(clipRect);
-        outlineRect.intersect(clipRect);
     }
 
     bool shouldPaintContent = false;
@@ -76,7 +71,6 @@ public:
     LayoutRect layerBounds;
     ClipRect backgroundRect;
     ClipRect foregroundRect;
-    ClipRect outlineRect;
     LayoutRect boundingBox;
     
     // Unique to paginated fragments. The physical translation to apply to shift the layer when painting/hit-testing.
@@ -89,6 +83,4 @@ public:
 
 typedef Vector<LayerFragment, 1> LayerFragments;
 
-}
-
-#endif
+} // namespace WebCore

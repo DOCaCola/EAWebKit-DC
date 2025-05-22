@@ -40,7 +40,7 @@
 
 namespace WebCore {
 
-float FontCascade::getGlyphsAndAdvancesForComplexText(const TextRun& run, int, int, GlyphBuffer& glyphBuffer, ForTextEmphasisOrNot /* forTextEmphasis */) const
+float FontCascade::getGlyphsAndAdvancesForComplexText(const TextRun& run, unsigned, unsigned, GlyphBuffer& glyphBuffer, ForTextEmphasisOrNot /* forTextEmphasis */) const
 {
     HarfBuzzShaper shaper(this, run);
     if (!shaper.shape(&glyphBuffer)) {
@@ -52,25 +52,7 @@ float FontCascade::getGlyphsAndAdvancesForComplexText(const TextRun& run, int, i
     return 0;
 }
 
-float FontCascade::drawComplexText(GraphicsContext* context, const TextRun& run, const FloatPoint& point, int from, int to) const
-{
-    // This glyph buffer holds our glyphs + advances + font data for each glyph.
-    GlyphBuffer glyphBuffer;
-
-    float startX = point.x() + getGlyphsAndAdvancesForComplexText(run, from, to, glyphBuffer);
-
-    // We couldn't generate any glyphs for the run. Give up.
-    if (glyphBuffer.isEmpty())
-        return 0;
-
-    // Draw the glyph buffer now at the starting point returned in startX.
-    FloatPoint startPoint(startX, point.y());
-    drawGlyphBuffer(context, run, glyphBuffer, startPoint);
-
-    return startPoint.x() - startX;
-}
-
-void FontCascade::drawEmphasisMarksForComplexText(GraphicsContext* /* context */, const TextRun& /* run */, const AtomicString& /* mark */, const FloatPoint& /* point */, int /* from */, int /* to */) const
+void FontCascade::drawEmphasisMarksForComplexText(GraphicsContext& /* context */, const TextRun& /* run */, const AtomicString& /* mark */, const FloatPoint& /* point */, unsigned /* from */, unsigned /* to */) const
 {
     notImplemented();
 }
@@ -103,7 +85,7 @@ int FontCascade::offsetForPositionForComplexText(const TextRun& run, float x, bo
     return 0;
 }
 
-void FontCascade::adjustSelectionRectForComplexText(const TextRun& run, LayoutRect& selectionRect, int from, int to) const
+void FontCascade::adjustSelectionRectForComplexText(const TextRun& run, LayoutRect& selectionRect, unsigned from, unsigned to) const
 {
     HarfBuzzShaper shaper(this, run);
     if (shaper.shape()) {

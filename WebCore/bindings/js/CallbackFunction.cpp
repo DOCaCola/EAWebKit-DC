@@ -31,7 +31,7 @@
 
 namespace WebCore {
 
-bool checkFunctionOnlyCallback(JSC::ExecState* exec, JSC::JSValue value, CallbackAllowedValueFlags acceptedValues)
+bool checkFunctionOnlyCallback(JSC::ExecState* state, JSC::JSValue value, CallbackAllowedValueFlags acceptedValues)
 {
     if (value.isUndefined() && (acceptedValues & CallbackAllowUndefined))
         return false;
@@ -40,8 +40,9 @@ bool checkFunctionOnlyCallback(JSC::ExecState* exec, JSC::JSValue value, Callbac
         return false;
 
     JSC::CallData callData;
-    if (getCallData(value, callData) == JSC::CallTypeNone) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
+    if (getCallData(value, callData) == JSC::CallType::None) {
+        auto scope = DECLARE_THROW_SCOPE(state->vm());
+        throwTypeMismatchError(*state, scope);
         return false;
     }
 

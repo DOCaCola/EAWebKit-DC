@@ -24,8 +24,6 @@
 #include "Frame.h"
 #include "HitTestResult.h"
 #include "InlineFlowBox.h"
-#include "Page.h"
-#include "PaintInfo.h"
 #include "RenderBlockFlow.h"
 #include "RenderLineBreak.h"
 #include "RootInlineBox.h"
@@ -108,7 +106,7 @@ void InlineBox::showLineTreeAndMark(const InlineBox* markedBox, int depth) const
 
 void InlineBox::showLineBox(bool mark, int depth) const
 {
-    fprintf(stderr, "------- --");
+    fprintf(stderr, "-------- %c-", isDirty() ? 'D' : '-');
     int printedCharacters = 0;
     if (mark) {
         fprintf(stderr, "*");

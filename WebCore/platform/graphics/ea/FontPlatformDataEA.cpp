@@ -53,6 +53,20 @@ FontPlatformData::~FontPlatformData()
 	}
 }
 
+unsigned FontPlatformData::hash() const
+{
+	uintptr_t hashCodes[8];
+	hashCodes[0] = m_size;
+    hashCodes[1] = m_syntheticBold;
+    hashCodes[2] = m_syntheticOblique;
+    hashCodes[3] = m_isColorBitmapFont;
+    hashCodes[4] = m_isCompositeFontReference;
+    hashCodes[5] = m_orientation;
+    hashCodes[6] = m_widthVariant;
+	hashCodes[7] = StringHasher::computeHashAndMaskTop8Bits(font()->GetFamilyName(), EA::Internal::Strlen(font()->GetFamilyName()));
+	return StringHasher::hashMemory<sizeof(hashCodes)>(hashCodes);
+}
+
 void FontPlatformData::platformDataInit(const FontPlatformData &other)
 {
 	m_privData = other.m_privData;

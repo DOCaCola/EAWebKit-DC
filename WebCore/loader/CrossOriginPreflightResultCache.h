@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef CrossOriginPreflightResultCache_h
-#define CrossOriginPreflightResultCache_h
+#pragma once
 
 #include "URLHash.h"
 #include "ResourceHandleTypes.h"
@@ -59,7 +58,7 @@ private:
     std::chrono::steady_clock::time_point m_absoluteExpiryTime;
     StoredCredentials m_credentials;
     HashSet<String> m_methods;
-    HashSet<String, CaseFoldingHash> m_headers;
+    HashSet<String, ASCIICaseInsensitiveHash> m_headers;
 };
 
 class CrossOriginPreflightResultCache {
@@ -81,5 +80,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif

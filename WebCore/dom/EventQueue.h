@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef EventQueue_h
-#define EventQueue_h
+#pragma once
 
 #include <wtf/Forward.h>
 
@@ -36,11 +35,9 @@ class Event;
 class EventQueue {
 public:
     virtual ~EventQueue() { }
-    virtual bool enqueueEvent(PassRefPtr<Event>) = 0;
+    virtual bool enqueueEvent(Ref<Event>&&) = 0;
     virtual bool cancelEvent(Event&) = 0;
     virtual void close() = 0; // Discard accumulated events and all future events. No events will be dispatched after this.
 };
 
-}
-
-#endif // EventQueue_h
+} // namespace WebCore

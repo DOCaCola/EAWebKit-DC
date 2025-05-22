@@ -40,6 +40,7 @@
 #include "XLinkNames.h"
 #include "XMLNSNames.h"
 #include "XMLNames.h"
+#include <wtf/NeverDestroyed.h>
 #include <wtf/unicode/CharacterNames.h>
 
 namespace WebCore {
@@ -155,15 +156,12 @@ void MarkupAccumulator::serializeNodesWithNamespaces(Node& targetNode, EChildren
     if (!childrenOnly)
         appendStartTag(targetNode, &namespaceHash);
 
-    if (!(targetNode.document().isHTMLDocument() && elementCannotHaveEndTag(targetNode))) {
-#if ENABLE(TEMPLATE_ELEMENT)
-        Node* current = targetNode.hasTagName(templateTag) ? downcast<HTMLTemplateElement>(targetNode).content()->firstChild() : targetNode.firstChild();
-#else
-        Node* current = targetNode.firstChild();
-#endif
-        for ( ; current; current = current->nextSibling())
-            serializeNodesWithNamespaces(*current, IncludeNode, &namespaceHash, tagNamesToSkip);
-    }
+    if (targetNode.document().isHTMLDocument() && elementCannotHaveEndTag(targetNode))
+        return;
+
+    Node* current = targetNode.hasTagName(templateTag) ? downcast<HTMLTemplateElement>(targetNode).content().firstChild() : targetNode.firstChild();
+    for ( ; current; current = current->nextSibling())
+        serializeNodesWithNamespaces(*current, IncludeNode, &namespaceHash, tagNamesToSkip);
 
     if (!childrenOnly)
         appendEndTag(targetNode);
@@ -206,8 +204,8 @@ void MarkupAccumulator::appendEndTag(const Element& element)
 size_t MarkupAccumulator::totalLength(const Vector<String>& strings)
 {
     size_t length = 0;
-    for (size_t i = 0; i < strings.size(); ++i)
-        length += strings[i].length();
+    for (auto& string : strings)
+        length += string.length();
     return length;
 }
 
@@ -259,8 +257,8 @@ bool MarkupAccumulator::shouldAddNamespaceElement(const Element& element)
     if (prefix.isEmpty())
         return !element.hasAttribute(xmlnsAtom);
 
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, xmlnsWithColon, (ASCIILiteral("xmlns:")));
-    return !element.hasAttribute(xmlnsWithColon + prefix);
+    static NeverDestroyed<String> xmlnsWithColon(ASCIILiteral("xmlns:"));
+    return !element.hasAttribute(xmlnsWithColon.get() + prefix);
 }
 
 bool MarkupAccumulator::shouldAddNamespaceAttribute(const Attribute& attribute, Namespaces& namespaces)
@@ -327,7 +325,7 @@ EntityMask MarkupAccumulator::entityMaskForText(const Text& text) const
     if (!text.document().isHTMLDocument())
         return EntityMaskInPCDATA;
 
-    const QualifiedName* parentName = 0;
+    const QualifiedName* parentName = nullptr;
     if (text.parentElement())
         parentName = &text.parentElement()->tagQName();
 
@@ -343,9 +341,9 @@ void MarkupAccumulator::appendText(StringBuilder& result, const Text& text)
     unsigned length = textData.length();
 
     if (m_range) {
-        if (&text == m_range->endContainer())
+        if (&text == &m_range->endContainer())
             length = m_range->endOffset();
-        if (&text == m_range->startContainer()) {
+        if (&text == &m_range->startContainer()) {
             start = m_range->startOffset();
             length -= start;
         }
@@ -392,26 +390,20 @@ void MarkupAccumulator::appendDocumentType(StringBuilder& result, const Document
 
     result.appendLiteral("<!DOCTYPE ");
     result.append(documentType.name());
-    if (!documentType.publicId().isNull()) {
+    if (!documentType.publicId().isEmpty()) {
         result.appendLiteral(" PUBLIC \"");
         result.append(documentType.publicId());
         result.append('"');
-        if (!documentType.systemId().isNull()) {
+        if (!documentType.systemId().isEmpty()) {
             result.append(' ');
             result.append('"');
             result.append(documentType.systemId());
             result.append('"');
         }
-    } else if (!documentType.systemId().isNull()) {
+    } else if (!documentType.systemId().isEmpty()) {
         result.appendLiteral(" SYSTEM \"");
         result.append(documentType.systemId());
         result.append('"');
-    }
-    if (!documentType.internalSubset().isNull()) {
-        result.append(' ');
-        result.append('[');
-        result.append(documentType.internalSubset());
-        result.append(']');
     }
     result.append('>');
 }
@@ -506,15 +498,20 @@ void MarkupAccumulator::appendAttribute(StringBuilder& result, const Element& el
         result.append(attribute.name().localName());
     else {
         if (!attribute.namespaceURI().isEmpty()) {
-            AtomicStringImpl* foundNS = namespaces && attribute.prefix().impl() ? namespaces->get(attribute.prefix().impl()) : 0;
-            bool prefixIsAlreadyMappedToOtherNS = foundNS && foundNS != attribute.namespaceURI().impl();
-            if (attribute.prefix().isEmpty() || !foundNS || prefixIsAlreadyMappedToOtherNS) {
-                if (AtomicStringImpl* prefix = namespaces ? namespaces->get(attribute.namespaceURI().impl()) : 0)
-                    prefixedName.setPrefix(AtomicString(prefix));
-                else {
-                    bool shouldBeDeclaredUsingAppendNamespace = !attribute.prefix().isEmpty() && !foundNS;
-                    if (!shouldBeDeclaredUsingAppendNamespace && attribute.localName() != xmlnsAtom && namespaces)
-                        generateUniquePrefix(prefixedName, *namespaces);
+            if (attribute.namespaceURI() == XMLNames::xmlNamespaceURI) {
+                // Always use xml as prefix if the namespace is the XML namespace.
+                prefixedName.setPrefix(xmlAtom);
+            } else {
+                AtomicStringImpl* foundNS = namespaces && attribute.prefix().impl() ? namespaces->get(attribute.prefix().impl()) : 0;
+                bool prefixIsAlreadyMappedToOtherNS = foundNS && foundNS != attribute.namespaceURI().impl();
+                if (attribute.prefix().isEmpty() || !foundNS || prefixIsAlreadyMappedToOtherNS) {
+                    if (AtomicStringImpl* prefix = namespaces ? namespaces->get(attribute.namespaceURI().impl()) : 0)
+                        prefixedName.setPrefix(AtomicString(prefix));
+                    else {
+                        bool shouldBeDeclaredUsingAppendNamespace = !attribute.prefix().isEmpty() && !foundNS;
+                        if (!shouldBeDeclaredUsingAppendNamespace && attribute.localName() != xmlnsAtom && namespaces)
+                            generateUniquePrefix(prefixedName, *namespaces);
+                    }
                 }
             }
         }
@@ -573,9 +570,6 @@ void MarkupAccumulator::appendStartMarkup(StringBuilder& result, const Node& nod
         appendCDATASection(result, downcast<CDATASection>(node).data());
         break;
     case Node::ATTRIBUTE_NODE:
-    case Node::ENTITY_NODE:
-    case Node::ENTITY_REFERENCE_NODE:
-    case Node::XPATH_NAMESPACE_NODE:
         ASSERT_NOT_REACHED();
         break;
     }
@@ -602,11 +596,18 @@ bool MarkupAccumulator::elementCannotHaveEndTag(const Node& node)
     if (!is<HTMLElement>(node))
         return false;
 
-    // FIXME: ieForbidsInsertHTML may not be the right function to call here
-    // ieForbidsInsertHTML is used to disallow setting innerHTML/outerHTML
-    // or createContextualFragment.  It does not necessarily align with
-    // which elements should be serialized w/o end tags.
-    return downcast<HTMLElement>(node).ieForbidsInsertHTML();
+    // From https://html.spec.whatwg.org/#serialising-html-fragments:
+    // If current node is an area, base, basefont, bgsound, br, col, embed, frame, hr, img,
+    // input, keygen, link, meta, param, source, track or wbr element, then continue on to
+    // the next child node at this point.
+    static const HTMLQualifiedName* tags[] = { &areaTag, &baseTag, &basefontTag, &bgsoundTag, &brTag, &colTag, &embedTag,
+        &frameTag, &hrTag, &imgTag, &inputTag, &keygenTag, &linkTag, &metaTag, &paramTag, &sourceTag, &trackTag, &wbrTag };
+    auto& element = downcast<HTMLElement>(node);
+    for (auto* tag : tags) {
+        if (element.hasTagName(*tag))
+            return true;
+    }
+    return false;
 }
 
 void MarkupAccumulator::appendEndMarkup(StringBuilder& result, const Element& element)

@@ -18,33 +18,42 @@
  *
  */
 
-#ifndef HTMLDetailsElement_h
-#define HTMLDetailsElement_h
+#pragma once
 
 #include "HTMLElement.h"
 
 namespace WebCore {
 
+class HTMLSlotElement;
+
+template<typename T> class EventSender;
+typedef EventSender<HTMLDetailsElement> DetailEventSender;
+
 class HTMLDetailsElement final : public HTMLElement {
 public:
     static Ref<HTMLDetailsElement> create(const QualifiedName& tagName, Document&);
+    ~HTMLDetailsElement();
+
     void toggleOpen();
 
-    const Element* findMainSummary() const;
     bool isOpen() const { return m_isOpen; }
+    bool isActiveSummary(const HTMLSummaryElement&) const;
+
+    void dispatchPendingEvent(DetailEventSender*);
     
 private:
     HTMLDetailsElement(const QualifiedName&, Document&);
 
-    virtual RenderPtr<RenderElement> createElementRenderer(Ref<RenderStyle>&&, const RenderTreePosition&) override;
-    virtual bool childShouldCreateRenderer(const Node&) const override;
-    virtual void parseAttribute(const QualifiedName&, const AtomicString&) override;
+    RenderPtr<RenderElement> createElementRenderer(RenderStyle&&, const RenderTreePosition&) final;
+    void parseAttribute(const QualifiedName&, const AtomicString&) final;
 
-    virtual void didAddUserAgentShadowRoot(ShadowRoot*) override;
+    void didAddUserAgentShadowRoot(ShadowRoot*) final;
+    bool hasCustomFocusLogic() const final { return true; }
 
-    bool m_isOpen;
+    bool m_isOpen { false };
+    HTMLSlotElement* m_summarySlot { nullptr };
+    HTMLSummaryElement* m_defaultSummary { nullptr };
+    RefPtr<HTMLSlotElement> m_defaultSlot;
 };
 
 } // namespace WebCore
-
-#endif // HTMLDetailsElement_h

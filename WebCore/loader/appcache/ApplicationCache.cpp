@@ -30,7 +30,6 @@
 #include "ApplicationCacheResource.h"
 #include "ApplicationCacheStorage.h"
 #include "ResourceRequest.h"
-#include "SecurityOrigin.h"
 #include <algorithm>
 #include <stdio.h>
 #include <wtf/text/CString.h>
@@ -43,17 +42,13 @@ static inline bool fallbackURLLongerThan(const std::pair<URL, URL>& lhs, const s
 }
 
 ApplicationCache::ApplicationCache()
-    : m_group(0)
-    , m_manifest(0)
-    , m_estimatedSizeInStorage(0)
-    , m_storageID(0)
 {
 }
 
 ApplicationCache::~ApplicationCache()
 {
     if (m_group)
-        m_group->cacheDestroyed(this);
+        m_group->cacheDestroyed(*this);
 }
     
 void ApplicationCache::setGroup(ApplicationCacheGroup* group)
@@ -64,57 +59,39 @@ void ApplicationCache::setGroup(ApplicationCacheGroup* group)
 
 bool ApplicationCache::isComplete()
 {
-    return m_group && m_group->cacheIsComplete(this);
+    return m_group && m_group->cacheIsComplete(*this);
 }
 
-void ApplicationCache::setManifestResource(PassRefPtr<ApplicationCacheResource> manifest)
+void ApplicationCache::setManifestResource(Ref<ApplicationCacheResource>&& manifest)
 {
-    ASSERT(manifest);
     ASSERT(!m_manifest);
     ASSERT(manifest->type() & ApplicationCacheResource::Manifest);
-    
-    m_manifest = manifest.get();
-    
-    addResource(manifest);
+
+    m_manifest = manifest.ptr();
+
+    addResource(WTFMove(manifest));
 }
     
-void ApplicationCache::addResource(PassRefPtr<ApplicationCacheResource> resource)
+void ApplicationCache::addResource(Ref<ApplicationCacheResource>&& resource)
 {
-    ASSERT(resource);
-    
-    const String& url = resource->url();
-    
+    auto& url = resource->url();
+
+    ASSERT(!URL(ParsedURLString, url).hasFragmentIdentifier());
     ASSERT(!m_resources.contains(url));
-    
+
     if (m_storageID) {
         ASSERT(!resource->storageID());
         ASSERT(resource->type() & ApplicationCacheResource::Master);
-        
+
         // Add the resource to the storage.
-        ApplicationCacheStorage::singleton().store(resource.get(), this);
+        m_group->storage().store(resource.ptr(), this);
     }
 
     m_estimatedSizeInStorage += resource->estimatedSizeInStorage();
 
-    m_resources.set(url, resource);
+    m_resources.set(url, WTFMove(resource));
 }
 
-unsigned ApplicationCache::removeResource(const String& url)
-{
-    HashMap<String, RefPtr<ApplicationCacheResource>>::iterator it = m_resources.find(url);
-    if (it == m_resources.end())
-        return 0;
-
-    // The resource exists, get its type so we can return it.
-    unsigned type = it->value->type();
-
-    m_estimatedSizeInStorage -= it->value->estimatedSizeInStorage();
-
-    m_resources.remove(it);
-
-    return type;
-}    
-    
 ApplicationCacheResource* ApplicationCache::resourceForURL(const String& url)
 {
     ASSERT(!URL(ParsedURLString, url).hasFragmentIdentifier());
@@ -123,25 +100,17 @@ ApplicationCacheResource* ApplicationCache::resourceForURL(const String& url)
 
 bool ApplicationCache::requestIsHTTPOrHTTPSGet(const ResourceRequest& request)
 {
-    if (!request.url().protocolIsInHTTPFamily())
-        return false;
-    
-    if (!equalIgnoringCase(request.httpMethod(), "GET"))
-        return false;
-
-    return true;
-}    
+    return request.url().protocolIsInHTTPFamily() && equalLettersIgnoringASCIICase(request.httpMethod(), "get");
+}
 
 ApplicationCacheResource* ApplicationCache::resourceForRequest(const ResourceRequest& request)
 {
     // We only care about HTTP/HTTPS GET requests.
     if (!requestIsHTTPOrHTTPSGet(request))
-        return 0;
+        return nullptr;
 
     URL url(request.url());
-    if (url.hasFragmentIdentifier())
-        url.removeFragmentIdentifier();
-
+    url.removeFragmentIdentifier();
     return resourceForURL(url);
 }
 
@@ -153,9 +122,8 @@ void ApplicationCache::setOnlineWhitelist(const Vector<URL>& onlineWhitelist)
 
 bool ApplicationCache::isURLInOnlineWhitelist(const URL& url)
 {
-    size_t whitelistSize = m_onlineWhitelist.size();
-    for (size_t i = 0; i < whitelistSize; ++i) {
-        if (protocolHostAndPortAreEqual(url, m_onlineWhitelist[i]) && url.string().startsWith(m_onlineWhitelist[i].string()))
+    for (auto& whitelistURL : m_onlineWhitelist) {
+        if (protocolHostAndPortAreEqual(url, whitelistURL) && url.string().startsWith(whitelistURL.string()))
             return true;
     }
     return false;
@@ -171,11 +139,10 @@ void ApplicationCache::setFallbackURLs(const FallbackURLVector& fallbackURLs)
 
 bool ApplicationCache::urlMatchesFallbackNamespace(const URL& url, URL* fallbackURL)
 {
-    size_t fallbackCount = m_fallbackURLs.size();
-    for (size_t i = 0; i < fallbackCount; ++i) {
-        if (protocolHostAndPortAreEqual(url, m_fallbackURLs[i].first) && url.string().startsWith(m_fallbackURLs[i].first.string())) {
+    for (auto& fallback : m_fallbackURLs) {
+        if (protocolHostAndPortAreEqual(url, fallback.first) && url.string().startsWith(fallback.first.string())) {
             if (fallbackURL)
-                *fallbackURL = m_fallbackURLs[i].second;
+                *fallbackURL = fallback.second;
             return true;
         }
     }

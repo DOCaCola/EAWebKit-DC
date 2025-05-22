@@ -1,7 +1,7 @@
 /*
  * This file is part of the internal font implementation.
  *
- * Copyright (C) 2006, 2008, 2010, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2008, 2010, 2015-2016 Apple Inc. All rights reserved.
  * Copyright (C) 2007-2008 Torch Mobile, Inc.
  * Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
@@ -36,7 +36,8 @@
 #if ENABLE(OPENTYPE_VERTICAL)
 #include "OpenTypeVerticalData.h"
 #endif
-#include "TypesettingFeatures.h"
+#include <wtf/BitVector.h>
+#include <wtf/Optional.h>
 #include <wtf/TypeCasts.h>
 #include <wtf/text/StringHash.h>
 
@@ -54,7 +55,12 @@
 #endif
 
 #if USE(CG)
-#include <WebCore/CoreGraphicsSPI.h>
+#include "CoreGraphicsSPI.h"
+#endif
+
+#if USE(DIRECT2D)
+interface IDWriteFactory;
+interface IDWriteGdiInterop;
 #endif
 
 namespace WebCore {
@@ -70,26 +76,10 @@ enum Pitch { UnknownPitch, FixedPitch, VariablePitch };
 
 class Font : public RefCounted<Font> {
 public:
-    class SVGData {
-        WTF_MAKE_FAST_ALLOCATED;
-    public:
-        virtual ~SVGData() { }
-
-        virtual void initializeFont(Font*, float fontSize) = 0;
-        virtual float widthForSVGGlyph(Glyph, float fontSize) const = 0;
-        virtual bool fillSVGGlyphPage(GlyphPage*, unsigned offset, unsigned length, UChar* buffer, unsigned bufferLength, const Font*) const = 0;
-    };
-
     // Used to create platform fonts.
     static Ref<Font> create(const FontPlatformData& platformData, bool isCustomFont = false, bool isLoading = false, bool isTextOrientationFallback = false)
     {
         return adoptRef(*new Font(platformData, isCustomFont, isLoading, isTextOrientationFallback));
-    }
-
-    // Used to create SVG Fonts.
-    static Ref<Font> create(std::unique_ptr<SVGData> svgData, float fontSize, bool syntheticBold, bool syntheticItalic)
-    {
-        return adoptRef(*new Font(WTF::move(svgData), fontSize, syntheticBold, syntheticItalic));
     }
 
     WEBCORE_EXPORT ~Font();
@@ -102,20 +92,24 @@ public:
     const OpenTypeVerticalData* verticalData() const { return m_verticalData.get(); }
 #endif
 
-    PassRefPtr<Font> smallCapsFont(const FontDescription&) const;
-    PassRefPtr<Font> emphasisMarkFont(const FontDescription&) const;
-    PassRefPtr<Font> brokenIdeographFont() const;
-    PassRefPtr<Font> nonSyntheticItalicFont() const;
+    const Font* smallCapsFont(const FontDescription&) const;
+    const Font& noSynthesizableFeaturesFont() const;
+    const Font* emphasisMarkFont(const FontDescription&) const;
+    const Font& brokenIdeographFont() const;
+    const Font& nonSyntheticItalicFont() const;
 
-    PassRefPtr<Font> variantFont(const FontDescription& description, FontVariant variant) const
+    const Font* variantFont(const FontDescription& description, FontVariant variant) const
     {
+#if PLATFORM(COCOA)
+        ASSERT(variant != SmallCapsVariant);
+#endif
         switch (variant) {
         case SmallCapsVariant:
             return smallCapsFont(description);
         case EmphasisMarkVariant:
             return emphasisMarkFont(description);
         case BrokenIdeographVariant:
-            return brokenIdeographFont();
+            return &brokenIdeographFont();
         case AutoVariant:
         case NormalVariant:
             break;
@@ -124,8 +118,10 @@ public:
         return const_cast<Font*>(this);
     }
 
-    PassRefPtr<Font> verticalRightOrientationFont() const;
-    PassRefPtr<Font> uprightOrientationFont() const;
+    bool variantCapsSupportsCharacterForSynthesis(FontVariantCaps, UChar32) const;
+
+    const Font& verticalRightOrientationFont() const;
+    const Font& uprightOrientationFont() const;
 
     bool hasVerticalGlyphs() const { return m_hasVerticalGlyphs; }
     bool isTextOrientationFallback() const { return m_isTextOrientationFallback; }
@@ -153,7 +149,7 @@ public:
         m_adjustedSpaceWidth = spaceWidth;
     }
 
-#if USE(CG) || USE(CAIRO)
+#if USE(CG) || USE(DIRECT2D) || USE(CAIRO)
     float syntheticBoldOffset() const { return m_syntheticBoldOffset; }
 #endif
 
@@ -175,9 +171,6 @@ public:
     void determinePitch();
     Pitch pitch() const { return m_treatAsFixedPitch ? FixedPitch : VariablePitch; }
 
-    const SVGData* svgData() const { return m_svgData.get(); }
-    bool isSVGFont() const { return !!m_svgData; }
-
     bool isCustomFont() const { return m_isCustomFont; }
     bool isLoading() const { return m_isLoading; }
 
@@ -185,29 +178,23 @@ public:
     String description() const;
 #endif
 
-#if USE(APPKIT)
-    const Font* compositeFontReferenceFont(NSFont *key) const;
-    NSFont* getNSFont() const { return m_platformData.nsFont(); }
-#endif
-
 #if PLATFORM(IOS)
-    CTFontRef getCTFont() const { return m_platformData.font(); }
     bool shouldNotBeUsedForArabic() const { return m_shouldNotBeUsedForArabic; };
 #endif
 #if PLATFORM(COCOA)
-    CFDictionaryRef getCFStringAttributes(TypesettingFeatures, FontOrientation) const;
-    bool hasCustomTracking() const { return isSystemFont(); }
+    CTFontRef getCTFont() const { return m_platformData.font(); }
+    CFDictionaryRef getCFStringAttributes(bool enableKerning, FontOrientation) const;
+    const BitVector& glyphsSupportedBySmallCaps() const;
+    const BitVector& glyphsSupportedByAllSmallCaps() const;
+    const BitVector& glyphsSupportedByPetiteCaps() const;
+    const BitVector& glyphsSupportedByAllPetiteCaps() const;
 #endif
 
 #if PLATFORM(COCOA) || USE(HARFBUZZ)
     bool canRenderCombiningCharacterSequence(const UChar*, size_t) const;
 #endif
 
-    bool applyTransforms(GlyphBufferGlyph*, GlyphBufferAdvance*, size_t glyphCount, TypesettingFeatures) const;
-
-#if PLATFORM(COCOA) || PLATFORM(WIN)
-    bool isSystemFont() const { return m_isSystemFont; }
-#endif
+    bool applyTransforms(GlyphBufferGlyph*, GlyphBufferAdvance*, size_t glyphCount, bool enableKerning, bool requiresShaping) const;
 
 	//+EAWebKitChange
 	//10/14/2011
@@ -225,12 +212,13 @@ public:
     static float ascentConsideringMacAscentHack(const WCHAR*, float ascent, float descent);
 #endif
 
+#if USE(DIRECT2D)
+    WEBCORE_EXPORT static IDWriteFactory* systemDWriteFactory();
+    WEBCORE_EXPORT static IDWriteGdiInterop* systemDWriteGdiInterop();
+#endif
+
 private:
     Font(const FontPlatformData&, bool isCustomFont = false, bool isLoading = false, bool isTextOrientationFallback = false);
-
-    Font(std::unique_ptr<SVGData>, float fontSize, bool syntheticBold, bool syntheticItalic);
-
-    Font(const FontPlatformData&, std::unique_ptr<SVGData>&&, bool isCustomFont = false, bool isLoading = false, bool isTextOrientationFallback = false);
 
     void platformInit();
     void platformGlyphInit();
@@ -239,8 +227,9 @@ private:
 
     void initCharWidths();
 
-    PassRefPtr<Font> createScaledFont(const FontDescription&, float scaleFactor) const;
-    PassRefPtr<Font> platformCreateScaledFont(const FontDescription&, float scaleFactor) const;
+    RefPtr<Font> createFontWithoutSynthesizableFeatures() const;
+    RefPtr<Font> createScaledFont(const FontDescription&, float scaleFactor) const;
+    RefPtr<Font> platformCreateScaledFont(const FontDescription&, float scaleFactor) const;
 
     void removeFromSystemFallbackCache();
 
@@ -255,8 +244,7 @@ private:
     float m_maxCharWidth;
     float m_avgCharWidth;
 
-    FontPlatformData m_platformData;
-    std::unique_ptr<SVGData> m_svgData;
+    const FontPlatformData m_platformData;
 
     mutable RefPtr<GlyphPage> m_glyphPageZero;
     mutable HashMap<unsigned, RefPtr<GlyphPage>> m_glyphPages;
@@ -268,44 +256,47 @@ private:
     RefPtr<OpenTypeVerticalData> m_verticalData;
 #endif
 
-    Glyph m_spaceGlyph;
-    float m_spaceWidth;
-    Glyph m_zeroGlyph;
-    float m_adjustedSpaceWidth;
+    Glyph m_spaceGlyph { 0 };
+    float m_spaceWidth { 0 };
+    Glyph m_zeroGlyph { 0 };
+    float m_adjustedSpaceWidth { 0 };
 
-    Glyph m_zeroWidthSpaceGlyph;
+    Glyph m_zeroWidthSpaceGlyph { 0 };
 
-    struct DerivedFontData {
+    struct DerivedFonts {
 #if !COMPILER(MSVC)
         WTF_MAKE_FAST_ALLOCATED;
 #endif
     public:
-        explicit DerivedFontData(bool custom)
+        explicit DerivedFonts(bool custom)
             : forCustomFont(custom)
         {
         }
-        ~DerivedFontData();
+        ~DerivedFonts();
 
         bool forCustomFont;
         RefPtr<Font> smallCaps;
+        RefPtr<Font> noSynthesizableFeatures;
         RefPtr<Font> emphasisMark;
         RefPtr<Font> brokenIdeograph;
         RefPtr<Font> verticalRightOrientation;
         RefPtr<Font> uprightOrientation;
         RefPtr<Font> nonSyntheticItalic;
-#if USE(APPKIT)
-        HashMap<NSFont*, RefPtr<Font>> compositeFontReferences;
-#endif
     };
 
-    mutable std::unique_ptr<DerivedFontData> m_derivedFontData;
+    mutable std::unique_ptr<DerivedFonts> m_derivedFontData;
 
-#if USE(CG) || USE(CAIRO)
+#if USE(CG) || USE(DIRECT2D) || USE(CAIRO)
     float m_syntheticBoldOffset;
 #endif
 
 #if PLATFORM(COCOA)
-    mutable HashMap<unsigned, RetainPtr<CFDictionaryRef>> m_CFStringAttributes;
+    mutable RetainPtr<CFDictionaryRef> m_nonKernedCFStringAttributes;
+    mutable RetainPtr<CFDictionaryRef> m_kernedCFStringAttributes;
+    mutable std::optional<BitVector> m_glyphsSupportedBySmallCaps;
+    mutable std::optional<BitVector> m_glyphsSupportedByAllSmallCaps;
+    mutable std::optional<BitVector> m_glyphsSupportedByPetiteCaps;
+    mutable std::optional<BitVector> m_glyphsSupportedByAllPetiteCaps;
 #endif
 
 #if PLATFORM(COCOA) || USE(HARFBUZZ)
@@ -327,9 +318,6 @@ private:
 
     unsigned m_isUsedInSystemFallbackCache : 1;
 
-#if PLATFORM(COCOA) || PLATFORM(WIN)
-    unsigned m_isSystemFont : 1;
-#endif
 #if PLATFORM(IOS)
     unsigned m_shouldNotBeUsedForArabic : 1;
 #endif
@@ -367,17 +355,15 @@ ALWAYS_INLINE float Font::widthForGlyph(Glyph glyph) const
     if (width != cGlyphSizeUnknown)
         return width;
 
-    if (isSVGFont())
-        width = m_svgData->widthForSVGGlyph(glyph, m_platformData.size());
 #if ENABLE(OPENTYPE_VERTICAL)
-    else if (m_verticalData)
-#if USE(CG) || USE(CAIRO)
+    if (m_verticalData) {
+#if USE(CG) || USE(DIRECT2D) || USE(CAIRO)
         width = m_verticalData->advanceHeight(this, glyph) + m_syntheticBoldOffset;
 #else
         width = m_verticalData->advanceHeight(this, glyph);
 #endif
+    } else
 #endif
-    else
         width = platformWidthForGlyph(glyph);
 
     m_glyphToWidthMap.setMetricsForGlyph(glyph, width);

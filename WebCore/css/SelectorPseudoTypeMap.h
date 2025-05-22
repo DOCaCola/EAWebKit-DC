@@ -23,10 +23,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SelectorPseudoTypeMap_h
-#define SelectorPseudoTypeMap_h
+#pragma once
 
-#include "CSSParserValues.h"
 #include "CSSSelector.h"
 
 namespace WebCore {
@@ -36,9 +34,7 @@ struct PseudoClassOrCompatibilityPseudoElement {
     CSSSelector::PseudoElementType compatibilityPseudoElement;
 };
 
-PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const CSSParserString& pseudoTypeString);
+PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const StringView& pseudoTypeString);
 CSSSelector::PseudoElementType parsePseudoElementString(const StringImpl& pseudoTypeString);
 
 } // namespace WebCore
-
-#endif // SelectorPseudoTypeMap_h

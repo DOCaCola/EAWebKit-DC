@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2015 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,14 +26,11 @@
 #include "config.h"
 #include "DFACombiner.h"
 
+#if ENABLE(CONTENT_EXTENSIONS)
+
 #include "MutableRangeList.h"
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
-
-//+EAWebKitChange
-//9/23/2015 It appears this new code is missing an appropriate guard
-#if ENABLE(CONTENT_EXTENSIONS)
-//-EAWebKitChange
 
 namespace WebCore {
 
@@ -195,14 +191,14 @@ void DFACombiner::combineDFAs(unsigned minimumSize, std::function<void(DFA&&)> h
 
     for (unsigned i = m_dfas.size(); i--;) {
         if (m_dfas[i].graphSize() > minimumSize) {
-            handler(WTF::move(m_dfas[i]));
+            handler(WTFMove(m_dfas[i]));
             m_dfas.remove(i);
         }
     }
 
     while (!m_dfas.isEmpty()) {
         if (m_dfas.size() == 1) {
-            handler(WTF::move(m_dfas.first()));
+            handler(WTFMove(m_dfas.first()));
             return;
         }
 
@@ -218,7 +214,7 @@ void DFACombiner::combineDFAs(unsigned minimumSize, std::function<void(DFA&&)> h
         }
 
         if (c.graphSize() > minimumSize)
-            handler(WTF::move(c));
+            handler(WTFMove(c));
         else
             m_dfas.append(c);
     }
@@ -228,7 +224,4 @@ void DFACombiner::combineDFAs(unsigned minimumSize, std::function<void(DFA&&)> h
 
 } // namespace WebCore
 
-//+EAWebKitChange
-//9/23/2015 #if ENABLE(CONTENT_EXTENSIONS)
 #endif
-//-EAWebKitChange

@@ -17,30 +17,26 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGAnimatedColor_h
-#define SVGAnimatedColor_h
+#pragma once
 
 #include "SVGAnimatedTypeAnimator.h"
 
 namespace WebCore {
 
-class SVGAnimationElement;
-
 class SVGAnimatedColorAnimator final : public SVGAnimatedTypeAnimator {
 public:
-    SVGAnimatedColorAnimator(SVGAnimationElement*, SVGElement*);
+    SVGAnimatedColorAnimator(SVGAnimationElement&, SVGElement&);
 
-    virtual std::unique_ptr<SVGAnimatedType> constructFromString(const String&) override;
-    virtual std::unique_ptr<SVGAnimatedType> startAnimValAnimation(const SVGElementAnimatedPropertyList&) override { return nullptr; }
-    virtual void stopAnimValAnimation(const SVGElementAnimatedPropertyList&) override { }
-    virtual void resetAnimValToBaseVal(const SVGElementAnimatedPropertyList&, SVGAnimatedType*) override { }
-    virtual void animValWillChange(const SVGElementAnimatedPropertyList&) override { }
-    virtual void animValDidChange(const SVGElementAnimatedPropertyList&) override { }
-
-    virtual void addAnimatedTypes(SVGAnimatedType*, SVGAnimatedType*) override;
-    virtual void calculateAnimatedValue(float percentage, unsigned repeatCount, SVGAnimatedType*, SVGAnimatedType*, SVGAnimatedType*, SVGAnimatedType*) override;
-    virtual float calculateDistance(const String& fromString, const String& toString) override;
+private:
+    std::unique_ptr<SVGAnimatedType> constructFromString(const String&) final;
+    std::unique_ptr<SVGAnimatedType> startAnimValAnimation(const SVGElementAnimatedPropertyList&) final { return nullptr; }
+    void stopAnimValAnimation(const SVGElementAnimatedPropertyList&) final { }
+    void resetAnimValToBaseVal(const SVGElementAnimatedPropertyList&, SVGAnimatedType&) final { }
+    void animValWillChange(const SVGElementAnimatedPropertyList&) final { }
+    void animValDidChange(const SVGElementAnimatedPropertyList&) final { }
+    void addAnimatedTypes(SVGAnimatedType*, SVGAnimatedType*) final;
+    void calculateAnimatedValue(float percentage, unsigned repeatCount, SVGAnimatedType*, SVGAnimatedType*, SVGAnimatedType*, SVGAnimatedType*) final;
+    float calculateDistance(const String& fromString, const String& toString) final;
 };
-} // namespace WebCore
 
-#endif
+} // namespace WebCore

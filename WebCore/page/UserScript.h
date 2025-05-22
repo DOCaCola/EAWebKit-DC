@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
  
-#ifndef UserScript_h
-#define UserScript_h
+#pragma once
 
 #include "URL.h"
 #include "UserContentTypes.h"
@@ -45,8 +44,8 @@ public:
     UserScript(const String& source, const URL& url, Vector<String>&& whitelist, Vector<String>&& blacklist, UserScriptInjectionTime injectionTime, UserContentInjectedFrames injectedFrames)
         : m_source(source)
         , m_url(url)
-        , m_whitelist(WTF::move(whitelist))
-        , m_blacklist(WTF::move(blacklist))
+        , m_whitelist(WTFMove(whitelist))
+        , m_blacklist(WTFMove(blacklist))
         , m_injectionTime(injectionTime)
         , m_injectedFrames(injectedFrames)
     {
@@ -69,5 +68,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // UserScript_h

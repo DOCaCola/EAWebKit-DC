@@ -85,7 +85,7 @@ void SVGTextPathElement::parseAttribute(const QualifiedName& name, const AtomicS
     SVGParsingError parseError = NoError;
 
     if (name == SVGNames::startOffsetAttr)
-        setStartOffsetBaseValue(SVGLength::construct(LengthModeOther, value, parseError));
+        setStartOffsetBaseValue(SVGLengthValue::construct(LengthModeOther, value, parseError));
     else if (name == SVGNames::methodAttr) {
         SVGTextPathMethodType propertyValue = SVGPropertyTraits<SVGTextPathMethodType>::fromString(value);
         if (propertyValue > 0)
@@ -123,9 +123,9 @@ void SVGTextPathElement::svgAttributeChanged(const QualifiedName& attrName)
         RenderSVGResource::markForLayoutAndParentResourceInvalidation(*renderer);
 }
 
-RenderPtr<RenderElement> SVGTextPathElement::createElementRenderer(Ref<RenderStyle>&& style, const RenderTreePosition&)
+RenderPtr<RenderElement> SVGTextPathElement::createElementRenderer(RenderStyle&& style, const RenderTreePosition&)
 {
-    return createRenderer<RenderSVGTextPath>(*this, WTF::move(style));
+    return createRenderer<RenderSVGTextPath>(*this, WTFMove(style));
 }
 
 bool SVGTextPathElement::childShouldCreateRenderer(const Node& child) const

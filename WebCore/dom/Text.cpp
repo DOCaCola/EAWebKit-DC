@@ -23,15 +23,18 @@
 #include "Text.h"
 
 #include "Event.h"
+#include "ExceptionCode.h"
 #include "RenderCombineText.h"
 #include "RenderSVGInlineText.h"
 #include "RenderText.h"
+#include "RenderTreeUpdater.h"
 #include "SVGElement.h"
 #include "SVGNames.h"
 #include "ScopedEventQueue.h"
 #include "ShadowRoot.h"
 #include "StyleInheritedData.h"
 #include "StyleResolver.h"
+#include "StyleUpdate.h"
 #include "TextNodeTraversal.h"
 #include <wtf/CheckedArithmetic.h>
 #include <wtf/text/CString.h>
@@ -54,36 +57,30 @@ Text::~Text()
     ASSERT(!renderer());
 }
 
-RefPtr<Text> Text::splitText(unsigned offset, ExceptionCode& ec)
+ExceptionOr<Ref<Text>> Text::splitText(unsigned offset)
 {
-    ec = 0;
-
-    // INDEX_SIZE_ERR: Raised if the specified offset is negative or greater than
-    // the number of 16-bit units in data.
-    if (offset > length()) {
-        ec = INDEX_SIZE_ERR;
-        return 0;
-    }
+    if (offset > length())
+        return Exception { INDEX_SIZE_ERR };
 
     EventQueueScope scope;
-    String oldStr = data();
-    Ref<Text> newText = virtualCreate(oldStr.substring(offset));
-    setDataWithoutUpdate(oldStr.substring(0, offset));
+    auto oldData = data();
+    auto newText = virtualCreate(oldData.substring(offset));
+    setDataWithoutUpdate(oldData.substring(0, offset));
 
-    dispatchModifiedEvent(oldStr);
+    dispatchModifiedEvent(oldData);
 
-    if (parentNode())
-        parentNode()->insertBefore(newText.ptr(), nextSibling(), ec);
-    if (ec)
-        return 0;
+    if (auto* parent = parentNode()) {
+        auto insertResult = parent->insertBefore(newText, nextSibling());
+        if (insertResult.hasException())
+            return insertResult.releaseException();
+    }
 
-    if (parentNode())
-        document().textNodeSplit(this);
+    document().textNodeSplit(this);
 
     if (renderer())
-        renderer()->setTextWithOffset(data(), 0, oldStr.length());
+        renderer()->setTextWithOffset(data(), 0, oldData.length());
 
-    return WTF::move(newText);
+    return WTFMove(newText);
 }
 
 static const Text* earliestLogicallyAdjacentTextNode(const Text* text)
@@ -121,7 +118,7 @@ String Text::wholeText() const
     return result.toString();
 }
 
-RefPtr<Text> Text::replaceWholeText(const String& newText, ExceptionCode&)
+RefPtr<Text> Text::replaceWholeText(const String& newText)
 {
     // Remove all adjacent text nodes, and replace the contents of this one.
 
@@ -132,33 +129,33 @@ RefPtr<Text> Text::replaceWholeText(const String& newText, ExceptionCode&)
     RefPtr<Text> protectedThis(this); // Mutation event handlers could cause our last ref to go away
     RefPtr<ContainerNode> parent = parentNode(); // Protect against mutation handlers moving this node during traversal
     for (RefPtr<Node> n = startText; n && n != this && n->isTextNode() && n->parentNode() == parent;) {
-        RefPtr<Node> nodeToRemove(n.release());
+        Ref<Node> nodeToRemove(n.releaseNonNull());
         n = nodeToRemove->nextSibling();
-        parent->removeChild(nodeToRemove.get(), IGNORE_EXCEPTION);
+        parent->removeChild(nodeToRemove);
     }
 
     if (this != endText) {
         Node* onePastEndText = endText->nextSibling();
         for (RefPtr<Node> n = nextSibling(); n && n != onePastEndText && n->isTextNode() && n->parentNode() == parent;) {
-            RefPtr<Node> nodeToRemove(n.release());
+            Ref<Node> nodeToRemove(n.releaseNonNull());
             n = nodeToRemove->nextSibling();
-            parent->removeChild(nodeToRemove.get(), IGNORE_EXCEPTION);
+            parent->removeChild(nodeToRemove);
         }
     }
 
     if (newText.isEmpty()) {
         if (parent && parentNode() == parent)
-            parent->removeChild(this, IGNORE_EXCEPTION);
-        return 0;
+            parent->removeChild(*this);
+        return nullptr;
     }
 
-    setData(newText, IGNORE_EXCEPTION);
-    return protectedThis.release();
+    setData(newText);
+    return protectedThis;
 }
 
 String Text::nodeName() const
 {
-    return textAtom.string();
+    return ASCIILiteral("#text");
 }
 
 Node::NodeType Text::nodeType() const
@@ -166,7 +163,7 @@ Node::NodeType Text::nodeType() const
     return TEXT_NODE;
 }
 
-RefPtr<Node> Text::cloneNodeInternal(Document& targetDocument, CloningOperation)
+Ref<Node> Text::cloneNodeInternal(Document& targetDocument, CloningOperation)
 {
     return create(targetDocument, data());
 }
@@ -175,7 +172,7 @@ static bool isSVGShadowText(Text* text)
 {
     Node* parentNode = text->parentNode();
     ASSERT(parentNode);
-    return is<ShadowRoot>(*parentNode) && downcast<ShadowRoot>(*parentNode).hostElement()->hasTagName(SVGNames::trefTag);
+    return is<ShadowRoot>(*parentNode) && downcast<ShadowRoot>(*parentNode).host()->hasTagName(SVGNames::trefTag);
 }
 
 static bool isSVGText(Text* text)
@@ -215,6 +212,22 @@ Ref<Text> Text::createWithLengthLimit(Document& document, const String& data, un
     Ref<Text> result = Text::create(document, String());
     result->parserAppendData(data, start, lengthLimit);
     return result;
+}
+
+void Text::updateRendererAfterContentChange(unsigned offsetOfReplacedData, unsigned lengthOfReplacedData)
+{
+    ASSERT(parentNode());
+    if (styleValidity() >= Style::Validity::SubtreeAndRenderersInvalid)
+        return;
+
+    auto textUpdate = std::make_unique<Style::Update>(document());
+    textUpdate->addText(*this);
+
+    RenderTreeUpdater renderTreeUpdater(document());
+    renderTreeUpdater.commit(WTFMove(textUpdate));
+
+    if (auto* renderer = this->renderer())
+        renderer->setTextWithOffset(data(), offsetOfReplacedData, lengthOfReplacedData);
 }
 
 #if ENABLE(TREE_DEBUGGING)

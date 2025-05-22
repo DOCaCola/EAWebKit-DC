@@ -23,15 +23,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef InlineTextBoxStyle_h
-#define InlineTextBoxStyle_h
+#pragma once
 
 #include "FontCascade.h"
-#include "RenderStyle.h"
+#include "RenderStyleConstants.h"
 
 namespace WebCore {
     
 class InlineTextBox;
+class RenderStyle;
 
 inline float textDecorationStrokeThickness(float fontSize)
 {
@@ -44,10 +44,8 @@ inline float wavyOffsetFromDecoration()
     return 2;
 }
 
-GlyphOverflow visualOverflowForDecorations(const RenderStyle& lineStyle, InlineTextBox*);
+GlyphOverflow visualOverflowForDecorations(const RenderStyle& lineStyle, const InlineTextBox*);
 void getWavyStrokeParameters(float strokeThickness, float& controlPointDistance, float& step);
-int computeUnderlineOffset(TextUnderlinePosition, const FontMetrics&, InlineTextBox*, int textDecorationThickness);
+int computeUnderlineOffset(TextUnderlinePosition, const FontMetrics&, const InlineTextBox*, int textDecorationThickness);
     
-}
-
-#endif
+} // namespace WebCore

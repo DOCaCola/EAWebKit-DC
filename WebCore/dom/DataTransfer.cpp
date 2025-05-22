@@ -36,6 +36,7 @@
 #include "HTMLImageElement.h"
 #include "Image.h"
 #include "Pasteboard.h"
+#include "StaticPasteboard.h"
 
 namespace WebCore {
 
@@ -49,7 +50,7 @@ public:
     void stopLoading(CachedResourceHandle<CachedImage>&);
 
 private:
-    virtual void imageChanged(CachedImage*, const IntRect*) override;
+    void imageChanged(CachedImage*, const IntRect*) override;
     DataTransfer* m_dataTransfer;
 };
 
@@ -57,9 +58,9 @@ private:
 
 DataTransfer::DataTransfer(DataTransferAccessPolicy policy, std::unique_ptr<Pasteboard> pasteboard, Type type, bool forFileDrag)
     : m_policy(policy)
-    , m_pasteboard(WTF::move(pasteboard))
+    , m_pasteboard(WTFMove(pasteboard))
 #if ENABLE(DRAG_SUPPORT)
-    , m_forDrag(type != CopyAndPaste)
+    , m_forDrag(type == DragAndDrop)
     , m_forFileDrag(forFileDrag)
     , m_dropEffect(ASCIILiteral("uninitialized"))
     , m_effectAllowed(ASCIILiteral("uninitialized"))
@@ -67,7 +68,7 @@ DataTransfer::DataTransfer(DataTransferAccessPolicy policy, std::unique_ptr<Past
 #endif
 {
 #if !ENABLE(DRAG_SUPPORT)
-    ASSERT_UNUSED(type, type == CopyAndPaste);
+    ASSERT_UNUSED(type, type != DragAndDrop);
     ASSERT_UNUSED(forFileDrag, !forFileDrag);
 #endif
 }
@@ -112,15 +113,10 @@ void DataTransfer::clearData(const String& type)
     if (!canWriteData())
         return;
 
-    m_pasteboard->clear(type);
-}
-
-void DataTransfer::clearData()
-{
-    if (!canWriteData())
-        return;
-
-    m_pasteboard->clear();
+    if (type.isNull())
+        m_pasteboard->clear();
+    else
+        m_pasteboard->clear(type);
 }
 
 String DataTransfer::getData(const String& type) const
@@ -151,10 +147,8 @@ void DataTransfer::setData(const String& type, const String& data)
 
 Vector<String> DataTransfer::types() const
 {
-    // FIXME: Per HTML5, types should be a live array, and the DOM attribute should always return the same object.
-
     if (!canReadTypes())
-        return Vector<String>();
+        return { };
 
     return m_pasteboard->types();
 }
@@ -189,7 +183,7 @@ bool DataTransfer::hasFileOfType(const String& type)
     ASSERT_WITH_SECURITY_IMPLICATION(canReadTypes());
 
     for (const String& path : m_pasteboard->readFilenames()) {
-        if (equalIgnoringCase(File::contentTypeForFile(path), type))
+        if (equalIgnoringASCIICase(File::contentTypeForFile(path), type))
             return true;
     }
 
@@ -201,6 +195,14 @@ bool DataTransfer::hasStringOfType(const String& type)
     ASSERT_WITH_SECURITY_IMPLICATION(canReadTypes());
 
     return !type.isNull() && types().contains(type);
+}
+
+Ref<DataTransfer> DataTransfer::createForInputEvent(const String& plainText, const String& htmlText)
+{
+    TypeToStringMap typeToStringMap;
+    typeToStringMap.set(ASCIILiteral("text/plain"), plainText);
+    typeToStringMap.set(ASCIILiteral("text/html"), htmlText);
+    return adoptRef(*new DataTransfer(DataTransferAccessPolicy::Readable, StaticPasteboard::create(WTFMove(typeToStringMap)), InputEvent));
 }
 
 #if !ENABLE(DRAG_SUPPORT)
@@ -288,7 +290,7 @@ void DataTransfer::updateDragImage()
     m_pasteboard->setDragImage(computedImage, computedHotSpot);
 }
 
-#if !PLATFORM(COCOA)
+#if !PLATFORM(MAC)
 
 DragImageRef DataTransfer::createDragImage(IntPoint& location) const
 {
@@ -316,12 +318,12 @@ DragImageLoader::DragImageLoader(DataTransfer* dataTransfer)
 void DragImageLoader::startLoading(CachedResourceHandle<WebCore::CachedImage>& image)
 {
     // FIXME: Does this really trigger a load? Does it need to?
-    image->addClient(this);
+    image->addClient(*this);
 }
 
 void DragImageLoader::stopLoading(CachedResourceHandle<WebCore::CachedImage>& image)
 {
-    image->removeClient(this);
+    image->removeClient(*this);
 }
 
 void DragImageLoader::imageChanged(CachedImage*, const IntRect*)

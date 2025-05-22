@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Ericsson AB. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,15 +29,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef UserMediaClient_h
-#define UserMediaClient_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
-#include <wtf/PassRefPtr.h>
-
 namespace WebCore {
 
+class MediaDevicesEnumerationRequest;
 class Page;
 class UserMediaRequest;
 
@@ -44,8 +43,11 @@ class UserMediaClient {
 public:
     virtual void pageDestroyed() = 0;
 
-    virtual void requestPermission(Ref<UserMediaRequest>&&) = 0;
-    virtual void cancelRequest(UserMediaRequest&) = 0;
+    virtual void requestUserMediaAccess(UserMediaRequest&) = 0;
+    virtual void cancelUserMediaAccessRequest(UserMediaRequest&) = 0;
+
+    virtual void enumerateMediaDevices(MediaDevicesEnumerationRequest&) = 0;
+    virtual void cancelMediaDevicesEnumerationRequest(MediaDevicesEnumerationRequest&) = 0;
 
 protected:
     virtual ~UserMediaClient() { }
@@ -56,5 +58,3 @@ WEBCORE_EXPORT void provideUserMediaTo(Page*, UserMediaClient*);
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif // UserMediaClient_h

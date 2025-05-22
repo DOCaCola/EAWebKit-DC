@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGPropertyTraits_h
-#define SVGPropertyTraits_h
+#pragma once
 
 #include <wtf/text/WTFString.h>
 
@@ -58,6 +57,10 @@ struct SVGPropertyTraits<String> {
     static String toString(const String& type) { return type; }
 };
 
-}
+template<typename EnumType>
+struct SVGIDLEnumLimits {
+    // Specialize this function for a particular enumeration to limit the values that are exposed through the DOM.
+    static unsigned highestExposedEnumValue() { return SVGPropertyTraits<EnumType>::highestEnumValue(); }
+};
 
-#endif
+} // namespace WebCore

@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RenderPtr_h
-#define RenderPtr_h
+#pragma once
 
 #include <algorithm>
 #include <cstddef>
@@ -109,7 +108,7 @@ template<typename T> template<typename U> inline RenderPtr<T>::RenderPtr(RenderP
 template<typename T> inline auto RenderPtr<T>::operator=(RenderPtr&& o) -> RenderPtr&
 {
     ASSERT(!o || o != m_ptr);
-    RenderPtr ptr = WTF::move(o);
+    RenderPtr ptr = WTFMove(o);
     swap(ptr);
     return *this;
 }
@@ -117,7 +116,7 @@ template<typename T> inline auto RenderPtr<T>::operator=(RenderPtr&& o) -> Rende
 template<typename T> template<typename U> inline auto RenderPtr<T>::operator=(RenderPtr<U>&& o) -> RenderPtr&
 {
     ASSERT(!o || o != m_ptr);
-    RenderPtr ptr = WTF::move(o);
+    RenderPtr ptr = WTFMove(o);
     swap(ptr);
     return *this;
 }
@@ -177,5 +176,3 @@ template<typename T> struct HashTraits<WebCore::RenderPtr<T>> : SimpleClassHashT
 };
 
 } // namespace WTF
-
-#endif // RenderPtr_h

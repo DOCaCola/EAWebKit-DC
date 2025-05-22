@@ -23,33 +23,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebKitAnimationEvent_h
-#define WebKitAnimationEvent_h
+#pragma once
 
 #include "Event.h"
 
 namespace WebCore {
 
-struct WebKitAnimationEventInit : public EventInit {
-    WebKitAnimationEventInit();
-
-    String animationName;
-    double elapsedTime;
-};
-
 class WebKitAnimationEvent final : public Event {
 public:
-    static Ref<WebKitAnimationEvent> create()
-    {
-        return adoptRef(*new WebKitAnimationEvent);
-    }
     static Ref<WebKitAnimationEvent> create(const AtomicString& type, const String& animationName, double elapsedTime)
     {
         return adoptRef(*new WebKitAnimationEvent(type, animationName, elapsedTime));
     }
-    static Ref<WebKitAnimationEvent> create(const AtomicString& type, const WebKitAnimationEventInit& initializer)
+
+    struct Init : EventInit {
+        String animationName;
+        double elapsedTime { 0.0 };
+    };
+
+    static Ref<WebKitAnimationEvent> create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
     {
-        return adoptRef(*new WebKitAnimationEvent(type, initializer));
+        return adoptRef(*new WebKitAnimationEvent(type, initializer, isTrusted));
     }
 
     virtual ~WebKitAnimationEvent();
@@ -57,17 +51,14 @@ public:
     const String& animationName() const;
     double elapsedTime() const;
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
-    WebKitAnimationEvent();
     WebKitAnimationEvent(const AtomicString& type, const String& animationName, double elapsedTime);
-    WebKitAnimationEvent(const AtomicString&, const WebKitAnimationEventInit&);
+    WebKitAnimationEvent(const AtomicString&, const Init&, IsTrusted);
 
     String m_animationName;
     double m_elapsedTime;
 };
 
 } // namespace WebCore
-
-#endif // WebKitAnimationEvent_h

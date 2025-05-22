@@ -90,7 +90,6 @@ private:
 
 #elif PLATFORM(WIN)
     static void CALLBACK addrChangeCallback(void*, BOOLEAN timedOut);
-    static void callAddressChanged(void*);
     void addressChanged();
 
     void registerForAddressChange();

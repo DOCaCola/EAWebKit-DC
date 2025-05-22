@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorFrontendHost_h
-#define InspectorFrontendHost_h
+#pragma once
 
 #include "ContextMenu.h"
 #include "ContextMenuProvider.h"
@@ -57,20 +56,27 @@ public:
     void requestSetDockSide(const String&);
     void closeWindow();
     void bringToFront();
-    void setZoomFactor(float);
     void inspectedURLChanged(const String&);
+
+    void setZoomFactor(float);
+    float zoomFactor();
 
     void setAttachedWindowHeight(unsigned);
     void setAttachedWindowWidth(unsigned);
-    void setToolbarHeight(unsigned);
 
     void startWindowDrag();
     void moveWindowBy(float x, float y) const;
 
     String localizedStringsURL();
+    String backendCommandsURL();
     String debuggableType();
+    unsigned inspectionLevel();
+
+    String platform();
+    String port();
 
     void copyText(const String& text);
+    void killText(const String& text, bool shouldPrependToKillRing, bool shouldStartNewSequence);
     void openInNewTab(const String& url);
     bool canSave();
     void save(const String& url, const String& content, bool base64Encoded, bool forceSaveAs);
@@ -89,9 +95,6 @@ public:
 
     void beep();
 
-    bool canInspectWorkers();
-    bool canSaveAs();
-
 private:
 #if ENABLE(CONTEXT_MENUS)
     friend class FrontendMenuProvider;
@@ -106,5 +109,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // !defined(InspectorFrontendHost_h)

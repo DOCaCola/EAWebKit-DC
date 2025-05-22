@@ -22,62 +22,48 @@
  *
  */
 
-#ifndef NodeIterator_h
-#define NodeIterator_h
+#pragma once
 
 #include "NodeFilter.h"
 #include "ScriptWrappable.h"
 #include "Traversal.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
 
 namespace WebCore {
 
-    typedef int ExceptionCode;
+class NodeIterator : public ScriptWrappable, public RefCounted<NodeIterator>, public NodeIteratorBase {
+public:
+    static Ref<NodeIterator> create(Node&, unsigned whatToShow, RefPtr<NodeFilter>&&);
+    WEBCORE_EXPORT ~NodeIterator();
 
-    class NodeIterator : public ScriptWrappable, public RefCounted<NodeIterator>, public NodeIteratorBase {
-    public:
-        static Ref<NodeIterator> create(PassRefPtr<Node> rootNode, unsigned whatToShow, PassRefPtr<NodeFilter> filter, bool expandEntityReferences)
-        {
-            return adoptRef(*new NodeIterator(rootNode, whatToShow, filter, expandEntityReferences));
-        }
-        ~NodeIterator();
+    WEBCORE_EXPORT RefPtr<Node> nextNode();
+    WEBCORE_EXPORT RefPtr<Node> previousNode();
+    void detach() { } // This is now a no-op as per the DOM specification.
 
-        PassRefPtr<Node> nextNode(JSC::ExecState*, ExceptionCode&);
-        PassRefPtr<Node> previousNode(JSC::ExecState*, ExceptionCode&);
-        void detach();
+    Node* referenceNode() const { return m_referenceNode.node.get(); }
+    bool pointerBeforeReferenceNode() const { return m_referenceNode.isPointerBeforeNode; }
 
-        Node* referenceNode() const { return m_referenceNode.node.get(); }
-        bool pointerBeforeReferenceNode() const { return m_referenceNode.isPointerBeforeNode; }
+    // This function is called before any node is removed from the document tree.
+    void nodeWillBeRemoved(Node&);
 
-        // This function is called before any node is removed from the document tree.
-        void nodeWillBeRemoved(Node&);
+private:
+    NodeIterator(Node&, unsigned whatToShow, RefPtr<NodeFilter>&&);
 
-        // Do not call these functions. They are just scaffolding to support the Objective-C bindings.
-        // They operate in the main thread normal world, and they swallow JS exceptions.
-        PassRefPtr<Node> nextNode(ExceptionCode& ec) { return nextNode(execStateFromNode(mainThreadNormalWorld(), referenceNode()), ec); }
-        PassRefPtr<Node> previousNode(ExceptionCode& ec) { return previousNode(execStateFromNode(mainThreadNormalWorld(), referenceNode()), ec); }
+    struct NodePointer {
+        RefPtr<Node> node;
+        bool isPointerBeforeNode { true };
 
-    private:
-        NodeIterator(PassRefPtr<Node>, unsigned whatToShow, PassRefPtr<NodeFilter>, bool expandEntityReferences);
+        NodePointer() = default;
+        NodePointer(Node&, bool);
 
-        struct NodePointer {
-            RefPtr<Node> node;
-            bool isPointerBeforeNode;
-            NodePointer();
-            NodePointer(PassRefPtr<Node>, bool);
-            void clear();
-            bool moveToNext(Node* root);
-            bool moveToPrevious(Node* root);
-        };
-
-        void updateForNodeRemoval(Node& nodeToBeRemoved, NodePointer&) const;
-
-        NodePointer m_referenceNode;
-        NodePointer m_candidateNode;
-        bool m_detached;
+        void clear();
+        bool moveToNext(Node& root);
+        bool moveToPrevious(Node& root);
     };
 
-} // namespace WebCore
+    void updateForNodeRemoval(Node& nodeToBeRemoved, NodePointer&) const;
 
-#endif // NodeIterator_h
+    NodePointer m_referenceNode;
+    NodePointer m_candidateNode;
+};
+
+} // namespace WebCore

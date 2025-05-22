@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2015 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,13 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DFACombiner_h
-#define DFACombiner_h
+#pragma once
 
-//+EAWebKitChange
-//9/23/2015 It appears this new code is missing an appropriate guard
 #if ENABLE(CONTENT_EXTENSIONS)
-//-EAWebKitChange
 
 #include "DFA.h"
 #include <wtf/Vector.h>
@@ -51,16 +46,10 @@ private:
 inline void DFACombiner::addDFA(DFA&& dfa)
 {
     dfa.minimize();
-    m_dfas.append(WTF::move(dfa));
+    m_dfas.append(WTFMove(dfa));
 }
 
-}
-
+} // namespace ContentExtensions
 } // namespace WebCore
 
-#endif
-
-//+EAWebKitChange
-//9/23/2015 #if ENABLE(CONTENT_EXTENSIONS)
-#endif
-//-EAWebKitChange
+#endif // ENABLE(CONTENT_EXTENSIONS)

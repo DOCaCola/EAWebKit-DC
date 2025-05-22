@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef RenderScrollbar_h
-#define RenderScrollbar_h
+#pragma once
 
 #include "RenderPtr.h"
 #include "RenderStyleConstants.h"
@@ -42,12 +41,12 @@ class RenderStyle;
 class RenderScrollbar final : public Scrollbar {
 public:
     friend class Scrollbar;
-    static RefPtr<Scrollbar> createCustomScrollbar(ScrollableArea&, ScrollbarOrientation, Element*, Frame* owningFrame = nullptr);
+    static Ref<Scrollbar> createCustomScrollbar(ScrollableArea&, ScrollbarOrientation, Element*, Frame* owningFrame = nullptr);
     virtual ~RenderScrollbar();
 
     RenderBox* owningRenderer() const;
 
-    void paintPart(GraphicsContext*, ScrollbarPart, const IntRect&);
+    void paintPart(GraphicsContext&, ScrollbarPart, const IntRect&);
 
     IntRect buttonRect(ScrollbarPart);
     IntRect trackRect(int startLength, int endLength);
@@ -55,24 +54,24 @@ public:
 
     int minimumThumbLength();
 
-    virtual bool isOverlayScrollbar() const override { return false; }
+    bool isOverlayScrollbar() const override { return false; }
 
     float opacity();
 
-    PassRefPtr<RenderStyle> getScrollbarPseudoStyle(ScrollbarPart, PseudoId);
+    std::unique_ptr<RenderStyle> getScrollbarPseudoStyle(ScrollbarPart, PseudoId);
 
 private:
     RenderScrollbar(ScrollableArea&, ScrollbarOrientation, Element*, Frame*);
 
-    virtual void setParent(ScrollView*) override;
-    virtual void setEnabled(bool) override;
+    void setParent(ScrollView*) override;
+    void setEnabled(bool) override;
 
-    virtual void paint(GraphicsContext*, const IntRect& damageRect) override;
+    void paint(GraphicsContext&, const IntRect& damageRect) override;
 
-    virtual void setHoveredPart(ScrollbarPart) override;
-    virtual void setPressedPart(ScrollbarPart) override;
+    void setHoveredPart(ScrollbarPart) override;
+    void setPressedPart(ScrollbarPart) override;
 
-    virtual void styleChanged() override;
+    void styleChanged() override;
 
     void updateScrollbarParts();
 
@@ -93,5 +92,3 @@ private:
 SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::RenderScrollbar)
     static bool isType(const WebCore::Scrollbar& scrollbar) { return scrollbar.isCustomScrollbar(); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif // RenderScrollbar_h

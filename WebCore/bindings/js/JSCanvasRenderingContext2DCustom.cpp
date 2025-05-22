@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2006-2017 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -38,84 +38,16 @@ using namespace JSC;
 
 namespace WebCore {
 
-static JSValue toJS(ExecState* exec, JSDOMGlobalObject* globalObject, const CanvasStyle& style)
+bool JSCanvasRenderingContext2DOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
-    if (style.canvasGradient())
-        return toJS(exec, globalObject, style.canvasGradient());
-    if (style.canvasPattern())
-        return toJS(exec, globalObject, style.canvasPattern());
-    return jsStringWithCache(exec, style.color());
+    JSCanvasRenderingContext2D* jsCanvasRenderingContext = jsCast<JSCanvasRenderingContext2D*>(handle.slot()->asCell());
+    void* root = WebCore::root(jsCanvasRenderingContext->wrapped().canvas());
+    return visitor.containsOpaqueRoot(root);
 }
 
-static CanvasStyle toHTMLCanvasStyle(ExecState*, JSValue value)
+void JSCanvasRenderingContext2D::visitAdditionalChildren(SlotVisitor& visitor)
 {
-    if (!value.isObject())
-        return CanvasStyle();
-    JSObject* object = asObject(value);
-    if (object->inherits(JSCanvasGradient::info()))
-        return CanvasStyle(&jsCast<JSCanvasGradient*>(object)->impl());
-    if (object->inherits(JSCanvasPattern::info()))
-        return CanvasStyle(&jsCast<JSCanvasPattern*>(object)->impl());
-    return CanvasStyle();
-}
-
-JSValue JSCanvasRenderingContext2D::strokeStyle(ExecState* exec) const
-{
-    return toJS(exec, globalObject(), impl().strokeStyle());
-}
-
-void JSCanvasRenderingContext2D::setStrokeStyle(ExecState* exec, JSValue value)
-{
-    CanvasRenderingContext2D& context = impl();
-    if (value.isString()) {
-        context.setStrokeColor(asString(value)->value(exec));
-        return;
-    }
-    context.setStrokeStyle(toHTMLCanvasStyle(exec, value));
-}
-
-JSValue JSCanvasRenderingContext2D::fillStyle(ExecState* exec) const
-{
-    return toJS(exec, globalObject(), impl().fillStyle());
-}
-
-void JSCanvasRenderingContext2D::setFillStyle(ExecState* exec, JSValue value)
-{
-    CanvasRenderingContext2D& context = impl();
-    if (value.isString()) {
-        context.setFillColor(asString(value)->value(exec));
-        return;
-    }
-    context.setFillStyle(toHTMLCanvasStyle(exec, value));
-}
-
-JSValue JSCanvasRenderingContext2D::webkitLineDash(ExecState* exec) const
-{
-    const Vector<float>& dash = impl().getLineDash();
-
-    MarkedArgumentBuffer list;
-    Vector<float>::const_iterator end = dash.end();
-    for (Vector<float>::const_iterator it = dash.begin(); it != end; ++it)
-        list.append(JSValue(*it));
-    return constructArray(exec, 0, globalObject(), list);
-}
-
-void JSCanvasRenderingContext2D::setWebkitLineDash(ExecState* exec, JSValue value)
-{
-    if (!isJSArray(value))
-        return;
-
-    Vector<float> dash;
-    JSArray* valueArray = asArray(value);
-    for (unsigned i = 0; i < valueArray->length(); ++i) {
-        float elem = valueArray->getIndex(exec, i).toFloat(exec);
-        if (elem <= 0 || !std::isfinite(elem))
-            return;
-
-        dash.append(elem);
-    }
-
-    impl().setWebkitLineDash(dash);
+    visitor.addOpaqueRoot(root(wrapped().canvas()));
 }
 
 } // namespace WebCore

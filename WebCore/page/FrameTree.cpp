@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2006-2017 Apple Inc. All rights reserved.
  * Copyright (C) Research In Motion Limited 2010. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -48,14 +48,14 @@ void FrameTree::setName(const AtomicString& name)
         m_uniqueName = name;
         return;
     }
-    m_uniqueName = AtomicString(); // Remove our old frame name so it's not considered in uniqueChildName.
+    m_uniqueName = nullAtom; // Remove our old frame name so it's not considered in uniqueChildName.
     m_uniqueName = parent()->tree().uniqueChildName(name);
 }
 
 void FrameTree::clearName()
 {
-    m_name = AtomicString();
-    m_uniqueName = AtomicString();
+    m_name = nullAtom;
+    m_uniqueName = nullAtom;
 }
 
 Frame* FrameTree::parent() const 
@@ -63,80 +63,61 @@ Frame* FrameTree::parent() const
     return m_parent;
 }
 
-bool FrameTree::transferChild(PassRefPtr<Frame> child)
+unsigned FrameTree::indexInParent() const
 {
-    Frame* oldParent = child->tree().parent();
-    if (oldParent == &m_thisFrame)
-        return false; // |child| is already a child of m_thisFrame.
-
-    if (oldParent)
-        oldParent->tree().removeChild(child.get());
-
-    ASSERT(child->page() == m_thisFrame.page());
-    child->tree().m_parent = &m_thisFrame;
-
-    // We need to ensure that the child still has a unique frame name with respect to its new parent.
-    child->tree().setName(child->tree().m_name);
-
-    actuallyAppendChild(child); // Note, on return |child| is null.
-    return true;
+    if (!m_parent)
+        return 0;
+    unsigned index = 0;
+    for (Frame* frame = m_parent->tree().firstChild(); frame; frame = frame->tree().nextSibling()) {
+        if (&frame->tree() == this)
+            return index;
+        ++index;
+    }
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
-void FrameTree::appendChild(PassRefPtr<Frame> child)
+void FrameTree::appendChild(Frame& child)
 {
-    ASSERT(child->page() == m_thisFrame.page());
-    child->tree().m_parent = &m_thisFrame;
-    actuallyAppendChild(child); // Note, on return |child| is null.
-}
-
-void FrameTree::actuallyAppendChild(PassRefPtr<Frame> child)
-{
-    ASSERT(child->tree().m_parent == &m_thisFrame);
+    ASSERT(child.page() == m_thisFrame.page());
+    child.tree().m_parent = &m_thisFrame;
     Frame* oldLast = m_lastChild;
-    m_lastChild = child.get();
+    m_lastChild = &child;
 
     if (oldLast) {
-        child->tree().m_previousSibling = oldLast;
-        oldLast->tree().m_nextSibling = child;
+        child.tree().m_previousSibling = oldLast;
+        oldLast->tree().m_nextSibling = &child;
     } else
-        m_firstChild = child;
+        m_firstChild = &child;
 
     m_scopedChildCount = invalidCount;
 
     ASSERT(!m_lastChild->tree().m_nextSibling);
 }
 
-void FrameTree::removeChild(Frame* child)
+void FrameTree::removeChild(Frame& child)
 {
-    child->tree().m_parent = nullptr;
+    Frame*& newLocationForPrevious = m_lastChild == &child ? m_lastChild : child.tree().m_nextSibling->tree().m_previousSibling;
+    RefPtr<Frame>& newLocationForNext = m_firstChild == &child ? m_firstChild : child.tree().m_previousSibling->tree().m_nextSibling;
 
-    // Slightly tricky way to prevent deleting the child until we are done with it, w/o
-    // extra refs. These swaps leave the child in a circular list by itself. Clearing its
-    // previous and next will then finally deref it.
-
-    RefPtr<Frame>& newLocationForNext = m_firstChild == child ? m_firstChild : child->tree().m_previousSibling->tree().m_nextSibling;
-    Frame*& newLocationForPrevious = m_lastChild == child ? m_lastChild : child->tree().m_nextSibling->tree().m_previousSibling;
-    swap(newLocationForNext, child->tree().m_nextSibling);
-    // For some inexplicable reason, the following line does not compile without the explicit std:: namespace
-    std::swap(newLocationForPrevious, child->tree().m_previousSibling);
-
-    child->tree().m_previousSibling = nullptr;
-    child->tree().m_nextSibling = nullptr;
+    child.tree().m_parent = nullptr;
+    newLocationForPrevious = std::exchange(child.tree().m_previousSibling, nullptr);
+    newLocationForNext = WTFMove(child.tree().m_nextSibling);
 
     m_scopedChildCount = invalidCount;
 }
 
 AtomicString FrameTree::uniqueChildName(const AtomicString& requestedName) const
 {
+    // If the requested name (the frame's "name" attribute) is unique, just use that.
     if (!requestedName.isEmpty() && !child(requestedName) && requestedName != "_blank")
         return requestedName;
 
-    // Create a repeatable name for a child about to be added to us. The name must be
-    // unique within the frame tree. The string we generate includes a "path" of names
-    // from the root frame down to us. For this path to be unique, each set of siblings must
-    // contribute a unique name to the path, which can't collide with any HTML-assigned names.
-    // We generate this path component by index in the child list along with an unlikely
-    // frame name that can't be set in HTML because it collides with comment syntax.
+    // The "name" attribute was not unique or absent. Generate a name based on the
+    // new frame's location in the frame tree. The name uses HTML comment syntax to
+    // avoid collisions with author names.
+
+    // An example path for the third child of the second child of the root frame:
+    // <!--framePath //<!--frame1-->/<!--frame2-->-->
 
     const char framePathPrefix[] = "<!--framePath ";
     const int framePathPrefixLength = 14;
@@ -159,7 +140,11 @@ AtomicString FrameTree::uniqueChildName(const AtomicString& requestedName) const
     for (int i = chain.size() - 1; i >= 0; --i) {
         frame = chain[i];
         name.append('/');
-        name.append(frame->tree().uniqueName());
+        if (frame->tree().parent()) {
+            name.appendLiteral("<!--frame");
+            name.appendNumber(frame->tree().indexInParent());
+            name.appendLiteral("-->");
+        }
     }
 
     name.appendLiteral("/<!--frame");

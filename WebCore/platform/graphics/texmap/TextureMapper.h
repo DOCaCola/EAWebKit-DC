@@ -21,12 +21,6 @@
 #ifndef TextureMapper_h
 #define TextureMapper_h
 
-#if USE(TEXTURE_MAPPER)
-
-#if USE(OPENGL_ES_2)
-#define TEXMAP_OPENGL_ES_2
-#endif
-
 #include "BitmapTexture.h"
 #include "GraphicsContext.h"
 #include "IntRect.h"
@@ -139,7 +133,5 @@ private:
 };
 
 }
-
-#endif
 
 #endif

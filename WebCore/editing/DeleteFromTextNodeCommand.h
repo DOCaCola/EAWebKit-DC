@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DeleteFromTextNodeCommand_h
-#define DeleteFromTextNodeCommand_h
+#pragma once
 
 #include "EditCommand.h"
 
@@ -36,20 +35,18 @@ class DeleteFromTextNodeCommand : public SimpleEditCommand {
 public:
     static Ref<DeleteFromTextNodeCommand> create(RefPtr<Text>&& node, unsigned offset, unsigned count, EditAction editingAction = EditActionDelete)
     {
-        return adoptRef(*new DeleteFromTextNodeCommand(WTF::move(node), offset, count, editingAction));
+        return adoptRef(*new DeleteFromTextNodeCommand(WTFMove(node), offset, count, editingAction));
     }
-
-    const String& deletedText();
 
 protected:
     DeleteFromTextNodeCommand(RefPtr<Text>&&, unsigned offset, unsigned count, EditAction);
 
 private:
-    virtual void doApply() override;
-    virtual void doUnapply() override;
+    void doApply() override;
+    void doUnapply() override;
     
 #ifndef NDEBUG
-    virtual void getNodesInCommand(HashSet<Node*>&) override;
+    void getNodesInCommand(HashSet<Node*>&) override;
 #endif
     
     RefPtr<Text> m_node;
@@ -58,11 +55,4 @@ private:
     String m_text;
 };
 
-inline const String& DeleteFromTextNodeCommand::deletedText()
-{
-    return m_text;
-}
-
 } // namespace WebCore
-
-#endif // DeleteFromTextNodeCommand_h

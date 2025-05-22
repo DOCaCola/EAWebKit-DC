@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TextTrackLoader_h
-#define TextTrackLoader_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -47,9 +46,7 @@ public:
     
     virtual void newCuesAvailable(TextTrackLoader*) = 0;
     virtual void cueLoadingCompleted(TextTrackLoader*, bool loadingFailed) = 0;
-#if ENABLE(WEBVTT_REGIONS)
     virtual void newRegionsAvailable(TextTrackLoader*) = 0;
-#endif
 };
 
 class TextTrackLoader : public CachedResourceClient, private WebVTTParserClient {
@@ -62,34 +59,29 @@ public:
     bool load(const URL&, const String& crossOriginMode, bool isInitiatingElementInUserAgentShadowTree);
     void cancelLoad();
     void getNewCues(Vector<RefPtr<TextTrackCue>>& outputCues);
-#if ENABLE(WEBVTT_REGIONS)
     void getNewRegions(Vector<RefPtr<VTTRegion>>& outputRegions);
-#endif
 private:
 
     // CachedResourceClient
-    virtual void notifyFinished(CachedResource*) override;
-    virtual void deprecatedDidReceiveCachedResource(CachedResource*) override;
-    
+    void notifyFinished(CachedResource&) override;
+    void deprecatedDidReceiveCachedResource(CachedResource&) override;
+
     // WebVTTParserClient
-    virtual void newCuesParsed() override;
-#if ENABLE(WEBVTT_REGIONS)
-    virtual void newRegionsParsed() override;
-#endif
-    virtual void fileFailedToParse() override;
-    
-    void processNewCueData(CachedResource*);
+    void newCuesParsed() override;
+    void newRegionsParsed() override;
+    void fileFailedToParse() override;
+
+    void processNewCueData(CachedResource&);
     void cueLoadTimerFired();
     void corsPolicyPreventedLoad();
 
     enum State { Idle, Loading, Finished, Failed };
-    
+
     TextTrackLoaderClient& m_client;
     std::unique_ptr<WebVTTParser> m_cueParser;
     CachedResourceHandle<CachedTextTrack> m_resource;
     ScriptExecutionContext* m_scriptExecutionContext;
     Timer m_cueLoadTimer;
-    String m_crossOriginMode;
     State m_state;
     unsigned m_parseOffset;
     bool m_newCuesAvailable;
@@ -97,5 +89,4 @@ private:
 
 } // namespace WebCore
 
-#endif
-#endif
+#endif // ENABLE(VIDEO_TRACK)

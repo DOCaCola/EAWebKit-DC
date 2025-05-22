@@ -25,6 +25,4 @@
 [
     Conditional=WEB_AUDIO,
     JSGenerateToJSObject,
-] callback interface AudioBufferCallback {
-    boolean handleEvent(AudioBuffer audioBuffer);
-};
+] callback AudioBufferCallback = void (AudioBuffer audioBuffer);

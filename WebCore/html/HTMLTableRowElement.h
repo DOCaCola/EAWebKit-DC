@@ -23,9 +23,9 @@
  *
  */
 
-#ifndef HTMLTableRowElement_h
-#define HTMLTableRowElement_h
+#pragma once
 
+#include "HTMLTableCellElement.h"
 #include "HTMLTablePartElement.h"
 
 namespace WebCore {
@@ -35,23 +35,19 @@ public:
     static Ref<HTMLTableRowElement> create(Document&);
     static Ref<HTMLTableRowElement> create(const QualifiedName&, Document&);
 
-    int rowIndex() const;
+    WEBCORE_EXPORT int rowIndex() const;
     void setRowIndex(int);
 
-    int sectionRowIndex() const;
+    WEBCORE_EXPORT int sectionRowIndex() const;
     void setSectionRowIndex(int);
 
-    RefPtr<HTMLElement> insertCell(ExceptionCode& ec) { return insertCell(-1, ec); }
-    RefPtr<HTMLElement> insertCell(int index, ExceptionCode&);
-    void deleteCell(int index, ExceptionCode&);
+    WEBCORE_EXPORT ExceptionOr<Ref<HTMLTableCellElement>> insertCell(int index = -1);
+    WEBCORE_EXPORT ExceptionOr<void> deleteCell(int index);
 
-    Ref<HTMLCollection> cells();
-    void setCells(HTMLCollection *, ExceptionCode&);
+    WEBCORE_EXPORT Ref<HTMLCollection> cells();
 
 private:
     HTMLTableRowElement(const QualifiedName&, Document&);
 };
 
 } // namespace
-
-#endif

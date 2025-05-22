@@ -25,25 +25,28 @@
 
 #include "config.h"
 #include "Logging.h"
+#include "LogInitialization.h"
 
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
-#if !LOG_DISABLED
+#if PLATFORM(COCOA)
+#include <notify.h>
+#endif
 
 namespace WebCore {
 
-#define DEFINE_LOG_CHANNEL(name) \
-    WTFLogChannel JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, name) = { WTFLogChannelOff, #name };
-WEBCORE_LOG_CHANNELS(DEFINE_LOG_CHANNEL)
+#if !LOG_DISABLED || !RELEASE_LOG_DISABLED
 
-#define LOG_CHANNEL_ADDRESS(name)  &JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, name),
-WTFLogChannel* logChannels[] = {
+#define DEFINE_WEBCORE_LOG_CHANNEL(name) DEFINE_LOG_CHANNEL(name, LOG_CHANNEL_WEBKIT_SUBSYSTEM)
+WEBCORE_LOG_CHANNELS(DEFINE_WEBCORE_LOG_CHANNEL)
+
+static WTFLogChannel* logChannels[] = {
     WEBCORE_LOG_CHANNELS(LOG_CHANNEL_ADDRESS)
 };
 
-size_t logChannelCount = WTF_ARRAY_LENGTH(logChannels);
+static const size_t logChannelCount = WTF_ARRAY_LENGTH(logChannels);
 
 bool isLogChannelEnabled(const String& name)
 {
@@ -53,16 +56,43 @@ bool isLogChannelEnabled(const String& name)
     return channel->state != WTFLogChannelOff;
 }
 
-void initializeLoggingChannelsIfNecessary()
+static bool logChannelsNeedInitialization = true;
+
+void setLogChannelToAccumulate(const String& name)
 {
-    static bool haveInitializedLoggingChannels = false;
-    if (haveInitializedLoggingChannels)
+    WTFLogChannel* channel = WTFLogChannelByName(logChannels, logChannelCount, name.utf8().data());
+    if (!channel)
         return;
-    haveInitializedLoggingChannels = true;
+
+    channel->state = WTFLogChannelOnWithAccumulation;
+    logChannelsNeedInitialization = true;
+}
+
+void initializeLogChannelsIfNecessary()
+{
+    if (!logChannelsNeedInitialization)
+        return;
+
+    logChannelsNeedInitialization = false;
 
     WTFInitializeLogChannelStatesFromString(logChannels, logChannelCount, logLevelString().utf8().data());
 }
 
+#ifndef NDEBUG
+void registerNotifyCallback(const String& notifyID, std::function<void()> callback)
+{
+#if PLATFORM(COCOA)
+    int token;
+    notify_register_dispatch(notifyID.utf8().data(), &token, dispatch_get_main_queue(), ^(int) {
+        callback();
+    });
+#else
+    UNUSED_PARAM(notifyID);
+    UNUSED_PARAM(callback);
+#endif
 }
+#endif
 
-#endif // !LOG_DISABLED
+#endif // !LOG_DISABLED || !RELEASE_LOG_DISABLED
+
+} // namespace WebCore

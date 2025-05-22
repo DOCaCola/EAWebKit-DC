@@ -22,57 +22,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ConvolverNode_h
-#define ConvolverNode_h
+#pragma once
 
 #include "AudioNode.h"
-#include <memory>
-#include <mutex>
-#include <wtf/RefPtr.h>
+#include <wtf/Lock.h>
 
 namespace WebCore {
 
 class AudioBuffer;
 class Reverb;
     
-class ConvolverNode : public AudioNode {
+class ConvolverNode final : public AudioNode {
 public:
-    static Ref<ConvolverNode> create(AudioContext* context, float sampleRate)
+    static Ref<ConvolverNode> create(AudioContext& context, float sampleRate)
     {
         return adoptRef(*new ConvolverNode(context, sampleRate));
     }
     
     virtual ~ConvolverNode();
     
-    // AudioNode
-    virtual void process(size_t framesToProcess) override;
-    virtual void reset() override;
-    virtual void initialize() override;
-    virtual void uninitialize() override;
-
-    // Impulse responses
-    void setBuffer(AudioBuffer*);
+    ExceptionOr<void> setBuffer(AudioBuffer*);
     AudioBuffer* buffer();
 
     bool normalize() const { return m_normalize; }
     void setNormalize(bool normalize) { m_normalize = normalize; }
 
 private:
-    ConvolverNode(AudioContext*, float sampleRate);
+    ConvolverNode(AudioContext&, float sampleRate);
 
-    virtual double tailTime() const override;
-    virtual double latencyTime() const override;
+    double tailTime() const final;
+    double latencyTime() const final;
+
+    void process(size_t framesToProcess) final;
+    void reset() final;
+    void initialize() final;
+    void uninitialize() final;
 
     std::unique_ptr<Reverb> m_reverb;
     RefPtr<AudioBuffer> m_buffer;
 
     // This synchronizes dynamic changes to the convolution impulse response with process().
-    mutable std::mutex m_processMutex;
+    mutable Lock m_processMutex;
 
-    // Normalize the impulse response or not. Must default to true.
-    bool m_normalize;
+    // Normalize the impulse response or not.
+    bool m_normalize { true };
 };
 
 } // namespace WebCore
-
-#endif // ConvolverNode_h

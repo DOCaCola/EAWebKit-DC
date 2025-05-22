@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBKeyRangeData_h
-#define IDBKeyRangeData_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
@@ -32,6 +31,8 @@
 #include "IDBKeyRange.h"
 
 namespace WebCore {
+
+class IDBKey;
 
 struct IDBKeyRangeData {
     IDBKeyRangeData()
@@ -41,6 +42,18 @@ struct IDBKeyRangeData {
     {
     }
 
+    static IDBKeyRangeData allKeys()
+    {
+        IDBKeyRangeData result;
+        result.isNull = false;
+        result.lowerKey = IDBKeyData::minimum();
+        result.upperKey = IDBKeyData::maximum();
+        return result;
+    }
+
+    IDBKeyRangeData(IDBKey*);
+    IDBKeyRangeData(const IDBKeyData&);
+
     IDBKeyRangeData(IDBKeyRange* keyRange)
         : isNull(!keyRange)
         , lowerOpen(false)
@@ -49,17 +62,22 @@ struct IDBKeyRangeData {
         if (isNull)
             return;
 
-        lowerKey = keyRange->lower().get();
-        upperKey = keyRange->upper().get();
+        lowerKey = keyRange->lower();
+        upperKey = keyRange->upper();
         lowerOpen = keyRange->lowerOpen();
         upperOpen = keyRange->upperOpen();
     }
 
     IDBKeyRangeData isolatedCopy() const;
 
-    WEBCORE_EXPORT PassRefPtr<IDBKeyRange> maybeCreateIDBKeyRange() const;
+    WEBCORE_EXPORT RefPtr<IDBKeyRange> maybeCreateIDBKeyRange() const;
 
     WEBCORE_EXPORT bool isExactlyOneKey() const;
+    bool containsKey(const IDBKeyData&) const;
+    bool isValid() const;
+
+    template<class Encoder> void encode(Encoder&) const;
+    template<class Decoder> static bool decode(Decoder&, IDBKeyRangeData&);
 
     bool isNull;
 
@@ -68,9 +86,46 @@ struct IDBKeyRangeData {
 
     bool lowerOpen;
     bool upperOpen;
+
+#if !LOG_DISABLED
+    String loggingString() const;
+#endif
 };
+
+template<class Encoder>
+void IDBKeyRangeData::encode(Encoder& encoder) const
+{
+    encoder << isNull;
+    if (isNull)
+        return;
+
+    encoder << upperKey << lowerKey << upperOpen << lowerOpen;
+}
+
+template<class Decoder>
+bool IDBKeyRangeData::decode(Decoder& decoder, IDBKeyRangeData& keyRange)
+{
+    if (!decoder.decode(keyRange.isNull))
+        return false;
+
+    if (keyRange.isNull)
+        return true;
+
+    if (!decoder.decode(keyRange.upperKey))
+        return false;
+
+    if (!decoder.decode(keyRange.lowerKey))
+        return false;
+
+    if (!decoder.decode(keyRange.upperOpen))
+        return false;
+
+    if (!decoder.decode(keyRange.lowerOpen))
+        return false;
+
+    return true;
+}
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-#endif // IDBKeyRangeData_h

@@ -20,8 +20,7 @@
  *
  */
 
-#ifndef HTMLFormControlsCollection_h
-#define HTMLFormControlsCollection_h
+#pragma once
 
 #include "CachedHTMLCollection.h"
 #include "HTMLElement.h"
@@ -39,15 +38,16 @@ public:
     static Ref<HTMLFormControlsCollection> create(ContainerNode&, CollectionType);
     virtual ~HTMLFormControlsCollection();
 
+    HTMLElement* item(unsigned offset) const override;
+
     // For CachedHTMLCollection.
-    Element* customElementAfter(Element*) const;
+    HTMLElement* customElementAfter(Element*) const;
 
 private:
     explicit HTMLFormControlsCollection(ContainerNode&);
 
-    virtual HTMLElement* namedItem(const AtomicString& name) const override;
-    virtual void invalidateCache(Document&) override;
-    virtual void updateNamedElementCache() const override;
+    void invalidateCache(Document&) override;
+    void updateNamedElementCache() const override;
 
     const Vector<FormAssociatedElement*>& formControlElements() const;
     const Vector<HTMLImageElement*>& formImageElements() const;
@@ -56,8 +56,11 @@ private:
     mutable unsigned m_cachedElementOffsetInArray;
 };
 
+inline HTMLElement* HTMLFormControlsCollection::item(unsigned offset) const
+{
+    return downcast<HTMLElement>(CachedHTMLCollection<HTMLFormControlsCollection, CollectionTypeTraits<FormControls>::traversalType>::item(offset));
+}
+
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_HTMLCOLLECTION(HTMLFormControlsCollection, FormControls)
-
-#endif // HTMLFormControlsCollection_h

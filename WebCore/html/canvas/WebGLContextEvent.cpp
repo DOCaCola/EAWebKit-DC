@@ -26,19 +26,9 @@
 #include "config.h"
 #include "WebGLContextEvent.h"
 
-#include "EventNames.h"
-
 #if ENABLE(WEBGL)
 
 namespace WebCore {
-
-WebGLContextEventInit::WebGLContextEventInit()
-{
-}
-
-WebGLContextEvent::WebGLContextEvent()
-{
-}
 
 WebGLContextEvent::WebGLContextEvent(const AtomicString& type, bool canBubble, bool cancelable, const String& statusMessage)
     : Event(type, canBubble, cancelable)
@@ -46,8 +36,8 @@ WebGLContextEvent::WebGLContextEvent(const AtomicString& type, bool canBubble, b
 {
 }
 
-WebGLContextEvent::WebGLContextEvent(const AtomicString& type, const WebGLContextEventInit& initializer)
-    : Event(type, initializer)
+WebGLContextEvent::WebGLContextEvent(const AtomicString& type, const Init& initializer, IsTrusted isTrusted)
+    : Event(type, initializer, isTrusted)
     , m_statusMessage(initializer.statusMessage)
 {
 }

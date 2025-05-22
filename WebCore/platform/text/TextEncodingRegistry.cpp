@@ -30,6 +30,7 @@
 
 #include "TextCodecICU.h"
 #include "TextCodecLatin1.h"
+#include "TextCodecReplacement.h"
 #include "TextCodecUserDefined.h"
 #include "TextCodecUTF16.h"
 #include "TextCodecUTF8.h"
@@ -38,8 +39,8 @@
 #include <wtf/ASCIICType.h>
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
+#include <wtf/Lock.h>
 #include <wtf/MainThread.h>
-#include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/StringExtras.h>
 
@@ -107,14 +108,7 @@ struct TextCodecFactory {
 typedef HashMap<const char*, const char*, TextEncodingNameHash> TextEncodingNameMap;
 typedef HashMap<const char*, TextCodecFactory> TextCodecMap;
 
-static std::mutex& encodingRegistryMutex()
-{
-    // We don't have to construct this mutex in a thread safe way because this function
-    // is called on the main thread for any page before it is used in worker threads.
-    static NeverDestroyed<std::mutex> mutex;
-
-    return mutex;
-}
+static StaticLock encodingRegistryMutex;
 
 static TextEncodingNameMap* textEncodingNameMap;
 static TextCodecMap* textCodecMap;
@@ -122,7 +116,7 @@ static bool didExtendTextCodecMaps;
 static HashSet<const char*>* japaneseEncodings;
 static HashSet<const char*>* nonBackslashEncodings;
 
-static const char* const textEncodingNameBlacklist[] = { "UTF-7" };
+static const char* const textEncodingNameBlacklist[] = { "UTF-7", "BOCU-1", "SCSU" };
 
 #if ERROR_DISABLED
 
@@ -204,9 +198,8 @@ static void pruneBlacklistedCodecs()
     }
 }
 
-static void buildBaseTextCodecMaps()
+static void buildBaseTextCodecMaps(const std::lock_guard<StaticLock>&)
 {
-    ASSERT(isMainThread());
     ASSERT(!textCodecMap);
     ASSERT(!textEncodingNameMap);
 
@@ -274,6 +267,22 @@ bool isJapaneseEncoding(const char* canonicalEncodingName)
     return canonicalEncodingName && japaneseEncodings && japaneseEncodings->contains(canonicalEncodingName);
 }
 
+bool isReplacementEncoding(const char* alias)
+{
+    if (!alias)
+        return false;
+
+    if (strlen(alias) != 11)
+        return false;
+
+    return !strcasecmp(alias, "replacement");
+}
+
+bool isReplacementEncoding(const String& alias)
+{
+    return equalLettersIgnoringASCIICase(alias, "replacement");
+}
+
 bool shouldShowBackslashAsCurrencySymbolIn(const char* canonicalEncodingName)
 {
     return canonicalEncodingName && nonBackslashEncodings && nonBackslashEncodings->contains(canonicalEncodingName);
@@ -281,9 +290,8 @@ bool shouldShowBackslashAsCurrencySymbolIn(const char* canonicalEncodingName)
 
 static void extendTextCodecMaps()
 {
-//+EAWebKitChange
-//3/23/2015
-//TextCodecICU is excluded for us in TextAllInOne
+    TextCodecReplacement::registerEncodingNames(addToTextEncodingNameMap);
+    TextCodecReplacement::registerCodecs(addToTextCodecMap);
 #if !PLATFORM(EA)
     TextCodecICU::registerEncodingNames(addToTextEncodingNameMap);
     TextCodecICU::registerCodecs(addToTextCodecMap);
@@ -301,7 +309,7 @@ static void extendTextCodecMaps()
 
 std::unique_ptr<TextCodec> newTextCodec(const TextEncoding& encoding)
 {
-    std::lock_guard<std::mutex> lock(encodingRegistryMutex());
+    std::lock_guard<StaticLock> lock(encodingRegistryMutex);
 
     ASSERT(textCodecMap);
     TextCodecFactory factory = textCodecMap->get(encoding.name());
@@ -314,10 +322,10 @@ const char* atomicCanonicalTextEncodingName(const char* name)
     if (!name || !name[0])
         return nullptr;
 
-    if (!textEncodingNameMap)
-        buildBaseTextCodecMaps();
+    std::lock_guard<StaticLock> lock(encodingRegistryMutex);
 
-    std::lock_guard<std::mutex> lock(encodingRegistryMutex());
+    if (!textEncodingNameMap)
+        buildBaseTextCodecMaps(lock);
 
     if (const char* atomicName = textEncodingNameMap->get(name))
         return atomicName;
@@ -370,11 +378,11 @@ String defaultTextEncodingNameForSystemLanguage()
     // ICU uses this name for a different encoding, so we need to change the name to a value that actually gives us windows-949.
     // In addition, this value must match what is used in Safari, see <rdar://problem/5579292>.
     // On some OS versions, the result is CP949 (uppercase).
-    if (equalIgnoringCase(systemEncodingName, "cp949"))
-        systemEncodingName = "ks_c_5601-1987";
+    if (equalLettersIgnoringASCIICase(systemEncodingName, "cp949"))
+        systemEncodingName = ASCIILiteral("ks_c_5601-1987");
     return systemEncodingName;
 #else
-    return String("ISO-8859-1");
+    return ASCIILiteral("ISO-8859-1");
 #endif
 }
 
@@ -384,7 +392,7 @@ void dumpTextEncodingNameMap()
     unsigned size = textEncodingNameMap->size();
     fprintf(stderr, "Dumping %u entries in WebCore::textEncodingNameMap...\n", size);
 
-    std::lock_guard<std::mutex> lock(encodingRegistryMutex());
+    std::lock_guard<StaticLock> lock(encodingRegistryMutex);
 
     TextEncodingNameMap::const_iterator it = textEncodingNameMap->begin();
     TextEncodingNameMap::const_iterator end = textEncodingNameMap->end();

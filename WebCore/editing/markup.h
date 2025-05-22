@@ -23,9 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef markup_h
-#define markup_h
+#pragma once
 
+#include "ExceptionOr.h"
 #include "FragmentScriptingPermission.h"
 #include "HTMLInterchange.h"
 #include <wtf/Forward.h>
@@ -43,27 +43,23 @@ class Node;
 class QualifiedName;
 class Range;
 
-typedef int ExceptionCode;
-
 enum EChildrenOnly { IncludeNode, ChildrenOnly };
 enum EAbsoluteURLs { DoNotResolveURLs, ResolveAllURLs, ResolveNonLocalURLs };
 enum EFragmentSerialization { HTMLFragmentSerialization, XMLFragmentSerialization };
 
-WEBCORE_EXPORT PassRefPtr<DocumentFragment> createFragmentFromText(Range& context, const String& text);
-WEBCORE_EXPORT PassRefPtr<DocumentFragment> createFragmentFromMarkup(Document&, const String& markup, const String& baseURL, ParserContentPolicy = AllowScriptingContent);
-PassRefPtr<DocumentFragment> createFragmentForInnerOuterHTML(const String&, Element*, ParserContentPolicy, ExceptionCode&);
-PassRefPtr<DocumentFragment> createFragmentForTransformToFragment(const String&, const String& sourceMIMEType, Document* outputDoc);
-PassRefPtr<DocumentFragment> createContextualFragment(const String&, HTMLElement*, ParserContentPolicy, ExceptionCode&);
+WEBCORE_EXPORT Ref<DocumentFragment> createFragmentFromText(Range& context, const String& text);
+WEBCORE_EXPORT Ref<DocumentFragment> createFragmentFromMarkup(Document&, const String& markup, const String& baseURL, ParserContentPolicy = AllowScriptingContent);
+ExceptionOr<Ref<DocumentFragment>> createFragmentForInnerOuterHTML(Element&, const String& markup, ParserContentPolicy);
+RefPtr<DocumentFragment> createFragmentForTransformToFragment(Document&, const String& sourceString, const String& sourceMIMEType);
+ExceptionOr<Ref<DocumentFragment>> createContextualFragment(Element&, const String& markup, ParserContentPolicy);
 
 bool isPlainTextMarkup(Node*);
 
-// These methods are used by HTMLElement & ShadowRoot to replace the
-// children with respected fragment/text.
-void replaceChildrenWithFragment(ContainerNode&, PassRefPtr<DocumentFragment>, ExceptionCode&);
-void replaceChildrenWithText(ContainerNode&, const String&, ExceptionCode&);
+// These methods are used by HTMLElement & ShadowRoot to replace the children with respected fragment/text.
+ExceptionOr<void> replaceChildrenWithFragment(ContainerNode&, Ref<DocumentFragment>&&);
 
-String createMarkup(const Range&, Vector<Node*>* = 0, EAnnotateForInterchange = DoNotAnnotateForInterchange, bool convertBlocksToInlines = false, EAbsoluteURLs = DoNotResolveURLs);
-String createMarkup(const Node&, EChildrenOnly = IncludeNode, Vector<Node*>* = 0, EAbsoluteURLs = DoNotResolveURLs, Vector<QualifiedName>* tagNamesToSkip = 0, EFragmentSerialization = HTMLFragmentSerialization);
+String createMarkup(const Range&, Vector<Node*>* = nullptr, EAnnotateForInterchange = DoNotAnnotateForInterchange, bool convertBlocksToInlines = false, EAbsoluteURLs = DoNotResolveURLs);
+String createMarkup(const Node&, EChildrenOnly = IncludeNode, Vector<Node*>* = nullptr, EAbsoluteURLs = DoNotResolveURLs, Vector<QualifiedName>* tagNamesToSkip = nullptr, EFragmentSerialization = HTMLFragmentSerialization);
 
 WEBCORE_EXPORT String createFullMarkup(const Node&);
 WEBCORE_EXPORT String createFullMarkup(const Range&);
@@ -73,5 +69,3 @@ String urlToMarkup(const URL&, const String& title);
 String documentTypeString(const Document&);
 
 }
-
-#endif // markup_h

@@ -23,27 +23,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef EventDispatcher_h
-#define EventDispatcher_h
+#pragma once
 
 #include "SimulatedClickOptions.h"
 #include <wtf/Forward.h>
-#include <wtf/PassRefPtr.h>
 
 namespace WebCore {
 
-class Element;
 class Event;
 class Node;
 
 namespace EventDispatcher {
 
-bool dispatchEvent(Node*, PassRefPtr<Event>);
-void dispatchScopedEvent(Node&, PassRefPtr<Event>);
-void dispatchSimulatedClick(Element*, Event* underlyingEvent, SimulatedClickMouseEventOptions, SimulatedClickVisualOptions);
-
-};
+bool dispatchEvent(Node&, Event&);
+void dispatchScopedEvent(Node&, Event&);
 
 }
 
-#endif
+} // namespace WebCore

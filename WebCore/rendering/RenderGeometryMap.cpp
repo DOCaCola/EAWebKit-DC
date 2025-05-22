@@ -30,7 +30,7 @@
 #include "RenderLayer.h"
 #include "RenderView.h"
 #include "TransformState.h"
-#include <wtf/TemporaryChange.h>
+#include <wtf/SetForScope.h>
 
 namespace WebCore {
 
@@ -81,13 +81,13 @@ void RenderGeometryMap::mapToContainer(TransformState& transformState, const Ren
             inFixed = true;
 
         if (!i) {
-            // A null container indicates mapping through the RenderView, so including its transform (the page scale).
-            if (!container && currentStep.m_transform)
-                transformState.applyTransform(*currentStep.m_transform.get());
-
             // The root gets special treatment for fixed position
             if (inFixed)
                 transformState.move(currentStep.m_offset.width(), currentStep.m_offset.height());
+
+            // A null container indicates mapping through the RenderView, so including its transform (the page scale).
+            if (!container && currentStep.m_transform)
+                transformState.applyTransform(*currentStep.m_transform.get());
         } else {
             TransformState::TransformAccumulation accumulate = currentStep.m_accumulatingTransform ? TransformState::AccumulateTransform : TransformState::FlattenTransform;
             if (currentStep.m_transform)
@@ -104,19 +104,20 @@ void RenderGeometryMap::mapToContainer(TransformState& transformState, const Ren
 FloatPoint RenderGeometryMap::mapToContainer(const FloatPoint& p, const RenderLayerModelObject* container) const
 {
     FloatPoint result;
+#if !ASSERT_DISABLED
+    FloatPoint rendererMappedResult = m_mapping.last().m_renderer->localToAbsolute(p, m_mapCoordinatesFlags);
+#endif
     
-    if (!hasFixedPositionStep() && !hasTransformStep() && !hasNonUniformStep() && (!container || (m_mapping.size() && container == m_mapping[0].m_renderer)))
+    if (!hasFixedPositionStep() && !hasTransformStep() && !hasNonUniformStep() && (!container || (m_mapping.size() && container == m_mapping[0].m_renderer))) {
         result = p + roundedIntSize(m_accumulatedOffset);
-    else {
+        // Should convert to a LayoutPoint because of the uniqueness of LayoutUnit::round
+        ASSERT(roundedIntPoint(LayoutPoint(rendererMappedResult)) == result);
+    } else {
         TransformState transformState(TransformState::ApplyTransformDirection, p);
         mapToContainer(transformState, container);
         result = transformState.lastPlanarPoint();
+        ASSERT(areEssentiallyEqual(rendererMappedResult, result));
     }
-
-#if !ASSERT_DISABLED
-    FloatPoint rendererMappedResult = m_mapping.last().m_renderer->localToAbsolute(p, m_mapCoordinatesFlags);
-    ASSERT(roundedIntPoint(rendererMappedResult) == roundedIntPoint(result));
-#endif
 
     return result;
 }
@@ -140,7 +141,7 @@ FloatQuad RenderGeometryMap::mapToContainer(const FloatRect& rect, const RenderL
 void RenderGeometryMap::pushMappingsToAncestor(const RenderObject* renderer, const RenderLayerModelObject* ancestorRenderer)
 {
     // We need to push mappings in reverse order here, so do insertions rather than appends.
-    TemporaryChange<size_t> positionChange(m_insertionPosition, m_mapping.size());
+    SetForScope<size_t> positionChange(m_insertionPosition, m_mapping.size());
     do {
         renderer = renderer->pushMappingToContainer(ancestorRenderer, *this);
     } while (renderer && renderer != ancestorRenderer);
@@ -174,7 +175,7 @@ static bool canMapBetweenRenderersViaLayers(const RenderLayerModelObject& render
 void RenderGeometryMap::pushMappingsToAncestor(const RenderLayer* layer, const RenderLayer* ancestorLayer, bool respectTransforms)
 {
     MapCoordinatesFlags newFlags = respectTransforms ? m_mapCoordinatesFlags : m_mapCoordinatesFlags & ~UseTransforms;
-    TemporaryChange<MapCoordinatesFlags> flagsChange(m_mapCoordinatesFlags, newFlags);
+    SetForScope<MapCoordinatesFlags> flagsChange(m_mapCoordinatesFlags, newFlags);
 
     const RenderLayerModelObject& renderer = layer->renderer();
 
@@ -191,7 +192,7 @@ void RenderGeometryMap::pushMappingsToAncestor(const RenderLayer* layer, const R
             pushMappingsToAncestor(&ancestorLayer->renderer(), nullptr);
         }
 
-        TemporaryChange<size_t> positionChange(m_insertionPosition, m_mapping.size());
+        SetForScope<size_t> positionChange(m_insertionPosition, m_mapping.size());
         push(&renderer, layerOffset, /*accumulatingTransform*/ true, /*isNonUniform*/ false, /*isFixedPosition*/ false, /*hasTransform*/ false);
         return;
     }

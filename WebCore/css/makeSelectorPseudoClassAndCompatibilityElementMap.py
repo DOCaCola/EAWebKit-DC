@@ -62,7 +62,7 @@ output_file = open('SelectorPseudoClassAndCompatibilityElementMap.gperf', 'w')
 output_file.write("""
 %{
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -90,6 +90,8 @@ output_file.write("""
 
 #include "config.h"
 #include "SelectorPseudoTypeMap.h"
+
+#include "CSSParserSelector.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -183,7 +185,7 @@ static inline const SelectorPseudoClassOrCompatibilityPseudoElementEntry* parseP
 """ % longest_keyword)
 
 output_file.write("""
-PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const CSSParserString& pseudoTypeString)
+PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const StringView& pseudoTypeString)
 {
     const SelectorPseudoClassOrCompatibilityPseudoElementEntry* entry;
     if (pseudoTypeString.is8Bit())
@@ -205,7 +207,7 @@ PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementS
 """)
 output_file.close()
 
-gperf_command = 'gperf'
+gperf_command = sys.argv[2]
 if 'GPERF' in os.environ:
     gperf_command = os.environ['GPERF']
 

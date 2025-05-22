@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AsyncFileStream_h
-#define AsyncFileStream_h
+#pragma once
 
 #include <functional>
 #include <wtf/Forward.h>
+#include <wtf/Function.h>
 
 namespace WebCore {
 
@@ -41,7 +41,7 @@ class FileStreamClient;
 class FileStream;
 class URL;
 
-class AsyncFileStream {
+class WEBCORE_EXPORT AsyncFileStream {
 public:
     explicit AsyncFileStream(FileStreamClient&);
     ~AsyncFileStream();
@@ -56,12 +56,10 @@ public:
 
 private:
     void start();
-    void perform(std::function<std::function<void(FileStreamClient&)>(FileStream&)>);
+    void perform(Function<std::function<void(FileStreamClient&)>(FileStream&)>&&);
 
     struct Internals;
     std::unique_ptr<Internals> m_internals;
 };
 
 } // namespace WebCore
-
-#endif // AsyncFileStream_h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Apple Inc.  All rights reserved.
+ * Copyright (C) 2003-2016 Apple Inc.  All rights reserved.
  * Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,12 @@ typedef struct _NSSize NSSize;
 
 #if PLATFORM(WIN)
 typedef struct tagSIZE SIZE;
+
+struct D2D_SIZE_U;
+typedef D2D_SIZE_U D2D1_SIZE_U;
+
+struct D2D_SIZE_F;
+typedef D2D_SIZE_F D2D1_SIZE_F;
 #endif
 
 //+EAWebKitChange
@@ -63,13 +69,10 @@ namespace EA{namespace WebKit{class IntSize;}}
 #endif
 //-EAWebKitChange
 
-namespace WTF {
-class PrintStream;
-}
-
 namespace WebCore {
 
 class FloatSize;
+class TextStream;
 
 class IntSize {
 public:
@@ -134,9 +137,17 @@ public:
             m_height = minimumSize.height();
     }
 
-    int area() const
+    WEBCORE_EXPORT IntSize constrainedBetween(const IntSize& min, const IntSize& max) const;
+
+    template <typename T = WTF::CrashOnOverflow>
+    Checked<unsigned, T> area() const
     {
-        return m_width * m_height;
+        return Checked<unsigned, T>(abs(m_width)) * abs(m_height);
+    }
+
+    size_t unclampedArea() const
+    {
+        return static_cast<size_t>(abs(m_width)) * abs(m_height);
     }
 
     int diagonalLengthSquared() const
@@ -162,8 +173,11 @@ public:
 #if PLATFORM(WIN)
     IntSize(const SIZE&);
     operator SIZE() const;
+    IntSize(const D2D1_SIZE_U&);
+    explicit IntSize(const D2D1_SIZE_F&); // don't do this implicitly since it's lossy;
+    operator D2D1_SIZE_U() const;
+    operator D2D1_SIZE_F() const;
 #endif
-
 //+EAWebKitChange
 //10/14/2011
 #if PLATFORM(EA) 
@@ -172,7 +186,6 @@ public:
 #endif
 //-EAWebKitChange
 
-    void dump(WTF::PrintStream& out) const;
 
 private:
     int m_width, m_height;
@@ -216,6 +229,8 @@ inline bool operator!=(const IntSize& a, const IntSize& b)
 {
     return a.width() != b.width() || a.height() != b.height();
 }
+
+WEBCORE_EXPORT TextStream& operator<<(TextStream&, const IntSize&);
 
 } // namespace WebCore
 

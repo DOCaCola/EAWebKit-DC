@@ -23,71 +23,35 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBKeyPath_h
-#define IDBKeyPath_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
+#include <wtf/Variant.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-class KeyedDecoder;
-class KeyedEncoder;
+using IDBKeyPath = WTF::Variant<String, Vector<String>>;
+bool isIDBKeyPathValid(const IDBKeyPath&);
 
-enum IDBKeyPathParseError {
-    IDBKeyPathParseErrorNone,
-    IDBKeyPathParseErrorStart,
-    IDBKeyPathParseErrorIdentifier,
-    IDBKeyPathParseErrorDot,
+enum class IDBKeyPathParseError {
+    None,
+    Start,
+    Identifier,
+    Dot,
 };
 
 void IDBParseKeyPath(const String&, Vector<String>&, IDBKeyPathParseError&);
-
-class IDBKeyPath {
-public:
-    IDBKeyPath() : m_type(NullType) { }
-    WEBCORE_EXPORT explicit IDBKeyPath(const String&);
-    WEBCORE_EXPORT explicit IDBKeyPath(const Vector<String>& array);
-
-    enum Type {
-        NullType = 0,
-        StringType,
-        ArrayType
-    };
-
-    Type type() const { return m_type; }
-
-    const Vector<String>& array() const
-    {
-        ASSERT(m_type == ArrayType);
-        return m_array;
-    }
-
-    const String& string() const
-    {
-        ASSERT(m_type == StringType);
-        return m_string;
-    }
-
-    bool isNull() const { return m_type == NullType; }
-    bool isValid() const;
-    bool operator==(const IDBKeyPath& other) const;
-
-    IDBKeyPath isolatedCopy() const;
-
-    WEBCORE_EXPORT void encode(KeyedEncoder&) const;
-    WEBCORE_EXPORT static bool decode(KeyedDecoder&, IDBKeyPath&);
-
-private:
-    Type m_type;
-    String m_string;
-    Vector<String> m_array;
-};
+IDBKeyPath isolatedCopy(const IDBKeyPath&);
+inline std::optional<IDBKeyPath> isolatedCopy(const std::optional<IDBKeyPath>& variant)
+{
+    if (!variant)
+        return { };
+    return isolatedCopy(variant.value());
+}
 
 } // namespace WebCore
 
 #endif
-
-#endif // IDBKeyPath_h

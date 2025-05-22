@@ -37,11 +37,11 @@ MouseRelatedEvent::MouseRelatedEvent()
 {
 }
 
-static LayoutSize contentsScrollOffset(AbstractView* abstractView)
+static LayoutSize contentsScrollOffset(DOMWindow* DOMWindow)
 {
-    if (!abstractView)
+    if (!DOMWindow)
         return LayoutSize();
-    Frame* frame = abstractView->frame();
+    Frame* frame = DOMWindow->frame();
     if (!frame)
         return LayoutSize();
     FrameView* frameView = frame->view();
@@ -55,31 +55,47 @@ static LayoutSize contentsScrollOffset(AbstractView* abstractView)
 #endif
 }
 
-MouseRelatedEvent::MouseRelatedEvent(const AtomicString& eventType, bool canBubble, bool cancelable, double timestamp, PassRefPtr<AbstractView> abstractView,
+MouseRelatedEvent::MouseRelatedEvent(const AtomicString& eventType, bool canBubble, bool cancelable, double timestamp, DOMWindow* DOMWindow,
                                      int detail, const IntPoint& screenLocation, const IntPoint& windowLocation,
 #if ENABLE(POINTER_LOCK)
                                      const IntPoint& movementDelta,
 #endif
                                      bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool isSimulated)
-    : UIEventWithKeyState(eventType, canBubble, cancelable, timestamp, abstractView, detail, ctrlKey, altKey, shiftKey, metaKey)
+    : UIEventWithKeyState(eventType, canBubble, cancelable, timestamp, DOMWindow, detail, ctrlKey, altKey, shiftKey, metaKey, false, false)
     , m_screenLocation(screenLocation)
 #if ENABLE(POINTER_LOCK)
     , m_movementDelta(movementDelta)
 #endif
     , m_isSimulated(isSimulated)
 {
+    init(isSimulated, windowLocation);
+}
+
+MouseRelatedEvent::MouseRelatedEvent(const AtomicString& eventType, const MouseRelatedEventInit& initializer, IsTrusted isTrusted)
+    : UIEventWithKeyState(eventType, initializer, isTrusted)
+    , m_screenLocation(IntPoint(initializer.screenX, initializer.screenY))
+#if ENABLE(POINTER_LOCK)
+    , m_movementDelta(IntPoint(0, 0))
+#endif
+    , m_isSimulated(false)
+{
+    init(false, IntPoint(0, 0));
+}
+
+void MouseRelatedEvent::init(bool isSimulated, const IntPoint& windowLocation)
+{
     LayoutPoint adjustedPageLocation;
     LayoutPoint scrollPosition;
 
-    Frame* frame = view() ? view()->frame() : 0;
+    Frame* frame = view() ? view()->frame() : nullptr;
     if (frame && !isSimulated) {
         if (FrameView* frameView = frame->view()) {
             scrollPosition = frameView->contentsScrollPosition();
             adjustedPageLocation = frameView->windowToContents(windowLocation);
             float scaleFactor = 1 / (frame->pageZoomFactor() * frame->frameScaleFactor());
             if (scaleFactor != 1.0f) {
-                adjustedPageLocation.scale(scaleFactor, scaleFactor);
-                scrollPosition.scale(scaleFactor, scaleFactor);
+                adjustedPageLocation.scale(scaleFactor);
+                scrollPosition.scale(scaleFactor);
             }
         }
     }
@@ -150,7 +166,7 @@ void MouseRelatedEvent::receivedTarget()
 
 void MouseRelatedEvent::computeRelativePosition()
 {
-    Node* targetNode = target() ? target()->toNode() : 0;
+    Node* targetNode = target() ? target()->toNode() : nullptr;
     if (!targetNode)
         return;
 
@@ -166,7 +182,7 @@ void MouseRelatedEvent::computeRelativePosition()
         m_offsetLocation = LayoutPoint(r->absoluteToLocal(absoluteLocation(), UseTransforms));
         float scaleFactor = 1 / (pageZoomFactor(this) * frameScaleFactor(this));
         if (scaleFactor != 1.0f)
-            m_offsetLocation.scale(scaleFactor, scaleFactor);
+            m_offsetLocation.scale(scaleFactor);
     }
 
     // Adjust layerLocation to be relative to the layer.

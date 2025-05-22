@@ -38,7 +38,7 @@ Ref<CDATASection> CDATASection::create(Document& document, const String& data)
 
 String CDATASection::nodeName() const
 {
-    return "#cdata-section";
+    return ASCIILiteral("#cdata-section");
 }
 
 Node::NodeType CDATASection::nodeType() const
@@ -46,7 +46,7 @@ Node::NodeType CDATASection::nodeType() const
     return CDATA_SECTION_NODE;
 }
 
-RefPtr<Node> CDATASection::cloneNodeInternal(Document& targetDocument, CloningOperation)
+Ref<Node> CDATASection::cloneNodeInternal(Document& targetDocument, CloningOperation)
 {
     return create(targetDocument, data());
 }

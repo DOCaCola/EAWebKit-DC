@@ -23,9 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MockPageOverlayClient_h
-#define MockPageOverlayClient_h
+#pragma once
 
+#include "MockPageOverlay.h"
 #include "PageOverlay.h"
 #include <wtf/HashSet.h>
 
@@ -40,7 +40,7 @@ public:
 
     explicit MockPageOverlayClient();
 
-    void installOverlay(MainFrame&, PageOverlay::OverlayType);
+    Ref<MockPageOverlay> installOverlay(MainFrame&, PageOverlay::OverlayType);
     void uninstallAllOverlays();
 
     String layerTreeAsText(MainFrame&);
@@ -48,20 +48,17 @@ public:
     virtual ~MockPageOverlayClient() { }
 
 private:
-    virtual void pageOverlayDestroyed(PageOverlay&) override;
-    virtual void willMoveToPage(PageOverlay&, Page*) override;
-    virtual void didMoveToPage(PageOverlay&, Page*) override;
-    virtual void drawRect(PageOverlay&, GraphicsContext&, const IntRect& dirtyRect) override;
-    virtual bool mouseEvent(PageOverlay&, const PlatformMouseEvent&) override;
-    virtual void didScrollFrame(PageOverlay&, Frame&) override;
+    void willMoveToPage(PageOverlay&, Page*) override;
+    void didMoveToPage(PageOverlay&, Page*) override;
+    void drawRect(PageOverlay&, GraphicsContext&, const IntRect& dirtyRect) override;
+    bool mouseEvent(PageOverlay&, const PlatformMouseEvent&) override;
+    void didScrollFrame(PageOverlay&, Frame&) override;
 
-    virtual bool copyAccessibilityAttributeStringValueForPoint(PageOverlay&, String /* attribute */, FloatPoint, String&) override;
-    virtual bool copyAccessibilityAttributeBoolValueForPoint(PageOverlay&, String /* attribute */, FloatPoint, bool&) override;
-    virtual Vector<String> copyAccessibilityAttributeNames(PageOverlay&, bool /* parameterizedNames */) override;
+    bool copyAccessibilityAttributeStringValueForPoint(PageOverlay&, String /* attribute */, FloatPoint, String&) override;
+    bool copyAccessibilityAttributeBoolValueForPoint(PageOverlay&, String /* attribute */, FloatPoint, bool&) override;
+    Vector<String> copyAccessibilityAttributeNames(PageOverlay&, bool /* parameterizedNames */) override;
 
-    HashSet<PageOverlay*> m_overlays;
+    HashSet<RefPtr<MockPageOverlay>> m_overlays;
 };
 
-}
-
-#endif // MockPageOverlayClient_h
+} // namespace WebCore

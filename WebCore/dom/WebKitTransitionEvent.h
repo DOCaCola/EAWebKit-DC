@@ -23,34 +23,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebKitTransitionEvent_h
-#define WebKitTransitionEvent_h
+#pragma once
 
 #include "Event.h"
 
 namespace WebCore {
 
-struct WebKitTransitionEventInit : public EventInit {
-    WebKitTransitionEventInit();
-
-    String propertyName;
-    double elapsedTime;
-    String pseudoElement;
-};
-
 class WebKitTransitionEvent final : public Event {
 public:
-    static Ref<WebKitTransitionEvent> create()
-    {
-        return adoptRef(*new WebKitTransitionEvent);
-    }
     static Ref<WebKitTransitionEvent> create(const AtomicString& type, const String& propertyName, double elapsedTime, const String& pseudoElement)
     {
         return adoptRef(*new WebKitTransitionEvent(type, propertyName, elapsedTime, pseudoElement));
     }
-    static Ref<WebKitTransitionEvent> create(const AtomicString& type, const WebKitTransitionEventInit& initializer)
+
+    struct Init : EventInit {
+        String propertyName;
+        double elapsedTime { 0 };
+        String pseudoElement;
+    };
+
+    static Ref<WebKitTransitionEvent> create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
     {
-        return adoptRef(*new WebKitTransitionEvent(type, initializer));
+        return adoptRef(*new WebKitTransitionEvent(type, initializer, isTrusted));
     }
 
     virtual ~WebKitTransitionEvent();
@@ -59,12 +53,11 @@ public:
     double elapsedTime() const;
     const String& pseudoElement() const;
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
-    WebKitTransitionEvent();
     WebKitTransitionEvent(const AtomicString& type, const String& propertyName, double elapsedTime, const String& pseudoElement);
-    WebKitTransitionEvent(const AtomicString& type, const WebKitTransitionEventInit& initializer);
+    WebKitTransitionEvent(const AtomicString& type, const Init& initializer, IsTrusted);
 
     String m_propertyName;
     double m_elapsedTime;
@@ -72,5 +65,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // WebKitTransitionEvent_h

@@ -31,7 +31,7 @@
 #if USE(AUDIO_SESSION)
 
 #include <memory>
-#include <wtf/HashSet.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/Noncopyable.h>
 
 namespace WebCore {
@@ -67,6 +67,7 @@ public:
     void setPreferredBufferSize(size_t);
 
 private:
+    friend class NeverDestroyed<AudioSession>;
     AudioSession();
     ~AudioSession();
 

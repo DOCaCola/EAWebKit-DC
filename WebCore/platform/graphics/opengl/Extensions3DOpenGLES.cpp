@@ -34,12 +34,11 @@
 #include "GraphicsContext3D.h"
 #include "NotImplemented.h"
 #include <EGL/egl.h>
-#include <wtf/Vector.h>
 
 namespace WebCore {
 
-Extensions3DOpenGLES::Extensions3DOpenGLES(GraphicsContext3D* context)
-    : Extensions3DOpenGLCommon(context)
+Extensions3DOpenGLES::Extensions3DOpenGLES(GraphicsContext3D* context, bool useIndexedGetString)
+    : Extensions3DOpenGLCommon(context, useIndexedGetString)
     , m_contextResetStatus(GL_NO_ERROR)
     , m_supportsOESvertexArrayObject(false)
     , m_supportsIMGMultisampledRenderToTexture(false)
@@ -189,7 +188,7 @@ int Extensions3DOpenGLES::getGraphicsResetStatusARB()
 
 void Extensions3DOpenGLES::setEXTContextLostCallback(std::unique_ptr<GraphicsContext3D::ContextLostCallback> callback)
 {
-    m_contextLostCallback = WTF::move(callback);
+    m_contextLostCallback = WTFMove(callback);
 }
 
 void Extensions3DOpenGLES::readnPixelsEXT(int x, int y, GC3Dsizei width, GC3Dsizei height, GC3Denum format, GC3Denum type, GC3Dsizei bufSize, void *data)

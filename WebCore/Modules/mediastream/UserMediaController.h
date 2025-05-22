@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Google Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,8 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef UserMediaController_h
-#define UserMediaController_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
@@ -39,28 +39,40 @@ public:
     ~UserMediaController();
 
     UserMediaClient* client() const { return m_client; }
-    void requestPermission(Ref<UserMediaRequest>&&);
-    void cancelRequest(UserMediaRequest&);
 
-    static const char* supplementName();
+    void requestUserMediaAccess(UserMediaRequest&);
+    void cancelUserMediaAccessRequest(UserMediaRequest&);
+
+    void enumerateMediaDevices(MediaDevicesEnumerationRequest&);
+    void cancelMediaDevicesEnumerationRequest(MediaDevicesEnumerationRequest&);
+
+    WEBCORE_EXPORT static const char* supplementName();
     static UserMediaController* from(Page* page) { return static_cast<UserMediaController*>(Supplement<Page>::from(page, supplementName())); }
 
 private:
     UserMediaClient* m_client;
 };
 
-inline void UserMediaController::requestPermission(Ref<UserMediaRequest>&& request)
+inline void UserMediaController::requestUserMediaAccess(UserMediaRequest& request)
 {
-    m_client->requestPermission(WTF::move(request));
+    m_client->requestUserMediaAccess(request);
 }
 
-inline void UserMediaController::cancelRequest(UserMediaRequest& request)
+inline void UserMediaController::cancelUserMediaAccessRequest(UserMediaRequest& request)
 {
-    m_client->cancelRequest(request);
+    m_client->cancelUserMediaAccessRequest(request);
+}
+
+inline void UserMediaController::enumerateMediaDevices(MediaDevicesEnumerationRequest& request)
+{
+    m_client->enumerateMediaDevices(request);
+}
+
+inline void UserMediaController::cancelMediaDevicesEnumerationRequest(MediaDevicesEnumerationRequest& request)
+{
+    m_client->cancelMediaDevicesEnumerationRequest(request);
 }
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif // UserMediaController_h

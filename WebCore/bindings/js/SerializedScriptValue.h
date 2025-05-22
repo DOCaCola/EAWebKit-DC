@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2009, 2013, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,15 +24,14 @@
  *
  */
 
-#ifndef SerializedScriptValue_h
-#define SerializedScriptValue_h
+#pragma once
 
-#include "ScriptState.h"
-#include <bindings/ScriptValue.h>
+#include "ExceptionOr.h"
 #include <heap/Strong.h>
 #include <runtime/ArrayBuffer.h>
 #include <runtime/JSCJSValue.h>
 #include <wtf/Forward.h>
+#include <wtf/Function.h>
 #include <wtf/RefCounted.h>
 #include <wtf/text/WTFString.h>
 
@@ -41,42 +40,32 @@ typedef const struct OpaqueJSValue* JSValueRef;
 
 namespace WebCore {
 
+class IDBValue;
 class MessagePort;
-typedef Vector<RefPtr<MessagePort>, 1> MessagePortArray;
-typedef Vector<RefPtr<JSC::ArrayBuffer>, 1> ArrayBufferArray;
- 
-enum SerializationReturnCode {
-    SuccessfullyCompleted,
-    StackOverflowError,
-    InterruptedExecutionError,
-    ValidationError,
-    ExistingExceptionError,
-    DataCloneError,
-    UnspecifiedError
-};
-    
+class SharedBuffer;
+enum class SerializationReturnCode;
+
 enum SerializationErrorMode { NonThrowing, Throwing };
 
-class SharedBuffer;
+using ArrayBufferContentsArray = Vector<JSC::ArrayBufferContents>;
 
-class SerializedScriptValue :
-#if ENABLE(INDEXED_DATABASE)
-    public ThreadSafeRefCounted<SerializedScriptValue> {
-#else
-    public RefCounted<SerializedScriptValue> {
-#endif
+class SerializedScriptValue : public ThreadSafeRefCounted<SerializedScriptValue> {
 public:
-    WEBCORE_EXPORT static RefPtr<SerializedScriptValue> create(JSC::ExecState*, JSC::JSValue, MessagePortArray*, ArrayBufferArray*, SerializationErrorMode = Throwing);
+    WEBCORE_EXPORT static RefPtr<SerializedScriptValue> create(JSC::ExecState&, JSC::JSValue, SerializationErrorMode = Throwing);
 
-    WEBCORE_EXPORT static RefPtr<SerializedScriptValue> create(const String&);
-    static Ref<SerializedScriptValue> adopt(Vector<uint8_t>& buffer)
+    WEBCORE_EXPORT static ExceptionOr<Ref<SerializedScriptValue>> create(JSC::ExecState&, JSC::JSValue, Vector<JSC::Strong<JSC::JSObject>>&&, Vector<RefPtr<MessagePort>>&);
+
+    WEBCORE_EXPORT static RefPtr<SerializedScriptValue> create(StringView);
+    static Ref<SerializedScriptValue> adopt(Vector<uint8_t>&& buffer)
     {
-        return adoptRef(*new SerializedScriptValue(buffer));
+        return adoptRef(*new SerializedScriptValue(WTFMove(buffer)));
     }
 
     static Ref<SerializedScriptValue> nullValue();
 
-    WEBCORE_EXPORT JSC::JSValue deserialize(JSC::ExecState*, JSC::JSGlobalObject*, MessagePortArray*, SerializationErrorMode = Throwing);
+    WEBCORE_EXPORT JSC::JSValue deserialize(JSC::ExecState&, JSC::JSGlobalObject*, SerializationErrorMode = Throwing);
+    WEBCORE_EXPORT JSC::JSValue deserialize(JSC::ExecState&, JSC::JSGlobalObject*, Vector<RefPtr<MessagePort>>&, SerializationErrorMode = Throwing);
+    JSC::JSValue deserialize(JSC::ExecState&, JSC::JSGlobalObject*, Vector<RefPtr<MessagePort>>&, const Vector<String>& blobURLs, const Vector<String>& blobFilePaths, SerializationErrorMode = Throwing);
 
     static uint32_t wireFormatVersion();
 
@@ -88,39 +77,28 @@ public:
 
     const Vector<uint8_t>& data() const { return m_data; }
     bool hasBlobURLs() const { return !m_blobURLs.isEmpty(); }
-    void blobURLs(Vector<String>&) const;
 
 #if ENABLE(INDEXED_DATABASE)
-    // FIXME: Get rid of these. The only caller immediately deserializes the result, so it's a very roundabout way to create a JSValue.
-    static Ref<SerializedScriptValue> numberValue(double value);
-    static Ref<SerializedScriptValue> undefinedValue();
-#endif
+    Vector<String> blobURLsIsolatedCopy() const;
+    void writeBlobsToDiskForIndexedDB(WTF::Function<void (const IDBValue&)>&& completionHandler);
+    IDBValue writeBlobsToDiskForIndexedDBSynchronously();
+#endif // ENABLE(INDEXED_DATABASE)
 
-    static Ref<SerializedScriptValue> createFromWireBytes(const Vector<uint8_t>& data)
+    static Ref<SerializedScriptValue> createFromWireBytes(Vector<uint8_t>&& data)
     {
-        return adoptRef(*new SerializedScriptValue(data));
+        return adoptRef(*new SerializedScriptValue(WTFMove(data)));
     }
     const Vector<uint8_t>& toWireBytes() const { return m_data; }
 
     WEBCORE_EXPORT ~SerializedScriptValue();
 
 private:
-    typedef Vector<JSC::ArrayBufferContents> ArrayBufferContentsArray;
-    static void maybeThrowExceptionIfSerializationFailed(JSC::ExecState*, SerializationReturnCode);
-    static bool serializationDidCompleteSuccessfully(SerializationReturnCode);
-    static std::unique_ptr<ArrayBufferContentsArray> transferArrayBuffers(JSC::ExecState*, ArrayBufferArray&, SerializationReturnCode&);
-    void addBlobURL(const String&);
-
-    SerializedScriptValue(const Vector<unsigned char>&);
-    WEBCORE_EXPORT SerializedScriptValue(Vector<unsigned char>&);
-    SerializedScriptValue(Vector<unsigned char>&, Vector<String>& blobURLs);
-    SerializedScriptValue(Vector<unsigned char>&, Vector<String>& blobURLs, std::unique_ptr<ArrayBufferContentsArray>);
+    WEBCORE_EXPORT SerializedScriptValue(Vector<unsigned char>&&);
+    SerializedScriptValue(Vector<unsigned char>&&, const Vector<String>& blobURLs, std::unique_ptr<ArrayBufferContentsArray>&&);
 
     Vector<unsigned char> m_data;
     std::unique_ptr<ArrayBufferContentsArray> m_arrayBufferContentsArray;
-    Vector<Vector<uint16_t>> m_blobURLs;
+    Vector<String> m_blobURLs;
 };
 
 }
-
-#endif // SerializedScriptValue_h

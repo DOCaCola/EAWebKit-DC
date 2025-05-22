@@ -18,15 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef CSSValueList_h
-#define CSSValueList_h
+#pragma once
 
 #include "CSSValue.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
+class CSSCustomPropertyValue;
+struct CSSParserValue;
 class CSSParserValueList;
 
 class CSSValueList : public CSSValue {
@@ -46,10 +46,6 @@ public:
     {
         return adoptRef(*new CSSValueList(SlashSeparator));
     }
-    static Ref<CSSValueList> createFromParserValueList(CSSParserValueList& list)
-    {
-        return adoptRef(*new CSSValueList(list));
-    }
 
     size_t length() const { return m_values.size(); }
     CSSValue* item(size_t index) { return index < m_values.size() ? m_values[index].ptr() : nullptr; }
@@ -66,41 +62,35 @@ public:
     void prepend(Ref<CSSValue>&&);
     bool removeAll(CSSValue*);
     bool hasValue(CSSValue*) const;
-    PassRefPtr<CSSValueList> copy();
+    Ref<CSSValueList> copy();
 
     String customCSSText() const;
     bool equals(const CSSValueList&) const;
     bool equals(const CSSValue&) const;
 
-    void addSubresourceStyleURLs(ListHashSet<URL>&, const StyleSheetContents*) const;
-
     bool traverseSubresources(const std::function<bool (const CachedResource&)>& handler) const;
-    
-    Ref<CSSValueList> cloneForCSSOM() const;
+
+    unsigned separator() const { return m_valueListSeparator; }
 
 protected:
     CSSValueList(ClassType, ValueListSeparator);
-    CSSValueList(const CSSValueList& cloneFrom);
 
 private:
     explicit CSSValueList(ValueListSeparator);
-    explicit CSSValueList(CSSParserValueList&);
 
     Vector<Ref<CSSValue>, 4> m_values;
 };
 
 inline void CSSValueList::append(Ref<CSSValue>&& value)
 {
-    m_values.append(WTF::move(value));
+    m_values.append(WTFMove(value));
 }
 
 inline void CSSValueList::prepend(Ref<CSSValue>&& value)
 {
-    m_values.insert(0, WTF::move(value));
+    m_values.insert(0, WTFMove(value));
 }
 
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_CSS_VALUE(CSSValueList, isValueList())
-
-#endif // CSSValueList_h

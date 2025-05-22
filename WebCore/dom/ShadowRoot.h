@@ -24,74 +24,93 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ShadowRoot_h
-#define ShadowRoot_h
+#pragma once
 
-#include "ContainerNode.h"
-#include "ContentDistributor.h"
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "Element.h"
-#include "ExceptionCode.h"
-#include "TreeScope.h"
+#include "ShadowRootMode.h"
 
 namespace WebCore {
 
+class HTMLSlotElement;
+class SlotAssignment;
+
 class ShadowRoot final : public DocumentFragment, public TreeScope {
 public:
-    enum ShadowRootType {
-        UserAgentShadowRoot = 0,
-    };
-
-    static Ref<ShadowRoot> create(Document& document, ShadowRootType type)
+    static Ref<ShadowRoot> create(Document& document, ShadowRootMode type)
     {
         return adoptRef(*new ShadowRoot(document, type));
     }
 
+    static Ref<ShadowRoot> create(Document& document, std::unique_ptr<SlotAssignment>&& assignment)
+    {
+        return adoptRef(*new ShadowRoot(document, WTFMove(assignment)));
+    }
+
     virtual ~ShadowRoot();
+
+    using TreeScope::rootNode;
+
+    Style::Scope& styleScope();
 
     bool resetStyleInheritance() const { return m_resetStyleInheritance; }
     void setResetStyleInheritance(bool);
 
-    Element* hostElement() const { return m_hostElement; }
-    void setHostElement(Element* hostElement) { m_hostElement = hostElement; }
+    Element* host() const { return m_host; }
+    void setHost(Element* host) { m_host = host; }
 
     String innerHTML() const;
-    void setInnerHTML(const String&, ExceptionCode&);
+    ExceptionOr<void> setInnerHTML(const String&);
 
     Element* activeElement() const;
 
-    ShadowRootType type() const { return static_cast<ShadowRootType>(m_type); }
+    ShadowRootMode mode() const { return m_type; }
 
-    PassRefPtr<Node> cloneNode(bool, ExceptionCode&);
+    void removeAllEventListeners() override;
 
-    ContentDistributor& distributor() { return m_distributor; }
-    void invalidateDistribution() { m_distributor.invalidateDistribution(hostElement()); }
+    HTMLSlotElement* findAssignedSlot(const Node&);
 
-    virtual void removeAllEventListeners() override;
+    void addSlotElementByName(const AtomicString&, HTMLSlotElement&);
+    void removeSlotElementByName(const AtomicString&, HTMLSlotElement&);
 
-private:
-    ShadowRoot(Document&, ShadowRootType);
+    void didRemoveAllChildrenOfShadowHost();
+    void didChangeDefaultSlot();
+    void hostChildElementDidChange(const Element&);
+    void hostChildElementDidChangeSlotAttribute(const AtomicString& oldValue, const AtomicString& newValue);
 
-    virtual bool childTypeAllowed(NodeType) const override;
-    virtual void childrenChanged(const ChildChange&) override;
+    const Vector<Node*>* assignedNodesForSlot(const HTMLSlotElement&);
 
-    virtual RefPtr<Node> cloneNodeInternal(Document&, CloningOperation) override;
+protected:
+    ShadowRoot(Document&, ShadowRootMode);
+
+    ShadowRoot(Document&, std::unique_ptr<SlotAssignment>&&);
 
     // FIXME: This shouldn't happen. https://bugs.webkit.org/show_bug.cgi?id=88834
-    bool isOrphan() const { return !hostElement(); }
+    bool isOrphan() const { return !m_host; }
 
-    unsigned m_resetStyleInheritance : 1;
-    unsigned m_type : 1;
+private:
+    bool childTypeAllowed(NodeType) const override;
 
-    Element* m_hostElement;
+    Ref<Node> cloneNodeInternal(Document&, CloningOperation) override;
 
-    ContentDistributor m_distributor;
+    Node::InsertionNotificationRequest insertedInto(ContainerNode& insertionPoint) override;
+    void removedFrom(ContainerNode& insertionPoint) override;
+    void didMoveToNewDocument(Document& oldDocument) override;
+
+    bool m_resetStyleInheritance { false };
+    ShadowRootMode m_type { ShadowRootMode::UserAgent };
+
+    Element* m_host { nullptr };
+
+    std::unique_ptr<Style::Scope> m_styleScope;
+
+    std::unique_ptr<SlotAssignment> m_slotAssignment;
 };
 
 inline Element* ShadowRoot::activeElement() const
 {
-    return treeScope().focusedElement();
+    return treeScope().focusedElementInScope();
 }
 
 inline ShadowRoot* Node::shadowRoot() const
@@ -105,7 +124,7 @@ inline ContainerNode* Node::parentOrShadowHostNode() const
 {
     ASSERT(isMainThreadOrGCThread());
     if (is<ShadowRoot>(*this))
-        return downcast<ShadowRoot>(*this).hostElement();
+        return downcast<ShadowRoot>(*this).host();
     return parentNode();
 }
 
@@ -114,10 +133,10 @@ inline bool hasShadowRootParent(const Node& node)
     return node.parentNode() && node.parentNode()->isShadowRoot();
 }
 
+Vector<ShadowRoot*> assignedShadowRootsIfSlotted(const Node&);
+
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::ShadowRoot)
     static bool isType(const WebCore::Node& node) { return node.isShadowRoot(); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif

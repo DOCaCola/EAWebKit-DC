@@ -18,11 +18,11 @@
  *
  */
 
-#ifndef HTMLFrameOwnerElement_h
-#define HTMLFrameOwnerElement_h
+#pragma once
 
 #include "HTMLElement.h"
 #include <wtf/HashCountedSet.h>
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
@@ -36,7 +36,7 @@ public:
     virtual ~HTMLFrameOwnerElement();
 
     Frame* contentFrame() const { return m_contentFrame; }
-    DOMWindow* contentWindow() const;
+    WEBCORE_EXPORT DOMWindow* contentWindow() const;
     WEBCORE_EXPORT Document* contentDocument() const;
 
     void setContentFrame(Frame*);
@@ -49,21 +49,21 @@ public:
     // RenderElement when using fallback content.
     RenderWidget* renderWidget() const;
 
-    SVGDocument* getSVGDocument(ExceptionCode&) const;
+    ExceptionOr<Document&> getSVGDocument() const;
 
     virtual ScrollbarMode scrollingMode() const { return ScrollbarAuto; }
 
     SandboxFlags sandboxFlags() const { return m_sandboxFlags; }
 
-    void scheduleSetNeedsStyleRecalc(StyleChangeType = FullStyleChange);
+    void scheduleinvalidateStyleAndLayerComposition();
 
 protected:
     HTMLFrameOwnerElement(const QualifiedName& tagName, Document&);
     void setSandboxFlags(SandboxFlags);
 
 private:
-    virtual bool isKeyboardFocusable(KeyboardEvent*) const override;
-    virtual bool isFrameOwnerElement() const override final { return true; }
+    bool isKeyboardFocusable(KeyboardEvent&) const override;
+    bool isFrameOwnerElement() const final { return true; }
 
     Frame* m_contentFrame;
     SandboxFlags m_sandboxFlags;
@@ -87,7 +87,7 @@ public:
 private:
     static HashCountedSet<ContainerNode*>& disabledSubtreeRoots()
     {
-        DEPRECATED_DEFINE_STATIC_LOCAL(HashCountedSet<ContainerNode*>, nodes, ());
+        static NeverDestroyed<HashCountedSet<ContainerNode*>> nodes;
         return nodes;
     }
 
@@ -99,5 +99,3 @@ private:
 SPECIALIZE_TYPE_TRAITS_BEGIN(WebCore::HTMLFrameOwnerElement)
     static bool isType(const WebCore::Node& node) { return node.isFrameOwnerElement(); }
 SPECIALIZE_TYPE_TRAITS_END()
-
-#endif // HTMLFrameOwnerElement_h

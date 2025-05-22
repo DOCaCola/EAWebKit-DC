@@ -34,45 +34,42 @@
 
 namespace WebCore {
 
-Ref<WebGLVertexArrayObjectOES> WebGLVertexArrayObjectOES::create(WebGLRenderingContextBase* ctx, VAOType type)
+Ref<WebGLVertexArrayObjectOES> WebGLVertexArrayObjectOES::create(WebGLRenderingContextBase& context, Type type)
 {
-    return adoptRef(*new WebGLVertexArrayObjectOES(ctx, type));
+    return adoptRef(*new WebGLVertexArrayObjectOES(context, type));
 }
 
-WebGLVertexArrayObjectOES::WebGLVertexArrayObjectOES(WebGLRenderingContextBase* ctx, VAOType type)
-    : WebGLVertexArrayObjectBase(ctx, type)
+WebGLVertexArrayObjectOES::WebGLVertexArrayObjectOES(WebGLRenderingContextBase& context, Type type)
+    : WebGLVertexArrayObjectBase(context, type)
 {
-    Extensions3D* extensions = context()->graphicsContext3D()->getExtensions();
-    switch (m_type) {
-    case VAOTypeDefault:
+    switch (type) {
+    case Type::Default:
         break;
-    default:
-        setObject(extensions->createVertexArrayOES());
+    case Type::User:
+        setObject(this->context()->graphicsContext3D()->getExtensions().createVertexArrayOES());
         break;
     }
 }
 
 WebGLVertexArrayObjectOES::~WebGLVertexArrayObjectOES()
 {
-    deleteObject(0);
+    deleteObject(nullptr);
 }
 
 void WebGLVertexArrayObjectOES::deleteObjectImpl(GraphicsContext3D* context3d, Platform3DObject object)
 {
-    Extensions3D* extensions = context3d->getExtensions();
     switch (m_type) {
-    case VAOTypeDefault:
+    case Type::Default:
         break;
-    default:
-        extensions->deleteVertexArrayOES(object);
+    case Type::User:
+        context3d->getExtensions().deleteVertexArrayOES(object);
         break;
     }
 
     if (m_boundElementArrayBuffer)
         m_boundElementArrayBuffer->onDetached(context3d);
 
-    for (size_t i = 0; i < m_vertexAttribState.size(); ++i) {
-        VertexAttribState& state = m_vertexAttribState[i];
+    for (auto& state : m_vertexAttribState) {
         if (state.bufferBinding)
             state.bufferBinding->onDetached(context3d);
     }

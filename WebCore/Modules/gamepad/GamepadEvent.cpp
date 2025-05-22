@@ -29,18 +29,14 @@
 
 namespace WebCore {
 
-GamepadEvent::GamepadEvent()
-{
-}
-
 GamepadEvent::GamepadEvent(const AtomicString& eventType, Gamepad& gamepad)
     : Event(eventType, false, false)
     , m_gamepad(&gamepad)
 {
 }
 
-GamepadEvent::GamepadEvent(const AtomicString& eventType, const GamepadEventInit& initializer)
-    : Event(eventType, initializer)
+GamepadEvent::GamepadEvent(const AtomicString& eventType, const Init& initializer, IsTrusted isTrusted)
+    : Event(eventType, initializer, isTrusted)
     , m_gamepad(initializer.gamepad)
 {
 }

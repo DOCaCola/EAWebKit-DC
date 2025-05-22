@@ -27,9 +27,7 @@
 #include "TextStream.h"
 
 #include "FloatPoint.h"
-#include "FloatRect.h"
 #include "IntPoint.h"
-#include "IntRect.h"
 #include "LayoutRect.h"
 #include "LayoutUnit.h"
 #include <wtf/MathExtras.h>
@@ -91,12 +89,18 @@ TextStream& TextStream::operator<<(unsigned long long i)
 
 TextStream& TextStream::operator<<(float f)
 {
+    if (m_formattingFlags & Formatting::NumberRespectingIntegers)
+        return *this << FormatNumberRespectingIntegers(f);
+
     m_text.appendFixedWidthNumber(f, 2);
     return *this;
 }
 
 TextStream& TextStream::operator<<(double d)
 {
+    if (m_formattingFlags & Formatting::NumberRespectingIntegers)
+        return *this << FormatNumberRespectingIntegers(d);
+
     m_text.appendFixedWidthNumber(d, 2);
     return *this;
 }
@@ -122,50 +126,18 @@ TextStream& TextStream::operator<<(const String& string)
 
 TextStream& TextStream::operator<<(const FormatNumberRespectingIntegers& numberToFormat)
 {
-    if (hasFractions(numberToFormat.value))
-        return *this << numberToFormat.value;
+    if (hasFractions(numberToFormat.value)) {
+        m_text.appendFixedWidthNumber(numberToFormat.value, 2);
+        return *this;
+    }
 
     m_text.appendNumber(static_cast<int>(numberToFormat.value));
     return *this;
 }
 
-TextStream& TextStream::operator<<(const IntPoint& p)
-{
-    return *this << "(" << p.x() << "," << p.y() << ")";
-}
-
-TextStream& TextStream::operator<<(const IntRect& r)
-{
-    return *this  << "at (" << r.x() << "," << r.y() << ") size " << r.width() << "x" << r.height();
-}
-
-TextStream& TextStream::operator<<(const FloatPoint& p)
-{
-    return *this << "(" << TextStream::FormatNumberRespectingIntegers(p.x())
-        << "," << TextStream::FormatNumberRespectingIntegers(p.y()) << ")";
-}
-
-TextStream& TextStream::operator<<(const FloatSize& s)
-{
-    return *this << "width=" << TextStream::FormatNumberRespectingIntegers(s.width())
-        << " height=" << TextStream::FormatNumberRespectingIntegers(s.height());
-}
-
-TextStream& TextStream::operator<<(const LayoutUnit& v)
+TextStream& TextStream::operator<<(LayoutUnit v)
 {
     return *this << TextStream::FormatNumberRespectingIntegers(v.toFloat());
-}
-
-TextStream& TextStream::operator<<(const LayoutPoint& p)
-{
-    // FIXME: These should be printed as floats. Keeping them ints for consistency with pervious test expectations.
-    return *this << "(" << p.x().toInt() << "," << p.y().toInt() << ")";
-}
-
-TextStream& TextStream::operator<<(const LayoutRect& r)
-{
-    // FIXME: These should be printed as floats. Keeping them ints for consistency with previous test expectations.
-    return *this << snappedIntRect(r);
 }
 
 String TextStream::release()
@@ -173,6 +145,43 @@ String TextStream::release()
     String result = m_text.toString();
     m_text.clear();
     return result;
+}
+
+void TextStream::startGroup()
+{
+    TextStream& ts = *this;
+
+    if (m_multiLineMode) {
+        ts << "\n";
+        ts.writeIndent();
+        ts << "(";
+        ts.increaseIndent();
+    } else
+        ts << " (";
+}
+
+void TextStream::endGroup()
+{
+    TextStream& ts = *this;
+    ts << ")";
+    if (m_multiLineMode)
+        ts.decreaseIndent();
+}
+
+void TextStream::nextLine()
+{
+    TextStream& ts = *this;
+    if (m_multiLineMode) {
+        ts << "\n";
+        ts.writeIndent();
+    } else
+        ts << " ";
+}
+
+void TextStream::writeIndent()
+{
+    if (m_multiLineMode)
+        WebCore::writeIndent(*this, m_indent);
 }
 
 void writeIndent(TextStream& ts, int indent)

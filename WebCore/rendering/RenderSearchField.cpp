@@ -36,13 +36,11 @@
 #include "HitTestResult.h"
 #include "LocalizedStrings.h"
 #include "Page.h"
-#include "PlatformKeyboardEvent.h"
+#include "PopupMenu.h"
 #include "RenderLayer.h"
 #include "RenderScrollbar.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
-#include "SearchPopupMenu.h"
-#include "Settings.h"
 #include "StyleResolver.h"
 #include "TextControlInnerElements.h"
 
@@ -50,8 +48,8 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-RenderSearchField::RenderSearchField(HTMLInputElement& element, Ref<RenderStyle>&& style)
-    : RenderTextControlSingleLine(element, WTF::move(style))
+RenderSearchField::RenderSearchField(HTMLInputElement& element, RenderStyle&& style)
+    : RenderTextControlSingleLine(element, WTFMove(style))
     , m_searchPopupIsVisible(false)
     , m_searchPopup(0)
 {
@@ -85,17 +83,21 @@ void RenderSearchField::addSearchResult()
     if (value.isEmpty())
         return;
 
-    if (frame().page()->usesEphemeralSession())
+    if (page().usesEphemeralSession())
         return;
 
-    m_recentSearches.removeAll(value);
-    m_recentSearches.insert(0, value);
+    m_recentSearches.removeAllMatching([value] (const RecentSearch& recentSearch) {
+        return recentSearch.string == value;
+    });
+
+    RecentSearch recentSearch = { value, std::chrono::system_clock::now() };
+    m_recentSearches.insert(0, recentSearch);
     while (static_cast<int>(m_recentSearches.size()) > inputElement().maxResults())
         m_recentSearches.removeLast();
 
     const AtomicString& name = autosaveName();
     if (!m_searchPopup)
-        m_searchPopup = document().page()->chrome().createSearchPopupMenu(this);
+        m_searchPopup = page().chrome().createSearchPopupMenu(*this);
 
     m_searchPopup->saveRecentSearches(name, m_recentSearches);
 }
@@ -106,7 +108,7 @@ void RenderSearchField::showPopup()
         return;
 
     if (!m_searchPopup)
-        m_searchPopup = document().page()->chrome().createSearchPopupMenu(this);
+        m_searchPopup = page().chrome().createSearchPopupMenu(*this);
 
     if (!m_searchPopup->enabled())
         return;
@@ -174,9 +176,9 @@ void RenderSearchField::updateCancelButtonVisibility() const
     if (curStyle.visibility() == buttonVisibility)
         return;
 
-    auto cancelButtonStyle = RenderStyle::clone(&curStyle);
-    cancelButtonStyle.get().setVisibility(buttonVisibility);
-    cancelButtonRenderer->setStyle(WTF::move(cancelButtonStyle));
+    auto cancelButtonStyle = RenderStyle::clone(curStyle);
+    cancelButtonStyle.setVisibility(buttonVisibility);
+    cancelButtonRenderer->setStyle(WTFMove(cancelButtonStyle));
 }
 
 EVisibility RenderSearchField::visibilityForCancelButton() const
@@ -186,7 +188,7 @@ EVisibility RenderSearchField::visibilityForCancelButton() const
 
 const AtomicString& RenderSearchField::autosaveName() const
 {
-    return inputElement().fastGetAttribute(autosaveAttr);
+    return inputElement().attributeWithoutSynchronization(autosaveAttr);
 }
 
 // PopupMenuClient methods
@@ -199,7 +201,7 @@ void RenderSearchField::valueChanged(unsigned listIndex, bool fireEvents)
             const AtomicString& name = autosaveName();
             if (!name.isEmpty()) {
                 if (!m_searchPopup)
-                    m_searchPopup = document().page()->chrome().createSearchPopupMenu(this);
+                    m_searchPopup = page().chrome().createSearchPopupMenu(*this);
                 m_searchPopup->saveRecentSearches(name, m_recentSearches);
             }
         }
@@ -228,7 +230,7 @@ String RenderSearchField::itemText(unsigned listIndex) const
     if (static_cast<int>(listIndex) == (size - 1))
         return searchMenuClearRecentSearchesText();
 #endif
-    return m_recentSearches[listIndex - 1];
+    return m_recentSearches[listIndex - 1].string;
 }
 
 String RenderSearchField::itemLabel(unsigned) const
@@ -342,15 +344,12 @@ HostWindow* RenderSearchField::hostWindow() const
     return view().frameView().hostWindow();
 }
 
-PassRefPtr<Scrollbar> RenderSearchField::createScrollbar(ScrollableArea& scrollableArea, ScrollbarOrientation orientation, ScrollbarControlSize controlSize)
+Ref<Scrollbar> RenderSearchField::createScrollbar(ScrollableArea& scrollableArea, ScrollbarOrientation orientation, ScrollbarControlSize controlSize)
 {
-    RefPtr<Scrollbar> widget;
     bool hasCustomScrollbarStyle = style().hasPseudoStyle(SCROLLBAR);
     if (hasCustomScrollbarStyle)
-        widget = RenderScrollbar::createCustomScrollbar(scrollableArea, orientation, &inputElement());
-    else
-        widget = Scrollbar::createNativeScrollbar(scrollableArea, orientation, controlSize);
-    return widget.release();
+        return RenderScrollbar::createCustomScrollbar(scrollableArea, orientation, &inputElement());
+    return Scrollbar::createNativeScrollbar(scrollableArea, orientation, controlSize);
 }
 
 LayoutUnit RenderSearchField::computeLogicalHeightLimit() const

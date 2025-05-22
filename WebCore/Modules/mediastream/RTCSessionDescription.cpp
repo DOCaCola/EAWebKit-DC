@@ -30,84 +30,28 @@
  */
 
 #include "config.h"
-
-#if ENABLE(MEDIA_STREAM)
-
 #include "RTCSessionDescription.h"
 
-#include "Dictionary.h"
-#include "ExceptionCode.h"
-#include "RTCSessionDescriptionDescriptor.h"
+#if ENABLE(WEB_RTC)
 
 namespace WebCore {
 
-static bool verifyType(const String& type)
-{
-    return type == "offer" || type == "pranswer" || type == "answer";
-}
-
-RefPtr<RTCSessionDescription> RTCSessionDescription::create(const Dictionary& dictionary, ExceptionCode& ec)
-{
-    String type;
-    bool ok = dictionary.get("type", type);
-    if (ok && !verifyType(type)) {
-        ec = TYPE_MISMATCH_ERR;
-        return nullptr;
-    }
-
-    String sdp;
-    ok = dictionary.get("sdp", sdp);
-    if (ok && sdp.isEmpty()) {
-        ec = TYPE_MISMATCH_ERR;
-        return nullptr;
-    }
-
-    return adoptRef(*new RTCSessionDescription(RTCSessionDescriptionDescriptor::create(type, sdp)));
-}
-
-RefPtr<RTCSessionDescription> RTCSessionDescription::create(PassRefPtr<RTCSessionDescriptionDescriptor> descriptor)
-{
-    ASSERT(descriptor);
-    return adoptRef(*new RTCSessionDescription(descriptor));
-}
-
-RTCSessionDescription::RTCSessionDescription(PassRefPtr<RTCSessionDescriptionDescriptor> descriptor)
-    : m_descriptor(descriptor)
+inline RTCSessionDescription::RTCSessionDescription(SdpType type, const String& sdp)
+    : m_type(type)
+    , m_sdp(sdp)
 {
 }
 
-RTCSessionDescription::~RTCSessionDescription()
+Ref<RTCSessionDescription> RTCSessionDescription::create(const Init& dictionary)
 {
+    return create(dictionary.type, dictionary.sdp);
 }
 
-const String& RTCSessionDescription::type() const
+Ref<RTCSessionDescription> RTCSessionDescription::create(SdpType type, const String& sdp)
 {
-    return m_descriptor->type();
-}
-
-void RTCSessionDescription::setType(const String& type, ExceptionCode& ec)
-{
-    if (verifyType(type))
-        m_descriptor->setType(type);
-    else
-        ec = TYPE_MISMATCH_ERR;
-}
-
-const String& RTCSessionDescription::sdp() const
-{
-    return m_descriptor->sdp();
-}
-
-void RTCSessionDescription::setSdp(const String& sdp)
-{
-    m_descriptor->setSdp(sdp);
-}
-
-RTCSessionDescriptionDescriptor* RTCSessionDescription::descriptor()
-{
-    return m_descriptor.get();
+    return adoptRef(*new RTCSessionDescription(type, sdp));
 }
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

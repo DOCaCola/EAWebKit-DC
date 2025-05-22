@@ -47,10 +47,9 @@ DOMFormData::DOMFormData(HTMLFormElement* form)
     if (!form)
         return;
 
-    for (unsigned i = 0; i < form->associatedElements().size(); ++i) {
-        FormAssociatedElement& element = *form->associatedElements()[i];
-        if (!element.asHTMLElement().isDisabledFormControl())
-            element.appendFormData(*this, true);
+    for (auto& element : form->associatedElements()) {
+        if (!element->asHTMLElement().isDisabledFormControl())
+            element->appendFormData(*this, true);
     }
 }
 
@@ -60,7 +59,7 @@ void DOMFormData::append(const String& name, const String& value)
         appendData(name, value);
 }
 
-void DOMFormData::append(const String& name, Blob* blob, const String& filename)
+void DOMFormData::append(const String& name, Blob& blob, const String& filename)
 {
     if (!name.isEmpty())
         appendBlob(name, blob, filename);

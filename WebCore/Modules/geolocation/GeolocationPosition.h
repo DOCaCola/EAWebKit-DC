@@ -23,12 +23,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GeolocationPosition_h
-#define GeolocationPosition_h
+#pragma once
 
-#include <wtf/PassRefPtr.h>
+#include <wtf/Ref.h>
 #include <wtf/RefCounted.h>
-#include <wtf/RefPtr.h>
 
 namespace WebCore {
 
@@ -109,5 +107,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // GeolocationPosition_h

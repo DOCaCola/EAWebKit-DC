@@ -32,7 +32,6 @@
 #include "HRTFKernel.h"
 #include <memory>
 #include <wtf/Noncopyable.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 #include <wtf/text/CString.h>
@@ -46,8 +45,8 @@ class HRTFElevation {
     WTF_MAKE_NONCOPYABLE(HRTFElevation);
 public:
     HRTFElevation(std::unique_ptr<HRTFKernelList> kernelListL, std::unique_ptr<HRTFKernelList> kernelListR, int elevation, float sampleRate)
-        : m_kernelListL(WTF::move(kernelListL))
-        , m_kernelListR(WTF::move(kernelListR))
+        : m_kernelListL(WTFMove(kernelListL))
+        , m_kernelListR(WTFMove(kernelListR))
         , m_elevationAngle(elevation)
         , m_sampleRate(sampleRate)
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2009-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,10 +24,9 @@
  */
 
 #include "config.h"
+#include "WebGLFramebuffer.h"
 
 #if ENABLE(WEBGL)
-
-#include "WebGLFramebuffer.h"
 
 #include "Extensions3D.h"
 #include "WebGLContextGroup.h"
@@ -49,17 +48,17 @@ namespace {
 
     private:
         WebGLRenderbufferAttachment(WebGLRenderbuffer*);
-        virtual GC3Dsizei getWidth() const override;
-        virtual GC3Dsizei getHeight() const override;
-        virtual GC3Denum getFormat() const override;
-        virtual WebGLSharedObject* getObject() const override;
-        virtual bool isSharedObject(WebGLSharedObject*) const override;
-        virtual bool isValid() const override;
-        virtual bool isInitialized() const override;
-        virtual void setInitialized() override;
-        virtual void onDetached(GraphicsContext3D*) override;
-        virtual void attach(GraphicsContext3D*, GC3Denum attachment) override;
-        virtual void unattach(GraphicsContext3D*, GC3Denum attachment) override;
+        GC3Dsizei getWidth() const override;
+        GC3Dsizei getHeight() const override;
+        GC3Denum getFormat() const override;
+        WebGLSharedObject* getObject() const override;
+        bool isSharedObject(WebGLSharedObject*) const override;
+        bool isValid() const override;
+        bool isInitialized() const override;
+        void setInitialized() override;
+        void onDetached(GraphicsContext3D*) override;
+        void attach(GraphicsContext3D*, GC3Denum attachment) override;
+        void unattach(GraphicsContext3D*, GC3Denum attachment) override;
 
         WebGLRenderbufferAttachment() { };
 
@@ -143,17 +142,17 @@ namespace {
 
     private:
         WebGLTextureAttachment(WebGLTexture*, GC3Denum target, GC3Dint level);
-        virtual GC3Dsizei getWidth() const override;
-        virtual GC3Dsizei getHeight() const override;
-        virtual GC3Denum getFormat() const override;
-        virtual WebGLSharedObject* getObject() const override;
-        virtual bool isSharedObject(WebGLSharedObject*) const override;
-        virtual bool isValid() const override;
-        virtual bool isInitialized() const override;
-        virtual void setInitialized() override;
-        virtual void onDetached(GraphicsContext3D*) override;
-        virtual void attach(GraphicsContext3D*, GC3Denum attachment) override;
-        virtual void unattach(GraphicsContext3D*, GC3Denum attachment) override;
+        GC3Dsizei getWidth() const override;
+        GC3Dsizei getHeight() const override;
+        GC3Denum getFormat() const override;
+        WebGLSharedObject* getObject() const override;
+        bool isSharedObject(WebGLSharedObject*) const override;
+        bool isValid() const override;
+        bool isInitialized() const override;
+        void setInitialized() override;
+        void onDetached(GraphicsContext3D*) override;
+        void attach(GraphicsContext3D*, GC3Denum attachment) override;
+        void unattach(GraphicsContext3D*, GC3Denum attachment) override;
 
         WebGLTextureAttachment() { };
 
@@ -269,16 +268,16 @@ WebGLFramebuffer::WebGLAttachment::~WebGLAttachment()
 {
 }
 
-Ref<WebGLFramebuffer> WebGLFramebuffer::create(WebGLRenderingContextBase* ctx)
+Ref<WebGLFramebuffer> WebGLFramebuffer::create(WebGLRenderingContextBase& ctx)
 {
     return adoptRef(*new WebGLFramebuffer(ctx));
 }
 
-WebGLFramebuffer::WebGLFramebuffer(WebGLRenderingContextBase* ctx)
+WebGLFramebuffer::WebGLFramebuffer(WebGLRenderingContextBase& ctx)
     : WebGLContextObject(ctx)
     , m_hasEverBeenBound(false)
 {
-    setObject(ctx->graphicsContext3D()->createFramebuffer());
+    setObject(ctx.graphicsContext3D()->createFramebuffer());
 }
 
 WebGLFramebuffer::~WebGLFramebuffer()
@@ -371,10 +370,10 @@ void WebGLFramebuffer::removeAttachmentFromBoundFramebuffer(WebGLSharedObject* a
     bool checkMore = true;
     do {
         checkMore = false;
-        for (AttachmentMap::iterator it = m_attachments.begin(); it != m_attachments.end(); ++it) {
-            WebGLAttachment* attachmentObject = it->value.get();
+        for (auto& entry : m_attachments) {
+            WebGLAttachment* attachmentObject = entry.value.get();
             if (attachmentObject->isSharedObject(attachment)) {
-                GC3Denum attachmentType = it->key;
+                GC3Denum attachmentType = entry.key;
                 attachmentObject->unattach(context()->graphicsContext3D(), attachmentType);
                 removeAttachmentFromBoundFramebuffer(attachmentType);
                 checkMore = true;
@@ -423,9 +422,9 @@ GC3Denum WebGLFramebuffer::checkStatus(const char** reason) const
     bool haveDepth = false;
     bool haveStencil = false;
     bool haveDepthStencil = false;
-    for (AttachmentMap::const_iterator it = m_attachments.begin(); it != m_attachments.end(); ++it) {
-        WebGLAttachment* attachment = it->value.get();
-        if (!isAttachmentComplete(attachment, it->key, reason))
+    for (auto& entry : m_attachments) {
+        WebGLAttachment* attachment = entry.value.get();
+        if (!isAttachmentComplete(attachment, entry.key, reason))
             return GraphicsContext3D::FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         if (!attachment->isValid()) {
             *reason = "attachment is not valid";
@@ -441,7 +440,7 @@ GC3Denum WebGLFramebuffer::checkStatus(const char** reason) const
             *reason = "attachment is an unsupported format";
             return GraphicsContext3D::FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
-        switch (it->key) {
+        switch (entry.key) {
         case GraphicsContext3D::DEPTH_ATTACHMENT:
             haveDepth = true;
             break;
@@ -479,13 +478,11 @@ GC3Denum WebGLFramebuffer::checkStatus(const char** reason) const
     return GraphicsContext3D::FRAMEBUFFER_COMPLETE;
 }
 
-bool WebGLFramebuffer::onAccess(GraphicsContext3D* context3d, bool needToInitializeAttachments, const char** reason)
+bool WebGLFramebuffer::onAccess(GraphicsContext3D* context3d, const char** reason)
 {
     if (checkStatus(reason) != GraphicsContext3D::FRAMEBUFFER_COMPLETE)
         return false;
-    if (needToInitializeAttachments)
-        return initializeAttachments(context3d, reason);
-    return true;
+    return initializeAttachments(context3d, reason);
 }
 
 bool WebGLFramebuffer::hasStencilBuffer() const
@@ -498,8 +495,8 @@ bool WebGLFramebuffer::hasStencilBuffer() const
 
 void WebGLFramebuffer::deleteObjectImpl(GraphicsContext3D* context3d, Platform3DObject object)
 {
-    for (AttachmentMap::iterator it = m_attachments.begin(); it != m_attachments.end(); ++it)
-        it->value->onDetached(context3d);
+    for (auto& attachment : m_attachments.values())
+        attachment->onDetached(context3d);
 
     context3d->deleteFramebuffer(object);
 }
@@ -509,9 +506,9 @@ bool WebGLFramebuffer::initializeAttachments(GraphicsContext3D* g3d, const char*
     ASSERT(object());
     GC3Dbitfield mask = 0;
 
-    for (AttachmentMap::iterator it = m_attachments.begin(); it != m_attachments.end(); ++it) {
-        GC3Denum attachmentType = it->key;
-        WebGLAttachment* attachment = it->value.get();
+    for (auto& entry : m_attachments) {
+        GC3Denum attachmentType = entry.key;
+        WebGLAttachment* attachment = entry.value.get();
         if (!attachment->isInitialized())
            mask |= GraphicsContext3D::getClearBitsByAttachmentType(attachmentType);
     }
@@ -600,14 +597,17 @@ void WebGLFramebuffer::drawBuffers(const Vector<GC3Denum>& bufs)
 {
     m_drawBuffers = bufs;
     m_filteredDrawBuffers.resize(m_drawBuffers.size());
-    for (size_t i = 0; i < m_filteredDrawBuffers.size(); ++i)
-        m_filteredDrawBuffers[i] = GraphicsContext3D::NONE;
+    for (auto& buffer : m_filteredDrawBuffers)
+        buffer = GraphicsContext3D::NONE;
     drawBuffersIfNecessary(true);
 }
 
 void WebGLFramebuffer::drawBuffersIfNecessary(bool force)
 {
 #if ENABLE(WEBGL2)
+    // FIXME: The logic here seems wrong. If we don't have WebGL 2 enabled at all, then
+    // we skip the m_webglDrawBuffers check. But if we do have WebGL 2 enabled, then we
+    // perform this check, for WebGL 1 contexts only.
     if (!context()->m_webglDrawBuffers && !context()->isWebGL2())
         return;
 #endif
@@ -627,7 +627,7 @@ void WebGLFramebuffer::drawBuffersIfNecessary(bool force)
         }
     }
     if (reset) {
-        context()->graphicsContext3D()->getExtensions()->drawBuffersEXT(
+        context()->graphicsContext3D()->getExtensions().drawBuffersEXT(
             m_filteredDrawBuffers.size(), m_filteredDrawBuffers.data());
     }
 }

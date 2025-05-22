@@ -35,15 +35,16 @@
 #if ENABLE(MEDIA_STREAM)
 
 #include "RealtimeMediaSource.h"
+#include "RealtimeMediaSourceSupportedConstraints.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
+class CaptureDevice;
 class MediaConstraints;
-class MediaStreamCreationClient;
-class RealtimeMediaSourceStates;
-class MediaStreamTrackSourcesRequestClient;
+class RealtimeMediaSourceSettings;
+class RealtimeMediaSourceSupportedConstraints;
 class TrackSourceInfo;
 
 class RealtimeMediaSourceCenter {
@@ -51,20 +52,24 @@ public:
     virtual ~RealtimeMediaSourceCenter();
 
     WEBCORE_EXPORT static RealtimeMediaSourceCenter& singleton();
-    static void setSharedStreamCenter(RealtimeMediaSourceCenter*);
+    static void setSharedStreamCenterOverride(RealtimeMediaSourceCenter*);
 
-    virtual void validateRequestConstraints(PassRefPtr<MediaStreamCreationClient>, PassRefPtr<MediaConstraints> audioConstraints, PassRefPtr<MediaConstraints> videoConstraints) = 0;
+    using ValidConstraintsHandler = std::function<void(const Vector<String>&& audioDeviceUIDs, const Vector<String>&& videoDeviceUIDs)>;
+    using InvalidConstraintsHandler = std::function<void(const String& invalidConstraint)>;
+    virtual void validateRequestConstraints(ValidConstraintsHandler, InvalidConstraintsHandler, const MediaConstraints& audioConstraints, const MediaConstraints& videoConstraints) = 0;
 
-    virtual void createMediaStream(PassRefPtr<MediaStreamCreationClient>, PassRefPtr<MediaConstraints> audioConstraints, PassRefPtr<MediaConstraints> videoConstraints) = 0;
+    using NewMediaStreamHandler = std::function<void(RefPtr<MediaStreamPrivate>&&)>;
+    virtual void createMediaStream(NewMediaStreamHandler, const String& audioDeviceID, const String& videoDeviceID, const MediaConstraints* audioConstraints, const MediaConstraints* videoConstraints) = 0;
 
-    virtual bool getMediaStreamTrackSources(PassRefPtr<MediaStreamTrackSourcesRequestClient>) = 0;
+    virtual Vector<CaptureDevice> getMediaStreamDevices() = 0;
     
-    virtual RefPtr<TrackSourceInfo> sourceWithUID(const String&, RealtimeMediaSource::Type, MediaConstraints*) = 0;
+    virtual const RealtimeMediaSourceSupportedConstraints& supportedConstraints() { return m_supportedConstraints; }
 
 protected:
     RealtimeMediaSourceCenter();
 
     static RealtimeMediaSourceCenter& platformCenter();
+    RealtimeMediaSourceSupportedConstraints m_supportedConstraints;
 };
 
 } // namespace WebCore

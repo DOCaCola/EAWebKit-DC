@@ -30,6 +30,4 @@
 
 [
     Conditional=QUOTA,
-] callback interface StorageErrorCallback {
-    boolean handleEvent(DOMCoreException error);
-};
+] callback StorageErrorCallback = void (DOMCoreException error);

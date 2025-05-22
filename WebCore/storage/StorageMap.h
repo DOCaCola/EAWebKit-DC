@@ -23,11 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StorageMap_h
-#define StorageMap_h
+#pragma once
 
 #include <wtf/HashMap.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/text/StringHash.h>
 #include <wtf/text/WTFString.h>
@@ -42,9 +40,9 @@ public:
     WEBCORE_EXPORT unsigned length() const;
     WEBCORE_EXPORT String key(unsigned index);
     WEBCORE_EXPORT String getItem(const String&) const;
-    WEBCORE_EXPORT PassRefPtr<StorageMap> setItem(const String& key, const String& value, String& oldValue, bool& quotaException);
-    WEBCORE_EXPORT PassRefPtr<StorageMap> setItemIgnoringQuota(const String& key, const String& value);
-    WEBCORE_EXPORT PassRefPtr<StorageMap> removeItem(const String&, String& oldValue);
+    WEBCORE_EXPORT RefPtr<StorageMap> setItem(const String& key, const String& value, String& oldValue, bool& quotaException);
+    WEBCORE_EXPORT RefPtr<StorageMap> setItemIgnoringQuota(const String& key, const String& value);
+    WEBCORE_EXPORT RefPtr<StorageMap> removeItem(const String&, String& oldValue);
 
     WEBCORE_EXPORT bool contains(const String& key) const;
 
@@ -53,11 +51,11 @@ public:
 
     unsigned quota() const { return m_quotaSize; }
 
-    static const unsigned noQuota = UINT_MAX;
+    static const constexpr unsigned noQuota = UINT_MAX;
 
 private:
     explicit StorageMap(unsigned quota);
-    PassRefPtr<StorageMap> copy();
+    Ref<StorageMap> copy();
     void invalidateIterator();
     void setIteratorToIndex(unsigned);
 
@@ -70,5 +68,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // StorageMap_h

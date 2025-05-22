@@ -17,8 +17,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef DOMPlugin_h
-#define DOMPlugin_h
+#pragma once
 
 #include "FrameDestructionObserver.h"
 #include "DOMMimeType.h"
@@ -33,7 +32,7 @@ class PluginData;
 
 class DOMPlugin : public ScriptWrappable, public RefCounted<DOMPlugin>, public FrameDestructionObserver {
 public:
-    static Ref<DOMPlugin> create(PluginData* pluginData, Frame* frame, PluginInfo pluginInfo) { return adoptRef(*new DOMPlugin(pluginData, frame, WTF::move(pluginInfo))); }
+    static Ref<DOMPlugin> create(PluginData* pluginData, Frame* frame, PluginInfo pluginInfo) { return adoptRef(*new DOMPlugin(pluginData, frame, WTFMove(pluginInfo))); }
     ~DOMPlugin();
 
     String name() const;
@@ -42,9 +41,9 @@ public:
 
     unsigned length() const;
 
-    PassRefPtr<DOMMimeType> item(unsigned index);
-    bool canGetItemsForName(const AtomicString& propertyName);
-    PassRefPtr<DOMMimeType> namedItem(const AtomicString& propertyName);
+    RefPtr<DOMMimeType> item(unsigned index);
+    RefPtr<DOMMimeType> namedItem(const AtomicString& propertyName);
+    Vector<AtomicString> supportedPropertyNames();
 
 private:
     DOMPlugin(PluginData*, Frame*, PluginInfo);
@@ -53,5 +52,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // DOMPlugin_h

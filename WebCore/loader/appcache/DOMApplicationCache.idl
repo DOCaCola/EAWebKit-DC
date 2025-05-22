@@ -24,11 +24,10 @@
  */
  
 [
-    NoInterfaceObject,
-    EventTarget,
     DoNotCheckConstants,
     GenerateIsReachable=ImplFrame,
-] interface DOMApplicationCache {
+    InterfaceName=ApplicationCache,
+] interface DOMApplicationCache : EventTarget {
     // update status
     const unsigned short UNCACHED = 0;
     const unsigned short IDLE = 1;
@@ -38,8 +37,8 @@
     const unsigned short OBSOLETE = 5;
     readonly attribute unsigned short status;
 
-    [RaisesException] void update();
-    [RaisesException] void swapCache();
+    [MayThrowException] void update();
+    [MayThrowException] void swapCache();
     void abort();
 
     attribute EventHandler onchecking;
@@ -50,10 +49,5 @@
     attribute EventHandler onupdateready;
     attribute EventHandler oncached;
     attribute EventHandler onobsolete;
-
-    // EventTarget interface
-    void addEventListener(DOMString type, EventListener listener, optional boolean useCapture);
-    void removeEventListener(DOMString type, EventListener listener, optional boolean useCapture);
-    [RaisesException] boolean dispatchEvent(Event event);
 };
 

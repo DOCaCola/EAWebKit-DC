@@ -180,7 +180,7 @@ bool RenderLineBoxList::rangeIntersectsRect(RenderBoxModelObject* renderer, Layo
     return true;
 }
 
-bool RenderLineBoxList::anyLineIntersectsRect(RenderBoxModelObject* renderer, const LayoutRect& rect, const LayoutPoint& offset, bool usePrintRect, LayoutUnit outlineSize) const
+bool RenderLineBoxList::anyLineIntersectsRect(RenderBoxModelObject* renderer, const LayoutRect& rect, const LayoutPoint& offset, bool usePrintRect) const
 {
     // We can check the first box and last box and avoid painting/hit testing if we don't
     // intersect.  This is a quick short-circuit that we can take to avoid walking any lines.
@@ -194,18 +194,14 @@ bool RenderLineBoxList::anyLineIntersectsRect(RenderBoxModelObject* renderer, co
     LayoutUnit lastLineBottom = lastLineBox()->logicalBottomVisualOverflow(lastRootBox.lineBottom());
     if (usePrintRect && !lastLineBox()->parent())
         lastLineBottom = std::max(lastLineBottom, lastRootBox.lineBottom());
-    LayoutUnit logicalTop = firstLineTop - outlineSize;
-    LayoutUnit logicalBottom = outlineSize + lastLineBottom;
-    
-    return rangeIntersectsRect(renderer, logicalTop, logicalBottom, rect, offset);
+    return rangeIntersectsRect(renderer, firstLineTop, lastLineBottom, rect, offset);
 }
 
 bool RenderLineBoxList::lineIntersectsDirtyRect(RenderBoxModelObject* renderer, InlineFlowBox* box, const PaintInfo& paintInfo, const LayoutPoint& offset) const
 {
     const RootInlineBox& rootBox = box->root();
-    LayoutUnit logicalTop = std::min<LayoutUnit>(box->logicalTopVisualOverflow(rootBox.lineTop()), rootBox.selectionTop()) - renderer->maximalOutlineSize(paintInfo.phase);
-    LayoutUnit logicalBottom = box->logicalBottomVisualOverflow(rootBox.lineBottom()) + renderer->maximalOutlineSize(paintInfo.phase);
-    
+    LayoutUnit logicalTop = std::min(box->logicalTopVisualOverflow(rootBox.lineTop()), rootBox.selectionTop());
+    LayoutUnit logicalBottom = box->logicalBottomVisualOverflow(rootBox.lineBottom());
     return rangeIntersectsRect(renderer, logicalTop, logicalBottom, paintInfo.rect, offset);
 }
 
@@ -221,8 +217,7 @@ void RenderLineBoxList::paint(RenderBoxModelObject* renderer, PaintInfo& paintIn
     // NSViews.  Do not add any more code for this.
     RenderView& v = renderer->view();
     bool usePrintRect = !v.printRect().isEmpty();
-    LayoutUnit outlineSize = renderer->maximalOutlineSize(paintInfo.phase);
-    if (!anyLineIntersectsRect(renderer, paintInfo.rect, paintOffset, usePrintRect, outlineSize))
+    if (!anyLineIntersectsRect(renderer, paintInfo.rect, paintOffset, usePrintRect))
         return;
 
     PaintInfo info(paintInfo);
@@ -328,8 +323,8 @@ void RenderLineBoxList::dirtyLinesFromChangedChild(RenderBoxModelObject& contain
         return;
     }
 
-    // Try to figure out which line box we belong in.  First try to find a previous
-    // line box by examining our siblings.  If we didn't find a line box, then use our 
+    // Try to figure out which line box we belong in. First try to find a previous
+    // line box by examining our siblings. If we didn't find a line box, then use our
     // parent's first line box.
     RootInlineBox* box = nullptr;
     RenderObject* current;
@@ -375,11 +370,11 @@ void RenderLineBoxList::dirtyLinesFromChangedChild(RenderBoxModelObject& contain
     if (box) {
         box->markDirty();
 
-        // dirty the adjacent lines that might be affected
+        // Dirty the adjacent lines that might be affected.
         // NOTE: we dirty the previous line because RootInlineBox objects cache
         // the address of the first object on the next line after a BR, which we may be
-        // invalidating here.  For more info, see how RenderBlock::layoutInlineChildren
-        // calls setLineBreakInfo with the result of findNextLineBreak.  findNextLineBreak,
+        // invalidating here. For more info, see how RenderBlock::layoutInlineChildren
+        // calls setLineBreakInfo with the result of findNextLineBreak. findNextLineBreak,
         // despite the name, actually returns the first RenderObject after the BR.
         // <rdar://problem/3849947> "Typing after pasting line does not appear until after window resize."
         if (RootInlineBox* prevBox = box->prevRootBox())
@@ -387,8 +382,17 @@ void RenderLineBoxList::dirtyLinesFromChangedChild(RenderBoxModelObject& contain
 
         // FIXME: We shouldn't need to always dirty the next line. This is only strictly 
         // necessary some of the time, in situations involving BRs.
-        if (RootInlineBox* nextBox = box->nextRootBox())
+        if (RootInlineBox* nextBox = box->nextRootBox()) {
             nextBox->markDirty();
+            // Dedicated linebox for floats may be added as the last rootbox. If this occurs with BRs inside inlines that propagte their lineboxes to
+            // the parent flow, we need to invalidate it explicitly.
+            // FIXME: We should be able to figure out the actual "changed child" even when we are calling through empty inlines recursively.
+            if (is<RenderInline>(child) && !downcast<RenderInline>(child).firstLineBoxIncludingCulling()) {
+                auto* lastRootBox = nextBox->blockFlow().lastRootBox();
+                if (lastRootBox->isTrailingFloatsRootInlineBox() && !lastRootBox->isDirty())
+                    lastRootBox->markDirty();
+            }
+        }
     }
 }
 

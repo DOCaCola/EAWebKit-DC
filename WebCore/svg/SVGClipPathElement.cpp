@@ -25,7 +25,6 @@
 #include "Document.h"
 #include "RenderSVGResourceClipper.h"
 #include "SVGNames.h"
-#include "SVGTransformList.h"
 #include "StyleResolver.h"
 #include <wtf/NeverDestroyed.h>
 
@@ -102,9 +101,9 @@ void SVGClipPathElement::childrenChanged(const ChildChange& change)
         object->setNeedsLayout();
 }
 
-RenderPtr<RenderElement> SVGClipPathElement::createElementRenderer(Ref<RenderStyle>&& style, const RenderTreePosition&)
+RenderPtr<RenderElement> SVGClipPathElement::createElementRenderer(RenderStyle&& style, const RenderTreePosition&)
 {
-    return createRenderer<RenderSVGResourceClipper>(*this, WTF::move(style));
+    return createRenderer<RenderSVGResourceClipper>(*this, WTFMove(style));
 }
 
 }

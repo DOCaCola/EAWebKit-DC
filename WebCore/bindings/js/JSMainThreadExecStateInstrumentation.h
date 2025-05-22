@@ -24,22 +24,22 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSMainThreadExecStateInstrumentation_h
-#define JSMainThreadExecStateInstrumentation_h
+#pragma once
 
 #include "InspectorInstrumentation.h"
 #include "JSMainThreadExecState.h"
-#include <runtime/Executable.h>
+#include <runtime/FunctionExecutable.h>
 
 namespace WebCore {
 
-inline InspectorInstrumentationCookie JSMainThreadExecState::instrumentFunctionCall(ScriptExecutionContext* context, JSC::CallType callType, const JSC::CallData& callData)
+template<typename Type, Type jsType, class DataType>
+inline InspectorInstrumentationCookie JSMainThreadExecState::instrumentFunctionInternal(ScriptExecutionContext* context, Type callType, const DataType& callData)
 {
     if (!InspectorInstrumentation::timelineAgentEnabled(context))
         return InspectorInstrumentationCookie();
     String resourceName;
     int lineNumber = 1;
-    if (callType == JSC::CallTypeJS) {
+    if (callType == jsType) {
         resourceName = callData.js.functionExecutable->sourceURL();
         lineNumber = callData.js.functionExecutable->firstLine();
     } else
@@ -47,6 +47,14 @@ inline InspectorInstrumentationCookie JSMainThreadExecState::instrumentFunctionC
     return InspectorInstrumentation::willCallFunction(context, resourceName, lineNumber);
 }
 
-} // namespace WebCore
+inline InspectorInstrumentationCookie JSMainThreadExecState::instrumentFunctionCall(ScriptExecutionContext* context, JSC::CallType type, const JSC::CallData& data)
+{
+    return instrumentFunctionInternal<JSC::CallType, JSC::CallType::JS, JSC::CallData>(context, type, data);
+}
 
-#endif // JSMainThreadExecStateInstrumentation_h
+inline InspectorInstrumentationCookie JSMainThreadExecState::instrumentFunctionConstruct(ScriptExecutionContext* context, JSC::ConstructType type, const JSC::ConstructData& data)
+{
+    return instrumentFunctionInternal<JSC::ConstructType, JSC::ConstructType::JS, JSC::ConstructData>(context, type, data);
+}
+
+} // namespace WebCore

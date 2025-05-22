@@ -35,6 +35,7 @@
 #include "SVGGraphicsElement.h"
 #include "SVGNames.h"
 #include "SVGRenderSupport.h"
+#include "SVGStringList.h"
 #include "SVGTransformable.h"
 #include "XLinkNames.h"
 #include <wtf/NeverDestroyed.h>
@@ -123,7 +124,7 @@ void SVGPatternElement::parseAttribute(const QualifiedName& name, const AtomicSt
         return;
     }
     if (name == SVGNames::patternTransformAttr) {
-        SVGTransformList newList;
+        SVGTransformListValues newList;
         newList.parse(value);
         detachAnimatedPatternTransformListWrappers(newList.size());
         setPatternTransformBaseValue(newList);
@@ -133,13 +134,13 @@ void SVGPatternElement::parseAttribute(const QualifiedName& name, const AtomicSt
     SVGParsingError parseError = NoError;
 
     if (name == SVGNames::xAttr)
-        setXBaseValue(SVGLength::construct(LengthModeWidth, value, parseError));
+        setXBaseValue(SVGLengthValue::construct(LengthModeWidth, value, parseError));
     else if (name == SVGNames::yAttr)
-        setYBaseValue(SVGLength::construct(LengthModeHeight, value, parseError));
+        setYBaseValue(SVGLengthValue::construct(LengthModeHeight, value, parseError));
     else if (name == SVGNames::widthAttr)
-        setWidthBaseValue(SVGLength::construct(LengthModeWidth, value, parseError, ForbidNegativeLengths));
+        setWidthBaseValue(SVGLengthValue::construct(LengthModeWidth, value, parseError, ForbidNegativeLengths));
     else if (name == SVGNames::heightAttr)
-        setHeightBaseValue(SVGLength::construct(LengthModeHeight, value, parseError, ForbidNegativeLengths));
+        setHeightBaseValue(SVGLengthValue::construct(LengthModeHeight, value, parseError, ForbidNegativeLengths));
 
     reportAttributeParsingError(parseError, name, value);
 
@@ -182,68 +183,45 @@ void SVGPatternElement::childrenChanged(const ChildChange& change)
         object->setNeedsLayout();
 }
 
-RenderPtr<RenderElement> SVGPatternElement::createElementRenderer(Ref<RenderStyle>&& style, const RenderTreePosition&)
+RenderPtr<RenderElement> SVGPatternElement::createElementRenderer(RenderStyle&& style, const RenderTreePosition&)
 {
-    return createRenderer<RenderSVGResourcePattern>(*this, WTF::move(style));
-}
-
-static void setPatternAttributes(const SVGPatternElement& element, PatternAttributes& attributes)
-{
-    if (!attributes.hasX() && element.hasAttribute(SVGNames::xAttr))
-        attributes.setX(element.x());
-
-    if (!attributes.hasY() && element.hasAttribute(SVGNames::yAttr))
-        attributes.setY(element.y());
-
-    if (!attributes.hasWidth() && element.hasAttribute(SVGNames::widthAttr))
-        attributes.setWidth(element.width());
-
-    if (!attributes.hasHeight() && element.hasAttribute(SVGNames::heightAttr))
-        attributes.setHeight(element.height());
-
-    if (!attributes.hasViewBox() && element.hasAttribute(SVGNames::viewBoxAttr) && element.viewBoxIsValid())
-        attributes.setViewBox(element.viewBox());
-
-    if (!attributes.hasPreserveAspectRatio() && element.hasAttribute(SVGNames::preserveAspectRatioAttr))
-        attributes.setPreserveAspectRatio(element.preserveAspectRatio());
-
-    if (!attributes.hasPatternUnits() && element.hasAttribute(SVGNames::patternUnitsAttr))
-        attributes.setPatternUnits(element.patternUnits());
-
-    if (!attributes.hasPatternContentUnits() && element.hasAttribute(SVGNames::patternContentUnitsAttr))
-        attributes.setPatternContentUnits(element.patternContentUnits());
-
-    if (!attributes.hasPatternTransform() && element.hasAttribute(SVGNames::patternTransformAttr)) {
-        AffineTransform transform;
-        element.patternTransform().concatenate(transform);
-        attributes.setPatternTransform(transform);
-    }
-
-    if (!attributes.hasPatternContentElement() && element.childElementCount())
-        attributes.setPatternContentElement(&element);
+    return createRenderer<RenderSVGResourcePattern>(*this, WTFMove(style));
 }
 
 void SVGPatternElement::collectPatternAttributes(PatternAttributes& attributes) const
 {
-    HashSet<const SVGPatternElement*> processedPatterns;
-    const SVGPatternElement* current = this;
+    if (!attributes.hasX() && hasAttribute(SVGNames::xAttr))
+        attributes.setX(x());
 
-    while (true) {
-        setPatternAttributes(*current, attributes);
-        processedPatterns.add(current);
+    if (!attributes.hasY() && hasAttribute(SVGNames::yAttr))
+        attributes.setY(y());
 
-        // Respect xlink:href, take attributes from referenced element
-        Element* refElement = SVGURIReference::targetElementFromIRIString(current->href(), document());
-        if (is<SVGPatternElement>(refElement)) {
-            current = downcast<SVGPatternElement>(refElement);
+    if (!attributes.hasWidth() && hasAttribute(SVGNames::widthAttr))
+        attributes.setWidth(width());
 
-            // Cycle detection
-            if (processedPatterns.contains(current))
-                return;
-        } else
-            return;
+    if (!attributes.hasHeight() && hasAttribute(SVGNames::heightAttr))
+        attributes.setHeight(height());
+
+    if (!attributes.hasViewBox() && hasAttribute(SVGNames::viewBoxAttr) && viewBoxIsValid())
+        attributes.setViewBox(viewBox());
+
+    if (!attributes.hasPreserveAspectRatio() && hasAttribute(SVGNames::preserveAspectRatioAttr))
+        attributes.setPreserveAspectRatio(preserveAspectRatio());
+
+    if (!attributes.hasPatternUnits() && hasAttribute(SVGNames::patternUnitsAttr))
+        attributes.setPatternUnits(patternUnits());
+
+    if (!attributes.hasPatternContentUnits() && hasAttribute(SVGNames::patternContentUnitsAttr))
+        attributes.setPatternContentUnits(patternContentUnits());
+
+    if (!attributes.hasPatternTransform() && hasAttribute(SVGNames::patternTransformAttr)) {
+        AffineTransform transform;
+        patternTransform().concatenate(transform);
+        attributes.setPatternTransform(transform);
     }
-    ASSERT_NOT_REACHED();
+
+    if (!attributes.hasPatternContentElement() && childElementCount())
+        attributes.setPatternContentElement(this);
 }
 
 AffineTransform SVGPatternElement::localCoordinateSpaceTransform(SVGLocatable::CTMScope) const
@@ -251,6 +229,21 @@ AffineTransform SVGPatternElement::localCoordinateSpaceTransform(SVGLocatable::C
     AffineTransform matrix;
     patternTransform().concatenate(matrix);
     return matrix;
+}
+
+Ref<SVGStringList> SVGPatternElement::requiredFeatures()
+{
+    return SVGTests::requiredFeatures(*this);
+}
+
+Ref<SVGStringList> SVGPatternElement::requiredExtensions()
+{ 
+    return SVGTests::requiredExtensions(*this);
+}
+
+Ref<SVGStringList> SVGPatternElement::systemLanguage()
+{
+    return SVGTests::systemLanguage(*this);
 }
 
 }

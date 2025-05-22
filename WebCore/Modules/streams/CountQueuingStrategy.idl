@@ -28,8 +28,10 @@
  */
 
 [
-    CustomConstructor(any properties),
-    Conditional=STREAMS_API,
+    JSBuiltin,
+    Constructor,
+    Conditional=READABLE_STREAM_API|WRITABLE_STREAM_API,
+    Exposed=(Window,Worker),
 ] interface CountQueuingStrategy {
-    [CustomBinding] double size();
+    double size();
 };

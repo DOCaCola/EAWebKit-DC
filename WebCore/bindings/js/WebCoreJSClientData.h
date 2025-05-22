@@ -1,6 +1,6 @@
 /*
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
- *  Copyright (C) 2003, 2004, 2005, 2006, 2008, 2009 Apple Inc. All rights reserved.
+ *  Copyright (C) 2003-2017 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Samuel Weinig <sam@webkit.org>
  *  Copyright (C) 2009 Google, Inc. All rights reserved.
  *  Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
@@ -20,59 +20,31 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef WebCoreJSClientData_h
-#define WebCoreJSClientData_h
+#pragma once
 
 #include "DOMWrapperWorld.h"
+#include "WebCoreBuiltinNames.h"
+#include "WebCoreJSBuiltins.h"
 #include "WebCoreTypedArrayController.h"
 #include <wtf/HashSet.h>
 #include <wtf/RefPtr.h>
 
-//+EAWebKitChange
-//3/24/2014
-#include <wtf/MainThread.h>
-//-EAWebKitChange
-
 namespace WebCore {
 
-class WebCoreJSClientData : public JSC::VM::ClientData {
-    WTF_MAKE_NONCOPYABLE(WebCoreJSClientData); WTF_MAKE_FAST_ALLOCATED;
+class JSVMClientData : public JSC::VM::ClientData {
+    WTF_MAKE_NONCOPYABLE(JSVMClientData); WTF_MAKE_FAST_ALLOCATED;
     friend class VMWorldIterator;
-    friend void initNormalWorldClientData(JSC::VM*);
 
 public:
-    WebCoreJSClientData()
-    {
-    }
+    explicit JSVMClientData(JSC::VM&);
 
-    virtual ~WebCoreJSClientData()
-    {
-		//+EAWebKitChange
-		//3/24/2014 - Guarded asserts with !WTF::isMainThread
-		if(!WTF::isMainThread())
-		{
-			ASSERT(m_worldSet.contains(m_normalWorld.get()));
-			ASSERT(m_worldSet.size() == 1);
-			ASSERT(m_normalWorld->hasOneRef());
-		}
-		m_normalWorld = nullptr;
-		if(!WTF::isMainThread())
-		{
-			ASSERT(m_worldSet.isEmpty());
-		}
-		//-EAWebKitChange
-    }
+    virtual ~JSVMClientData();
+    
+    WEBCORE_EXPORT static void initNormalWorld(JSC::VM*);
 
     DOMWrapperWorld& normalWorld() { return *m_normalWorld; }
 
-    void getAllWorlds(Vector<Ref<DOMWrapperWorld>>& worlds)
-    {
-        ASSERT(worlds.isEmpty());
-
-        worlds.reserveInitialCapacity(m_worldSet.size());
-        for (auto it = m_worldSet.begin(), end = m_worldSet.end(); it != end; ++it)
-            worlds.uncheckedAppend(*(*it));
-    }
+    void getAllWorlds(Vector<Ref<DOMWrapperWorld>>&);
 
     void rememberWorld(DOMWrapperWorld& world)
     {
@@ -86,19 +58,28 @@ public:
         m_worldSet.remove(&world);
     }
 
+    WebCoreBuiltinNames& builtinNames() { return m_builtinNames; }
+    JSBuiltinFunctions& builtinFunctions() { return m_builtinFunctions; }
+    
+    JSC::Subspace& outputConstraintSpace() { return m_outputConstraintSpace; }
+    JSC::Subspace& globalObjectOutputConstraintSpace() { return m_globalObjectOutputConstraintSpace; }
+    
+    template<typename Func>
+    void forEachOutputConstraintSpace(const Func& func)
+    {
+        func(m_outputConstraintSpace);
+        func(m_globalObjectOutputConstraintSpace);
+    }
+
 private:
     HashSet<DOMWrapperWorld*> m_worldSet;
     RefPtr<DOMWrapperWorld> m_normalWorld;
+
+    JSBuiltinFunctions m_builtinFunctions;
+    WebCoreBuiltinNames m_builtinNames;
+    
+    JSC::JSDestructibleObjectSubspace m_outputConstraintSpace;
+    JSC::JSSegmentedVariableObjectSubspace m_globalObjectOutputConstraintSpace;
 };
 
-inline void initNormalWorldClientData(JSC::VM* vm)
-{
-    WebCoreJSClientData* webCoreJSClientData = new WebCoreJSClientData;
-    vm->clientData = webCoreJSClientData; // ~VM deletes this pointer.
-    webCoreJSClientData->m_normalWorld = DOMWrapperWorld::create(*vm, true);
-    vm->m_typedArrayController = adoptRef(new WebCoreTypedArrayController());
-}
-
 } // namespace WebCore
-
-#endif // WebCoreJSClientData_h

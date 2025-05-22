@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Inc.  All rights reserved.
+ * Copyright (C) 2006-2016 Apple Inc.  All rights reserved.
  * Copyright (C) 2011 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,66 +27,29 @@
 #ifndef SharedTimer_h
 #define SharedTimer_h
 
+#include <functional>
 #include <wtf/FastMalloc.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/Seconds.h>
 
 namespace WebCore {
 
-    // Each thread has its own single instance of shared timer, which implements this interface.
-    // This instance is shared by all timers in the thread.
-    // Not intended to be used directly; use the Timer class instead.
-    class SharedTimer {
-        WTF_MAKE_NONCOPYABLE(SharedTimer); WTF_MAKE_FAST_ALLOCATED;
-    public:
-        SharedTimer() { }
-        virtual ~SharedTimer() {}
-        virtual void setFiredFunction(void (*)()) = 0;
+// Each thread has its own single instance of shared timer, which implements this interface.
+// This instance is shared by all timers in the thread.
+// Not intended to be used directly; use the Timer class instead.
+class SharedTimer {
+    WTF_MAKE_NONCOPYABLE(SharedTimer); WTF_MAKE_FAST_ALLOCATED;
+public:
+    SharedTimer() = default;
+    virtual ~SharedTimer() { }
+    virtual void setFiredFunction(std::function<void()>&&) = 0;
 
-        // The fire interval is in seconds relative to the current monotonic clock time.
-        virtual void setFireInterval(double) = 0;
-        virtual void stop() = 0;
+    // The fire interval is in seconds relative to the current monotonic clock time.
+    virtual void setFireInterval(Seconds) = 0;
+    virtual void stop() = 0;
 
-        virtual void invalidate() { }
-    };
-
-
-    // Implemented by port (since it provides the run loop for the main thread).
-    // FIXME: make ports implement MainThreadSharedTimer directly instead.
-    void setSharedTimerFiredFunction(void (*)());
-    void setSharedTimerFireInterval(double);
-    void stopSharedTimer();
-    void invalidateSharedTimer();
-
-	//+EAWebKitChange
-	//10/17/2011 - Added this to serve as a manually polled callback.
-	void fireTimerIfNeeded();
-	//-EAWebKitChange
-
-
-
-    // Implementation of SharedTimer for the main thread.
-    class MainThreadSharedTimer final : public SharedTimer {
-    public:
-        void setFiredFunction(void (*function)()) override
-        {
-            setSharedTimerFiredFunction(function);
-        }
-        
-        void setFireInterval(double interval) override
-        {
-            setSharedTimerFireInterval(interval);
-        }
-        
-        void stop() override
-        {
-            stopSharedTimer();
-        }
-
-        void invalidate() override
-        {
-            invalidateSharedTimer();
-        }
-    };
+    virtual void invalidate() { }
+};
 
 } // namespace WebCore
 

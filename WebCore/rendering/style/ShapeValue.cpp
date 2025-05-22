@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,16 +27,27 @@
 #include "ShapeValue.h"
 
 #include "CachedImage.h"
+#include <wtf/PointerComparison.h>
 
 namespace WebCore {
 
 bool ShapeValue::isImageValid() const
 {
-    if (!image())
+    if (!m_image)
         return false;
-    if (image()->isCachedImage() || image()->isCachedImageSet())
-        return image()->cachedImage() && image()->cachedImage()->hasImage();
-    return image()->isGeneratedImage();
+    if (m_image->isCachedImage()) {
+        auto* cachedImage = m_image->cachedImage();
+        return cachedImage && cachedImage->hasImage();
+    }
+    return m_image->isGeneratedImage();
+}
+
+bool ShapeValue::operator==(const ShapeValue& other) const
+{
+    return m_type == other.m_type
+        && m_cssBox == other.m_cssBox
+        && arePointingToEqualData(m_shape, other.m_shape)
+        && arePointingToEqualData(m_image, other.m_image);
 }
 
 } // namespace WebCore

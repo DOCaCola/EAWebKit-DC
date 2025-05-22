@@ -23,18 +23,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MallocStatistics_h
-#define MallocStatistics_h
+#pragma once
 
 #include <wtf/FastMalloc.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
 
 class MallocStatistics : public RefCounted<MallocStatistics> {
 public:
-    static PassRefPtr<MallocStatistics> create() { return adoptRef(new MallocStatistics()); }
+    static Ref<MallocStatistics> create() { return adoptRef(*new MallocStatistics); }
 
     size_t reservedVMBytes() const { return m_stats.reservedVMBytes; }
     size_t committedVMBytes() const { return m_stats.committedVMBytes; }
@@ -50,5 +48,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif

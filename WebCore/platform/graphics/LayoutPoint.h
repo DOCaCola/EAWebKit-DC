@@ -55,20 +55,29 @@ public:
     void move(const LayoutSize& s) { move(s.width(), s.height()); } 
     void moveBy(const LayoutPoint& offset) { move(offset.x(), offset.y()); }
     void move(LayoutUnit dx, LayoutUnit dy) { m_x += dx; m_y += dy; }
+    
+    void scale(float s)
+    {
+        m_x *= s;
+        m_y *= s;
+    }
+    
     void scale(float sx, float sy)
     {
         m_x *= sx;
         m_y *= sy;
     }
-    
+
+    LayoutPoint constrainedBetween(const LayoutPoint& min, const LayoutPoint& max) const;
+
     LayoutPoint expandedTo(const LayoutPoint& other) const
     {
-        return LayoutPoint(std::max(m_x, other.m_x), std::max(m_y, other.m_y));
+        return { std::max(m_x, other.m_x), std::max(m_y, other.m_y) };
     }
 
     LayoutPoint shrunkTo(const LayoutPoint& other) const
     {
-        return LayoutPoint(std::min(m_x, other.m_x), std::min(m_y, other.m_y));
+        return { std::min(m_x, other.m_x), std::min(m_y, other.m_y) };
     }
 
     void clampNegativeToZero()
@@ -78,15 +87,15 @@ public:
 
     LayoutPoint transposedPoint() const
     {
-        return LayoutPoint(m_y, m_x);
+        return { m_y, m_x };
     }
 
     LayoutPoint fraction() const
     {
-        return LayoutPoint(m_x.fraction(), m_y.fraction());
+        return { m_x.fraction(), m_y.fraction() };
     }
 
-    operator FloatPoint() const { return FloatPoint(m_x, m_y); }
+    operator FloatPoint() const { return { m_x, m_y }; }
 
 private:
     LayoutUnit m_x, m_y;
@@ -211,6 +220,8 @@ inline FloatSize snapSizeToDevicePixel(const LayoutSize& size, const LayoutPoint
     };
     return FloatSize(snap(size.width(), location.x()), snap(size.height(), location.y()));
 }
+
+TextStream& operator<<(TextStream&, const LayoutPoint&);
 
 } // namespace WebCore
 

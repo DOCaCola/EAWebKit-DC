@@ -28,8 +28,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef InspectorDatabaseResource_h
-#define InspectorDatabaseResource_h
+#pragma once
 
 #include <inspector/InspectorFrontendDispatchers.h>
 #include <wtf/RefCounted.h>
@@ -46,7 +45,7 @@ public:
 
     void bind(Inspector::DatabaseFrontendDispatcher*);
     Database* database() { return m_database.get(); }
-    void setDatabase(RefPtr<Database>&& database) { m_database = database; }
+    void setDatabase(RefPtr<Database>&& database) { m_database = WTFMove(database); }
     String id() const { return m_id; }
 
 private:
@@ -60,5 +59,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // InspectorDatabaseResource_h

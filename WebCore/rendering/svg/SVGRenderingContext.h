@@ -22,8 +22,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef SVGRenderingContext_h
-#define SVGRenderingContext_h
+#pragma once
 
 #include "ImageBuffer.h"
 #include "PaintInfo.h"
@@ -31,9 +30,9 @@
 namespace WebCore {
 
 class AffineTransform;
+class FloatRect;
 class RenderElement;
 class RenderObject;
-class FloatRect;
 class RenderSVGResourceFilter;
 
 // SVGRenderingContext 
@@ -75,7 +74,7 @@ public:
     static std::unique_ptr<ImageBuffer> createImageBuffer(const FloatRect& targetRect, const FloatRect& clampedRect, ColorSpace, RenderingMode);
 
     static void renderSubtreeToImageBuffer(ImageBuffer*, RenderElement&, const AffineTransform&);
-    static void clipToImageBuffer(GraphicsContext*, const AffineTransform& absoluteTransform, const FloatRect& targetRect, std::unique_ptr<ImageBuffer>&, bool safeToClear);
+    static void clipToImageBuffer(GraphicsContext&, const AffineTransform& absoluteTransform, const FloatRect& targetRect, std::unique_ptr<ImageBuffer>&, bool safeToClear);
 
     static float calculateScreenFontSizeScalingFactor(const RenderObject&);
     static AffineTransform calculateTransformationToOutermostCoordinateSystem(const RenderObject&);
@@ -112,5 +111,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // SVGRenderingContext_h

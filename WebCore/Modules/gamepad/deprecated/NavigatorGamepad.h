@@ -23,8 +23,7 @@
  * DAMAGE.
  */
 
-#ifndef NavigatorGamepad_h
-#define NavigatorGamepad_h
+#pragma once
 
 #if ENABLE(GAMEPAD_DEPRECATED)
 
@@ -42,7 +41,7 @@ public:
 
     static NavigatorGamepad* from(Navigator*);
 
-    static GamepadList* webkitGetGamepads(Navigator*);
+    static GamepadList* webkitGetGamepads(Navigator&);
 
     GamepadList* gamepads();
 
@@ -55,5 +54,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(GAMEPAD_DEPRECATED)
-
-#endif // NavigatorGamepad_h

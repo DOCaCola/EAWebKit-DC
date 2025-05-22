@@ -19,16 +19,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef DOMWrapperWorld_h
-#define DOMWrapperWorld_h
+#pragma once
 
 #include "JSDOMGlobalObject.h"
 #include <wtf/Forward.h>
 
 namespace WebCore {
 
-class CSSValue;
-class JSDOMWrapper;
+class DeprecatedCSSOMValue;
 class ScriptController;
 
 typedef HashMap<void*, JSC::Weak<JSC::JSObject>> DOMObjectWrapperMap;
@@ -47,9 +45,12 @@ public:
     void didCreateWindowShell(ScriptController* scriptController) { m_scriptControllersWithWindowShells.add(scriptController); }
     void didDestroyWindowShell(ScriptController* scriptController) { m_scriptControllersWithWindowShells.remove(scriptController); }
 
+    void setShadowRootIsAlwaysOpen() { m_shadowRootIsAlwaysOpen = true; }
+    bool shadowRootIsAlwaysOpen() const { return m_shadowRootIsAlwaysOpen; }
+
     // FIXME: can we make this private?
     DOMObjectWrapperMap m_wrappers;
-    HashMap<CSSValue*, void*> m_cssValueRoots;
+    HashMap<DeprecatedCSSOMValue*, void*> m_deprecatedCSSOMValueRoots;
 
     bool isNormal() const { return m_isNormal; }
 
@@ -62,6 +63,7 @@ private:
     JSC::VM& m_vm;
     HashSet<ScriptController*> m_scriptControllersWithWindowShells;
     bool m_isNormal;
+    bool m_shadowRootIsAlwaysOpen { false };
 };
 
 DOMWrapperWorld& normalWorld(JSC::VM&);
@@ -80,5 +82,3 @@ inline DOMWrapperWorld& worldForDOMObject(JSC::JSObject* object)
 }
     
 } // namespace WebCore
-
-#endif // DOMWrapperWorld_h

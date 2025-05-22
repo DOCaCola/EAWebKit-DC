@@ -35,15 +35,15 @@ namespace WebCore {
 
 class MockRealtimeMediaSourceCenter final : public RealtimeMediaSourceCenter {
 public:
-    WEBCORE_EXPORT static void registerMockRealtimeMediaSourceCenter();
-
-    virtual void validateRequestConstraints(PassRefPtr<MediaStreamCreationClient>, PassRefPtr<MediaConstraints> audioConstraints, PassRefPtr<MediaConstraints> videoConstraints) override;
-    virtual void createMediaStream(PassRefPtr<MediaStreamCreationClient>, PassRefPtr<MediaConstraints> audioConstraints, PassRefPtr<MediaConstraints> videoConstraints) override;
-    virtual bool getMediaStreamTrackSources(PassRefPtr<MediaStreamTrackSourcesRequestClient>) override;
-    RefPtr<TrackSourceInfo> sourceWithUID(const String&, RealtimeMediaSource::Type, MediaConstraints*) override;
+    WEBCORE_EXPORT static void setMockRealtimeMediaSourceCenterEnabled(bool);
 
 private:
-    MockRealtimeMediaSourceCenter() { }
+    friend NeverDestroyed<MockRealtimeMediaSourceCenter>;
+    MockRealtimeMediaSourceCenter();
+
+    void validateRequestConstraints(ValidConstraintsHandler validHandler, InvalidConstraintsHandler invalidHandler, const MediaConstraints& audioConstraints, const MediaConstraints& videoConstraints) final;
+    Vector<CaptureDevice> getMediaStreamDevices() final;
+    void createMediaStream(NewMediaStreamHandler, const String& audioDeviceID, const String& videoDeviceID, const MediaConstraints* audioConstraints, const MediaConstraints* videoConstraints) final;
 };
 
 }

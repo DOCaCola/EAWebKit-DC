@@ -27,13 +27,14 @@
 #include "CSSImageValue.h"
 #include "CSSParser.h"
 #include "CSSValueKeywords.h"
+#include "DOMWindow.h"
 #include "EventNames.h"
 #include "Frame.h"
 #include "FrameView.h"
-#include "HTMLFrameElementBase.h"
+#include "HTMLFrameElement.h"
+#include "HTMLIFrameElement.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
-#include "Page.h"
 #include "StyleProperties.h"
 #include <wtf/NeverDestroyed.h>
 
@@ -80,9 +81,9 @@ void HTMLBodyElement::collectStyleForPresentationAttribute(const QualifiedName& 
     if (name == backgroundAttr) {
         String url = stripLeadingAndTrailingHTMLSpaces(value);
         if (!url.isEmpty()) {
-            auto imageValue = CSSImageValue::create(document().completeURL(url).string());
+            auto imageValue = CSSImageValue::create(document().completeURL(url));
             imageValue.get().setInitiator(localName());
-            style.setProperty(CSSProperty(CSSPropertyBackgroundImage, WTF::move(imageValue)));
+            style.setProperty(CSSProperty(CSSPropertyBackgroundImage, WTFMove(imageValue)));
         }
     } else if (name == marginwidthAttr || name == leftmarginAttr) {
         addHTMLLengthToStyle(style, CSSPropertyMarginRight, value);
@@ -95,7 +96,7 @@ void HTMLBodyElement::collectStyleForPresentationAttribute(const QualifiedName& 
     } else if (name == textAttr) {
         addHTMLColorToStyle(style, CSSPropertyColor, value);
     } else if (name == bgpropertiesAttr) {
-        if (equalIgnoringCase(value, "fixed"))
+        if (equalLettersIgnoringASCIICase(value, "fixed"))
            addPropertyToPresentationAttributeStyle(style, CSSPropertyBackgroundAttachment, CSSValueFixed);
     } else
         HTMLElement::collectStyleForPresentationAttribute(name, value, style);
@@ -111,6 +112,7 @@ HTMLElement::EventHandlerNameMap HTMLBodyElement::createWindowEventHandlerNameMa
         &onfocusinAttr,
         &onfocusoutAttr,
         &onhashchangeAttr,
+        &onlanguagechangeAttr,
         &onloadAttr,
         &onmessageAttr,
         &onofflineAttr,
@@ -155,8 +157,8 @@ void HTMLBodyElement::parseAttribute(const QualifiedName& name, const AtomicStri
             else
                 document().resetActiveLinkColor();
         } else {
-            RGBA32 color;
-            if (CSSParser::parseColor(color, value, !document().inQuirksMode())) {
+            Color color = CSSParser::parseColor(value, !document().inQuirksMode());
+            if (color.isValid()) {
                 if (name == linkAttr)
                     document().setLinkColor(color);
                 else if (name == vlinkAttr)
@@ -166,7 +168,7 @@ void HTMLBodyElement::parseAttribute(const QualifiedName& name, const AtomicStri
             }
         }
 
-        setNeedsStyleRecalc();
+        invalidateStyleForSubtree();
         return;
     }
 
@@ -193,16 +195,21 @@ Node::InsertionNotificationRequest HTMLBodyElement::insertedInto(ContainerNode& 
     // FIXME: It's surprising this is web compatible since it means a marginwidth and marginheight attribute can
     // magically appear on the <body> of all documents embedded through <iframe> or <frame>.
     // FIXME: Perhaps this code should be in attach() instead of here.
-    HTMLFrameOwnerElement* ownerElement = document().ownerElement();
-    if (is<HTMLFrameElementBase>(ownerElement)) {
-        HTMLFrameElementBase& ownerFrameElement = downcast<HTMLFrameElementBase>(*ownerElement);
-        int marginWidth = ownerFrameElement.marginWidth();
-        if (marginWidth != -1)
-            setIntegralAttribute(marginwidthAttr, marginWidth);
-        int marginHeight = ownerFrameElement.marginHeight();
-        if (marginHeight != -1)
-            setIntegralAttribute(marginheightAttr, marginHeight);
-    }
+    auto* ownerElement = document().ownerElement();
+    if (!is<HTMLFrameElementBase>(ownerElement))
+        return InsertionDone;
+    
+    auto& ownerFrameElement = downcast<HTMLFrameElementBase>(*ownerElement);
+
+    // Read values from the owner before setting any attributes, since setting an attribute can run arbitrary
+    // JavaScript, which might delete the owner element.
+    int marginWidth = ownerFrameElement.marginWidth();
+    int marginHeight = ownerFrameElement.marginHeight();
+
+    if (marginWidth != -1)
+        setIntegralAttribute(marginwidthAttr, marginWidth);
+    if (marginHeight != -1)
+        setIntegralAttribute(marginheightAttr, marginHeight);
 
     return InsertionDone;
 }
@@ -288,6 +295,23 @@ void HTMLBodyElement::setScrollTop(int scrollTop)
     return HTMLElement::setScrollTop(scrollTop);
 }
 
+void HTMLBodyElement::scrollTo(const ScrollToOptions& options)
+{
+    if (isFirstBodyElementOfDocument()) {
+        // If the element is the HTML body element, document is in quirks mode, and the element is not potentially scrollable,
+        // invoke scroll() on window with options as the only argument, and terminate these steps.
+        // Note that WebKit always uses quirks mode document scrolling behavior. See Document::scrollingElement().
+        // FIXME: Scrolling an independently scrollable body is broken: webkit.org/b/161612.
+        auto* window = document().domWindow();
+        if (!window)
+            return;
+
+        window->scrollTo(options);
+        return;
+    }
+    return HTMLElement::scrollTo(options);
+}
+
 int HTMLBodyElement::scrollHeight()
 {
     if (isFirstBodyElementOfDocument()) {
@@ -324,7 +348,7 @@ void HTMLBodyElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 {
     HTMLElement::addSubresourceAttributeURLs(urls);
 
-    addSubresourceURL(urls, document().completeURL(fastGetAttribute(backgroundAttr)));
+    addSubresourceURL(urls, document().completeURL(attributeWithoutSynchronization(backgroundAttr)));
 }
 
 } // namespace WebCore

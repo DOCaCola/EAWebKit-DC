@@ -22,8 +22,7 @@
  *
  */
 
-#ifndef StyleReflection_h
-#define StyleReflection_h
+#pragma once
 
 #include "CSSReflectionDirection.h"
 #include "Length.h"
@@ -50,7 +49,7 @@ public:
     const NinePieceImage& mask() const { return m_mask; }
 
     void setDirection(CSSReflectionDirection dir) { m_direction = dir; }
-    void setOffset(Length offset) { m_offset = WTF::move(offset); }
+    void setOffset(Length offset) { m_offset = WTFMove(offset); }
     void setMask(const NinePieceImage& image) { m_mask = image; }
 
 private:
@@ -67,5 +66,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // StyleReflection_h

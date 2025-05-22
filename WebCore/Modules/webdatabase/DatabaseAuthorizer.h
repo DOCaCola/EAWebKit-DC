@@ -25,8 +25,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef DatabaseAuthorizer_h
-#define DatabaseAuthorizer_h
+
+#pragma once
 
 #include <wtf/Forward.h>
 #include <wtf/HashSet.h>
@@ -117,9 +117,7 @@ private:
 
     const String m_databaseInfoTableName;
 
-    HashSet<String, CaseFoldingHash> m_whitelistedFunctions;
+    HashSet<String, ASCIICaseInsensitiveHash> m_whitelistedFunctions;
 };
 
 } // namespace WebCore
-
-#endif // DatabaseAuthorizer_h

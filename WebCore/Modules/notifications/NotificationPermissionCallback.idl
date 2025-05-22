@@ -25,7 +25,5 @@
 
 [
     Conditional=NOTIFICATIONS,
-] callback interface NotificationPermissionCallback {
-    boolean handleEvent(DOMString permission);
-};
+] callback NotificationPermissionCallback = void (DOMString permission);
 

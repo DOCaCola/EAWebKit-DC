@@ -41,7 +41,7 @@
 #endif
 
 #if PLATFORM(WIN) && !USE(WINGDI)
-#include <WebCore/WebCoreHeaderDetection.h>
+#include "WebCoreHeaderDetection.h"
 #endif
 
 #include <wtf/ExportMacros.h>
@@ -105,6 +105,9 @@
 #ifndef _WINSOCKAPI_
 #define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h
 #endif
+#elif USE(DIRECT2D)
+#undef USE_CA
+#undef USE_CG
 #elif !USE(WINGDI)
 #define USE_CG 1
 #undef USE_CAIRO
@@ -127,11 +130,6 @@ typedef float CGFloat;
 #endif
 #endif /* USE(CG) */
 
-#if PLATFORM(IOS)
-#define WEBCORE_NAVIGATOR_PLATFORM wkGetPlatformNameForNavigator();
-#define WEBCORE_NAVIGATOR_VENDOR wkGetVendorNameForNavigator();
-#endif
-
 // FIXME: Move this to JavaScriptCore/wtf/Platform.h, which is where we define USE_AVFOUNDATION on the Mac.
 // https://bugs.webkit.org/show_bug.cgi?id=67334
 #if PLATFORM(WIN) && USE(CG) && HAVE(AVCF)
@@ -145,4 +143,3 @@ typedef float CGFloat;
 #endif
 
 #endif
-

@@ -33,7 +33,7 @@
 
 namespace WebCore {
 
-BorderEdge::BorderEdge(LayoutUnit edgeWidth, Color edgeColor, EBorderStyle edgeStyle, bool edgeIsTransparent, bool edgeIsPresent, float devicePixelRatio)
+BorderEdge::BorderEdge(float edgeWidth, Color edgeColor, EBorderStyle edgeStyle, bool edgeIsTransparent, bool edgeIsPresent, float devicePixelRatio)
     : m_width(edgeWidth)
     , m_color(edgeColor)
     , m_style(edgeStyle)
@@ -43,17 +43,7 @@ BorderEdge::BorderEdge(LayoutUnit edgeWidth, Color edgeColor, EBorderStyle edgeS
 {
     if (edgeStyle == DOUBLE && edgeWidth  < borderWidthInDevicePixel(3))
         m_style = SOLID;
-    m_flooredToDevicePixelWidth = floorToDevicePixel(edgeWidth, devicePixelRatio);
-}
-
-BorderEdge::BorderEdge()
-    : m_width(LayoutUnit::fromPixel(0))
-    , m_style(BHIDDEN)
-    , m_isTransparent(false)
-    , m_isPresent(false)
-    , m_flooredToDevicePixelWidth(0)
-    , m_devicePixelRatio(1)
-{
+    m_flooredToDevicePixelWidth = floorf(edgeWidth * devicePixelRatio) / devicePixelRatio;
 }
 
 void BorderEdge::getBorderEdgeInfo(BorderEdge edges[], const RenderStyle& style, float deviceScaleFactor, bool includeLogicalLeftEdge, bool includeLogicalRightEdge)
@@ -72,7 +62,7 @@ void BorderEdge::getBorderEdgeInfo(BorderEdge edges[], const RenderStyle& style,
 
 bool BorderEdge::obscuresBackgroundEdge(float scale) const
 {
-    if (!m_isPresent || m_isTransparent || (m_width * scale) < borderWidthInDevicePixel(2) || m_color.hasAlpha() || m_style == BHIDDEN)
+    if (!m_isPresent || m_isTransparent || (m_width * scale) < borderWidthInDevicePixel(2) || !m_color.isOpaque() || m_style == BHIDDEN)
         return false;
 
     if (m_style == DOTTED || m_style == DASHED)
@@ -86,7 +76,7 @@ bool BorderEdge::obscuresBackgroundEdge(float scale) const
 
 bool BorderEdge::obscuresBackground() const
 {
-    if (!m_isPresent || m_isTransparent || m_color.hasAlpha() || m_style == BHIDDEN)
+    if (!m_isPresent || m_isTransparent || !m_color.isOpaque() || m_style == BHIDDEN)
         return false;
 
     if (m_style == DOTTED || m_style == DASHED || m_style == DOUBLE)

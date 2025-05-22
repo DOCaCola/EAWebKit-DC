@@ -27,7 +27,6 @@
 #include "EventListener.h"
 #include "Frame.h"
 #include "FrameLoader.h"
-#include "Page.h"
 #include "SMILTimeContainer.h"
 #include "SVGElement.h"
 #include "SVGResourcesCache.h"
@@ -256,7 +255,7 @@ void SVGDocumentExtensions::markPendingResourcesForRemoval(const AtomicString& i
 
     std::unique_ptr<PendingElements> existing = m_pendingResources.take(id);
     if (existing && !existing->isEmpty())
-        m_pendingResourcesForRemoval.add(id, WTF::move(existing));
+        m_pendingResourcesForRemoval.add(id, WTFMove(existing));
 }
 
 Element* SVGDocumentExtensions::removeElementFromPendingResourcesForRemovalMap(const AtomicString& id)
@@ -300,7 +299,7 @@ void SVGDocumentExtensions::addElementReferencingTarget(SVGElement* referencingE
 
     auto elements = std::make_unique<HashSet<SVGElement*>>();
     elements->add(referencingElement);
-    m_elementDependencies.set(referencedElement, WTF::move(elements));
+    m_elementDependencies.set(referencedElement, WTFMove(elements));
 }
 
 void SVGDocumentExtensions::removeAllTargetReferencesForElement(SVGElement* referencingElement)
@@ -321,7 +320,7 @@ void SVGDocumentExtensions::removeAllTargetReferencesForElement(SVGElement* refe
 
 void SVGDocumentExtensions::rebuildElements()
 {
-    Vector<SVGElement*> shadowRebuildElements = WTF::move(m_rebuildElements);
+    Vector<SVGElement*> shadowRebuildElements = WTFMove(m_rebuildElements);
     for (auto* element : shadowRebuildElements)
         element->svgAttributeChanged(XLinkNames::hrefAttr);
 }

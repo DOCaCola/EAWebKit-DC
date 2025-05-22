@@ -29,8 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ScriptWrappable_h
-#define ScriptWrappable_h
+#pragma once
 
 #include <heap/Weak.h>
 
@@ -40,21 +39,22 @@ class WeakHandleOwner;
 
 namespace WebCore {
 
-class JSDOMWrapper;
+class JSDOMObject;
 
 class ScriptWrappable {
 public:
-    JSDOMWrapper* wrapper() const;
-    void setWrapper(JSDOMWrapper*, JSC::WeakHandleOwner*, void*);
-    void clearWrapper(JSDOMWrapper*);
+    JSDOMObject* wrapper() const;
+    void setWrapper(JSDOMObject*, JSC::WeakHandleOwner*, void*);
+    void clearWrapper(JSDOMObject*);
+
+    template<typename Derived>
+    static ptrdiff_t offsetOfWrapper() { return CAST_OFFSET(Derived*, ScriptWrappable*) + OBJECT_OFFSETOF(ScriptWrappable, m_wrapper); }
 
 protected:
     ~ScriptWrappable() { }
 
 private:
-    JSC::Weak<JSDOMWrapper> m_wrapper;
+    JSC::Weak<JSDOMObject> m_wrapper;
 };
 
 } // namespace WebCore
-
-#endif // ScriptWrappable_h

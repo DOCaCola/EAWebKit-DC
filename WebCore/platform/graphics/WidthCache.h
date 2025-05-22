@@ -26,12 +26,12 @@
 #ifndef WidthCache_h
 #define WidthCache_h
 
+#include "MemoryPressureHandler.h"
 #include "TextRun.h"
 #include <wtf/Forward.h>
 #include <wtf/HashFunctions.h>
 #include <wtf/HashSet.h>
-#include <wtf/RefPtr.h>
-#include <wtf/StringHasher.h>
+#include <wtf/Hasher.h>
 
 namespace WebCore {
 
@@ -121,6 +121,8 @@ public:
 
     float* add(const TextRun& run, float entry, bool hasKerningOrLigatures, bool hasWordSpacingOrLetterSpacing, GlyphOverflow* glyphOverflow)
     {
+        if (MemoryPressureHandler::singleton().isUnderMemoryPressure())
+            return nullptr;
         // The width cache is not really profitable unless we're doing expensive glyph transformations.
         if (!hasKerningOrLigatures)
             return 0;

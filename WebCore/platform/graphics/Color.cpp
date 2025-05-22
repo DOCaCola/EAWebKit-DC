@@ -28,6 +28,7 @@
 
 #include "AnimationUtilities.h"
 #include "HashTools.h"
+#include "TextStream.h"
 #include <wtf/Assertions.h>
 #include <wtf/DecimalNumber.h>
 #include <wtf/HexNumber.h>
@@ -48,6 +49,16 @@ const RGBA32 Color::transparent;
 static const RGBA32 lightenedBlack = 0xFF545454;
 static const RGBA32 darkenedWhite = 0xFFABABAB;
 
+static inline unsigned premultipliedChannel(unsigned c, unsigned a)
+{
+    return fastDivideBy255(c * a + 254);
+}
+
+static inline unsigned unpremultipliedChannel(unsigned c, unsigned a)
+{
+    return (fastMultiplyBy255(c) + a - 1) / a;
+}
+
 RGBA32 makeRGB(int r, int g, int b)
 {
     return 0xFF000000 | std::max(0, std::min(r, 255)) << 16 | std::max(0, std::min(g, 255)) << 8 | std::max(0, std::min(b, 255));
@@ -56,6 +67,16 @@ RGBA32 makeRGB(int r, int g, int b)
 RGBA32 makeRGBA(int r, int g, int b, int a)
 {
     return std::max(0, std::min(a, 255)) << 24 | std::max(0, std::min(r, 255)) << 16 | std::max(0, std::min(g, 255)) << 8 | std::max(0, std::min(b, 255));
+}
+
+RGBA32 makePremultipliedRGBA(int r, int g, int b, int a)
+{
+    return makeRGBA(premultipliedChannel(r, a), premultipliedChannel(g, a), premultipliedChannel(b, a), a);
+}
+
+RGBA32 makeUnPremultipliedRGBA(int r, int g, int b, int a)
+{
+    return makeRGBA(unpremultipliedChannel(r, a), unpremultipliedChannel(g, a), unpremultipliedChannel(b, a), a);
 }
 
 static int colorFloatToRGBAByte(float f)
@@ -127,7 +148,7 @@ RGBA32 makeRGBAFromCMYKA(float c, float m, float y, float k, float a)
 template <typename CharacterType>
 static inline bool parseHexColorInternal(const CharacterType* name, unsigned length, RGBA32& rgb)
 {
-    if (length != 3 && length != 6)
+    if (length != 3 && length != 4 && length != 6 && length != 8)
         return false;
     unsigned value = 0;
     for (unsigned i = 0; i < length; ++i) {
@@ -138,6 +159,20 @@ static inline bool parseHexColorInternal(const CharacterType* name, unsigned len
     }
     if (length == 6) {
         rgb = 0xFF000000 | value;
+        return true;
+    }
+    if (length == 8) {
+        // We parsed the values into RGBA order, but the RGBA32 type
+        // expects them to be in ARGB order, so we right rotate eight bits.
+        rgb = value << 24 | value >> 8;
+        return true;
+    }
+    if (length == 4) {
+        // #abcd converts to ddaabbcc in RGBA32.
+        rgb = (value & 0xF) << 28 | (value & 0xF) << 24
+            | (value & 0xF000) << 8 | (value & 0xF000) << 4
+            | (value & 0xF00) << 4 | (value & 0xF00)
+            | (value & 0xF0) | (value & 0xF0) >> 4;
         return true;
     }
     // #abc converts to #aabbcc
@@ -169,39 +204,147 @@ bool Color::parseHexColor(const String& name, RGBA32& rgb)
     return parseHexColor(name.characters16(), name.length(), rgb);
 }
 
+bool Color::parseHexColor(const StringView& name, RGBA32& rgb)
+{
+    unsigned length = name.length();
+    if (!length)
+        return false;
+    if (name.is8Bit())
+        return parseHexColor(name.characters8(), name.length(), rgb);
+    return parseHexColor(name.characters16(), name.length(), rgb);
+}
+
 int differenceSquared(const Color& c1, const Color& c2)
 {
-    int dR = c1.red() - c2.red();
-    int dG = c1.green() - c2.green();
-    int dB = c1.blue() - c2.blue();
+    // FIXME: This is assuming that the colors are in the same colorspace.
+    // FIXME: This should probably return a floating point number, but many of the call
+    // sites have picked comparison values based on feel. We'd need to break out
+    // our logarithm tables to change them :)
+    int c1Red = c1.isExtended() ? c1.asExtended().red() * 255 : c1.red();
+    int c1Green = c1.isExtended() ? c1.asExtended().green() * 255 : c1.green();
+    int c1Blue = c1.isExtended() ? c1.asExtended().blue() * 255 : c1.blue();
+    int c2Red = c2.isExtended() ? c2.asExtended().red() * 255 : c2.red();
+    int c2Green = c2.isExtended() ? c2.asExtended().green() * 255 : c2.green();
+    int c2Blue = c2.isExtended() ? c2.asExtended().blue() * 255 : c2.blue();
+    int dR = c1Red - c2Red;
+    int dG = c1Green - c2Green;
+    int dB = c1Blue - c2Blue;
     return dR * dR + dG * dG + dB * dB;
+}
+
+static inline const NamedColor* findNamedColor(const String& name)
+{
+    char buffer[64]; // easily big enough for the longest color name
+    unsigned length = name.length();
+    if (length > sizeof(buffer) - 1)
+        return nullptr;
+    for (unsigned i = 0; i < length; ++i) {
+        UChar c = name[i];
+        if (!c || !WTF::isASCII(c))
+            return nullptr;
+        buffer[i] = toASCIILower(static_cast<char>(c));
+    }
+    buffer[length] = '\0';
+    return findColor(buffer, length);
 }
 
 Color::Color(const String& name)
 {
     if (name[0] == '#') {
+        RGBA32 color;
+        bool valid;
+
         if (name.is8Bit())
-            m_valid = parseHexColor(name.characters8() + 1, name.length() - 1, m_color);
+            valid = parseHexColor(name.characters8() + 1, name.length() - 1, color);
         else
-            m_valid = parseHexColor(name.characters16() + 1, name.length() - 1, m_color);
-    } else
-        setNamedColor(name);
+            valid = parseHexColor(name.characters16() + 1, name.length() - 1, color);
+
+        if (valid)
+            setRGB(color);
+    } else {
+        if (auto* foundColor = findNamedColor(name))
+            setRGB(foundColor->ARGBValue);
+        else
+            m_colorData.rgbaAndFlags = invalidRGBAColor;
+    }
 }
 
 Color::Color(const char* name)
 {
+    RGBA32 color;
+    bool valid;
     if (name[0] == '#')
-        m_valid = parseHexColor(&name[1], m_color);
+        valid = parseHexColor((String)&name[1], color);
     else {
         const NamedColor* foundColor = findColor(name, strlen(name));
-        m_color = foundColor ? foundColor->ARGBValue : 0;
-        m_valid = foundColor;
+        color = foundColor ? foundColor->ARGBValue : 0;
+        valid = foundColor;
     }
+
+    if (valid)
+        setRGB(color);
+}
+
+Color::Color(const Color& other)
+    : m_colorData(other.m_colorData)
+{
+    if (isExtended())
+        m_colorData.extendedColor->ref();
+}
+
+Color::Color(Color&& other)
+{
+    *this = WTFMove(other);
+}
+
+Color::Color(float r, float g, float b, float a, ColorSpace colorSpace)
+{
+    // Zero the union, just in case a 32-bit system only assigns the
+    // top 32 bits when copying the extendedColor pointer below.
+    m_colorData.rgbaAndFlags = 0;
+    auto extendedColorRef = ExtendedColor::create(r, g, b, a, colorSpace);
+    m_colorData.extendedColor = &extendedColorRef.leakRef();
+    ASSERT(isExtended());
+}
+
+Color::~Color()
+{
+    if (isExtended())
+        m_colorData.extendedColor->deref();
+}
+
+Color& Color::operator=(const Color& other)
+{
+    if (*this == other)
+        return *this;
+
+    if (isExtended())
+        m_colorData.extendedColor->deref();
+
+    m_colorData = other.m_colorData;
+
+    if (isExtended())
+        m_colorData.extendedColor->ref();
+    return *this;
+}
+
+Color& Color::operator=(Color&& other)
+{
+    if (*this == other)
+        return *this;
+
+    m_colorData = other.m_colorData;
+    other.m_colorData.rgbaAndFlags = invalidRGBAColor;
+
+    return *this;
 }
 
 String Color::serialized() const
 {
-    if (!hasAlpha()) {
+    if (isExtended())
+        return asExtended().cssText();
+
+    if (isOpaque()) {
         StringBuilder builder;
         builder.reserveCapacity(7);
         builder.append('#');
@@ -211,65 +354,54 @@ String Color::serialized() const
         return builder.toString();
     }
 
-    Vector<LChar> result;
-    result.reserveInitialCapacity(28);
-    const char commaSpace[] = ", ";
-    const char rgbaParen[] = "rgba(";
+    return cssText();
+}
 
-    result.append(rgbaParen, 5);
-    appendNumber(result, red());
-    result.append(commaSpace, 2);
-    appendNumber(result, green());
-    result.append(commaSpace, 2);
-    appendNumber(result, blue());
-    result.append(commaSpace, 2);
+String Color::cssText() const
+{
+    if (isExtended())
+        return asExtended().cssText();
 
-    if (!alpha())
-        result.append('0');
-    else {
-        NumberToLStringBuffer buffer;
-        unsigned length = DecimalNumber(alpha() / 255.0).toStringDecimal(buffer, WTF::NumberToStringBufferLength);
-        result.append(buffer, length);
+    StringBuilder builder;
+    builder.reserveCapacity(28);
+    bool colorHasAlpha = !isOpaque();
+    if (colorHasAlpha)
+        builder.appendLiteral("rgba(");
+    else
+        builder.appendLiteral("rgb(");
+
+    builder.appendNumber(static_cast<unsigned char>(red()));
+    builder.appendLiteral(", ");
+
+    builder.appendNumber(static_cast<unsigned char>(green()));
+    builder.appendLiteral(", ");
+
+
+    builder.appendNumber(static_cast<unsigned char>(blue()));
+    if (colorHasAlpha) {
+        builder.appendLiteral(", ");
+
+        NumberToStringBuffer buffer;
+        bool shouldTruncateTrailingZeros = true;
+        builder.append(numberToFixedPrecisionString(alpha() / 255.0f, 6, buffer, shouldTruncateTrailingZeros));
     }
-
-    result.append(')');
-    return String::adopt(result);
+        
+    builder.append(')');
+    return builder.toString();
 }
 
 String Color::nameForRenderTreeAsText() const
 {
+    // FIXME: Handle ExtendedColors.
     if (alpha() < 0xFF)
         return String::format("#%02X%02X%02X%02X", red(), green(), blue(), alpha());
     return String::format("#%02X%02X%02X", red(), green(), blue());
 }
 
-static inline const NamedColor* findNamedColor(const String& name)
-{
-    char buffer[64]; // easily big enough for the longest color name
-    unsigned length = name.length();
-    if (length > sizeof(buffer) - 1)
-        return 0;
-    for (unsigned i = 0; i < length; ++i) {
-        UChar c = name[i];
-        if (!c || c > 0x7F)
-            return 0;
-        buffer[i] = toASCIILower(static_cast<char>(c));
-    }
-    buffer[length] = '\0';
-    return findColor(buffer, length);
-}
-
-void Color::setNamedColor(const String& name)
-{
-    const NamedColor* foundColor = findNamedColor(name);
-    m_color = foundColor ? foundColor->ARGBValue : 0;
-    m_valid = foundColor;
-}
-
 Color Color::light() const
 {
     // Hardcode this common case for speed.
-    if (m_color == black)
+    if (rgb() == black)
         return lightenedBlack;
     
     const float scaleFactor = nextafterf(256.0f, 0.0f);
@@ -294,7 +426,7 @@ Color Color::light() const
 Color Color::dark() const
 {
     // Hardcode this common case for speed.
-    if (m_color == white)
+    if (rgb() == white)
         return darkenedWhite;
     
     const float scaleFactor = nextafterf(256.0f, 0.0f);
@@ -337,7 +469,7 @@ const int cAlphaIncrement = 17; // Increments in between.
 
 Color Color::blend(const Color& source) const
 {
-    if (!alpha() || !source.hasAlpha())
+    if (!isVisible() || source.isOpaque())
         return source;
 
     if (!source.alpha())
@@ -354,7 +486,7 @@ Color Color::blend(const Color& source) const
 Color Color::blendWithWhite() const
 {
     // If the color contains alpha already, we leave it alone.
-    if (hasAlpha())
+    if (!isOpaque())
         return *this;
 
     Color newColor;
@@ -371,6 +503,21 @@ Color Color::blendWithWhite() const
             break;
     }
     return newColor;
+}
+
+Color Color::colorWithAlphaMultipliedBy(float amount) const
+{
+    float newAlpha = amount * (isExtended() ? m_colorData.extendedColor->alpha() : static_cast<float>(alpha()) / 255);
+    return colorWithAlpha(newAlpha);
+}
+
+Color Color::colorWithAlpha(float alpha) const
+{
+    if (isExtended())
+        return Color { m_colorData.extendedColor->red(), m_colorData.extendedColor->green(), m_colorData.extendedColor->blue(), alpha, m_colorData.extendedColor->colorSpace() };
+
+    int newAlpha = alpha * 255;
+    return Color { red(), green(), blue(), newAlpha };
 }
 
 void Color::getRGBA(float& r, float& g, float& b, float& a) const
@@ -399,15 +546,16 @@ void Color::getHSL(double& hue, double& saturation, double& lightness) const
     double b = static_cast<double>(blue()) / 255.0;
     double max = std::max(std::max(r, g), b);
     double min = std::min(std::min(r, g), b);
+    double chroma = max - min;
 
-    if (max == min)
+    if (!chroma)
         hue = 0.0;
     else if (max == r)
-        hue = (60.0 * ((g - b) / (max - min))) + 360.0;
+        hue = (60.0 * ((g - b) / chroma)) + 360.0;
     else if (max == g)
-        hue = (60.0 * ((b - r) / (max - min))) + 120.0;
+        hue = (60.0 * ((b - r) / chroma)) + 120.0;
     else
-        hue = (60.0 * ((r - g) / (max - min))) + 240.0;
+        hue = (60.0 * ((r - g) / chroma)) + 240.0;
 
     if (hue >= 360.0)
         hue -= 360.0;
@@ -416,25 +564,51 @@ void Color::getHSL(double& hue, double& saturation, double& lightness) const
     hue /= 360.0;
 
     lightness = 0.5 * (max + min);
-    if (max == min)
+    if (!chroma)
         saturation = 0.0;
     else if (lightness <= 0.5)
-        saturation = ((max - min) / (max + min));
+        saturation = (chroma / (max + min));
     else
-        saturation = ((max - min) / (2.0 - (max + min)));
+        saturation = (chroma / (2.0 - (max + min)));
+}
+
+void Color::getHSV(double& hue, double& saturation, double& value) const
+{
+    double r = static_cast<double>(red()) / 255.0;
+    double g = static_cast<double>(green()) / 255.0;
+    double b = static_cast<double>(blue()) / 255.0;
+    double max = std::max(std::max(r, g), b);
+    double min = std::min(std::min(r, g), b);
+    double chroma = max - min;
+
+    if (!chroma)
+        hue = 0.0;
+    else if (max == r)
+        hue = (60.0 * ((g - b) / chroma)) + 360.0;
+    else if (max == g)
+        hue = (60.0 * ((b - r) / chroma)) + 120.0;
+    else
+        hue = (60.0 * ((r - g) / chroma)) + 240.0;
+
+    if (hue >= 360.0)
+        hue -= 360.0;
+
+    hue /= 360.0;
+
+    if (!max)
+        saturation = 0;
+    else
+        saturation = chroma / max;
+
+    value = max;
 }
 
 Color colorFromPremultipliedARGB(RGBA32 pixelColor)
 {
     int alpha = alphaChannel(pixelColor);
-    if (alpha && alpha < 255) {
-        return Color::createUnchecked(
-            redChannel(pixelColor) * 255 / alpha,
-            greenChannel(pixelColor) * 255 / alpha,
-            blueChannel(pixelColor) * 255 / alpha,
-            alpha);
-    } else
-        return Color(pixelColor);
+    if (alpha && alpha < 255)
+        pixelColor = makeUnPremultipliedRGBA(redChannel(pixelColor), greenChannel(pixelColor), blueChannel(pixelColor), alpha);
+    return Color(pixelColor);
 }
 
 RGBA32 premultipliedARGBFromColor(const Color& color)
@@ -442,20 +616,17 @@ RGBA32 premultipliedARGBFromColor(const Color& color)
     unsigned pixelColor;
 
     unsigned alpha = color.alpha();
-    if (alpha < 255) {
-        pixelColor = Color::createUnchecked(
-            fastDivideBy255(color.red() * alpha + 254),
-            fastDivideBy255(color.green() * alpha + 254),
-            fastDivideBy255(color.blue() * alpha + 254),
-            alpha).rgb();
-    } else
-         pixelColor = color.rgb();
+    if (alpha < 255)
+        pixelColor = makePremultipliedRGBA(color.red(), color.green(), color.blue(), alpha);
+    else
+        pixelColor = color.rgb();
 
     return pixelColor;
 }
 
 Color blend(const Color& from, const Color& to, double progress, bool blendPremultiplied)
 {
+    // FIXME: ExtendedColor - needs to handle color spaces.
     // We need to preserve the state of the valid flag at the end of the animation
     if (progress == 1 && !to.isValid())
         return Color();
@@ -480,5 +651,25 @@ Color blend(const Color& from, const Color& to, double progress, bool blendPremu
         blend(from.alpha(), to.alpha(), progress));
 }
 
+TextStream& operator<<(TextStream& ts, const Color& color)
+{
+    return ts << color.nameForRenderTreeAsText();
+}
+
+void Color::tagAsValid()
+{
+    m_colorData.rgbaAndFlags |= validRGBAColor;
+}
+
+bool Color::isExtended() const
+{
+    return !(m_colorData.rgbaAndFlags & invalidRGBAColor);
+}
+
+ExtendedColor& Color::asExtended() const
+{
+    ASSERT(isExtended());
+    return *m_colorData.extendedColor;
+}
 
 } // namespace WebCore

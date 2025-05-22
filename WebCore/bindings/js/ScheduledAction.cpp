@@ -39,7 +39,6 @@
 #include "ScriptSourceCode.h"
 #include "WorkerGlobalScope.h"
 #include "WorkerThread.h"
-#include <bindings/ScriptValue.h>
 #include <runtime/JSLock.h>
 
 using namespace JSC;
@@ -48,14 +47,16 @@ namespace WebCore {
 
 std::unique_ptr<ScheduledAction> ScheduledAction::create(ExecState* exec, DOMWrapperWorld& isolatedWorld, ContentSecurityPolicy* policy)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
     JSValue v = exec->argument(0);
     CallData callData;
-    if (getCallData(v, callData) == CallTypeNone) {
+    if (getCallData(v, callData) == CallType::None) {
         if (policy && !policy->allowEval(exec))
             return nullptr;
-        String string = v.toString(exec)->value(exec);
-        if (exec->hadException())
-            return nullptr;
+        String string = v.toWTFString(exec);
+        RETURN_IF_EXCEPTION(scope, nullptr);
         return std::unique_ptr<ScheduledAction>(new ScheduledAction(string, isolatedWorld));
     }
 
@@ -87,7 +88,7 @@ void ScheduledAction::executeFunctionInContext(JSGlobalObject* globalObject, JSV
 
     CallData callData;
     CallType callType = getCallData(m_function.get(), callData);
-    if (callType == CallTypeNone)
+    if (callType == CallType::None)
         return;
 
     ExecState* exec = globalObject->globalExec();
@@ -99,11 +100,11 @@ void ScheduledAction::executeFunctionInContext(JSGlobalObject* globalObject, JSV
 
     InspectorInstrumentationCookie cookie = JSMainThreadExecState::instrumentFunctionCall(&context, callType, callData);
 
-    NakedPtr<Exception> exception;
+    NakedPtr<JSC::Exception> exception;
     if (is<Document>(context))
-        JSMainThreadExecState::call(exec, m_function.get(), callType, callData, thisValue, args, exception);
+        JSMainThreadExecState::profiledCall(exec, JSC::ProfilingReason::Other, m_function.get(), callType, callData, thisValue, args, exception);
     else
-        JSC::call(exec, m_function.get(), callType, callData, thisValue, args, exception);
+        JSC::profiledCall(exec, JSC::ProfilingReason::Other, m_function.get(), callType, callData, thisValue, args, exception);
 
     InspectorInstrumentation::didCallFunction(cookie, &context);
 
@@ -117,7 +118,7 @@ void ScheduledAction::execute(Document& document)
     if (!window)
         return;
 
-    RefPtr<Frame> frame = window->impl().frame();
+    RefPtr<Frame> frame = window->wrapped().frame();
     if (!frame || !frame->script().canExecuteScripts(AboutToExecuteScript))
         return;
 

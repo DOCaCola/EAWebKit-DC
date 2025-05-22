@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef SpaceSplitString_h
-#define SpaceSplitString_h
+#pragma once
 
 #include <wtf/MainThread.h>
 #include <wtf/text/AtomicString.h>
@@ -30,7 +29,7 @@ class SpaceSplitStringData {
     WTF_MAKE_NONCOPYABLE(SpaceSplitStringData);
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    static PassRefPtr<SpaceSplitStringData> create(const AtomicString&);
+    static RefPtr<SpaceSplitStringData> create(const AtomicString&);
 
     bool contains(const AtomicString& string)
     {
@@ -77,7 +76,7 @@ public:
     static ptrdiff_t tokensMemoryOffset() { return sizeof(SpaceSplitStringData); }
 
 private:
-    static PassRefPtr<SpaceSplitStringData> create(const AtomicString&, unsigned tokenCount);
+    static Ref<SpaceSplitStringData> create(const AtomicString&, unsigned tokenCount);
     SpaceSplitStringData(const AtomicString& string, unsigned size)
         : m_keyString(string)
         , m_refCount(1)
@@ -130,5 +129,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // SpaceSplitString_h

@@ -23,54 +23,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef RTCIceServer_h
-#define RTCIceServer_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "RTCIceServerPrivate.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
+#include <wtf/Variant.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-class RTCIceServer : public RefCounted<RTCIceServer> {
-public:
-    static Ref<RTCIceServer> create(const Vector<String>& urls, const String& credential, const String& username)
-    {
-        return adoptRef(*new RTCIceServer(urls, credential, username));
-    }
-
-    static Ref<RTCIceServer> create(PassRefPtr<RTCIceServerPrivate> server)
-    {
-        return adoptRef(*new RTCIceServer(server));
-    }
-
-    virtual ~RTCIceServer() { }
-
-    const Vector<String>& urls() { return m_private->urls(); }
-    const String& credential() { return m_private->credential(); }
-    const String& username() { return m_private->username(); }
-    RTCIceServerPrivate* privateServer() { return m_private.get(); }
-
-private:
-    RTCIceServer(const Vector<String>& urls, const String& credential, const String& username)
-        : m_private(RTCIceServerPrivate::create(urls, credential, username))
-    {
-    }
-
-    RTCIceServer(PassRefPtr<RTCIceServerPrivate> server)
-        : m_private(server)
-    {
-    }
-
-    RefPtr<RTCIceServerPrivate> m_private;
+struct RTCIceServer {
+    Variant<String, Vector<String>> urls;
+    String credential;
+    String username;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif // RTCIceServer_h
+#endif // ENABLE(WEB_RTC)

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2003, 2006, 2009 Apple Inc. All rights reserved.
- *               2006 Rob Buis <buis@kde.org>
+ * Copyright (C) 2003, 2006, 2009, 2016 Apple Inc. All rights reserved.
+ * Copyright (C) 2006 Rob Buis <buis@kde.org>
  * Copyright (C) 2007-2008 Torch Mobile, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,23 @@
 #include <functional>
 #include <wtf/FastMalloc.h>
 #include <wtf/Forward.h>
+#include <wtf/Vector.h>
 
 #if USE(CG)
 
 #include <wtf/RetainPtr.h>
 #include <CoreGraphics/CGPath.h>
 typedef struct CGPath PlatformPath;
+
+#elif USE(DIRECT2D)
+#include "COMPtr.h"
+
+interface ID2D1Geometry;
+interface ID2D1GeometryGroup;
+interface ID2D1PathGeometry;
+interface ID2D1GeometrySink;
+
+typedef ID2D1GeometryGroup PlatformPath;
 
 #elif USE(CAIRO)
 
@@ -50,7 +61,7 @@ typedef WebCore::CairoPath PlatformPath;
 #elif USE(WINGDI)
 
 namespace WebCore {
-    class PlatformPath;
+class PlatformPath;
 }
 typedef WebCore::PlatformPath PlatformPath;
 
@@ -72,6 +83,7 @@ namespace WebCore {
     class PathTraversalState;
     class RoundedRect;
     class StrokeStyleApplier;
+    class TextStream;
 
     enum PathElementType {
         PathElementMoveToPoint, // The points member will contain 1 value.
@@ -102,6 +114,8 @@ namespace WebCore {
 
         WEBCORE_EXPORT Path(const Path&);
         WEBCORE_EXPORT Path& operator=(const Path&);
+        
+        static Path polygonPathFromPoints(const Vector<FloatPoint>&);
 
         bool contains(const FloatPoint&, WindRule rule = RULE_NONZERO) const;
         bool strokeContains(StrokeStyleApplier*, const FloatPoint&) const;
@@ -151,22 +165,54 @@ namespace WebCore {
 
         // To keep Path() cheap, it does not allocate a PlatformPath immediately
         // meaning Path::platformPath() can return null.
+#if USE(DIRECT2D)
+        PlatformPathPtr platformPath() const { return m_path.get(); }
+#else
         PlatformPathPtr platformPath() const { return m_path; }
+#endif
         // ensurePlatformPath() will allocate a PlatformPath if it has not yet been and will never return null.
         WEBCORE_EXPORT PlatformPathPtr ensurePlatformPath();
 
         WEBCORE_EXPORT void apply(const PathApplierFunction&) const;
         void transform(const AffineTransform&);
 
+        static float circleControlPoint()
+        {
+            // Approximation of control point positions on a bezier to simulate a quarter of a circle.
+            // This is 1-kappa, where kappa = 4 * (sqrt(2) - 1) / 3
+            return 0.447715;
+        }
+
         void addBeziersForRoundedRect(const FloatRect&, const FloatSize& topLeftRadius, const FloatSize& topRightRadius, const FloatSize& bottomLeftRadius, const FloatSize& bottomRightRadius);
 
-#if USE(CG)
+#if USE(CG) || USE(DIRECT2D)
         void platformAddPathForRoundedRect(const FloatRect&, const FloatSize& topLeftRadius, const FloatSize& topRightRadius, const FloatSize& bottomLeftRadius, const FloatSize& bottomRightRadius);
 #endif
 
+#if USE(DIRECT2D)
+        ID2D1GeometrySink* activePath() const { return m_activePath.get(); }
+        void appendGeometry(ID2D1Geometry*);
+        void createGeometryWithFillMode(WindRule, COMPtr<ID2D1GeometryGroup>&) const;
+        void drawDidComplete() const;
+
+        HRESULT initializePathState();
+#endif
+
+#ifndef NDEBUG
+        void dump() const;
+#endif
+
     private:
-        PlatformPathPtr m_path;
+#if USE(DIRECT2D)
+        COMPtr<ID2D1GeometryGroup> m_path;
+        COMPtr<ID2D1PathGeometry> m_activePathGeometry;
+        COMPtr<ID2D1GeometrySink> m_activePath;
+#else
+        PlatformPathPtr m_path { nullptr };
+#endif
     };
+
+TextStream& operator<<(TextStream&, const Path&);
 
 }
 

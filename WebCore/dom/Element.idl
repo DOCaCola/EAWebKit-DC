@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2009, 2015 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -19,66 +19,49 @@
  */
 
 [
+    CustomToJSObject,
     JSCustomHeader,
     JSGenerateToNativeObject,
+    ExportMacro=WEBCORE_EXPORT,
 ] interface Element : Node {
+    readonly attribute DOMString? tagName;
 
-    // DOM Level 1 Core
+    [DOMJIT=ReadDOM] DOMString? getAttribute(DOMString name);
 
-    [TreatReturnedNullStringAs=Null] readonly attribute DOMString tagName;
+    [CEReactions, MayThrowException] void setAttribute(DOMString name, DOMString value);
 
-    [TreatReturnedNullStringAs=Null] DOMString getAttribute([Default=Undefined] optional DOMString name);
-    [ObjCLegacyUnnamedParameters, RaisesException] void setAttribute([Default=Undefined] optional DOMString name,
-                                     [Default=Undefined] optional DOMString value);
-    void removeAttribute([Default=Undefined] optional DOMString name);
-    Attr getAttributeNode([Default=Undefined] optional DOMString name);
-    [RaisesException] Attr setAttributeNode([Default=Undefined] optional Attr newAttr);
-    [RaisesException] Attr removeAttributeNode([Default=Undefined] optional Attr oldAttr);
-    NodeList getElementsByTagName([Default=Undefined] optional DOMString name);
+    [CEReactions] void removeAttribute(DOMString name);
+    [DOMJIT=ReadDOM] Attr? getAttributeNode(DOMString name);
 
-#if !defined(LANGUAGE_OBJECTIVE_C)
-    // For ObjC this is defined on Node for legacy support.
-    readonly attribute NamedNodeMap     attributes;
-    boolean            hasAttributes();
-#endif
+    [CEReactions, MayThrowException] Attr? setAttributeNode(Attr newAttr);
+    [CEReactions, MayThrowException] Attr removeAttributeNode(Attr oldAttr);
 
-    // DOM Level 2 Core
+    [DOMJIT=ReadDOM] HTMLCollection getElementsByTagName(DOMString name);
 
-    [ObjCLegacyUnnamedParameters] DOMString getAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                            [Default=Undefined] optional DOMString localName);
-    [ObjCLegacyUnnamedParameters, RaisesException] void setAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                       [Default=Undefined] optional DOMString qualifiedName, 
-                                       [Default=Undefined] optional DOMString value);
-    [ObjCLegacyUnnamedParameters] void removeAttributeNS([TreatNullAs=NullString] DOMString namespaceURI,
-                                          DOMString localName);
-    [ObjCLegacyUnnamedParameters] NodeList getElementsByTagNameNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                                   [Default=Undefined] optional DOMString localName);
-    [ObjCLegacyUnnamedParameters] Attr getAttributeNodeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                           [Default=Undefined] optional DOMString localName);
-    [RaisesException] Attr setAttributeNodeNS([Default=Undefined] optional Attr newAttr);
+    readonly attribute NamedNodeMap attributes;
+    [DOMJIT=ReadDOM] boolean hasAttributes();
+
+    DOMString? getAttributeNS(DOMString? namespaceURI, DOMString localName);
+
+    [CEReactions, MayThrowException] void setAttributeNS(DOMString? namespaceURI, DOMString qualifiedName, DOMString value);
+    [CEReactions] void removeAttributeNS(DOMString? namespaceURI, DOMString localName);
+
+    HTMLCollection getElementsByTagNameNS(DOMString? namespaceURI, DOMString localName);
+
+    Attr? getAttributeNodeNS(DOMString? namespaceURI, DOMString localName);
+    [CEReactions, MayThrowException] Attr? setAttributeNodeNS(Attr newAttr);
     boolean hasAttribute(DOMString name);
-    [ObjCLegacyUnnamedParameters] boolean hasAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                          [Default=Undefined] optional DOMString localName);
 
-    readonly attribute CSSStyleDeclaration style;
+    boolean hasAttributeNS(DOMString? namespaceURI, DOMString localName);
 
-    // DOM 4
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C
-    [Reflect] attribute DOMString id;
-#endif
+    [ImplementedAs=cssomStyle] readonly attribute CSSStyleDeclaration style;
 
-    // Common extensions
+    [CEReactions, Reflect] attribute DOMString id;
 
-#if defined(LANGUAGE_OBJECTIVE_C) && LANGUAGE_OBJECTIVE_C
-    readonly attribute long offsetLeft;
-    readonly attribute long offsetTop;
-    readonly attribute long offsetWidth;
-    readonly attribute long offsetHeight;
-    readonly attribute long clientLeft;
-    readonly attribute long clientTop;
-    readonly attribute long clientWidth;
-    readonly attribute long clientHeight;
-#else
+    readonly attribute DOMString? namespaceURI;
+    readonly attribute DOMString? prefix;
+    readonly attribute DOMString localName;
+
     readonly attribute double offsetLeft;
     readonly attribute double offsetTop;
     readonly attribute double offsetWidth;
@@ -87,65 +70,58 @@
     readonly attribute double clientTop;
     readonly attribute double clientWidth;
     readonly attribute double clientHeight;
-#endif
 
-    attribute long scrollLeft;
-    attribute long scrollTop;
+    attribute long scrollLeft; // FIXME: should be unrestricted double
+    attribute long scrollTop; // FIXME: should be unrestricted double
     readonly attribute long scrollWidth;
     readonly attribute long scrollHeight;
 
     [ImplementedAs=bindingsOffsetParent] readonly attribute Element offsetParent;
 
-    void focus();
-    void blur();
-    void scrollIntoView(optional boolean alignWithTop);
+    void scrollIntoView(optional boolean alignWithTop = true);
 
-    // WebKit extensions
+    void scrollIntoViewIfNeeded(optional boolean centerIfNeeded = true);
 
-    void scrollIntoViewIfNeeded(optional boolean centerIfNeeded);
-    void scrollByLines([Default=Undefined] optional long lines);
-    void scrollByPages([Default=Undefined] optional long pages);
+    [ImplementedAs=scrollTo] void scroll(optional ScrollToOptions options);
+    [ImplementedAs=scrollTo] void scroll(unrestricted double x, unrestricted double y);
 
-    // HTML 5
-    NodeList getElementsByClassName([Default=Undefined] optional DOMString name);
-    [TreatNullAs=NullString, SetterRaisesException] attribute DOMString innerHTML;
-    [TreatNullAs=NullString, SetterRaisesException] attribute DOMString outerHTML;
-             
+    void scrollTo(optional ScrollToOptions options);
+    void scrollTo(unrestricted double x, unrestricted double y);
 
-    [Reflect=class] attribute DOMString className;
-    readonly attribute DOMTokenList classList;
+    void scrollBy(optional ScrollToOptions option);
+    void scrollBy(unrestricted double x, unrestricted double y);
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-    readonly attribute DOMStringMap dataset;
-#endif
+    void scrollByLines(optional long lines = 0);
+    void scrollByPages(optional long pages = 0);
 
-    [RaisesException] boolean matches(DOMString selectors);
-    [RaisesException] Element closest(DOMString selectors);    
-    [ImplementedAs=matches, RaisesException] boolean webkitMatchesSelector(DOMString selectors);
+    sequence<DOMString> getAttributeNames();
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
+    HTMLCollection getElementsByClassName(DOMString name);
+    [CEReactions, TreatNullAs=EmptyString, SetterMayThrowException] attribute DOMString innerHTML;
+    [CEReactions, TreatNullAs=EmptyString, SetterMayThrowException] attribute DOMString outerHTML;
+
+    [CEReactions, Reflect=class] attribute DOMString className;
+    [PutForwards=value] readonly attribute DOMTokenList classList;
+
+    [MayThrowException] boolean matches(DOMString selectors);
+    [MayThrowException] Element? closest(DOMString selectors);
+    [ImplementedAs=matches, MayThrowException] boolean webkitMatchesSelector(DOMString selectors);
+
     // CSSOM View Module API
     ClientRectList getClientRects();
     ClientRect getBoundingClientRect();
-#endif
-
-#if defined(LANGUAGE_OBJECTIVE_C) && LANGUAGE_OBJECTIVE_C
-    // Objective-C extensions
-    readonly attribute DOMString innerText;
-#endif
 
 #if defined(ENABLE_FULLSCREEN_API) && ENABLE_FULLSCREEN_API
     // Mozilla version
-    const unsigned short ALLOW_KEYBOARD_INPUT = 1;
-    void webkitRequestFullScreen([Default=Undefined] optional unsigned short flags);
+    [ImplementedAs=webkitRequestFullscreen] void webkitRequestFullScreen();
 
     // W3C version
     void webkitRequestFullscreen();
 #endif
 
-#if defined(ENABLE_INDIE_UI) && ENABLE_INDIE_UI
-    [Reflect] attribute DOMString uiactions;
-#endif
+    [CEReactions, MayThrowException] Element? insertAdjacentElement(DOMString where, Element element);
+    [CEReactions, MayThrowException] void insertAdjacentHTML(DOMString where, DOMString html);
+    [MayThrowException] void insertAdjacentText(DOMString where, DOMString text);
 
     [Conditional=POINTER_LOCK] void requestPointerLock();
 
@@ -153,6 +129,10 @@
     [Conditional=CSS_REGIONS] readonly attribute DOMString webkitRegionOverset;
     [Conditional=CSS_REGIONS] sequence<Range> webkitGetRegionFlowRanges();
 
+    // Shadow DOM API
+    [EnabledAtRuntime=ShadowDOM, MayThrowException] ShadowRoot attachShadow(ShadowRootInit init);
+    [EnabledAtRuntime=ShadowDOM, ImplementedAs=shadowRootForBindings, CallWith=ScriptState] readonly attribute ShadowRoot shadowRoot;
+    [CEReactions, EnabledAtRuntime=ShadowDOM, Reflect] attribute DOMString slot;
 
     // Event Handlers
 
@@ -160,6 +140,7 @@
     // FIXME: Should these be exposed on Window as well (and therefore moved to GlobalEventHandlers.idl)?
     [NotEnumerable] attribute EventHandler onbeforecopy;
     [NotEnumerable] attribute EventHandler onbeforecut;
+    [NotEnumerable] attribute EventHandler onbeforeinput;
     [NotEnumerable] attribute EventHandler onbeforepaste;
     [NotEnumerable] attribute EventHandler oncopy;
     [NotEnumerable] attribute EventHandler oncut;
@@ -174,10 +155,10 @@
     [NotEnumerable] attribute EventHandler onanimationiteration;
     [NotEnumerable] attribute EventHandler onanimationstart;
     [NotEnumerable] attribute EventHandler ontransitionend;
-    [NotEnumerable] attribute EventHandler onwebkitanimationend;
-    [NotEnumerable] attribute EventHandler onwebkitanimationiteration;
-    [NotEnumerable] attribute EventHandler onwebkitanimationstart;
-    [NotEnumerable] attribute EventHandler onwebkittransitionend;
+    [NotEnumerable, ImplementedAs=onwebkitAnimationEnd] attribute EventHandler onwebkitanimationend;
+    [NotEnumerable, ImplementedAs=onwebkitAnimationIteration] attribute EventHandler onwebkitanimationiteration;
+    [NotEnumerable, ImplementedAs=onwebkitAnimationStart] attribute EventHandler onwebkitanimationstart;
+    [NotEnumerable, ImplementedAs=onwebkitTransitionEnd] attribute EventHandler onwebkittransitionend;
     [NotEnumerable, Conditional=IOS_GESTURE_EVENTS] attribute EventHandler ongesturechange;
     [NotEnumerable, Conditional=IOS_GESTURE_EVENTS] attribute EventHandler ongestureend;
     [NotEnumerable, Conditional=IOS_GESTURE_EVENTS] attribute EventHandler ongesturestart;
@@ -188,16 +169,18 @@
 
     // Unique to Element
     [NotEnumerable] attribute EventHandler onbeforeload;
-    [NotEnumerable, Conditional=ENCRYPTED_MEDIA] attribute EventHandler onwebkitkeyadded;
-    [NotEnumerable, Conditional=ENCRYPTED_MEDIA] attribute EventHandler onwebkitkeyerror;
-    [NotEnumerable, Conditional=ENCRYPTED_MEDIA] attribute EventHandler onwebkitkeymessage;
-    [NotEnumerable, Conditional=ENCRYPTED_MEDIA|ENCRYPTED_MEDIA_V2] attribute EventHandler onwebkitneedkey;
+    [NotEnumerable, Conditional=LEGACY_ENCRYPTED_MEDIA] attribute EventHandler onwebkitneedkey;
     [NotEnumerable, Conditional=VIDEO_PRESENTATION_MODE] attribute EventHandler onwebkitpresentationmodechanged;
     [NotEnumerable, Conditional=WIRELESS_PLAYBACK_TARGET] attribute EventHandler onwebkitcurrentplaybacktargetiswirelesschanged;
     [NotEnumerable, Conditional=WIRELESS_PLAYBACK_TARGET] attribute EventHandler onwebkitplaybacktargetavailabilitychanged;
 };
 
+dictionary ShadowRootInit {
+    required ShadowRootMode mode;
+};
+
+Element implements Animatable;
 Element implements ChildNode;
-Element implements ParentNode;
 Element implements NonDocumentTypeChildNode;
-Element implements GlobalEventHandlers;
+Element implements ParentNode;
+Element implements Slotable;

@@ -31,27 +31,30 @@
 #include "config.h"
 #include "Blob.h"
 
+#include "BlobBuilder.h"
+#include "BlobPart.h"
 #include "BlobURL.h"
 #include "File.h"
 #include "ScriptExecutionContext.h"
 #include "ThreadableBlobRegistry.h"
+#include <wtf/NeverDestroyed.h>
 #include <wtf/text/CString.h>
 
 namespace WebCore {
 
 class BlobURLRegistry final : public URLRegistry {
 public:
-    virtual void registerURL(SecurityOrigin*, const URL&, URLRegistrable*) override;
-    virtual void unregisterURL(const URL&) override;
+    void registerURL(SecurityOrigin*, const URL&, URLRegistrable&) override;
+    void unregisterURL(const URL&) override;
 
     static URLRegistry& registry();
 };
 
 
-void BlobURLRegistry::registerURL(SecurityOrigin* origin, const URL& publicURL, URLRegistrable* blob)
+void BlobURLRegistry::registerURL(SecurityOrigin* origin, const URL& publicURL, URLRegistrable& blob)
 {
-    ASSERT(&blob->registry() == this);
-    ThreadableBlobRegistry::registerBlobURL(origin, publicURL, static_cast<Blob*>(blob)->url());
+    ASSERT(&blob.registry() == this);
+    ThreadableBlobRegistry::registerBlobURL(origin, publicURL, static_cast<Blob&>(blob).url());
 }
 
 void BlobURLRegistry::unregisterURL(const URL& url)
@@ -61,10 +64,9 @@ void BlobURLRegistry::unregisterURL(const URL& url)
 
 URLRegistry& BlobURLRegistry::registry()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(BlobURLRegistry, instance, ());
+    static NeverDestroyed<BlobURLRegistry> instance;
     return instance;
 }
-
 
 Blob::Blob(UninitializedContructor)
 {
@@ -74,37 +76,49 @@ Blob::Blob()
     : m_size(0)
 {
     m_internalURL = BlobURL::createInternalURL();
-    ThreadableBlobRegistry::registerBlobURL(m_internalURL, Vector<BlobPart>(), String());
+    ThreadableBlobRegistry::registerBlobURL(m_internalURL, { },  { });
 }
 
-Blob::Blob(Vector<char> data, const String& contentType)
+Blob::Blob(Vector<BlobPartVariant>&& blobPartVariants, const BlobPropertyBag& propertyBag)
+    : m_internalURL(BlobURL::createInternalURL())
+    , m_type(normalizedContentType(propertyBag.type))
+    , m_size(-1)
+{
+    BlobBuilder builder(propertyBag.endings);
+    for (auto& blobPartVariant : blobPartVariants) {
+        WTF::switchOn(blobPartVariant,
+            [&] (auto& part) {
+                builder.append(WTFMove(part));
+            }
+        );
+    }
+
+    ThreadableBlobRegistry::registerBlobURL(m_internalURL, builder.finalize(), m_type);
+}
+
+Blob::Blob(Vector<uint8_t>&& data, const String& contentType)
     : m_type(contentType)
     , m_size(data.size())
 {
     Vector<BlobPart> blobParts;
-    blobParts.append(BlobPart(WTF::move(data)));
+    blobParts.append(BlobPart(WTFMove(data)));
     m_internalURL = BlobURL::createInternalURL();
-    ThreadableBlobRegistry::registerBlobURL(m_internalURL, WTF::move(blobParts), contentType);
+    ThreadableBlobRegistry::registerBlobURL(m_internalURL, WTFMove(blobParts), contentType);
 }
 
-Blob::Blob(Vector<BlobPart> blobParts, const String& contentType)
-    : m_type(contentType)
-    , m_size(-1)
-{
-    m_internalURL = BlobURL::createInternalURL();
-    ThreadableBlobRegistry::registerBlobURL(m_internalURL, WTF::move(blobParts), contentType);
-}
-
-Blob::Blob(DeserializationContructor, const URL& srcURL, const String& type, long long size)
-    : m_type(Blob::normalizedContentType(type))
+Blob::Blob(DeserializationContructor, const URL& srcURL, const String& type, long long size, const String& fileBackedPath)
+    : m_type(normalizedContentType(type))
     , m_size(size)
 {
     m_internalURL = BlobURL::createInternalURL();
-    ThreadableBlobRegistry::registerBlobURL(0, m_internalURL, srcURL);
+    if (fileBackedPath.isEmpty())
+        ThreadableBlobRegistry::registerBlobURL(nullptr, m_internalURL, srcURL);
+    else
+        ThreadableBlobRegistry::registerBlobURLOptionallyFileBacked(m_internalURL, srcURL, fileBackedPath, m_type);
 }
 
 Blob::Blob(const URL& srcURL, long long start, long long end, const String& type)
-    : m_type(Blob::normalizedContentType(type))
+    : m_type(normalizedContentType(type))
     , m_size(-1) // size is not necessarily equal to end - start.
 {
     m_internalURL = BlobURL::createInternalURL();
@@ -122,7 +136,7 @@ unsigned long long Blob::size() const
         // FIXME: JavaScript cannot represent sizes as large as unsigned long long, we need to
         // come up with an exception to throw if file size is not representable.
         unsigned long long actualSize = ThreadableBlobRegistry::blobSize(m_internalURL);
-        m_size = (WTF::isInBounds<long long>(actualSize)) ? static_cast<long long>(actualSize) : 0;
+        m_size = WTF::isInBounds<long long>(actualSize) ? static_cast<long long>(actualSize) : 0;
     }
 
     return static_cast<unsigned long long>(m_size);
@@ -130,71 +144,50 @@ unsigned long long Blob::size() const
 
 bool Blob::isValidContentType(const String& contentType)
 {
-    if (contentType.isNull())
-        return true;
-
-    size_t length = contentType.length();
-    if (contentType.is8Bit()) {
-        const LChar* characters = contentType.characters8();
-        for (size_t i = 0; i < length; ++i) {
-            if (characters[i] < 0x20 || characters[i] > 0x7e)
-                return false;
-        }
-    } else {
-        const UChar* characters = contentType.characters16();
-        for (size_t i = 0; i < length; ++i) {
-            if (characters[i] < 0x20 || characters[i] > 0x7e)
-                return false;
-        }
+    // FIXME: Do we really want to treat the empty string and null string as valid content types?
+    unsigned length = contentType.length();
+    for (unsigned i = 0; i < length; ++i) {
+        if (contentType[i] < 0x20 || contentType[i] > 0x7e)
+            return false;
     }
     return true;
 }
 
 String Blob::normalizedContentType(const String& contentType)
 {
-    if (Blob::isValidContentType(contentType))
-        return contentType.lower();
-    return emptyString();
+    if (!isValidContentType(contentType))
+        return emptyString();
+    return contentType.convertToASCIILowercase();
 }
 
+#if !ASSERT_DISABLED
 bool Blob::isNormalizedContentType(const String& contentType)
 {
-    if (contentType.isNull())
-        return true;
-
-    size_t length = contentType.length();
-    if (contentType.is8Bit()) {
-        const LChar* characters = contentType.characters8();
-        for (size_t i = 0; i < length; ++i) {
-            if (characters[i] < 0x20 || characters[i] > 0x7e)
-                return false;
-            if (characters[i] >= 'A' && characters[i] <= 'Z')
-                return false;
-        }
-    } else {
-        const UChar* characters = contentType.characters16();
-        for (size_t i = 0; i < length; ++i) {
-            if (characters[i] < 0x20 || characters[i] > 0x7e)
-                return false;
-            if (characters[i] >= 'A' && characters[i] <= 'Z')
-                return false;
-        }
+    // FIXME: Do we really want to treat the empty string and null string as valid content types?
+    unsigned length = contentType.length();
+    for (size_t i = 0; i < length; ++i) {
+        if (contentType[i] < 0x20 || contentType[i] > 0x7e)
+            return false;
+        if (isASCIIUpper(contentType[i]))
+            return false;
     }
     return true;
 }
 
 bool Blob::isNormalizedContentType(const CString& contentType)
 {
+    // FIXME: Do we really want to treat the empty string and null string as valid content types?
     size_t length = contentType.length();
     const char* characters = contentType.data();
     for (size_t i = 0; i < length; ++i) {
         if (characters[i] < 0x20 || characters[i] > 0x7e)
             return false;
-        if (characters[i] >= 'A' && characters[i] <= 'Z')
+        if (isASCIIUpper(characters[i]))
             return false;
     }
     return true;
 }
+#endif
 
 URLRegistry& Blob::registry() const
 {

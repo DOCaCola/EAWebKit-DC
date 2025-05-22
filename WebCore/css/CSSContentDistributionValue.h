@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CSSContentDistributionValue_h
-#define CSSContentDistributionValue_h
+#pragma once
 
 #include "CSSValue.h"
 #include "CSSValuePool.h"
@@ -32,7 +31,7 @@
 
 namespace WebCore {
 
-class CSSContentDistributionValue : public CSSValue {
+class CSSContentDistributionValue final : public CSSValue {
 public:
     static Ref<CSSContentDistributionValue> create(CSSValueID distribution, CSSValueID position, CSSValueID overflow)
     {
@@ -40,9 +39,9 @@ public:
     }
     ~CSSContentDistributionValue();
 
-    Ref<CSSPrimitiveValue> distribution() const { return cssValuePool().createIdentifierValue(m_distribution); }
-    Ref<CSSPrimitiveValue> position() const { return cssValuePool().createIdentifierValue(m_position); }
-    Ref<CSSPrimitiveValue> overflow() const { return cssValuePool().createIdentifierValue(m_overflow); }
+    Ref<CSSPrimitiveValue> distribution() const { return CSSValuePool::singleton().createIdentifierValue(m_distribution); }
+    Ref<CSSPrimitiveValue> position() const { return CSSValuePool::singleton().createIdentifierValue(m_position); }
+    Ref<CSSPrimitiveValue> overflow() const { return CSSValuePool::singleton().createIdentifierValue(m_overflow); }
 
     String customCSSText() const;
 
@@ -59,5 +58,3 @@ private:
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_CSS_VALUE(CSSContentDistributionValue, isContentDistributionValue())
-
-#endif // CSSContentDistributionValue_h

@@ -1,5 +1,6 @@
 /*
     Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+    Copyright (C) 2015 Apple Inc. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -17,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef PluginData_h
-#define PluginData_h
+#pragma once
 
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
@@ -85,10 +85,11 @@ inline bool operator==(PluginInfo& a, PluginInfo& b)
 // FIXME: merge with PluginDatabase in the future
 class PluginData : public RefCounted<PluginData> {
 public:
-    static Ref<PluginData> create(const Page* page) { return adoptRef(*new PluginData(page)); }
+    static Ref<PluginData> create(Page& page) { return adoptRef(*new PluginData(page)); }
 
     const Vector<PluginInfo>& plugins() const { return m_plugins; }
     Vector<PluginInfo> webVisiblePlugins() const;
+    Vector<PluginInfo> publiclyVisiblePlugins() const;
     WEBCORE_EXPORT void getWebVisibleMimesAndPluginIndices(Vector<MimeClassInfo>&, Vector<size_t>&) const;
 
     enum AllowedPluginTypes {
@@ -100,25 +101,18 @@ public:
     String pluginNameForWebVisibleMimeType(const String& mimeType) const;
     String pluginFileForWebVisibleMimeType(const String& mimeType) const;
 
-    static void refresh();
+    WEBCORE_EXPORT bool supportsMimeType(const String& mimeType, const AllowedPluginTypes) const;
 
 private:
-    explicit PluginData(const Page*);
+    explicit PluginData(Page&);
     void initPlugins();
     bool getPluginInfoForWebVisibleMimeType(const String& mimeType, PluginInfo&) const;
+    void getMimesAndPluginIndices(Vector<MimeClassInfo>&, Vector<size_t>&) const;
+    void getMimesAndPluginIndiciesForPlugins(const Vector<PluginInfo>&, Vector<MimeClassInfo>&, Vector<size_t>&) const;
 
 protected:
-#if defined ENABLE_WEB_REPLAY && ENABLE_WEB_REPLAY
-    PluginData(Vector<PluginInfo> plugins)
-        : m_plugins(plugins)
-    {
-    }
-#endif
-
-    const Page* m_page;
+    Page& m_page;
     Vector<PluginInfo> m_plugins;
 };
 
 } // namespace WebCore
-
-#endif // PluginData_h

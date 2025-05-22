@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef DeleteSelectionCommand_h
-#define DeleteSelectionCommand_h
+#pragma once
 
 #include "CompositeEditCommand.h"
 
@@ -49,9 +48,9 @@ protected:
 private:
     DeleteSelectionCommand(const VisibleSelection&, bool smartDelete, bool mergeBlocksAfterDelete, bool replace, bool expandForSpecialElements, bool sanitizeMarkup, EditAction);
 
-    virtual void doApply();
+    void doApply() override;
     
-    virtual bool preservesTypingStyle() const;
+    bool preservesTypingStyle() const override;
 
     void initializeStartEnd(Position&, Position&);
     void setStartingSelectionOnSmartDelete(const Position&, const Position&);
@@ -67,8 +66,8 @@ private:
     void calculateTypingStyleAfterDelete();
     void clearTransientState();
     void makeStylingElementsDirectChildrenOfEditableRootToPreventStyleLoss();
-    virtual void removeNode(PassRefPtr<Node>, ShouldAssumeContentIsAlwaysEditable = DoNotAssumeContentIsAlwaysEditable);
-    virtual void deleteTextFromNode(PassRefPtr<Text>, unsigned, unsigned);
+    void removeNode(PassRefPtr<Node>, ShouldAssumeContentIsAlwaysEditable = DoNotAssumeContentIsAlwaysEditable) override;
+    void deleteTextFromNode(PassRefPtr<Text>, unsigned, unsigned) override;
     void removeRedundantBlocks();
 
     // This function provides access to original string after the correction has been deleted.
@@ -105,5 +104,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // DeleteSelectionCommand_h

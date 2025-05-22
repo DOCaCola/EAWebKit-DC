@@ -28,10 +28,10 @@
 
 #if ENABLE(SUBTLE_CRYPTO)
 
-#include "CryptoAlgorithmDescriptionBuilder.h"
 #include "CryptoAlgorithmRegistry.h"
 #include "CryptoKeyDataRSAComponents.h"
 #include "CryptoKeyPair.h"
+#include "ExceptionCode.h"
 #include "NotImplemented.h"
 
 namespace WebCore {
@@ -39,18 +39,21 @@ namespace WebCore {
 struct _PlatformRSAKeyGnuTLS {
 };
 
-CryptoKeyRSA::CryptoKeyRSA(CryptoAlgorithmIdentifier identifier, CryptoKeyType type, PlatformRSAKey platformKey, bool extractable, CryptoKeyUsage usage)
+CryptoKeyRSA::CryptoKeyRSA(CryptoAlgorithmIdentifier identifier, CryptoAlgorithmIdentifier hash, bool hasHash, CryptoKeyType type, PlatformRSAKey platformKey, bool extractable, CryptoKeyUsageBitmap usage)
     : CryptoKey(identifier, type, extractable, usage)
     , m_platformKey(platformKey)
-    , m_restrictedToSpecificHash(false)
+    , m_restrictedToSpecificHash(hasHash)
+    , m_hash(hash)
 {
     notImplemented();
 }
 
-PassRefPtr<CryptoKeyRSA> CryptoKeyRSA::create(CryptoAlgorithmIdentifier identifier, const CryptoKeyDataRSAComponents& keyData, bool extractable, CryptoKeyUsage usage)
+RefPtr<CryptoKeyRSA> CryptoKeyRSA::create(CryptoAlgorithmIdentifier identifier, CryptoAlgorithmIdentifier hash, bool hasHash, const CryptoKeyDataRSAComponents& keyData, bool extractable, CryptoKeyUsageBitmap usage)
 {
     notImplemented();
     UNUSED_PARAM(identifier);
+    UNUSED_PARAM(hash);
+    UNUSED_PARAM(hasHash);
     UNUSED_PARAM(keyData);
     UNUSED_PARAM(extractable);
     UNUSED_PARAM(usage);
@@ -61,12 +64,6 @@ PassRefPtr<CryptoKeyRSA> CryptoKeyRSA::create(CryptoAlgorithmIdentifier identifi
 CryptoKeyRSA::~CryptoKeyRSA()
 {
     notImplemented();
-}
-
-void CryptoKeyRSA::restrictToHash(CryptoAlgorithmIdentifier identifier)
-{
-    m_restrictedToSpecificHash = true;
-    m_hash = identifier;
 }
 
 bool CryptoKeyRSA::isRestrictedToHash(CryptoAlgorithmIdentifier& identifier) const
@@ -84,10 +81,11 @@ size_t CryptoKeyRSA::keySizeInBits() const
     return 0;
 }
 
-void CryptoKeyRSA::buildAlgorithmDescription(CryptoAlgorithmDescriptionBuilder& builder) const
+std::unique_ptr<KeyAlgorithm> CryptoKeyRSA::buildAlgorithm() const
 {
     notImplemented();
-    UNUSED_PARAM(builder);
+    Vector<uint8_t> publicExponent;
+    return std::make_unique<RsaKeyAlgorithm>(emptyString(), 0, WTFMove(publicExponent));
 }
 
 std::unique_ptr<CryptoKeyData> CryptoKeyRSA::exportData() const
@@ -98,17 +96,48 @@ std::unique_ptr<CryptoKeyData> CryptoKeyRSA::exportData() const
     return nullptr;
 }
 
-void CryptoKeyRSA::generatePair(CryptoAlgorithmIdentifier algorithm, unsigned modulusLength, const Vector<uint8_t>& publicExponent, bool extractable, CryptoKeyUsage usage, KeyPairCallback callback, VoidCallback failureCallback)
+void CryptoKeyRSA::generatePair(CryptoAlgorithmIdentifier algorithm, CryptoAlgorithmIdentifier hash, bool hasHash, unsigned modulusLength, const Vector<uint8_t>& publicExponent, bool extractable, CryptoKeyUsageBitmap usage, KeyPairCallback&& callback, VoidCallback&& failureCallback, ScriptExecutionContext* context)
 {
     notImplemented();
     failureCallback();
 
     UNUSED_PARAM(algorithm);
+    UNUSED_PARAM(hash);
+    UNUSED_PARAM(hasHash);
     UNUSED_PARAM(modulusLength);
     UNUSED_PARAM(publicExponent);
     UNUSED_PARAM(extractable);
     UNUSED_PARAM(usage);
     UNUSED_PARAM(callback);
+    UNUSED_PARAM(context);
+}
+
+RefPtr<CryptoKeyRSA> CryptoKeyRSA::importSpki(CryptoAlgorithmIdentifier, std::optional<CryptoAlgorithmIdentifier>, Vector<uint8_t>&&, bool, CryptoKeyUsageBitmap)
+{
+    notImplemented();
+
+    return nullptr;
+}
+
+ExceptionOr<Vector<uint8_t>> CryptoKeyRSA::exportSpki() const
+{
+    notImplemented();
+
+    return Exception { NOT_SUPPORTED_ERR };
+}
+
+RefPtr<CryptoKeyRSA> CryptoKeyRSA::importPkcs8(CryptoAlgorithmIdentifier, std::optional<CryptoAlgorithmIdentifier>, Vector<uint8_t>&&, bool, CryptoKeyUsageBitmap)
+{
+    notImplemented();
+
+    return nullptr;
+}
+
+ExceptionOr<Vector<uint8_t>> CryptoKeyRSA::exportPkcs8() const
+{
+    notImplemented();
+
+    return Exception { NOT_SUPPORTED_ERR };
 }
 
 } // namespace WebCore

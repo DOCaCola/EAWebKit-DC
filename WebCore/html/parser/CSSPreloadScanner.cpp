@@ -29,7 +29,7 @@
 #include "CSSPreloadScanner.h"
 
 #include "HTMLParserIdioms.h"
-#include <wtf/TemporaryChange.h>
+#include <wtf/SetForScope.h>
 
 namespace WebCore {
 
@@ -53,7 +53,7 @@ void CSSPreloadScanner::reset()
 void CSSPreloadScanner::scan(const HTMLToken::DataVector& data, PreloadRequestStream& requests)
 {
     ASSERT(!m_requests);
-    TemporaryChange<PreloadRequestStream*> change(m_requests, &requests);
+    SetForScope<PreloadRequestStream*> change(m_requests, &requests);
 
     for (UChar c : data) {
         if (m_state == DoneParsingImportRules)
@@ -97,7 +97,7 @@ inline void CSSPreloadScanner::tokenize(UChar c)
             m_state = Comment;
         break;
     case RuleStart:
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+        if (isASCIIAlpha(c)) {
             m_rule.clear();
             m_ruleValue.clear();
             m_rule.append(c);
@@ -195,25 +195,18 @@ static String parseCSSStringOrURL(const UChar* characters, size_t length)
     return String(characters + offset, reducedLength);
 }
 
-template<unsigned referenceLength>
-static inline bool ruleEqualIgnoringCase(const Vector<UChar>& rule, const char (&reference)[referenceLength])
-{
-    unsigned referenceCharactersLength = referenceLength - 1;
-    return rule.size() == referenceCharactersLength && equalIgnoringCase(reference, rule.data(), referenceCharactersLength);
-}
-
 void CSSPreloadScanner::emitRule()
 {
-    if (ruleEqualIgnoringCase(m_rule, "import")) {
+    StringView rule(m_rule.data(), m_rule.size());
+    if (equalLettersIgnoringASCIICase(rule, "import")) {
         String url = parseCSSStringOrURL(m_ruleValue.data(), m_ruleValue.size());
         if (!url.isEmpty()) {
-            URL baseElementURL; // FIXME: This should be passed in from the HTMLPreloadScaner via scan()!
-
+            URL baseElementURL; // FIXME: This should be passed in from the HTMLPreloadScanner via scan(): without it we will get relative URLs wrong.
             // FIXME: Should this be including the charset in the preload request?
-            m_requests->append(std::make_unique<PreloadRequest>("css", url, baseElementURL, CachedResource::CSSStyleSheet, String()));
+            m_requests->append(std::make_unique<PreloadRequest>("css", url, baseElementURL, CachedResource::CSSStyleSheet, String(), PreloadRequest::ModuleScript::No));
         }
         m_state = Initial;
-    } else if (ruleEqualIgnoringCase(m_rule, "charset"))
+    } else if (equalLettersIgnoringASCIICase(rule, "charset"))
         m_state = Initial;
     else
         m_state = DoneParsingImportRules;

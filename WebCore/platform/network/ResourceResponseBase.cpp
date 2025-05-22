@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2008, 2016 Apple Inc. All rights reserved.
  * Copyright (C) 2009 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 #include "CacheValidation.h"
 #include "HTTPHeaderNames.h"
 #include "HTTPParsers.h"
+#include "ParsedContentRange.h"
 #include "ResourceResponse.h"
 #include <wtf/CurrentTime.h>
 #include <wtf/MathExtras.h>
@@ -38,15 +39,9 @@
 
 namespace WebCore {
 
-inline const ResourceResponse& ResourceResponseBase::asResourceResponse() const
-{
-    return *static_cast<const ResourceResponse*>(this);
-}
-
 ResourceResponseBase::ResourceResponseBase()
     : m_isNull(true)
     , m_expectedContentLength(0)
-    , m_includesCertificateInfo(false)
     , m_httpStatusCode(0)
 {
 }
@@ -57,57 +52,100 @@ ResourceResponseBase::ResourceResponseBase(const URL& url, const String& mimeTyp
     , m_mimeType(mimeType)
     , m_expectedContentLength(expectedLength)
     , m_textEncodingName(textEncodingName)
-    , m_includesCertificateInfo(true) // Empty but valid for synthetic responses.
+    , m_certificateInfo(CertificateInfo()) // Empty but valid for synthetic responses.
     , m_httpStatusCode(0)
 {
 }
 
-std::unique_ptr<ResourceResponse> ResourceResponseBase::adopt(std::unique_ptr<CrossThreadResourceResponseData> data)
+ResourceResponseBase::CrossThreadData ResourceResponseBase::crossThreadData() const
 {
-    auto response = std::make_unique<ResourceResponse>();
-    response->setURL(data->m_url);
-    response->setMimeType(data->m_mimeType);
-    response->setExpectedContentLength(data->m_expectedContentLength);
-    response->setTextEncodingName(data->m_textEncodingName);
+    CrossThreadData data;
 
-    response->setHTTPStatusCode(data->m_httpStatusCode);
-    response->setHTTPStatusText(data->m_httpStatusText);
+    data.url = url().isolatedCopy();
+    data.mimeType = mimeType().isolatedCopy();
+    data.expectedContentLength = expectedContentLength();
+    data.textEncodingName = textEncodingName().isolatedCopy();
 
-    response->lazyInit(AllFields);
-    response->m_httpHeaderFields.adopt(WTF::move(data->m_httpHeaders));
-    response->m_resourceLoadTiming = data->m_resourceLoadTiming;
-    response->doPlatformAdopt(WTF::move(data));
+    data.httpStatusCode = httpStatusCode();
+    data.httpStatusText = httpStatusText().isolatedCopy();
+    data.httpVersion = httpVersion().isolatedCopy();
+
+    data.httpHeaderFields = httpHeaderFields().isolatedCopy();
+    data.networkLoadTiming = m_networkLoadTiming.isolatedCopy();
+    data.type = m_type;
+    data.isRedirected = m_isRedirected;
+
+    return data;
+}
+
+ResourceResponse ResourceResponseBase::fromCrossThreadData(CrossThreadData&& data)
+{
+    ResourceResponse response;
+
+    response.setURL(data.url);
+    response.setMimeType(data.mimeType);
+    response.setExpectedContentLength(data.expectedContentLength);
+    response.setTextEncodingName(data.textEncodingName);
+
+    response.setHTTPStatusCode(data.httpStatusCode);
+    response.setHTTPStatusText(data.httpStatusText);
+    response.setHTTPVersion(data.httpVersion);
+
+    response.m_httpHeaderFields = WTFMove(data.httpHeaderFields);
+    response.m_networkLoadTiming = data.networkLoadTiming;
+    response.m_type = data.type;
+    response.m_isRedirected = data.isRedirected;
+
     return response;
 }
 
-std::unique_ptr<CrossThreadResourceResponseData> ResourceResponseBase::copyData() const
+ResourceResponse ResourceResponseBase::filterResponse(const ResourceResponse& response, ResourceResponse::Tainting tainting)
 {
-    auto data = std::make_unique<CrossThreadResourceResponseData>();
-    data->m_url = url().isolatedCopy();
-    data->m_mimeType = mimeType().isolatedCopy();
-    data->m_expectedContentLength = expectedContentLength();
-    data->m_textEncodingName = textEncodingName().isolatedCopy();
-    data->m_httpStatusCode = httpStatusCode();
-    data->m_httpStatusText = httpStatusText().isolatedCopy();
-    data->m_httpHeaders = httpHeaderFields().copyData();
-    data->m_resourceLoadTiming = m_resourceLoadTiming;
-    return asResourceResponse().doPlatformCopyData(WTF::move(data));
+    if (tainting == ResourceResponse::Tainting::Opaque) {
+        ResourceResponse opaqueResponse;
+        opaqueResponse.setType(ResourceResponse::Type::Opaque);
+        return opaqueResponse;
+    }
+
+    ResourceResponse filteredResponse = response;
+    // Let's initialize filteredResponse to remove some header fields.
+    filteredResponse.lazyInit(AllFields);
+
+    if (tainting == ResourceResponse::Tainting::Basic) {
+        filteredResponse.setType(ResourceResponse::Type::Basic);
+        filteredResponse.m_httpHeaderFields.remove(HTTPHeaderName::SetCookie);
+        filteredResponse.m_httpHeaderFields.remove(HTTPHeaderName::SetCookie2);
+        return filteredResponse;
+    }
+
+    ASSERT(tainting == ResourceResponse::Tainting::Cors);
+    filteredResponse.setType(ResourceResponse::Type::Cors);
+
+    HTTPHeaderSet accessControlExposeHeaderSet;
+    parseAccessControlExposeHeadersAllowList(response.httpHeaderField(HTTPHeaderName::AccessControlExposeHeaders), accessControlExposeHeaderSet);
+    filteredResponse.m_httpHeaderFields.uncommonHeaders().removeIf([&](auto& entry) {
+        return !isCrossOriginSafeHeader(entry.key, accessControlExposeHeaderSet);
+    });
+    filteredResponse.m_httpHeaderFields.commonHeaders().removeIf([&](auto& entry) {
+        return !isCrossOriginSafeHeader(entry.key, accessControlExposeHeaderSet);
+    });
+
+    return filteredResponse;
 }
 
+// FIXME: Name does not make it clear this is true for HTTPS!
 bool ResourceResponseBase::isHTTP() const
 {
     lazyInit(CommonFieldsOnly);
 
-    String protocol = m_url.protocol();
-
-    return equalIgnoringCase(protocol, "http")  || equalIgnoringCase(protocol, "https");
+    return m_url.protocolIsInHTTPFamily();
 }
 
 const URL& ResourceResponseBase::url() const
 {
     lazyInit(CommonFieldsOnly);
 
-    return m_url; 
+    return m_url;
 }
 
 void ResourceResponseBase::setURL(const URL& url)
@@ -176,20 +214,20 @@ void ResourceResponseBase::setTextEncodingName(const String& encodingName)
 
 void ResourceResponseBase::includeCertificateInfo() const
 {
-    if (m_includesCertificateInfo)
+    if (m_certificateInfo)
         return;
     m_certificateInfo = static_cast<const ResourceResponse*>(this)->platformCertificateInfo();
-    m_includesCertificateInfo = true;
-}
-
-CertificateInfo ResourceResponseBase::certificateInfo() const
-{
-    return m_certificateInfo;
 }
 
 String ResourceResponseBase::suggestedFilename() const
 {
     return static_cast<const ResourceResponse*>(this)->platformSuggestedFilename();
+}
+
+bool ResourceResponseBase::isSuccessful() const
+{
+    int code = httpStatusCode();
+    return code >= 200 && code < 300;
 }
 
 int ResourceResponseBase::httpStatusCode() const
@@ -222,6 +260,29 @@ void ResourceResponseBase::setHTTPStatusText(const String& statusText)
     m_httpStatusText = statusText; 
 
     // FIXME: Should invalidate or update platform response if present.
+}
+
+const String& ResourceResponseBase::httpVersion() const
+{
+    lazyInit(AllFields);
+    
+    return m_httpVersion;
+}
+
+void ResourceResponseBase::setHTTPVersion(const String& versionText)
+{
+    lazyInit(AllFields);
+    
+    m_httpVersion = versionText;
+    
+    // FIXME: Should invalidate or update platform response if present.
+}
+
+bool ResourceResponseBase::isHTTP09() const
+{
+    lazyInit(AllFields);
+
+    return m_httpVersion.startsWith("HTTP/0.9");
 }
 
 String ResourceResponseBase::httpHeaderField(const String& name) const
@@ -276,6 +337,10 @@ void ResourceResponseBase::updateHeaderParsedState(HTTPHeaderName name)
         m_haveParsedLastModifiedHeader = false;
         break;
 
+    case HTTPHeaderName::ContentRange:
+        m_haveParsedContentRangeHeader = false;
+        break;
+
     default:
         break;
     }
@@ -305,15 +370,22 @@ void ResourceResponseBase::setHTTPHeaderField(HTTPHeaderName name, const String&
     // FIXME: Should invalidate or update platform response if present.
 }
 
-void ResourceResponseBase::addHTTPHeaderField(const String& name, const String& value)
+void ResourceResponseBase::addHTTPHeaderField(HTTPHeaderName name, const String& value)
 {
     lazyInit(AllFields);
+    updateHeaderParsedState(name);
+    m_httpHeaderFields.add(name, value);
+}
 
+void ResourceResponseBase::addHTTPHeaderField(const String& name, const String& value)
+{
     HTTPHeaderName headerName;
     if (findHTTPHeaderName(name, headerName))
-        updateHeaderParsedState(headerName);
-
-    m_httpHeaderFields.add(name, value);
+        addHTTPHeaderField(headerName, value);
+    else {
+        lazyInit(AllFields);
+        m_httpHeaderFields.add(name, value);
+    }
 }
 
 const HTTPHeaderMap& ResourceResponseBase::httpHeaderFields() const
@@ -361,14 +433,14 @@ bool ResourceResponseBase::hasCacheValidatorFields() const
     return !m_httpHeaderFields.get(HTTPHeaderName::LastModified).isEmpty() || !m_httpHeaderFields.get(HTTPHeaderName::ETag).isEmpty();
 }
 
-Optional<std::chrono::microseconds> ResourceResponseBase::cacheControlMaxAge() const
+std::optional<std::chrono::microseconds> ResourceResponseBase::cacheControlMaxAge() const
 {
     if (!m_haveParsedCacheControlHeader)
         parseCacheControlDirectives();
     return m_cacheControlDirectives.maxAge;
 }
 
-static Optional<std::chrono::system_clock::time_point> parseDateValueInHeader(const HTTPHeaderMap& headers, HTTPHeaderName headerName)
+static std::optional<std::chrono::system_clock::time_point> parseDateValueInHeader(const HTTPHeaderMap& headers, HTTPHeaderName headerName)
 {
     String headerValue = headers.get(headerName);
     if (headerValue.isEmpty())
@@ -380,7 +452,7 @@ static Optional<std::chrono::system_clock::time_point> parseDateValueInHeader(co
     return parseHTTPDate(headerValue);
 }
 
-Optional<std::chrono::system_clock::time_point> ResourceResponseBase::date() const
+std::optional<std::chrono::system_clock::time_point> ResourceResponseBase::date() const
 {
     lazyInit(CommonFieldsOnly);
 
@@ -391,7 +463,7 @@ Optional<std::chrono::system_clock::time_point> ResourceResponseBase::date() con
     return m_date;
 }
 
-Optional<std::chrono::microseconds> ResourceResponseBase::age() const
+std::optional<std::chrono::microseconds> ResourceResponseBase::age() const
 {
     using namespace std::chrono;
 
@@ -408,7 +480,7 @@ Optional<std::chrono::microseconds> ResourceResponseBase::age() const
     return m_age;
 }
 
-Optional<std::chrono::system_clock::time_point> ResourceResponseBase::expires() const
+std::optional<std::chrono::system_clock::time_point> ResourceResponseBase::expires() const
 {
     lazyInit(CommonFieldsOnly);
 
@@ -419,30 +491,53 @@ Optional<std::chrono::system_clock::time_point> ResourceResponseBase::expires() 
     return m_expires;
 }
 
-Optional<std::chrono::system_clock::time_point> ResourceResponseBase::lastModified() const
+std::optional<std::chrono::system_clock::time_point> ResourceResponseBase::lastModified() const
 {
     lazyInit(CommonFieldsOnly);
 
     if (!m_haveParsedLastModifiedHeader) {
         m_lastModified = parseDateValueInHeader(m_httpHeaderFields, HTTPHeaderName::LastModified);
+#if PLATFORM(COCOA)
+        // CFNetwork converts malformed dates into Epoch so we need to treat Epoch as
+        // an invalid value (rdar://problem/22352838).
+        const std::chrono::system_clock::time_point epoch;
+        if (m_lastModified && m_lastModified.value() == epoch)
+            m_lastModified = std::nullopt;
+#endif
         m_haveParsedLastModifiedHeader = true;
     }
     return m_lastModified;
+}
+
+static ParsedContentRange parseContentRangeInHeader(const HTTPHeaderMap& headers)
+{
+    String contentRangeValue = headers.get(HTTPHeaderName::ContentRange);
+    if (contentRangeValue.isEmpty())
+        return ParsedContentRange();
+
+    return ParsedContentRange(contentRangeValue);
+}
+
+ParsedContentRange& ResourceResponseBase::contentRange() const
+{
+    lazyInit(CommonFieldsOnly);
+
+    if (!m_haveParsedContentRangeHeader) {
+        m_contentRange = parseContentRangeInHeader(m_httpHeaderFields);
+        m_haveParsedContentRangeHeader = true;
+    }
+
+    return m_contentRange;
 }
 
 bool ResourceResponseBase::isAttachment() const
 {
     lazyInit(AllFields);
 
-    String value = m_httpHeaderFields.get(HTTPHeaderName::ContentDisposition);
-    size_t loc = value.find(';');
-    if (loc != notFound)
-        value = value.left(loc);
-    value = value.stripWhiteSpace();
-
-    return equalIgnoringCase(value, "attachment");
+    auto value = m_httpHeaderFields.get(HTTPHeaderName::ContentDisposition);
+    return equalLettersIgnoringASCIICase(value.left(value.find(';')).stripWhiteSpace(), "attachment");
 }
-  
+
 ResourceResponseBase::Source ResourceResponseBase::source() const
 {
     lazyInit(AllFields);
@@ -480,7 +575,7 @@ bool ResourceResponseBase::compare(const ResourceResponse& a, const ResourceResp
         return false;
     if (a.httpHeaderFields() != b.httpHeaderFields())
         return false;
-    if (a.resourceLoadTiming() != b.resourceLoadTiming())
+    if (a.networkLoadTiming() != b.networkLoadTiming())
         return false;
     return ResourceResponse::platformCompare(a, b);
 }

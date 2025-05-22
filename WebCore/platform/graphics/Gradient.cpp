@@ -30,7 +30,7 @@
 #include "Color.h"
 #include "FloatRect.h"
 #include <wtf/HashFunctions.h>
-#include <wtf/StringHasher.h>
+#include <wtf/Hasher.h>
 
 using WTF::pairIntHash;
 
@@ -69,12 +69,15 @@ Gradient::~Gradient()
     platformDestroy();
 }
 
-void Gradient::adjustParametersForTiledDrawing(FloatSize& size, FloatRect& srcRect)
+void Gradient::adjustParametersForTiledDrawing(FloatSize& size, FloatRect& srcRect, const FloatSize& spacing)
 {
     if (m_radial)
         return;
 
     if (srcRect.isEmpty())
+        return;
+
+    if (!spacing.isZero())
         return;
 
     if (m_p0.x() == m_p1.x()) {
@@ -93,6 +96,7 @@ void Gradient::adjustParametersForTiledDrawing(FloatSize& size, FloatRect& srcRe
 
 void Gradient::addColorStop(float value, const Color& color)
 {
+    // FIXME: ExtendedColor - update this to support colors with color spaces.
     float r;
     float g;
     float b;

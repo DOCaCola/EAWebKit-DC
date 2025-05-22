@@ -30,7 +30,6 @@
 #include "Extensions3DOpenGL.h"
 
 #include "GraphicsContext3D.h"
-#include <wtf/Vector.h>
 
 #if PLATFORM(IOS)
 #include <OpenGLES/ES2/glext.h>
@@ -46,8 +45,8 @@
 
 namespace WebCore {
 
-Extensions3DOpenGL::Extensions3DOpenGL(GraphicsContext3D* context)
-    : Extensions3DOpenGLCommon(context)
+Extensions3DOpenGL::Extensions3DOpenGL(GraphicsContext3D* context, bool useIndexedGetString)
+    : Extensions3DOpenGLCommon(context, useIndexedGetString)
 {
 }
 
@@ -156,11 +155,15 @@ void Extensions3DOpenGL::popGroupMarkerEXT(void)
 bool Extensions3DOpenGL::supportsExtension(const String& name)
 {
     // GL_ANGLE_framebuffer_blit and GL_ANGLE_framebuffer_multisample are "fake". They are implemented using other
-    // extensions. In particular GL_EXT_framebuffer_blit and GL_EXT_framebuffer_multisample
+    // extensions. In particular GL_EXT_framebuffer_blit and GL_EXT_framebuffer_multisample/GL_APPLE_framebuffer_multisample.
     if (name == "GL_ANGLE_framebuffer_blit")
         return m_availableExtensions.contains("GL_EXT_framebuffer_blit");
     if (name == "GL_ANGLE_framebuffer_multisample")
+#if PLATFORM(IOS)
+        return m_availableExtensions.contains("GL_APPLE_framebuffer_multisample");
+#else
         return m_availableExtensions.contains("GL_EXT_framebuffer_multisample");
+#endif
 
     if (name == "GL_ANGLE_instanced_arrays") {
         return (m_availableExtensions.contains("GL_ARB_instanced_arrays") || m_availableExtensions.contains("GL_EXT_instanced_arrays"))
@@ -293,6 +296,7 @@ void Extensions3DOpenGL::vertexAttribDivisor(GC3Duint index, GC3Duint divisor)
 
 String Extensions3DOpenGL::getExtensions()
 {
+    ASSERT(!m_useIndexedGetString);
     return String(reinterpret_cast<const char*>(::glGetString(GL_EXTENSIONS)));
 }
 

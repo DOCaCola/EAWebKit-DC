@@ -31,12 +31,27 @@
 #include "GraphicsContextCG.h"
 #include <wtf/Assertions.h>
 #include <wtf/RetainPtr.h>
+#include <wtf/TinyLRUCache.h>
 #if !PLATFORM(IOS)
 #include <ApplicationServices/ApplicationServices.h>
 #else
-#include <WebCore/CoreGraphicsSPI.h>
+#include "CoreGraphicsSPI.h"
 #include <wtf/StdLibExtras.h>
 #endif // !PLATFORM(IOS)
+
+namespace WebCore {
+static CGColorRef leakCGColor(const Color&);
+}
+
+namespace WTF {
+
+template<>
+RetainPtr<CGColorRef> TinyLRUCachePolicy<WebCore::Color, RetainPtr<CGColorRef>>::createValueForKey(const WebCore::Color& color)
+{
+    return adoptCF(WebCore::leakCGColor(color));
+}
+
+} // namespace WTF
 
 namespace WebCore {
 
@@ -58,8 +73,7 @@ static CGColorRef createCGColorWithDeviceRGBA(CGColorRef sourceColor)
 Color::Color(CGColorRef color)
 {
     if (!color) {
-        m_color = 0;
-        m_valid = false;
+        m_colorData.rgbaAndFlags = invalidRGBAColor;
         return;
     }
 
@@ -67,6 +81,7 @@ Color::Color(CGColorRef color)
     size_t numComponents = CGColorGetNumberOfComponents(color);
     const CGFloat* components = CGColorGetComponents(color);
 #else
+    // FIXME: can we remove this?
     RetainPtr<CGColorRef> correctedColor = adoptCF(createCGColorWithDeviceRGBA(color));
     if (!correctedColor)
         correctedColor = color;
@@ -95,68 +110,57 @@ Color::Color(CGColorRef color)
         ASSERT_NOT_REACHED();
     }
 
-    m_color = makeRGBA(r * 255, g * 255, b * 255, a * 255);
-    m_valid = true;
+    setRGB(makeRGBA(r * 255, g * 255, b * 255, a * 255));
 }
 
-static CGColorRef leakCGColor(const Color& color, ColorSpace colorSpace)
+static CGColorRef leakCGColor(const Color& color)
 {
     CGFloat components[4];
+    if (color.isExtended()) {
+        ExtendedColor& extendedColor = color.asExtended();
+        components[0] = extendedColor.red();
+        components[1] = extendedColor.green();
+        components[2] = extendedColor.blue();
+        components[3] = extendedColor.alpha();
+        switch (extendedColor.colorSpace()) {
+        case ColorSpaceSRGB:
+            return CGColorCreate(sRGBColorSpaceRef(), components);
+        case ColorSpaceDisplayP3:
+            return CGColorCreate(displayP3ColorSpaceRef(), components);
+        case ColorSpaceLinearRGB:
+        case ColorSpaceDeviceRGB:
+            // FIXME: Do we ever create CGColorRefs in these spaces? It may only be ImageBuffers.
+            return CGColorCreate(sRGBColorSpaceRef(), components);
+        }
+    }
+
     color.getRGBA(components[0], components[1], components[2], components[3]);
-    return CGColorCreate(cachedCGColorSpace(colorSpace), components);
+    return CGColorCreate(sRGBColorSpaceRef(), components);
 }
 
-template<ColorSpace colorSpace> static CGColorRef cachedCGColor(const Color& color)
+CGColorRef cachedCGColor(const Color& color)
 {
-    switch (color.rgb()) {
-    case Color::transparent: {
-        static CGColorRef transparentCGColor = leakCGColor(color, colorSpace);
-        return transparentCGColor;
-    }
-    case Color::black: {
-        static CGColorRef blackCGColor = leakCGColor(color, colorSpace);
-        return blackCGColor;
-    }
-    case Color::white: {
-        static CGColorRef whiteCGColor = leakCGColor(color, colorSpace);
-        return whiteCGColor;
-    }
-    }
-
-    ASSERT(color.rgb());
-
-    const size_t cacheSize = 32;
-    static RGBA32 cachedRGBAValues[cacheSize];
-    static RetainPtr<CGColorRef>* cachedCGColors = new RetainPtr<CGColorRef>[cacheSize];
-
-    for (size_t i = 0; i < cacheSize; ++i) {
-        if (cachedRGBAValues[i] == color.rgb())
-            return cachedCGColors[i].get();
+    if (!color.isExtended()) {
+        switch (color.rgb()) {
+        case Color::transparent: {
+            static CGColorRef transparentCGColor = leakCGColor(color);
+            return transparentCGColor;
+        }
+        case Color::black: {
+            static CGColorRef blackCGColor = leakCGColor(color);
+            return blackCGColor;
+        }
+        case Color::white: {
+            static CGColorRef whiteCGColor = leakCGColor(color);
+            return whiteCGColor;
+        }
+        }
     }
 
-    CGColorRef newCGColor = leakCGColor(color, colorSpace);
+    ASSERT(color.isExtended() || color.rgb());
 
-    static size_t cursor;
-    cachedRGBAValues[cursor] = color.rgb();
-    cachedCGColors[cursor] = adoptCF(newCGColor);
-    if (++cursor == cacheSize)
-        cursor = 0;
-
-    return newCGColor;
-}
-
-CGColorRef cachedCGColor(const Color& color, ColorSpace colorSpace)
-{
-    switch (colorSpace) {
-    case ColorSpaceDeviceRGB:
-        return cachedCGColor<ColorSpaceDeviceRGB>(color);
-    case ColorSpaceSRGB:
-        return cachedCGColor<ColorSpaceSRGB>(color);
-    case ColorSpaceLinearRGB:
-        return cachedCGColor<ColorSpaceLinearRGB>(color);
-    }
-    ASSERT_NOT_REACHED();
-    return cachedCGColor(color, ColorSpaceDeviceRGB);
+    static NeverDestroyed<TinyLRUCache<Color, RetainPtr<CGColorRef>, 32>> cache;
+    return cache.get().get(color).get();
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,17 +23,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SimpleLineLayoutTextFragmentIterator_h
-#define SimpleLineLayoutTextFragmentIterator_h
+#pragma once
 
+#include "BreakLines.h"
 #include "RenderLineBreak.h"
-#include "RenderStyle.h"
 #include "SimpleLineLayoutFlowContents.h"
-#include "TextBreakIterator.h"
-#include "break_lines.h"
 
 namespace WebCore {
+
 class RenderBlockFlow;
+class RenderStyle;
 
 namespace SimpleLineLayout {
 
@@ -44,7 +43,7 @@ public:
     public:
         enum Type { ContentEnd, SoftLineBreak, HardLineBreak, Whitespace, NonWhitespace };
         TextFragment() = default;
-        TextFragment(unsigned start, unsigned end, float width, Type type, bool isLastInRenderer = false, bool overlapsToNextRenderer = false, bool isCollapsed = false, bool isCollapsible = false, bool isBreakable = false)
+        TextFragment(unsigned start, unsigned end, float width, Type type, bool isLastInRenderer = false, bool overlapsToNextRenderer = false, bool isCollapsed = false, bool isCollapsible = false)
             : m_start(start)
             , m_end(end)
             , m_width(width)
@@ -53,7 +52,6 @@ public:
             , m_overlapsToNextRenderer(overlapsToNextRenderer)
             , m_isCollapsed(isCollapsed)
             , m_isCollapsible(isCollapsible)
-            , m_isBreakable(isBreakable)
         {
         }
 
@@ -66,10 +64,12 @@ public:
         bool isLineBreak() const { return m_type == SoftLineBreak || m_type == HardLineBreak; }
         bool isCollapsed() const { return m_isCollapsed; }
         bool isCollapsible() const { return m_isCollapsible; }
-        bool isBreakable() const { return m_isBreakable; }
+        bool hasHyphen() const { return m_hasHyphen; }
+        unsigned wrappingWithHyphenCounter() const { return m_hyphenationCounter; }
 
         bool isEmpty() const { return start() == end() && !isLineBreak(); }
         TextFragment split(unsigned splitPosition, const TextFragmentIterator&);
+        TextFragment splitWithHyphen(unsigned hyphenPosition, const TextFragmentIterator&);
         bool operator==(const TextFragment& other) const
         {
             return m_start == other.m_start
@@ -80,7 +80,7 @@ public:
                 && m_overlapsToNextRenderer == other.m_overlapsToNextRenderer
                 && m_isCollapsed == other.m_isCollapsed
                 && m_isCollapsible == other.m_isCollapsible
-                && m_isBreakable == other.m_isBreakable;
+                && m_hasHyphen == other.m_hasHyphen;
         }
 
     private:
@@ -92,11 +92,15 @@ public:
         bool m_overlapsToNextRenderer { false };
         bool m_isCollapsed { false };
         bool m_isCollapsible { false };
-        bool m_isBreakable { false };
+        bool m_hasHyphen { false };
+        unsigned m_hyphenationCounter { 0 };
     };
     TextFragment nextTextFragment(float xPosition = 0);
     void revertToEndOfFragment(const TextFragment&);
+
+    // FIXME: These functions below should be decoupled from the text iterator.
     float textWidth(unsigned startPosition, unsigned endPosition, float xPosition) const;
+    std::optional<unsigned> lastHyphenPosition(const TextFragmentIterator::TextFragment& run, unsigned beforeIndex) const;
 
     struct Style {
         explicit Style(const RenderStyle&);
@@ -106,10 +110,19 @@ public:
         bool collapseWhitespace;
         bool preserveNewline;
         bool wrapLines;
-        bool breakWordOnOverflow;
+        bool breakAnyWordOnOverflow;
+        bool breakFirstWordOnOverflow;
+        bool breakNBSP;
+        bool keepAllWordsForCJK;
         float spaceWidth;
+        float wordSpacing;
         unsigned tabWidth;
+        bool shouldHyphenate;
+        float hyphenStringWidth;
+        unsigned hyphenLimitBefore;
+        unsigned hyphenLimitAfter;
         AtomicString locale;
+        std::optional<unsigned> hyphenLimitLines;
     };
     const Style& style() const { return m_style; }
 
@@ -119,9 +132,9 @@ private:
     unsigned skipToNextPosition(PositionType, unsigned startPosition, float& width, float xPosition, bool& overlappingFragment);
     bool isSoftLineBreak(unsigned position) const;
     bool isHardLineBreak(const FlowContents::Iterator& segment) const;
-    template <typename CharacterType> unsigned nextBreakablePosition(const FlowContents::Segment&, unsigned startPosition);
+    unsigned nextBreakablePosition(const FlowContents::Segment&, unsigned startPosition);
     template <typename CharacterType> unsigned nextNonWhitespacePosition(const FlowContents::Segment&, unsigned startPosition);
-    template <typename CharacterType> float runWidth(const FlowContents::Segment&, unsigned startPosition, unsigned endPosition, float xPosition) const;
+    float runWidth(const FlowContents::Segment&, unsigned startPosition, unsigned endPosition, float xPosition) const;
 
     FlowContents m_flowContents;
     FlowContents::Iterator m_currentSegment;
@@ -141,16 +154,26 @@ inline TextFragmentIterator::TextFragment TextFragmentIterator::TextFragment::sp
         if (fragment.start() + 1 > fragment.end())
             return;
         fragment.m_isCollapsed = false;
-        fragment.m_isBreakable = false;
     };
 
-    TextFragment newFragment(*this);
+    TextFragment rightSide(*this);
     m_end = splitPosition;
     updateFragmentProperties(*this);
 
-    newFragment.m_start = splitPosition;
-    updateFragmentProperties(newFragment);
-    return newFragment;
+    rightSide.m_start = splitPosition;
+    updateFragmentProperties(rightSide);
+    return rightSide;
+}
+
+inline TextFragmentIterator::TextFragment TextFragmentIterator::TextFragment::splitWithHyphen(unsigned hyphenPosition,
+    const TextFragmentIterator& textFragmentIterator)
+{
+    ASSERT(textFragmentIterator.style().shouldHyphenate);
+    auto rightSide = split(hyphenPosition, textFragmentIterator);
+    rightSide.m_hyphenationCounter = m_hyphenationCounter + 1;
+    m_hasHyphen = true;
+    m_width += textFragmentIterator.style().hyphenStringWidth;
+    return rightSide;
 }
 
 inline bool TextFragmentIterator::isSoftLineBreak(unsigned position) const
@@ -168,5 +191,3 @@ inline bool TextFragmentIterator::isHardLineBreak(const FlowContents::Iterator& 
 
 }
 }
-
-#endif

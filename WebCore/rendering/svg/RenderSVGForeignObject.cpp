@@ -36,8 +36,8 @@
 
 namespace WebCore {
 
-RenderSVGForeignObject::RenderSVGForeignObject(SVGForeignObjectElement& element, Ref<RenderStyle>&& style)
-    : RenderSVGBlock(element, WTF::move(style))
+RenderSVGForeignObject::RenderSVGForeignObject(SVGForeignObjectElement& element, RenderStyle&& style)
+    : RenderSVGBlock(element, WTFMove(style))
     , m_needsTransformUpdate(true)
 {
 }
@@ -53,18 +53,18 @@ SVGForeignObjectElement& RenderSVGForeignObject::foreignObjectElement() const
 
 void RenderSVGForeignObject::paint(PaintInfo& paintInfo, const LayoutPoint&)
 {
-    if (paintInfo.context->paintingDisabled())
+    if (paintInfo.context().paintingDisabled())
         return;
 
     if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection)
         return;
 
     PaintInfo childPaintInfo(paintInfo);
-    GraphicsContextStateSaver stateSaver(*childPaintInfo.context);
+    GraphicsContextStateSaver stateSaver(childPaintInfo.context());
     childPaintInfo.applyTransform(localTransform());
 
     if (SVGRenderSupport::isOverflowHidden(*this))
-        childPaintInfo.context->clip(m_viewport);
+        childPaintInfo.context().clip(m_viewport);
 
     SVGRenderingContext renderingContext;
     if (paintInfo.phase == PaintPhaseForeground) {
@@ -98,16 +98,14 @@ LayoutRect RenderSVGForeignObject::clippedOverflowRectForRepaint(const RenderLay
     return SVGRenderSupport::clippedOverflowRectForRepaint(*this, repaintContainer);
 }
 
-void RenderSVGForeignObject::computeFloatRectForRepaint(const RenderLayerModelObject* repaintContainer, FloatRect& repaintRect, bool fixed) const
+FloatRect RenderSVGForeignObject::computeFloatRectForRepaint(const FloatRect& repaintRect, const RenderLayerModelObject* repaintContainer, bool fixed) const
 {
-    SVGRenderSupport::computeFloatRectForRepaint(*this, repaintContainer, repaintRect, fixed);
+    return SVGRenderSupport::computeFloatRectForRepaint(*this, repaintRect, repaintContainer, fixed);
 }
 
-void RenderSVGForeignObject::computeRectForRepaint(const RenderLayerModelObject* repaintContainer, LayoutRect& repaintRect, bool fixed) const
+LayoutRect RenderSVGForeignObject::computeRectForRepaint(const LayoutRect& repaintRect, const RenderLayerModelObject* repaintContainer, RepaintContext context) const
 {
-    FloatRect floatRect(repaintRect);
-    computeFloatRectForRepaint(repaintContainer, floatRect, fixed);
-    repaintRect = enclosingLayoutRect(floatRect);
+    return enclosingLayoutRect(computeFloatRectForRepaint(repaintRect, repaintContainer, context.m_hasPositionFixedDescendant));
 }
 
 const AffineTransform& RenderSVGForeignObject::localToParentTransform() const
@@ -124,13 +122,12 @@ void RenderSVGForeignObject::updateLogicalWidth()
     setWidth(static_cast<int>(roundf(m_viewport.width())));
 }
 
-void RenderSVGForeignObject::computeLogicalHeight(LayoutUnit, LayoutUnit logicalTop, LogicalExtentComputedValues& computedValues) const
+RenderBox::LogicalExtentComputedValues RenderSVGForeignObject::computeLogicalHeight(LayoutUnit, LayoutUnit logicalTop) const
 {
     // FIXME: Investigate in size rounding issues
     // FIXME: Remove unnecessary rounding when layout is off ints: webkit.org/b/63656
     // FIXME: Is this correct for vertical writing mode?
-    computedValues.m_extent = static_cast<int>(roundf(m_viewport.height()));
-    computedValues.m_position = logicalTop;
+    return { static_cast<int>(roundf(m_viewport.height())), logicalTop, ComputedMarginValues() };
 }
 
 void RenderSVGForeignObject::layout()
@@ -185,7 +182,7 @@ bool RenderSVGForeignObject::nodeAtFloatPoint(const HitTestRequest& request, Hit
     if (hitTestAction != HitTestForeground)
         return false;
 
-    FloatPoint localPoint = localTransform().inverse().mapPoint(pointInParent);
+    FloatPoint localPoint = localTransform().inverse().value_or(AffineTransform()).mapPoint(pointInParent);
 
     // Early exit if local point is not contained in clipped viewport area
     if (SVGRenderSupport::isOverflowHidden(*this) && !m_viewport.contains(localPoint))

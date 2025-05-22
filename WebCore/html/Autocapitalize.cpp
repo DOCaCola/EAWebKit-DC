@@ -30,74 +30,46 @@
 
 namespace WebCore {
 
-static const AtomicString& valueOn()
-{
-    static NeverDestroyed<const AtomicString> valueOn("on", AtomicString::ConstructFromLiteral);
-    return valueOn;
-}
-
-static const AtomicString& valueOff()
-{
-    static NeverDestroyed<const AtomicString> valueOff("off", AtomicString::ConstructFromLiteral);
-    return valueOff;
-}
-
-static const AtomicString& valueNone()
-{
-    static NeverDestroyed<const AtomicString> valueNone("none", AtomicString::ConstructFromLiteral);
-    return valueNone;
-}
-
-static const AtomicString& valueWords()
-{
-    static NeverDestroyed<const AtomicString> valueWords("words", AtomicString::ConstructFromLiteral);
-    return valueWords;
-}
-
-static const AtomicString& valueSentences()
-{
-    static NeverDestroyed<const AtomicString> valueSentences("sentences", AtomicString::ConstructFromLiteral);
-    return valueSentences;
-}
-
-static const AtomicString& valueAllCharacters()
-{
-    static NeverDestroyed<const AtomicString> valueAllCharacters("characters", AtomicString::ConstructFromLiteral);
-    return valueAllCharacters;
-}
-
-WebAutocapitalizeType autocapitalizeTypeForAttributeValue(const AtomicString& attributeValue)
+AutocapitalizeType autocapitalizeTypeForAttributeValue(const AtomicString& attributeValue)
 {
     // Omitted / missing values are the Default state.
-    if (attributeValue.isNull() || attributeValue.isEmpty())
-        return WebAutocapitalizeTypeDefault;
+    if (attributeValue.isEmpty())
+        return AutocapitalizeTypeDefault;
 
-    if (equalIgnoringCase(attributeValue, valueOn()) || equalIgnoringCase(attributeValue, valueSentences()))
-        return WebAutocapitalizeTypeSentences;
-    if (equalIgnoringCase(attributeValue, valueOff()) || equalIgnoringCase(attributeValue, valueNone()))
-        return WebAutocapitalizeTypeNone;
-    if (equalIgnoringCase(attributeValue, valueWords()))
-        return WebAutocapitalizeTypeWords;
-    if (equalIgnoringCase(attributeValue, valueAllCharacters()))
-        return WebAutocapitalizeTypeAllCharacters;
+    if (equalLettersIgnoringASCIICase(attributeValue, "on") || equalLettersIgnoringASCIICase(attributeValue, "sentences"))
+        return AutocapitalizeTypeSentences;
+    if (equalLettersIgnoringASCIICase(attributeValue, "off") || equalLettersIgnoringASCIICase(attributeValue, "none"))
+        return AutocapitalizeTypeNone;
+    if (equalLettersIgnoringASCIICase(attributeValue, "words"))
+        return AutocapitalizeTypeWords;
+    if (equalLettersIgnoringASCIICase(attributeValue, "characters"))
+        return AutocapitalizeTypeAllCharacters;
 
     // Unrecognized values fall back to "on".
-    return WebAutocapitalizeTypeSentences;
+    return AutocapitalizeTypeSentences;
 }
 
-const AtomicString& stringForAutocapitalizeType(WebAutocapitalizeType type)
+const AtomicString& stringForAutocapitalizeType(AutocapitalizeType type)
 {
     switch (type) {
-    case WebAutocapitalizeTypeDefault:
+    case AutocapitalizeTypeDefault:
         return nullAtom;
-    case WebAutocapitalizeTypeNone:
-        return valueNone();
-    case WebAutocapitalizeTypeSentences:
-        return valueSentences();
-    case WebAutocapitalizeTypeWords:
-        return valueWords();
-    case WebAutocapitalizeTypeAllCharacters:
-        return valueAllCharacters();
+    case AutocapitalizeTypeNone: {
+        static NeverDestroyed<const AtomicString> valueNone("none", AtomicString::ConstructFromLiteral);
+        return valueNone;
+    }
+    case AutocapitalizeTypeSentences: {
+        static NeverDestroyed<const AtomicString> valueSentences("sentences", AtomicString::ConstructFromLiteral);
+        return valueSentences;
+    }
+    case AutocapitalizeTypeWords: {
+        static NeverDestroyed<const AtomicString> valueWords("words", AtomicString::ConstructFromLiteral);
+        return valueWords;
+    }
+    case AutocapitalizeTypeAllCharacters: {
+        static NeverDestroyed<const AtomicString> valueAllCharacters("characters", AtomicString::ConstructFromLiteral);
+        return valueAllCharacters;
+    }
     }
 
     ASSERT_NOT_REACHED();

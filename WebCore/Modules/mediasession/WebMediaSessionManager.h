@@ -23,12 +23,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebMediaSessionManager_h
-#define WebMediaSessionManager_h
+#pragma once
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET) && !PLATFORM(IOS)
 
+#include "MediaPlaybackTargetContext.h"
 #include "MediaPlaybackTargetPicker.h"
+#include "MediaPlaybackTargetPickerMock.h"
 #include "MediaProducer.h"
 #include "Timer.h"
 #include <wtf/Ref.h>
@@ -45,6 +46,11 @@ class WebMediaSessionManager : public MediaPlaybackTargetPicker::Client {
     WTF_MAKE_NONCOPYABLE(WebMediaSessionManager);
 public:
 
+    WEBCORE_EXPORT static WebMediaSessionManager& shared();
+
+    WEBCORE_EXPORT void setMockMediaPlaybackTargetPickerEnabled(bool);
+    WEBCORE_EXPORT void setMockMediaPlaybackTargetPickerState(const String&, MediaPlaybackTargetContext::State);
+
     WEBCORE_EXPORT uint64_t addPlaybackTargetPickerClient(WebMediaSessionManagerClient&, uint64_t);
     WEBCORE_EXPORT void removePlaybackTargetPickerClient(WebMediaSessionManagerClient&, uint64_t);
     WEBCORE_EXPORT void removeAllPlaybackTargetPickerClients(WebMediaSessionManagerClient&);
@@ -55,13 +61,17 @@ protected:
     WebMediaSessionManager();
     virtual ~WebMediaSessionManager();
 
-    virtual WebCore::MediaPlaybackTargetPicker& targetPicker() = 0;
+    virtual WebCore::MediaPlaybackTargetPicker& platformPicker() = 0;
+    static WebMediaSessionManager& platformManager();
 
 private:
 
+    WebCore::MediaPlaybackTargetPicker& targetPicker();
+    WebCore::MediaPlaybackTargetPickerMock& mockPicker();
+
     // MediaPlaybackTargetPicker::Client
-    virtual void setPlaybackTarget(Ref<WebCore::MediaPlaybackTarget>&&) override;
-    virtual void externalOutputDeviceAvailableDidChange(bool) override;
+    void setPlaybackTarget(Ref<WebCore::MediaPlaybackTarget>&&) override;
+    void externalOutputDeviceAvailableDidChange(bool) override;
 
     size_t find(WebMediaSessionManagerClient*, uint64_t);
 
@@ -90,14 +100,14 @@ private:
 
     Vector<std::unique_ptr<ClientState>> m_clientState;
     RefPtr<MediaPlaybackTarget> m_playbackTarget;
+    std::unique_ptr<WebCore::MediaPlaybackTargetPickerMock> m_pickerOverride;
     ConfigurationTasks m_taskFlags { NoTask };
     double m_currentWatchdogInterval { 0 };
     bool m_externalOutputDeviceAvailable { false };
     bool m_targetChanged { false };
+    bool m_mockPickerEnabled { false };
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(WIRELESS_PLAYBACK_TARGET)
-
-#endif // WebMediaSessionManager_h
+#endif // ENABLE(WIRELESS_PLAYBACK_TARGET) && !PLATFORM(IOS)

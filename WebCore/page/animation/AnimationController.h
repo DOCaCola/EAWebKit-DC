@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AnimationController_h
-#define AnimationController_h
+#pragma once
 
 #include "AnimationBase.h"
 #include "CSSPropertyNames.h"
@@ -50,8 +49,8 @@ public:
     ~AnimationController();
 
     void cancelAnimations(RenderElement&);
-    bool updateAnimations(RenderElement&, RenderStyle& newStyle, Ref<RenderStyle>& animatedStyle);
-    PassRefPtr<RenderStyle> getAnimatedStyleForRenderer(RenderElement&);
+    bool updateAnimations(RenderElement&, const RenderStyle& newStyle, std::unique_ptr<RenderStyle>& animatedStyle);
+    std::unique_ptr<RenderStyle> getAnimatedStyleForRenderer(RenderElement&);
 
     // If possible, compute the visual extent of any transform animation on the given renderer
     // using the given rect, returning the result in the rect. Return false if there is some
@@ -71,9 +70,7 @@ public:
     WEBCORE_EXPORT bool isSuspended() const;
     WEBCORE_EXPORT void suspendAnimations();
     WEBCORE_EXPORT void resumeAnimations();
-#if ENABLE(REQUEST_ANIMATION_FRAME)
     void serviceAnimations();
-#endif
 
     void suspendAnimationsForDocument(Document*);
     void resumeAnimationsForDocument(Document*);
@@ -91,6 +88,8 @@ public:
     bool wantsScrollUpdates() const;
     void scrollWasUpdated();
 #endif
+
+    bool hasAnimations() const;
 
 private:
     const std::unique_ptr<AnimationControllerPrivate> m_data;
@@ -115,5 +114,3 @@ public:
 };
 
 } // namespace WebCore
-
-#endif // AnimationController_h

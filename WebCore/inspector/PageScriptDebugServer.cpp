@@ -28,9 +28,12 @@
 #include "config.h"
 #include "PageScriptDebugServer.h"
 
+#include "CommonVM.h"
 #include "Document.h"
 #include "EventLoop.h"
 #include "FrameView.h"
+#include "InspectorController.h"
+#include "InspectorFrontendClient.h"
 #include "JSDOMWindowCustom.h"
 #include "MainFrame.h"
 #include "Page.h"
@@ -53,43 +56,27 @@ using namespace Inspector;
 namespace WebCore {
 
 PageScriptDebugServer::PageScriptDebugServer(Page& page)
-    : ScriptDebugServer(false)
+    : ScriptDebugServer(WebCore::commonVM())
     , m_page(page)
 {
 }
 
-void PageScriptDebugServer::addListener(ScriptDebugListener* listener)
+void PageScriptDebugServer::attachDebugger()
 {
-    if (!listener)
-        return;
-
-    bool wasEmpty = m_listeners.isEmpty();
-    m_listeners.add(listener);
-
-    if (wasEmpty) {
-        m_page.setDebugger(this);
-        recompileAllJSFunctions();
-    }
+    m_page.setDebugger(this);
 }
 
-void PageScriptDebugServer::removeListener(ScriptDebugListener* listener, bool isBeingDestroyed)
+void PageScriptDebugServer::detachDebugger(bool isBeingDestroyed)
 {
-    if (!listener)
-        return;
-
-    m_listeners.remove(listener);
-
-    if (m_listeners.isEmpty()) {
-        m_page.setDebugger(nullptr);
-        if (!isBeingDestroyed)
-            recompileAllJSFunctions();
-    }
+    m_page.setDebugger(nullptr);
+    if (!isBeingDestroyed)
+        recompileAllJSFunctions();
 }
 
 void PageScriptDebugServer::recompileAllJSFunctions()
 {
-    JSLockHolder lock(JSDOMWindow::commonVM());
-    Debugger::recompileAllJSFunctions(&JSDOMWindow::commonVM());
+    JSLockHolder lock(vm());
+    Debugger::recompileAllJSFunctions();
 }
 
 void PageScriptDebugServer::didPause(JSGlobalObject*)
@@ -110,7 +97,7 @@ void PageScriptDebugServer::runEventLoopWhilePaused()
     // we need to gracefully handle releasing and reacquiring the lock.
     if (WebThreadIsEnabled()) {
         ASSERT(WebThreadIsLockedOrDisabled());
-        JSC::JSLock::DropAllLocks dropAllLocks(WebCore::JSDOMWindowBase::commonVM());
+        JSC::JSLock::DropAllLocks dropAllLocks(vm());
         WebRunLoopEnableNested();
 
         runEventLoopWhilePausedInternal();
@@ -126,17 +113,15 @@ void PageScriptDebugServer::runEventLoopWhilePaused()
 
 void PageScriptDebugServer::runEventLoopWhilePausedInternal()
 {
-	TimerBase::fireTimersInNestedEventLoop();
+    TimerBase::fireTimersInNestedEventLoop();
 
-	EventLoop loop;
-	while (!m_doneProcessingDebuggerEvents && !loop.ended())
-	//+EAWebKitChange
-	//3/19/2015
-	//EAWEBKITBUILDFIX
-	{
-		loop.cycle(&m_page);
-	}
-	//-EAWebKitChange
+    m_page.incrementNestedRunLoopCount();
+
+    EventLoop loop;
+    while (!m_doneProcessingDebuggerEvents && !loop.ended())
+        loop.cycle();
+
+    m_page.decrementNestedRunLoopCount();
 }
 
 bool PageScriptDebugServer::isContentScript(ExecState* exec) const
@@ -144,7 +129,7 @@ bool PageScriptDebugServer::isContentScript(ExecState* exec) const
     return &currentWorld(exec) != &mainThreadNormalWorld();
 }
 
-void PageScriptDebugServer::reportException(ExecState* exec, Exception* exception) const
+void PageScriptDebugServer::reportException(ExecState* exec, JSC::Exception* exception) const
 {
     WebCore::reportException(exec, exception);
 }
@@ -153,54 +138,44 @@ void PageScriptDebugServer::setJavaScriptPaused(const PageGroup& pageGroup, bool
 {
     setMainThreadCallbacksPaused(paused);
 
-    const HashSet<Page*>& pages = pageGroup.pages();
+    for (auto& page : pageGroup.pages()) {
+        page->setDefersLoading(paused);
 
-    HashSet<Page*>::const_iterator end = pages.end();
-    for (HashSet<Page*>::const_iterator it = pages.begin(); it != end; ++it)
-        setJavaScriptPaused(*it, paused);
+        for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext())
+            setJavaScriptPaused(*frame, paused);
+
+        if (auto* frontendClient = page->inspectorController().inspectorFrontendClient()) {
+            if (paused)
+                frontendClient->pagePaused();
+            else
+                frontendClient->pageUnpaused();
+        }
+    }
 }
 
-void PageScriptDebugServer::setJavaScriptPaused(Page* page, bool paused)
+void PageScriptDebugServer::setJavaScriptPaused(Frame& frame, bool paused)
 {
-    ASSERT_ARG(page, page);
-
-    page->setDefersLoading(paused);
-
-    for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext())
-        setJavaScriptPaused(frame, paused);
-}
-
-void PageScriptDebugServer::setJavaScriptPaused(Frame* frame, bool paused)
-{
-    ASSERT_ARG(frame, frame);
-
-    if (!frame->script().canExecuteScripts(NotAboutToExecuteScript))
+    if (!frame.script().canExecuteScripts(NotAboutToExecuteScript))
         return;
 
-    frame->script().setPaused(paused);
+    frame.script().setPaused(paused);
 
-    Document* document = frame->document();
+    ASSERT(frame.document());
+    auto& document = *frame.document();
     if (paused) {
-        document->suspendScriptedAnimationControllerCallbacks();
-        document->suspendActiveDOMObjects(ActiveDOMObject::JavaScriptDebuggerPaused);
+        document.suspendScriptedAnimationControllerCallbacks();
+        document.suspendActiveDOMObjects(ActiveDOMObject::JavaScriptDebuggerPaused);
     } else {
-        document->resumeActiveDOMObjects(ActiveDOMObject::JavaScriptDebuggerPaused);
-        document->resumeScriptedAnimationControllerCallbacks();
+        document.resumeActiveDOMObjects(ActiveDOMObject::JavaScriptDebuggerPaused);
+        document.resumeScriptedAnimationControllerCallbacks();
     }
 
-    setJavaScriptPaused(frame->view(), paused);
-}
-
-void PageScriptDebugServer::setJavaScriptPaused(FrameView* view, bool paused)
-{
-    if (!view)
-        return;
-
-    for (auto& child : view->children()) {
-        if (!is<PluginViewBase>(*child))
-            continue;
-
-        downcast<PluginViewBase>(*child).setJavaScriptPaused(paused);
+    if (auto* view = frame.view()) {
+        for (auto& child : view->children()) {
+            if (!is<PluginViewBase>(child.get()))
+                continue;
+            downcast<PluginViewBase>(child.get()).setJavaScriptPaused(paused);
+        }
     }
 }
 

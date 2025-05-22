@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef JSTrackCustom_h
-#define JSTrackCustom_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -36,7 +35,7 @@
 namespace WebCore {
 
 TrackBase* toTrack(JSC::JSValue);
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TrackBase*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TrackBase&);
 
 inline void* root(TrackBase* track)
 {
@@ -45,7 +44,6 @@ inline void* root(TrackBase* track)
     return track;
 }
 
-}
+} // namespace WebCore
 
-#endif
-#endif
+#endif // ENABLE(VIDEO_TRACK)

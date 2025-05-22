@@ -28,8 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BlobURL_h
-#define BlobURL_h
+#pragma once
 
 #include "URL.h"
 
@@ -52,14 +51,10 @@ public:
     static URL createInternalURL();
     static String getOrigin(const URL&);
     static String getIdentifier(const URL&);
-    static const char* blobProtocol() { return kBlobProtocol; }
 
 private:
     static URL createBlobURL(const String& originString);
-    static const char kBlobProtocol[];
     BlobURL() { }
 };
 
-}
-
-#endif // BlobURL_h
+} // namespace WebCore

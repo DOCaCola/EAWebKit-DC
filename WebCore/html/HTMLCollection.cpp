@@ -46,6 +46,10 @@ inline auto HTMLCollection::rootTypeFromCollectionType(CollectionType type) -> R
     case DocumentNamedItems:
     case FormControls:
         return HTMLCollection::IsRootedAtDocument;
+    case AllDescendants:
+    case ByClass:
+    case ByTag:
+    case ByHTMLTag:
     case NodeChildren:
     case TableTBodies:
     case TSectionRows:
@@ -64,6 +68,9 @@ inline auto HTMLCollection::rootTypeFromCollectionType(CollectionType type) -> R
 static NodeListInvalidationType invalidationTypeExcludingIdAndNameAttributes(CollectionType type)
 {
     switch (type) {
+    case ByTag:
+    case ByHTMLTag:
+    case AllDescendants:
     case DocImages:
     case DocEmbeds:
     case DocForms:
@@ -82,6 +89,8 @@ static NodeListInvalidationType invalidationTypeExcludingIdAndNameAttributes(Col
     case DataListOptions:
         // FIXME: We can do better some day.
         return InvalidateOnAnyAttrChange;
+    case ByClass:
+        return InvalidateOnClassAttrChange;
     case DocAnchors:
         return InvalidateOnNameAttrChange;
     case DocLinks:
@@ -113,9 +122,18 @@ HTMLCollection::~HTMLCollection()
     if (hasNamedElementCache())
         document().collectionWillClearIdNameMap(*this);
 
-    // HTMLNameCollection removes cache by itself.
-    if (type() != WindowNamedItems && type() != DocumentNamedItems)
+    // HTMLNameCollection & ClassCollection remove cache by themselves.
+    // FIXME: We need a cleaner way to handle this.
+    switch (type()) {
+    case ByClass:
+    case ByTag:
+    case ByHTMLTag:
+    case WindowNamedItems:
+    case DocumentNamedItems:
+        break;
+    default:
         ownerNode().nodeLists()->removeCachedCollection(this);
+    }
 }
 
 void HTMLCollection::invalidateCache(Document& document)
@@ -150,6 +168,15 @@ Element* HTMLCollection::namedItemSlow(const AtomicString& name) const
     return nullptr;
 }
 
+// Documented in https://dom.spec.whatwg.org/#interface-htmlcollection.
+const Vector<AtomicString>& HTMLCollection::supportedPropertyNames()
+{
+    updateNamedElementCache();
+    ASSERT(m_namedElementCache);
+
+    return m_namedElementCache->propertyNames();
+}
+
 void HTMLCollection::updateNamedElementCache() const
 {
     if (hasNamedElementCache())
@@ -170,13 +197,7 @@ void HTMLCollection::updateNamedElementCache() const
             cache->appendToNameCache(name, element);
     }
 
-    setNamedItemCache(WTF::move(cache));
-}
-
-bool HTMLCollection::hasNamedItem(const AtomicString& name) const
-{
-    // FIXME: We can do better when there are multiple elements of the same name.
-    return namedItem(name);
+    setNamedItemCache(WTFMove(cache));
 }
 
 Vector<Ref<Element>> HTMLCollection::namedItems(const AtomicString& name) const
@@ -207,11 +228,6 @@ Vector<Ref<Element>> HTMLCollection::namedItems(const AtomicString& name) const
     }
 
     return elements;
-}
-
-PassRefPtr<NodeList> HTMLCollection::tags(const String& name)
-{
-    return ownerNode().getElementsByTagName(name);
 }
 
 } // namespace WebCore

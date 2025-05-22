@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All Rights Reserved.
- * Copyright (C) 2015 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -106,7 +106,7 @@ TextEncoding HTMLMetaCharsetParser::encodingFromMetaAttributes(const AttributeLi
         const String& attributeValue = attribute.second;
 
         if (attributeName == http_equivAttr) {
-            if (equalIgnoringCase(attributeValue, "content-type"))
+            if (equalLettersIgnoringASCIICase(attributeValue, "content-type"))
                 gotPragma = true;
         } else if (charset.isEmpty()) {
             if (attributeName == charsetAttr) {
@@ -151,9 +151,9 @@ bool HTMLMetaCharsetParser::checkForMetaCharset(const char* data, size_t length)
     // that are disallowed in <head>, we don't bail out until we've checked at
     // least bytesToCheckUnconditionally bytes of input.
 
-    static const int bytesToCheckUnconditionally = 1024;
+    constexpr int bytesToCheckUnconditionally = 1024;
 
-    m_input.append(SegmentedString(m_codec->decode(data, length)));
+    m_input.append(m_codec->decode(data, length));
 
     while (auto token = m_tokenizer.nextToken(m_input)) {
         bool isEnd = token->type() == HTMLToken::EndTag;

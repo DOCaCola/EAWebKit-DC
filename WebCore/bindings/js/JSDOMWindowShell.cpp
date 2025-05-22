@@ -29,10 +29,12 @@
 #include "config.h"
 #include "JSDOMWindowShell.h"
 
+#include "CommonVM.h"
 #include "Frame.h"
 #include "GCController.h"
 #include "JSDOMWindow.h"
-#include "DOMWindow.h"
+#include "JSDOMWindowProperties.h"
+#include "JSEventTarget.h"
 #include "ScriptController.h"
 #include <heap/StrongInlines.h>
 #include <runtime/JSObject.h>
@@ -49,11 +51,11 @@ JSDOMWindowShell::JSDOMWindowShell(VM& vm, Structure* structure, DOMWrapperWorld
 {
 }
 
-void JSDOMWindowShell::finishCreation(VM& vm, PassRefPtr<DOMWindow> window)
+void JSDOMWindowShell::finishCreation(VM& vm, RefPtr<DOMWindow>&& window)
 {
     Base::finishCreation(vm);
     ASSERT(inherits(info()));
-    setWindow(window);
+    setWindow(WTFMove(window));
 }
 
 void JSDOMWindowShell::destroy(JSCell* cell)
@@ -69,22 +71,27 @@ void JSDOMWindowShell::setWindow(VM& vm, JSDOMWindow* window)
     GCController::singleton().garbageCollectSoon();
 }
 
-void JSDOMWindowShell::setWindow(PassRefPtr<DOMWindow> domWindow)
+void JSDOMWindowShell::setWindow(RefPtr<DOMWindow>&& domWindow)
 {
     // Replacing JSDOMWindow via telling JSDOMWindowShell to use the same DOMWindow it already uses makes no sense,
     // so we'd better never try to.
-    ASSERT(!window() || domWindow.get() != &window()->impl());
+    ASSERT(!window() || domWindow.get() != &window()->wrapped());
     // Explicitly protect the global object's prototype so it isn't collected
     // when we allocate the global object. (Once the global object is fully
     // constructed, it can mark its own prototype.)
     
-    VM& vm = JSDOMWindow::commonVM();
+    VM& vm = commonVM();
     Structure* prototypeStructure = JSDOMWindowPrototype::createStructure(vm, 0, jsNull());
     Strong<JSDOMWindowPrototype> prototype(vm, JSDOMWindowPrototype::create(vm, 0, prototypeStructure));
 
     Structure* structure = JSDOMWindow::createStructure(vm, 0, prototype.get());
     JSDOMWindow* jsDOMWindow = JSDOMWindow::create(vm, structure, *domWindow, this);
     prototype->structure()->setGlobalObject(vm, jsDOMWindow);
+
+    Structure* windowPropertiesStructure = JSDOMWindowProperties::createStructure(vm, jsDOMWindow, JSEventTarget::prototype(vm, jsDOMWindow));
+    JSDOMWindowProperties* windowProperties = JSDOMWindowProperties::create(windowPropertiesStructure, *jsDOMWindow);
+
+    prototype->structure()->setPrototypeWithoutTransition(vm, windowProperties);
     setWindow(vm, jsDOMWindow);
     ASSERT(jsDOMWindow->globalObject() == jsDOMWindow);
     ASSERT(prototype->globalObject() == jsDOMWindow);
@@ -94,9 +101,17 @@ void JSDOMWindowShell::setWindow(PassRefPtr<DOMWindow> domWindow)
 // JSDOMWindow methods
 // ----
 
-DOMWindow& JSDOMWindowShell::impl() const
+DOMWindow& JSDOMWindowShell::wrapped() const
 {
-    return window()->impl();
+    return window()->wrapped();
+}
+
+DOMWindow* JSDOMWindowShell::toWrapped(JSObject* value)
+{
+    auto* wrapper = jsDynamicDowncast<JSDOMWindowShell*>(value);
+    if (!wrapper)
+        return nullptr;
+    return &wrapper->window()->wrapped();
 }
 
 // ----

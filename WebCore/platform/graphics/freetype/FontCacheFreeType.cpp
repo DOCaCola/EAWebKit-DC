@@ -63,20 +63,12 @@ static RefPtr<FcPattern> createFontConfigPatternForCharacters(const UChar* chara
 
 static RefPtr<FcPattern> findBestFontGivenFallbacks(const FontPlatformData& fontData, FcPattern* pattern)
 {
-    if (!fontData.m_pattern)
+    FcFontSet* fallbacks = fontData.fallbacks();
+    if (!fallbacks)
         return nullptr;
 
-    if (!fontData.m_fallbacks) {
-        FcResult fontConfigResult;
-        fontData.m_fallbacks = FcFontSort(nullptr, fontData.m_pattern.get(), FcTrue, nullptr, &fontConfigResult);
-    }
-
-    if (!fontData.m_fallbacks)
-        return nullptr;
-
-    FcFontSet* sets[] = { fontData.m_fallbacks };
     FcResult fontConfigResult;
-    return FcFontSetMatch(nullptr, sets, 1, pattern, &fontConfigResult);
+    return FcFontSetMatch(nullptr, &fallbacks, 1, pattern, &fontConfigResult);
 }
 
 RefPtr<Font> FontCache::systemFallbackForCharacters(const FontDescription& description, const Font* originalFontData, bool, const UChar* characters, unsigned length)
@@ -134,11 +126,16 @@ Ref<Font> FontCache::lastResortFallbackFont(const FontDescription& fontDescripti
     // We want to return a fallback font here, otherwise the logic preventing FontConfig
     // matches for non-fallback fonts might return 0. See isFallbackFontAllowed.
     static AtomicString timesStr("serif");
-    return *fontForFamily(fontDescription, timesStr, false);
+    if (RefPtr<Font> font = fontForFamily(fontDescription, timesStr))
+        return *font;
+
+    // This could be reached due to improperly-installed or misconfigured fontconfig.
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
-void FontCache::getTraitsInFamily(const AtomicString&, Vector<unsigned>&)
+Vector<FontTraitsMask> FontCache::getTraitsInFamily(const AtomicString&)
 {
+    return { };
 }
 
 static String getFamilyNameStringFromFamily(const AtomicString& family)
@@ -224,17 +221,19 @@ static AliasStrength strengthOfFirstAlias(const FcPattern& original)
 
     FcUniquePtr<FcLangSet> strongLangSet(FcLangSetCreate());
     FcLangSetAdd(strongLangSet.get(), reinterpret_cast<const FcChar8*>("nomatchlang"));
-    RefPtr<FcPattern> strong = adoptRef(FcPatternDuplicate(pattern.get()));
-    FcPatternAddLangSet(strong.get(), FC_LANG, strongLangSet.get());
+    // Ownership of this FcPattern will be transferred with FcFontSetAdd.
+    FcPattern* strong = FcPatternDuplicate(pattern.get());
+    FcPatternAddLangSet(strong, FC_LANG, strongLangSet.get());
 
     FcUniquePtr<FcLangSet> weakLangSet(FcLangSetCreate());
     FcLangSetAdd(weakLangSet.get(), reinterpret_cast<const FcChar8*>("matchlang"));
-    RefPtr<FcPattern> weak(FcPatternCreate());
-    FcPatternAddString(weak.get(), FC_FAMILY, reinterpret_cast<const FcChar8*>("nomatchstring"));
-    FcPatternAddLangSet(weak.get(), FC_LANG, weakLangSet.get());
+    // Ownership of this FcPattern will be transferred via FcFontSetAdd.
+    FcPattern* weak = FcPatternCreate();
+    FcPatternAddString(weak, FC_FAMILY, reinterpret_cast<const FcChar8*>("nomatchstring"));
+    FcPatternAddLangSet(weak, FC_LANG, weakLangSet.get());
 
-    FcFontSetAdd(fontSet.get(), strong.leakRef());
-    FcFontSetAdd(fontSet.get(), weak.leakRef());
+    FcFontSetAdd(fontSet.get(), strong);
+    FcFontSetAdd(fontSet.get(), weak);
 
     // Add 'matchlang' to the copy of the pattern.
     FcPatternAddLangSet(pattern.get(), FC_LANG, weakLangSet.get());
@@ -313,7 +312,17 @@ static bool areStronglyAliased(const String& familyA, const String& familyB)
     return false;
 }
 
-std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDescription& fontDescription, const AtomicString& family)
+static inline bool isCommonlyUsedGenericFamily(const String& familyNameString)
+{
+    return equalLettersIgnoringASCIICase(familyNameString, "sans")
+        || equalLettersIgnoringASCIICase(familyNameString, "sans-serif")
+        || equalLettersIgnoringASCIICase(familyNameString, "serif")
+        || equalLettersIgnoringASCIICase(familyNameString, "monospace")
+        || equalLettersIgnoringASCIICase(familyNameString, "fantasy")
+        || equalLettersIgnoringASCIICase(familyNameString, "cursive");
+}
+
+std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDescription& fontDescription, const AtomicString& family, const FontFeatureSettings*, const FontVariantSettings*)
 {
     // The CSS font matching algorithm (http://www.w3.org/TR/css3-fonts/#font-matching-algorithm)
     // says that we must find an exact match for font family, slant (italic or oblique can be used)
@@ -365,11 +374,7 @@ std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDe
     // and allow WebCore to give us the next font on the CSS fallback list. The exceptions are if
     // this family name is a commonly-used generic family, or if the families are strongly-aliased.
     // Checking for a strong alias comes last, since it is slow.
-    if (!equalIgnoringCase(familyNameAfterConfiguration, familyNameAfterMatching)
-        && !(equalIgnoringCase(familyNameString, "sans") || equalIgnoringCase(familyNameString, "sans-serif")
-          || equalIgnoringCase(familyNameString, "serif") || equalIgnoringCase(familyNameString, "monospace")
-          || equalIgnoringCase(familyNameString, "fantasy") || equalIgnoringCase(familyNameString, "cursive"))
-        && !areStronglyAliased(familyNameAfterConfiguration, familyNameAfterMatching))
+    if (!equalIgnoringASCIICase(familyNameAfterConfiguration, familyNameAfterMatching) && !isCommonlyUsedGenericFamily(familyNameString) && !areStronglyAliased(familyNameAfterConfiguration, familyNameAfterMatching))
         return nullptr;
 
     // Verify that this font has an encoding compatible with Fontconfig. Fontconfig currently
@@ -380,6 +385,11 @@ std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDe
         return nullptr;
 
     return platformData;
+}
+
+const AtomicString& FontCache::platformAlternateFamilyName(const AtomicString&)
+{
+    return nullAtom;
 }
 
 }

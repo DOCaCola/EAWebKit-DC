@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, 2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2010, 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +38,6 @@
 #include "ImageBuffer.h"
 #include "IntRect.h"
 #include "NodeTraversal.h"
-#include "Page.h"
 #include "Range.h"
 #include "RenderObject.h"
 
@@ -46,7 +45,7 @@ using namespace WebCore;
 
 namespace WebCore {
 
-static bool initializeIndicator(TextIndicatorData&, Frame&, const Range&, unsigned margin);
+static bool initializeIndicator(TextIndicatorData&, Frame&, const Range&, FloatSize margin, bool indicatesCurrentSelection);
 
 TextIndicator::TextIndicator(const TextIndicatorData& data)
     : m_data(data)
@@ -62,12 +61,14 @@ Ref<TextIndicator> TextIndicator::create(const TextIndicatorData& data)
     return adoptRef(*new TextIndicator(data));
 }
 
-RefPtr<TextIndicator> TextIndicator::createWithRange(const Range& range, TextIndicatorOptions options, TextIndicatorPresentationTransition presentationTransition, unsigned margin)
+RefPtr<TextIndicator> TextIndicator::createWithRange(const Range& range, TextIndicatorOptions options, TextIndicatorPresentationTransition presentationTransition, FloatSize margin)
 {
-    Frame* frame = range.startContainer()->document().frame();
+    Frame* frame = range.startContainer().document().frame();
 
     if (!frame)
         return nullptr;
+
+    Ref<Frame> protector(*frame);
 
 #if PLATFORM(IOS)
     frame->editor().setIgnoreCompositionSelectionChange(true);
@@ -80,10 +81,11 @@ RefPtr<TextIndicator> TextIndicator::createWithRange(const Range& range, TextInd
     TextIndicatorData data;
 
     data.presentationTransition = presentationTransition;
-    data.indicatesCurrentSelection = !areRangesEqual(&range, oldSelection.toNormalizedRange().get());
     data.options = options;
 
-    if (!initializeIndicator(data, *frame, range, margin))
+    bool indicatesCurrentSelection = areRangesEqual(&range, oldSelection.toNormalizedRange().get());
+
+    if (!initializeIndicator(data, *frame, range, margin, indicatesCurrentSelection))
         return nullptr;
 
     RefPtr<TextIndicator> indicator = TextIndicator::create(data);
@@ -98,7 +100,7 @@ RefPtr<TextIndicator> TextIndicator::createWithRange(const Range& range, TextInd
     return indicator;
 }
 
-RefPtr<TextIndicator> TextIndicator::createWithSelectionInFrame(Frame& frame, TextIndicatorOptions options, TextIndicatorPresentationTransition presentationTransition, unsigned margin)
+RefPtr<TextIndicator> TextIndicator::createWithSelectionInFrame(Frame& frame, TextIndicatorOptions options, TextIndicatorPresentationTransition presentationTransition, FloatSize margin)
 {
     RefPtr<Range> range = frame.selection().toNormalizedRange();
     if (!range)
@@ -107,10 +109,9 @@ RefPtr<TextIndicator> TextIndicator::createWithSelectionInFrame(Frame& frame, Te
     TextIndicatorData data;
 
     data.presentationTransition = presentationTransition;
-    data.indicatesCurrentSelection = true;
     data.options = options;
 
-    if (!initializeIndicator(data, frame, *range, margin))
+    if (!initializeIndicator(data, frame, *range, margin, true))
         return nullptr;
 
     return TextIndicator::create(data);
@@ -125,7 +126,7 @@ static bool hasNonInlineOrReplacedElements(const Range& range)
         RenderObject* renderer = node->renderer();
         if (!renderer)
             continue;
-        if ((!renderer->isInline() || renderer->isReplaced()) && range.intersectsNode(node, ASSERT_NO_EXCEPTION))
+        if ((!renderer->isInline() || renderer->isReplaced()) && range.intersectsNode(*node).releaseReturnValue())
             return true;
     }
 
@@ -149,53 +150,67 @@ static SnapshotOptions snapshotOptionsForTextIndicatorOptions(TextIndicatorOptio
     return snapshotOptions;
 }
 
-static RefPtr<Image> takeSnapshot(Frame& frame, IntRect rect, SnapshotOptions options, float& scaleFactor)
+static RefPtr<Image> takeSnapshot(Frame& frame, IntRect rect, SnapshotOptions options, float& scaleFactor, Vector<FloatRect>& clipRectsInDocumentCoordinates)
 {
-    std::unique_ptr<ImageBuffer> buffer = snapshotFrameRect(frame, rect, options);
+    std::unique_ptr<ImageBuffer> buffer = snapshotFrameRectWithClip(frame, rect, clipRectsInDocumentCoordinates, options);
     if (!buffer)
         return nullptr;
     scaleFactor = buffer->resolutionScale();
-    return buffer->copyImage(CopyBackingStore, Unscaled);
+    return ImageBuffer::sinkIntoImage(WTFMove(buffer), Unscaled);
 }
 
-static bool takeSnapshots(TextIndicatorData& data, Frame& frame, IntRect snapshotRect)
+static bool takeSnapshots(TextIndicatorData& data, Frame& frame, IntRect snapshotRect, Vector<FloatRect>& clipRectsInDocumentCoordinates)
 {
     SnapshotOptions snapshotOptions = snapshotOptionsForTextIndicatorOptions(data.options);
 
-    data.contentImage = takeSnapshot(frame, snapshotRect, snapshotOptions, data.contentImageScaleFactor);
+    data.contentImage = takeSnapshot(frame, snapshotRect, snapshotOptions, data.contentImageScaleFactor, clipRectsInDocumentCoordinates);
     if (!data.contentImage)
         return false;
 
     if (data.options & TextIndicatorOptionIncludeSnapshotWithSelectionHighlight) {
         float snapshotScaleFactor;
-        data.contentImageWithHighlight = takeSnapshot(frame, snapshotRect, SnapshotOptionsNone, snapshotScaleFactor);
+        data.contentImageWithHighlight = takeSnapshot(frame, snapshotRect, SnapshotOptionsNone, snapshotScaleFactor, clipRectsInDocumentCoordinates);
         ASSERT(!data.contentImageWithHighlight || data.contentImageScaleFactor == snapshotScaleFactor);
     }
     
     return true;
 }
 
-static bool initializeIndicator(TextIndicatorData& data, Frame& frame, const Range& range, unsigned margin)
+static bool initializeIndicator(TextIndicatorData& data, Frame& frame, const Range& range, FloatSize margin, bool indicatesCurrentSelection)
 {
     Vector<FloatRect> textRects;
+
+    // FIXME (138888): Ideally we wouldn't remove the margin in this case, but we need to
+    // ensure that the indicator and indicator-with-highlight overlap precisely, and
+    // we can't add a margin to the indicator-with-highlight.
+    if (indicatesCurrentSelection && !(data.options & TextIndicatorOptionIncludeMarginIfRangeMatchesSelection))
+        margin = FloatSize();
 
     FrameSelection::TextRectangleHeight textRectHeight = (data.options & TextIndicatorOptionTightlyFitContent) ? FrameSelection::TextRectangleHeight::TextHeight : FrameSelection::TextRectangleHeight::SelectionHeight;
 
     if ((data.options & TextIndicatorOptionUseBoundingRectAndPaintAllContentForComplexRanges) && hasNonInlineOrReplacedElements(range))
         data.options |= TextIndicatorOptionPaintAllContent;
-    else
-        frame.selection().getClippedVisibleTextRectangles(textRects, textRectHeight);
+    else {
+        if (data.options & TextIndicatorOptionDoNotClipToVisibleRect)
+            frame.selection().getTextRectangles(textRects, textRectHeight);
+        else
+            frame.selection().getClippedVisibleTextRectangles(textRects, textRectHeight);
+    }
 
     if (textRects.isEmpty()) {
         RenderView* renderView = frame.contentRenderer();
         if (!renderView)
             return false;
-        // Clip to the visible rect, just like getClippedVisibleTextRectangles does.
-        // FIXME: We really want to clip to the unobscured rect in both cases, I think.
-        // (this seems to work on Mac, but maybe not iOS?)
-        FloatRect visibleContentRect = frame.view()->visibleContentRect(ScrollableArea::LegacyIOSDocumentVisibleRect);
         FloatRect boundingRect = range.absoluteBoundingRect();
-        textRects.append(intersection(visibleContentRect, boundingRect));
+        if (data.options & TextIndicatorOptionDoNotClipToVisibleRect)
+            textRects.append(boundingRect);
+        else {
+            // Clip to the visible rect, just like getClippedVisibleTextRectangles does.
+            // FIXME: We really want to clip to the unobscured rect in both cases, I think.
+            // (this seems to work on Mac, but maybe not iOS?)
+            FloatRect visibleContentRect = frame.view()->visibleContentRect(ScrollableArea::LegacyIOSDocumentVisibleRect);
+            textRects.append(intersection(visibleContentRect, boundingRect));
+        }
     }
 
     FloatRect textBoundingRectInRootViewCoordinates;
@@ -203,7 +218,8 @@ static bool initializeIndicator(TextIndicatorData& data, Frame& frame, const Ran
     Vector<FloatRect> textRectsInRootViewCoordinates;
     for (const FloatRect& textRect : textRects) {
         FloatRect textRectInDocumentCoordinatesIncludingMargin = textRect;
-        textRectInDocumentCoordinatesIncludingMargin.inflate(margin);
+        textRectInDocumentCoordinatesIncludingMargin.inflateX(margin.width());
+        textRectInDocumentCoordinatesIncludingMargin.inflateY(margin.height());
         textBoundingRectInDocumentCoordinates.unite(textRectInDocumentCoordinatesIncludingMargin);
 
         FloatRect textRectInRootViewCoordinates = frame.view()->contentsToRootView(enclosingIntRect(textRectInDocumentCoordinatesIncludingMargin));
@@ -223,7 +239,7 @@ static bool initializeIndicator(TextIndicatorData& data, Frame& frame, const Ran
     data.textBoundingRectInRootViewCoordinates = textBoundingRectInRootViewCoordinates;
     data.textRectsInBoundingRectCoordinates = textRectsInBoundingRectCoordinates;
 
-    return takeSnapshots(data, frame, enclosingIntRect(textBoundingRectInDocumentCoordinates));
+    return takeSnapshots(data, frame, enclosingIntRect(textBoundingRectInDocumentCoordinates), textRects);
 }
 
 } // namespace WebCore

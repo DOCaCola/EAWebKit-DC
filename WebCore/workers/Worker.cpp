@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2010 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2008-2017 Apple Inc. All Rights Reserved.
  * Copyright (C) 2009 Google Inc. All Rights Reserved.
  * Copyright (C) 2016 Electronic Arts, Inc. All rights reserved.
  *
@@ -23,29 +23,22 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- *
  */
 
 #include "config.h"
-
 #include "Worker.h"
 
-#include "DOMWindow.h"
-#include "CachedResourceLoader.h"
-#include "Document.h"
-#include "EventException.h"
-#include "EventListener.h"
+#include "ContentSecurityPolicy.h"
+#include "Event.h"
 #include "EventNames.h"
-#include "ExceptionCode.h"
-#include "Frame.h"
-#include "FrameLoader.h"
 #include "InspectorInstrumentation.h"
-#include "MessageEvent.h"
 #include "NetworkStateNotifier.h"
-#include "TextEncoding.h"
+#include "ResourceResponse.h"
+#include "SecurityOrigin.h"
 #include "WorkerGlobalScopeProxy.h"
 #include "WorkerScriptLoader.h"
 #include "WorkerThread.h"
+#include <inspector/IdentifiersFactory.h>
 #include <wtf/HashSet.h>
 #include <wtf/MainThread.h>
 
@@ -65,41 +58,46 @@ void networkStateChanged(bool isOnLine)
         worker->notifyNetworkStateChange(isOnLine);
 }
 
-inline Worker::Worker(ScriptExecutionContext& context)
+inline Worker::Worker(ScriptExecutionContext& context, JSC::RuntimeFlags runtimeFlags)
     : ActiveDOMObject(&context)
-    , m_contextProxy(WorkerGlobalScopeProxy::create(this))
+    , m_identifier("worker:" + Inspector::IdentifiersFactory::createIdentifier())
+    , m_contextProxy(WorkerGlobalScopeProxy::create(*this))
+    , m_runtimeFlags(runtimeFlags)
 {
     if (!allWorkers) {
         allWorkers = new HashSet<Worker*>;
         networkStateNotifier().addNetworkStateChangeListener(networkStateChanged);
     }
 
-    HashSet<Worker*>::AddResult addResult = allWorkers->add(this);
+    auto addResult = allWorkers->add(this);
     ASSERT_UNUSED(addResult, addResult.isNewEntry);
 }
 
-RefPtr<Worker> Worker::create(ScriptExecutionContext& context, const String& url, ExceptionCode& ec)
+ExceptionOr<Ref<Worker>> Worker::create(ScriptExecutionContext& context, const String& url, JSC::RuntimeFlags runtimeFlags)
 {
     ASSERT(isMainThread());
 
     // We don't currently support nested workers, so workers can only be created from documents.
     ASSERT_WITH_SECURITY_IMPLICATION(context.isDocument());
 
-    Ref<Worker> worker = adoptRef(*new Worker(context));
+    auto worker = adoptRef(*new Worker(context, runtimeFlags));
 
     worker->suspendIfNeeded();
 
-    URL scriptURL = worker->resolveURL(url, ec);
-    if (scriptURL.isEmpty())
-        return nullptr;
+    bool shouldBypassMainWorldContentSecurityPolicy = context.shouldBypassMainWorldContentSecurityPolicy();
+    auto scriptURL = worker->resolveURL(url, shouldBypassMainWorldContentSecurityPolicy);
+    if (scriptURL.hasException())
+        return scriptURL.releaseException();
+
+    worker->m_shouldBypassMainWorldContentSecurityPolicy = shouldBypassMainWorldContentSecurityPolicy;
 
     // The worker context does not exist while loading, so we must ensure that the worker object is not collected, nor are its event listeners.
     worker->setPendingActivity(worker.ptr());
 
     worker->m_scriptLoader = WorkerScriptLoader::create();
-    worker->m_scriptLoader->loadAsynchronously(&context, scriptURL, DenyCrossOriginRequests, worker.ptr());
-
-    return WTF::move(worker);
+    auto contentSecurityPolicyEnforcement = shouldBypassMainWorldContentSecurityPolicy ? ContentSecurityPolicyEnforcement::DoNotEnforce : ContentSecurityPolicyEnforcement::EnforceChildSrcDirective;
+    worker->m_scriptLoader->loadAsynchronously(&context, scriptURL.releaseReturnValue(), FetchOptions::Mode::SameOrigin, contentSecurityPolicyEnforcement, worker->m_identifier, worker.ptr());
+    return WTFMove(worker);
 }
 
 Worker::~Worker()
@@ -107,32 +105,30 @@ Worker::~Worker()
     ASSERT(isMainThread());
     ASSERT(scriptExecutionContext()); // The context is protected by worker context proxy, so it cannot be destroyed while a Worker exists.
     allWorkers->remove(this);
-    m_contextProxy->workerObjectDestroyed();
+    m_contextProxy.workerObjectDestroyed();
 }
 
-void Worker::postMessage(PassRefPtr<SerializedScriptValue> message, MessagePort* port, ExceptionCode& ec)
+ExceptionOr<void> Worker::postMessage(JSC::ExecState& state, JSC::JSValue messageValue, Vector<JSC::Strong<JSC::JSObject>>&& transfer)
 {
-    MessagePortArray ports;
-    if (port)
-        ports.append(port);
-    postMessage(message, &ports, ec);
-}
+    Vector<RefPtr<MessagePort>> ports;
+    auto message = SerializedScriptValue::create(state, messageValue, WTFMove(transfer), ports);
+    if (message.hasException())
+        return message.releaseException();
 
-void Worker::postMessage(PassRefPtr<SerializedScriptValue> message, const MessagePortArray* ports, ExceptionCode& ec)
-{
     // Disentangle the port in preparation for sending it to the remote context.
-    std::unique_ptr<MessagePortChannelArray> channels = MessagePort::disentanglePorts(ports, ec);
-    if (ec)
-        return;
-    m_contextProxy->postMessageToWorkerGlobalScope(message, WTF::move(channels));
+    auto channels = MessagePort::disentanglePorts(WTFMove(ports));
+    if (channels.hasException())
+        return channels.releaseException();
+    m_contextProxy.postMessageToWorkerGlobalScope(message.releaseReturnValue(), channels.releaseReturnValue());
+    return { };
 }
 
 void Worker::terminate()
 {
-    m_contextProxy->terminateWorkerGlobalScope();
+    m_contextProxy.terminateWorkerGlobalScope();
 }
 
-bool Worker::canSuspendForPageCache() const
+bool Worker::canSuspendForDocumentSuspension() const
 {
     // FIXME: It is not currently possible to suspend a worker, so pages with workers can not go into page cache.
     return false;
@@ -150,16 +146,19 @@ void Worker::stop()
 
 bool Worker::hasPendingActivity() const
 {
-    return m_contextProxy->hasPendingActivity() || ActiveDOMObject::hasPendingActivity();
+    return m_contextProxy.hasPendingActivity() || ActiveDOMObject::hasPendingActivity();
 }
 
 void Worker::notifyNetworkStateChange(bool isOnLine)
 {
-    m_contextProxy->notifyNetworkStateChange(isOnLine);
+    m_contextProxy.notifyNetworkStateChange(isOnLine);
 }
 
-void Worker::didReceiveResponse(unsigned long identifier, const ResourceResponse&)
+void Worker::didReceiveResponse(unsigned long identifier, const ResourceResponse& response)
 {
+    const URL& responseURL = response.url();
+    if (!responseURL.protocolIsBlob() && !responseURL.protocolIs("file") && !SecurityOrigin::create(responseURL)->isUnique())
+        m_contentSecurityPolicyResponseHeaders = ContentSecurityPolicyResponseHeaders(response);
     InspectorInstrumentation::didReceiveScriptResponse(scriptExecutionContext(), identifier);
 }
 
@@ -178,11 +177,9 @@ void Worker::notifyFinished()
     }
 	//-EAWebKitChange
     else {
-        WorkerThreadStartMode startMode = DontPauseWorkerGlobalScopeOnStart;
-        if (InspectorInstrumentation::shouldPauseDedicatedWorkerOnStart(scriptExecutionContext()))
-            startMode = PauseWorkerGlobalScopeOnStart;
-        m_contextProxy->startWorkerGlobalScope(m_scriptLoader->url(), scriptExecutionContext()->userAgent(m_scriptLoader->url()), m_scriptLoader->script(), startMode);
-        InspectorInstrumentation::scriptImported(scriptExecutionContext(), m_scriptLoader->identifier(), m_scriptLoader->script());
+        const ContentSecurityPolicyResponseHeaders& contentSecurityPolicyResponseHeaders = m_contentSecurityPolicyResponseHeaders ? m_contentSecurityPolicyResponseHeaders.value() : scriptExecutionContext()->contentSecurityPolicy()->responseHeaders();
+        m_contextProxy.startWorkerGlobalScope(m_scriptLoader->url(), scriptExecutionContext()->userAgent(m_scriptLoader->url()), m_scriptLoader->script(), contentSecurityPolicyResponseHeaders, m_shouldBypassMainWorldContentSecurityPolicy, m_runtimeFlags);
+        InspectorInstrumentation::scriptImported(*scriptExecutionContext(), m_scriptLoader->identifier(), m_scriptLoader->script());
     }
     m_scriptLoader = nullptr;
 

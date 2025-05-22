@@ -24,13 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
  
-#ifndef IconDatabaseBase_h
-#define IconDatabaseBase_h
+#pragma once
 
-#include "NativeImagePtr.h"
+#include "NativeImage.h"
 #include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 
 //+EAWebKitChange
@@ -46,11 +44,7 @@ class Image;
 class IntSize;
 class SharedBuffer;
 
-enum IconLoadDecision {
-    IconLoadYes,
-    IconLoadNo,
-    IconLoadUnknown
-};
+enum IconLoadDecision { IconLoadYes, IconLoadNo, IconLoadUnknown };
 
 class CallbackBase : public RefCounted<CallbackBase> {
 public:
@@ -100,12 +94,12 @@ public:
         if (!m_callback)
             return;
         m_callback(result, context());
-        m_callback = 0;
+        m_callback = nullptr;
     }
     
     void invalidate()
     {
-        m_callback = 0;
+        m_callback = nullptr;
     }
 
 private:
@@ -139,12 +133,12 @@ public:
         if (!m_callback)
             return;
         m_callback(result, context());
-        m_callback = 0;
+        m_callback = nullptr;
     }
-    
+
     void invalidate()
     {
-        m_callback = 0;
+        m_callback = nullptr;
     }
 
 private:
@@ -158,46 +152,42 @@ private:
     CallbackFunction m_callback;
 };
 
-typedef EnumCallback<IconLoadDecision> IconLoadDecisionCallback;
-typedef ObjectCallback<SharedBuffer*> IconDataCallback;
+using IconLoadDecisionCallback = EnumCallback<IconLoadDecision>;
+using IconDataCallback = ObjectCallback<SharedBuffer*>;
 
 class WEBCORE_EXPORT IconDatabaseBase {
     WTF_MAKE_NONCOPYABLE(IconDatabaseBase);
 
-protected:
-    IconDatabaseBase() { }
-
 public:
     virtual ~IconDatabaseBase() { }
 
-    // Used internally by WebCore
     virtual bool isEnabled() const { return false; }
-        
+
     virtual void retainIconForPageURL(const String&) { }
     virtual void releaseIconForPageURL(const String&) { }
 
-    virtual void setIconURLForPageURL(const String&, const String&) { }
-    virtual void setIconDataForIconURL(PassRefPtr<SharedBuffer>, const String&) { }
+    virtual void setIconURLForPageURL(const String& /*iconURL*/, const String& /*pageURL*/) { }
+    virtual void setIconDataForIconURL(SharedBuffer*, const String& /*iconURL*/) { }
 
     // Synchronous calls used internally by WebCore.
     // Usage should be replaced by asynchronous calls.
     virtual String synchronousIconURLForPageURL(const String&);
     virtual bool synchronousIconDataKnownForIconURL(const String&) { return false; }
     virtual IconLoadDecision synchronousLoadDecisionForIconURL(const String&, DocumentLoader*) { return IconLoadNo; }
-    virtual Image* synchronousIconForPageURL(const String&, const IntSize&) { return 0; }
-    virtual PassNativeImagePtr synchronousNativeIconForPageURL(const String&, const IntSize&) { return 0; }
+    virtual Image* synchronousIconForPageURL(const String&, const IntSize&) { return nullptr; }
+    virtual NativeImagePtr synchronousNativeIconForPageURL(const String&, const IntSize&) { return nullptr; }
 
     // Asynchronous calls we should use to replace the above when supported.
     virtual bool supportsAsynchronousMode() { return false; }
-    virtual void loadDecisionForIconURL(const String&, PassRefPtr<IconLoadDecisionCallback>) { }
-    virtual void iconDataForIconURL(const String&, PassRefPtr<IconDataCallback>) { }
-    
+    virtual void loadDecisionForIconURL(const String&, IconLoadDecisionCallback&) { }
+    virtual void iconDataForIconURL(const String&, IconDataCallback&) { }
 
     // Used within one or more WebKit ports.
     // We should try to remove these dependencies from the IconDatabaseBase class.
+
     virtual void setEnabled(bool) { }
 
-    virtual Image* defaultIcon(const IntSize&) { return 0; }
+    virtual Image* defaultIcon(const IntSize&) { return nullptr; }
 
     virtual size_t pageURLMappingCount() { return 0; }
     virtual size_t retainedPageURLCount() { return 0; }
@@ -212,10 +202,12 @@ public:
 
     virtual void setPrivateBrowsingEnabled(bool) { }
     virtual void setClient(IconDatabaseClient*) { }
-    
+
     virtual bool isOpen() const { return false; }
     virtual String databasePath() const;
 
+protected:
+    IconDatabaseBase() = default;
 };
 
 // Functions to get/set the global icon database.
@@ -224,5 +216,3 @@ WEBCORE_EXPORT void setGlobalIconDatabase(IconDatabaseBase*);
 bool documentCanHaveIcon(const String&);
 
 } // namespace WebCore
-
-#endif // IconDatabaseBase_h

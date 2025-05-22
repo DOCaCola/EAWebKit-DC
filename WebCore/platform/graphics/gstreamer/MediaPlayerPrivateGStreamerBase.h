@@ -2,7 +2,8 @@
  * Copyright (C) 2007, 2009 Apple Inc.  All rights reserved.
  * Copyright (C) 2007 Collabora Ltd. All rights reserved.
  * Copyright (C) 2007 Alp Toker <alp@atoker.com>
- * Copyright (C) 2009, 2010 Igalia S.L
+ * Copyright (C) 2009, 2010, 2015, 2016 Igalia S.L
+ * Copyright (C) 2015, 2016 Metrological Group B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,95 +26,137 @@
 #if ENABLE(VIDEO) && USE(GSTREAMER)
 
 #include "GRefPtrGStreamer.h"
+#include "MainThreadNotifier.h"
 #include "MediaPlayerPrivate.h"
-
+#include "PlatformLayer.h"
 #include <glib.h>
-
+#include <gst/gst.h>
+#include <wtf/Condition.h>
 #include <wtf/Forward.h>
-#include <wtf/glib/GThreadSafeMainLoopSource.h>
+#include <wtf/RunLoop.h>
 
-#if USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS)
+#if USE(TEXTURE_MAPPER)
 #include "TextureMapperPlatformLayer.h"
+#include "TextureMapperPlatformLayerProxy.h"
 #endif
 
-typedef struct _GstMessage GstMessage;
 typedef struct _GstStreamVolume GstStreamVolume;
+typedef struct _GstVideoInfo GstVideoInfo;
 typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
 
 namespace WebCore {
 
+class BitmapTextureGL;
+class GLContext;
 class GraphicsContext;
+class GraphicsContext3D;
 class IntSize;
 class IntRect;
+class VideoTextureCopierGStreamer;
+
+void registerWebKitGStreamerElements();
 
 class MediaPlayerPrivateGStreamerBase : public MediaPlayerPrivateInterface
-#if USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS)
-    , public TextureMapperPlatformLayer
+#if USE(COORDINATED_GRAPHICS_THREADED) || (USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS))
+    , public PlatformLayer
 #endif
 {
 
 public:
     virtual ~MediaPlayerPrivateGStreamerBase();
 
-    FloatSize naturalSize() const;
+    FloatSize naturalSize() const override;
 
-    void setVolume(float);
-    float volume() const;
-    void volumeChanged();
-    void notifyPlayerOfVolumeChange();
+    void setVolume(float) override;
+    virtual float volume() const;
 
 #if USE(GSTREAMER_GL)
     bool ensureGstGLContext();
+    static GstContext* requestGLContext(const gchar* contextType, MediaPlayerPrivateGStreamerBase*);
 #endif
-    void handleNeedContextMessage(GstMessage*);
 
-    bool supportsMuting() const { return true; }
-    void setMuted(bool);
+    bool supportsMuting() const override { return true; }
+    void setMuted(bool) override;
     bool muted() const;
-    void muteChanged();
-    void notifyPlayerOfMute();
 
-    MediaPlayer::NetworkState networkState() const;
-    MediaPlayer::ReadyState readyState() const;
+    MediaPlayer::NetworkState networkState() const override;
+    MediaPlayer::ReadyState readyState() const override;
 
-    void setVisible(bool) { }
-    void setSize(const IntSize&);
+    void setVisible(bool) override { }
+    void setSize(const IntSize&) override;
     void sizeChanged();
 
-    void triggerRepaint(GstSample*);
-    void paint(GraphicsContext*, const FloatRect&);
+    void paint(GraphicsContext&, const FloatRect&) override;
 
-    virtual bool hasSingleSecurityOrigin() const { return true; }
+    bool hasSingleSecurityOrigin() const override { return true; }
     virtual float maxTimeLoaded() const { return 0.0; }
 
-    bool supportsFullscreen() const;
-    PlatformMedia platformMedia() const;
+    bool supportsFullscreen() const override;
+    PlatformMedia platformMedia() const override;
 
-    MediaPlayer::MovieLoadType movieLoadType() const;
+    MediaPlayer::MovieLoadType movieLoadType() const override;
     virtual bool isLiveStream() const = 0;
 
     MediaPlayer* mediaPlayer() const { return m_player; }
 
-    unsigned decodedFrameCount() const;
-    unsigned droppedFrameCount() const;
-    unsigned audioDecodedByteCount() const;
-    unsigned videoDecodedByteCount() const;
+    unsigned decodedFrameCount() const override;
+    unsigned droppedFrameCount() const override;
+    unsigned audioDecodedByteCount() const override;
+    unsigned videoDecodedByteCount() const override;
 
 #if USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS)
-    virtual PlatformLayer* platformLayer() const { return const_cast<MediaPlayerPrivateGStreamerBase*>(this); }
+    PlatformLayer* platformLayer() const override { return const_cast<MediaPlayerPrivateGStreamerBase*>(this); }
 #if PLATFORM(WIN_CAIRO)
     // FIXME: Accelerated rendering has not been implemented for WinCairo yet.
-    virtual bool supportsAcceleratedRendering() const { return false; }
+    bool supportsAcceleratedRendering() const override { return false; }
 #else
-    virtual bool supportsAcceleratedRendering() const { return true; }
+    bool supportsAcceleratedRendering() const override { return true; }
 #endif
-    virtual void paintToTextureMapper(TextureMapper*, const FloatRect&, const TransformationMatrix&, float);
+    void paintToTextureMapper(TextureMapper&, const FloatRect&, const TransformationMatrix&, float) override;
 #endif
+
+#if USE(COORDINATED_GRAPHICS_THREADED)
+    PlatformLayer* platformLayer() const override { return const_cast<MediaPlayerPrivateGStreamerBase*>(this); }
+    bool supportsAcceleratedRendering() const override { return true; }
+#endif
+
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+    void needKey(RefPtr<Uint8Array>);
+    void setCDMSession(CDMSession*);
+    void keyAdded();
+    virtual void dispatchDecryptionKey(GstBuffer*);
+#endif
+
+    static bool supportsKeySystem(const String& keySystem, const String& mimeType);
+    static MediaPlayer::SupportsType extendedSupportsType(const MediaEngineSupportParameters&, MediaPlayer::SupportsType);
+
+#if USE(GSTREAMER_GL)
+    bool copyVideoTextureToPlatformTexture(GraphicsContext3D*, Platform3DObject, GC3Denum, GC3Dint, GC3Denum, GC3Denum, GC3Denum, bool, bool) override;
+    NativeImagePtr nativeImageForCurrentTime() override;
+#endif
+
+    void setVideoSourceOrientation(const ImageOrientation&);
+    GstElement* pipeline() const { return m_pipeline.get(); }
 
 protected:
     MediaPlayerPrivateGStreamerBase(MediaPlayer*);
     virtual GstElement* createVideoSink();
+
+#if USE(GSTREAMER_GL)
+    static GstFlowReturn newSampleCallback(GstElement*, MediaPlayerPrivateGStreamerBase*);
+    static GstFlowReturn newPrerollCallback(GstElement*, MediaPlayerPrivateGStreamerBase*);
+    GstElement* createGLAppSink();
+    GstElement* createVideoSinkGL();
+    GstGLContext* gstGLContext() const { return m_glContext.get(); }
+    GstGLDisplay* gstGLDisplay() const { return m_glDisplay.get(); }
+#if USE(CAIRO) && ENABLE(ACCELERATED_2D_CANVAS)
+    GLContext* prepareContextForCairoPaint(GstVideoInfo&, IntSize&, IntSize&);
+    bool paintToCairoSurface(cairo_surface_t*, cairo_device_t*, GstVideoInfo&, const IntSize&, const IntSize&, bool);
+#endif
+#endif
+
+    GstElement* videoSink() const { return m_videoSink.get(); }
 
     void setStreamVolumeElement(GstStreamVolume*);
     virtual GstElement* createAudioSink() { return 0; }
@@ -121,36 +164,79 @@ protected:
 
     void setPipeline(GstElement*);
 
+    virtual bool handleSyncMessage(GstMessage*);
+
+    void triggerRepaint(GstSample*);
+    void repaint();
+
+    static void repaintCallback(MediaPlayerPrivateGStreamerBase*, GstSample*);
+
+    void notifyPlayerOfVolumeChange();
+    void notifyPlayerOfMute();
+
+    static void volumeChangedCallback(MediaPlayerPrivateGStreamerBase*);
+    static void muteChangedCallback(MediaPlayerPrivateGStreamerBase*);
+
+    enum MainThreadNotification {
+        VideoChanged = 1 << 0,
+        VideoCapsChanged = 1 << 1,
+        AudioChanged = 1 << 2,
+        VolumeChanged = 1 << 3,
+        MuteChanged = 1 << 4,
+#if ENABLE(VIDEO_TRACK)
+        TextChanged = 1 << 5,
+#endif
+        SizeChanged = 1 << 6
+    };
+
+    MainThreadNotifier<MainThreadNotification> m_notifier;
     MediaPlayer* m_player;
     GRefPtr<GstElement> m_pipeline;
     GRefPtr<GstStreamVolume> m_volumeElement;
     GRefPtr<GstElement> m_videoSink;
     GRefPtr<GstElement> m_fpsSink;
     MediaPlayer::ReadyState m_readyState;
-    MediaPlayer::NetworkState m_networkState;
+    mutable MediaPlayer::NetworkState m_networkState;
     IntSize m_size;
     mutable GMutex m_sampleMutex;
     GRefPtr<GstSample> m_sample;
-    GThreadSafeMainLoopSource m_volumeTimerHandler;
-    GThreadSafeMainLoopSource m_muteTimerHandler;
-#if USE(GSTREAMER_GL)
-    GThreadSafeMainLoopSource m_drawTimerHandler;
-    GCond m_drawCondition;
-    GMutex m_drawMutex;
+#if USE(GSTREAMER_GL) || USE(COORDINATED_GRAPHICS_THREADED)
+    RunLoop::Timer<MediaPlayerPrivateGStreamerBase> m_drawTimer;
 #endif
-    unsigned long m_repaintHandler;
-    unsigned long m_volumeSignalHandler;
-    unsigned long m_muteSignalHandler;
     mutable FloatSize m_videoSize;
     bool m_usingFallbackVideoSink;
-#if USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS)
-    PassRefPtr<BitmapTexture> updateTexture(TextureMapper*);
+    bool m_renderingCanBeAccelerated { false };
+#if USE(TEXTURE_MAPPER_GL) && !USE(COORDINATED_GRAPHICS_MULTIPROCESS)
+    void updateTexture(BitmapTextureGL&, GstVideoInfo&);
 #endif
 #if USE(GSTREAMER_GL)
     GRefPtr<GstGLContext> m_glContext;
     GRefPtr<GstGLDisplay> m_glDisplay;
 #endif
+
+#if USE(COORDINATED_GRAPHICS_THREADED)
+    RefPtr<TextureMapperPlatformLayerProxy> proxy() const override { return m_platformLayerProxy.copyRef(); }
+    void swapBuffersIfNeeded() override { };
+    void pushTextureToCompositor();
+    RefPtr<TextureMapperPlatformLayerProxy> m_platformLayerProxy;
+#endif
+
+#if USE(GSTREAMER_GL) || USE(COORDINATED_GRAPHICS_THREADED)
+    RefPtr<GraphicsContext3D> m_context3D;
+    Condition m_drawCondition;
+    Lock m_drawMutex;
+#endif
+
+    ImageOrientation m_videoSourceOrientation;
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+    std::unique_ptr<CDMSession> createSession(const String&, CDMSessionClient*);
+    CDMSession* m_cdmSession;
+#endif
+#if USE(GSTREAMER_GL)
+    std::unique_ptr<VideoTextureCopierGStreamer> m_videoTextureCopier;
+#endif
 };
+
 }
 
 #endif // USE(GSTREAMER)

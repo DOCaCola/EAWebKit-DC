@@ -27,6 +27,7 @@
 #include "SVGException.h"
 #include "SVGGraphicsElement.h"
 #include "SVGImageElement.h"
+#include "SVGMatrix.h"
 #include "SVGNames.h"
 
 namespace WebCore {
@@ -97,20 +98,19 @@ AffineTransform SVGLocatable::computeCTM(SVGElement* element, CTMScope mode, Sty
     return ctm;
 }
 
-AffineTransform SVGLocatable::getTransformToElement(SVGElement* target, ExceptionCode& ec, StyleUpdateStrategy styleUpdateStrategy)
+ExceptionOr<Ref<SVGMatrix>> SVGLocatable::getTransformToElement(SVGElement* target, StyleUpdateStrategy styleUpdateStrategy)
 {
     AffineTransform ctm = getCTM(styleUpdateStrategy);
 
     if (is<SVGGraphicsElement>(target)) {
         AffineTransform targetCTM = downcast<SVGGraphicsElement>(*target).getCTM(styleUpdateStrategy);
-        if (!targetCTM.isInvertible()) {
-            ec = SVGException::SVG_MATRIX_NOT_INVERTABLE;
-            return ctm;
-        }
-        ctm = targetCTM.inverse() * ctm;
+        if (auto inverse = targetCTM.inverse())
+            ctm = inverse.value() * ctm;
+        else
+            return Exception { SVGException::SVG_MATRIX_NOT_INVERTABLE };
     }
 
-    return ctm;
+    return SVGMatrix::create(ctm);
 }
 
 }

@@ -2,7 +2,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006, 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2004-2006, 2010, 2012-2016 Apple Inc. All rights reserved.
  *           (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  * This library is free software; you can redistribute it and/or
@@ -27,6 +27,7 @@
 
 #include "Attribute.h"
 #include "Document.h"
+#include "ElementChildIterator.h"
 #include "FormDataList.h"
 #include "HTMLNames.h"
 #include "HTMLSelectElement.h"
@@ -34,6 +35,7 @@
 #include "SSLKeyGenerator.h"
 #include "ShadowRoot.h"
 #include "Text.h"
+#include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 
 using namespace WebCore;
@@ -53,12 +55,12 @@ protected:
     KeygenSelectElement(Document& document)
         : HTMLSelectElement(selectTag, document, 0)
     {
-        DEPRECATED_DEFINE_STATIC_LOCAL(AtomicString, pseudoId, ("-webkit-keygen-select", AtomicString::ConstructFromLiteral));
+        static NeverDestroyed<AtomicString> pseudoId("-webkit-keygen-select", AtomicString::ConstructFromLiteral);
         setPseudo(pseudoId);
     }
 
 private:
-    virtual RefPtr<Element> cloneElementWithoutAttributesAndChildren(Document& targetDocument) override
+    Ref<Element> cloneElementWithoutAttributesAndChildren(Document& targetDocument) override
     {
         return create(targetDocument);
     }
@@ -73,14 +75,14 @@ inline HTMLKeygenElement::HTMLKeygenElement(const QualifiedName& tagName, Docume
     Vector<String> keys;
     getSupportedKeySizes(keys);
 
-    RefPtr<HTMLSelectElement> select = KeygenSelectElement::create(document);
-    for (size_t i = 0; i < keys.size(); ++i) {
-        RefPtr<HTMLOptionElement> option = HTMLOptionElement::create(document);
-        select->appendChild(option, IGNORE_EXCEPTION);
-        option->appendChild(Text::create(document, keys[i]), IGNORE_EXCEPTION);
+    auto select = KeygenSelectElement::create(document);
+    for (auto& key : keys) {
+        auto option = HTMLOptionElement::create(document);
+        select->appendChild(option);
+        option->appendChild(Text::create(document, key));
     }
 
-    ensureUserAgentShadowRoot().appendChild(select, IGNORE_EXCEPTION);
+    ensureUserAgentShadowRoot().appendChild(select);
 }
 
 Ref<HTMLKeygenElement> HTMLKeygenElement::create(const QualifiedName& tagName, Document& document, HTMLFormElement* form)
@@ -97,13 +99,28 @@ void HTMLKeygenElement::parseAttribute(const QualifiedName& name, const AtomicSt
     HTMLFormControlElement::parseAttribute(name, value);
 }
 
+bool HTMLKeygenElement::isKeytypeRSA() const
+{
+    const auto& keyType = attributeWithoutSynchronization(keytypeAttr);
+    return keyType.isNull() || equalLettersIgnoringASCIICase(keyType, "rsa");
+}
+
+void HTMLKeygenElement::setKeytype(const AtomicString& value)
+{
+    setAttributeWithoutSynchronization(keytypeAttr, value);
+}
+
+String HTMLKeygenElement::keytype() const
+{
+    return isKeytypeRSA() ? ASCIILiteral("rsa") : emptyString();
+}
+
 bool HTMLKeygenElement::appendFormData(FormDataList& encoded_values, bool)
 {
     // Only RSA is supported at this time.
-    const AtomicString& keyType = fastGetAttribute(keytypeAttr);
-    if (!keyType.isNull() && !equalIgnoringCase(keyType, "rsa"))
+    if (!isKeytypeRSA())
         return false;
-    String value = signedPublicKeyAndChallengeString(shadowSelect()->selectedIndex(), fastGetAttribute(challengeAttr), document().baseURL());
+    String value = signedPublicKeyAndChallengeString(shadowSelect()->selectedIndex(), attributeWithoutSynchronization(challengeAttr), document().baseURL());
     if (value.isNull())
         return false;
     encoded_values.appendData(name(), value.utf8());
@@ -112,7 +129,7 @@ bool HTMLKeygenElement::appendFormData(FormDataList& encoded_values, bool)
 
 const AtomicString& HTMLKeygenElement::formControlType() const
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(const AtomicString, keygen, ("keygen", AtomicString::ConstructFromLiteral));
+    static NeverDestroyed<const AtomicString> keygen("keygen", AtomicString::ConstructFromLiteral);
     return keygen;
 }
 
@@ -129,7 +146,10 @@ bool HTMLKeygenElement::shouldSaveAndRestoreFormControlState() const
 HTMLSelectElement* HTMLKeygenElement::shadowSelect() const
 {
     ShadowRoot* root = userAgentShadowRoot();
-    return root ? downcast<HTMLSelectElement>(root->firstChild()) : nullptr;
+    if (!root)
+        return nullptr;
+
+    return childrenOfType<HTMLSelectElement>(*root).first();
 }
 
 } // namespace

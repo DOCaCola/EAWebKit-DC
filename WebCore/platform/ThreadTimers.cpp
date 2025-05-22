@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2006-2016 Apple Inc. All rights reserved.
  * Copyright (C) 2009 Google Inc. All rights reserved.
  * Copyright (C) 2012 Electronic Arts, Inc.  All rights reserved.
  *
@@ -28,6 +28,7 @@
 #include "config.h"
 #include "ThreadTimers.h"
 
+#include "MainThreadSharedTimer.h"
 #include "SharedTimer.h"
 #include "ThreadGlobalData.h"
 #include "Timer.h"
@@ -51,27 +52,21 @@ static const double maxDurationOfFiringTimers = 0.010;
 // Timers are created, started and fired on the same thread, and each thread has its own ThreadTimers
 // copy to keep the heap and a set of currently firing timers.
 
-static MainThreadSharedTimer* mainThreadSharedTimer()
-{
-    static MainThreadSharedTimer* timer = new MainThreadSharedTimer;
-    return timer;
-}
-
 ThreadTimers::ThreadTimers()
     : m_sharedTimer(0)
     , m_firingTimers(false)
     , m_pendingSharedTimerFireTime(0)
 {
     if (isUIThread())
-        setSharedTimer(mainThreadSharedTimer());
+        setSharedTimer(&MainThreadSharedTimer::singleton());
 }
 
 // A worker thread may initialize SharedTimer after some timers are created.
-// Also, SharedTimer can be replaced with 0 before all timers are destroyed.
+// Also, SharedTimer can be replaced with nullptr before all timers are destroyed.
 void ThreadTimers::setSharedTimer(SharedTimer* sharedTimer)
 {
     if (m_sharedTimer) {
-        m_sharedTimer->setFiredFunction(0);
+        m_sharedTimer->setFiredFunction(nullptr);
         m_sharedTimer->stop();
         m_pendingSharedTimerFireTime = 0;
     }
@@ -79,7 +74,7 @@ void ThreadTimers::setSharedTimer(SharedTimer* sharedTimer)
     m_sharedTimer = sharedTimer;
     
     if (sharedTimer) {
-        m_sharedTimer->setFiredFunction(ThreadTimers::sharedTimerFired);
+        m_sharedTimer->setFiredFunction([] { threadGlobalData().threadTimers().sharedTimerFiredInternal(); });
         updateSharedTimer();
     }
 }
@@ -101,14 +96,8 @@ void ThreadTimers::updateSharedTimer()
                 return;
         } 
         m_pendingSharedTimerFireTime = nextFireTime;
-        m_sharedTimer->setFireInterval(std::max(nextFireTime - currentMonotonicTime, 0.0));
+        m_sharedTimer->setFireInterval(Seconds(std::max(nextFireTime - currentMonotonicTime, 0.0)));
     }
-}
-
-void ThreadTimers::sharedTimerFired()
-{
-    // Redirect to non-static method.
-    threadGlobalData().threadTimers().sharedTimerFiredInternal();
 }
 
 void ThreadTimers::sharedTimerFiredInternal()

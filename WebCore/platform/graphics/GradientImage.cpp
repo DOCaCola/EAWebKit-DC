@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2009, 2010, 2012, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2008-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,14 +26,12 @@
 #include "config.h"
 #include "GradientImage.h"
 
-#include "FloatRect.h"
 #include "GraphicsContext.h"
 #include "ImageBuffer.h"
-#include "Length.h"
 
 namespace WebCore {
 
-GradientImage::GradientImage(PassRefPtr<Gradient> generator, const FloatSize& size)
+GradientImage::GradientImage(Gradient& generator, const FloatSize& size)
     : m_gradient(generator)
 {
     setContainerSize(size);
@@ -43,28 +41,28 @@ GradientImage::~GradientImage()
 {
 }
 
-void GradientImage::draw(GraphicsContext* destContext, const FloatRect& destRect, const FloatRect& srcRect, ColorSpace, CompositeOperator compositeOp, BlendMode blendMode, ImageOrientationDescription)
+void GradientImage::draw(GraphicsContext& destContext, const FloatRect& destRect, const FloatRect& srcRect, CompositeOperator compositeOp, BlendMode blendMode, ImageOrientationDescription)
 {
-    GraphicsContextStateSaver stateSaver(*destContext);
-    destContext->setCompositeOperation(compositeOp, blendMode);
-    destContext->clip(destRect);
-    destContext->translate(destRect.x(), destRect.y());
+    GraphicsContextStateSaver stateSaver(destContext);
+    destContext.setCompositeOperation(compositeOp, blendMode);
+    destContext.clip(destRect);
+    destContext.translate(destRect.x(), destRect.y());
     if (destRect.size() != srcRect.size())
-        destContext->scale(FloatSize(destRect.width() / srcRect.width(), destRect.height() / srcRect.height()));
-    destContext->translate(-srcRect.x(), -srcRect.y());
-    destContext->fillRect(FloatRect(FloatPoint(), size()), *m_gradient.get());
+        destContext.scale(FloatSize(destRect.width() / srcRect.width(), destRect.height() / srcRect.height()));
+    destContext.translate(-srcRect.x(), -srcRect.y());
+    destContext.fillRect(FloatRect(FloatPoint(), size()), m_gradient.get());
 }
 
-void GradientImage::drawPattern(GraphicsContext* destContext, const FloatRect& srcRect, const AffineTransform& patternTransform,
-    const FloatPoint& phase, ColorSpace styleColorSpace, CompositeOperator compositeOp, const FloatRect& destRect, BlendMode blendMode)
+void GradientImage::drawPattern(GraphicsContext& destContext, const FloatRect& destRect, const FloatRect& srcRect, const AffineTransform& patternTransform,
+    const FloatPoint& phase, const FloatSize& spacing, CompositeOperator compositeOp, BlendMode blendMode)
 {
     // Allow the generator to provide visually-equivalent tiling parameters for better performance.
     FloatSize adjustedSize = size();
     FloatRect adjustedSrcRect = srcRect;
-    m_gradient->adjustParametersForTiledDrawing(adjustedSize, adjustedSrcRect);
+    m_gradient->adjustParametersForTiledDrawing(adjustedSize, adjustedSrcRect, spacing);
 
     // Factor in the destination context's scale to generate at the best resolution
-    AffineTransform destContextCTM = destContext->getCTM(GraphicsContext::DefinitelyIncludeDeviceScale);
+    AffineTransform destContextCTM = destContext.getCTM(GraphicsContext::DefinitelyIncludeDeviceScale);
     double xScale = fabs(destContextCTM.xScale());
     double yScale = fabs(destContextCTM.yScale());
     AffineTransform adjustedPatternCTM = patternTransform;
@@ -73,26 +71,31 @@ void GradientImage::drawPattern(GraphicsContext* destContext, const FloatRect& s
 
     unsigned generatorHash = m_gradient->hash();
 
-    if (!m_cachedImageBuffer || m_cachedGeneratorHash != generatorHash || m_cachedAdjustedSize != adjustedSize || !destContext->isCompatibleWithBuffer(m_cachedImageBuffer.get())) {
-        m_cachedImageBuffer = destContext->createCompatibleBuffer(adjustedSize, m_gradient->hasAlpha());
+    if (!m_cachedImageBuffer || m_cachedGeneratorHash != generatorHash || m_cachedAdjustedSize != adjustedSize || !m_cachedImageBuffer->isCompatibleWithContext(destContext)) {
+        m_cachedImageBuffer = ImageBuffer::createCompatibleBuffer(adjustedSize, ColorSpaceSRGB, destContext);
         if (!m_cachedImageBuffer)
             return;
 
         // Fill with the generated image.
-        m_cachedImageBuffer->context()->fillRect(FloatRect(FloatPoint(), adjustedSize), *m_gradient);
+        m_cachedImageBuffer->context().fillRect(FloatRect(FloatPoint(), adjustedSize), m_gradient.get());
 
         m_cachedGeneratorHash = generatorHash;
         m_cachedAdjustedSize = adjustedSize;
 
-        if (destContext->drawLuminanceMask())
+        if (destContext.drawLuminanceMask())
             m_cachedImageBuffer->convertToLuminanceMask();
     }
 
-    m_cachedImageBuffer->setSpaceSize(spaceSize());
-    destContext->setDrawLuminanceMask(false);
+    destContext.setDrawLuminanceMask(false);
 
     // Tile the image buffer into the context.
-    m_cachedImageBuffer->drawPattern(destContext, adjustedSrcRect, adjustedPatternCTM, phase, styleColorSpace, compositeOp, destRect, blendMode);
+    m_cachedImageBuffer->drawPattern(destContext, destRect, adjustedSrcRect, adjustedPatternCTM, phase, spacing, compositeOp, blendMode);
+}
+
+void GradientImage::dump(TextStream& ts) const
+{
+    GeneratedImage::dump(ts);
+    // FIXME: dump the gradient.
 }
 
 }

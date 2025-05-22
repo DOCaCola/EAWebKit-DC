@@ -22,10 +22,9 @@
     pages from the web. It has a memory cache for these objects.
 */
 
-#ifndef Cache_h
-#define Cache_h
+#pragma once
 
-#include "NativeImagePtr.h"
+#include "NativeImage.h"
 #include "SecurityOriginHash.h"
 #include "SessionID.h"
 #include "Timer.h"
@@ -97,12 +96,17 @@ public:
     bool add(CachedResource&);
     void remove(CachedResource&);
 
-    static URL removeFragmentIdentifierIfNeeded(const URL& originalURL);
-    
+    static bool shouldRemoveFragmentIdentifier(const URL&);
+    static URL removeFragmentIdentifierIfNeeded(const URL&);
+
     void revalidationSucceeded(CachedResource& revalidatingResource, const ResourceResponse&);
     void revalidationFailed(CachedResource& revalidatingResource);
-    
-    // Sets the cache's memory capacities, in bytes. These will hold only approximately, 
+
+    void forEachResource(const std::function<void(CachedResource&)>&);
+    void forEachSessionResource(SessionID, const std::function<void(CachedResource&)>&);
+    void destroyDecodedDataForAllImages();
+
+    // Sets the cache's memory capacities, in bytes. These will hold only approximately,
     // since the decoded cost of resources like scripts and stylesheets is not known.
     //  - minDeadBytes: The maximum number of bytes that dead resources should consume when the cache is under pressure.
     //  - maxDeadBytes: The maximum number of bytes that dead resources should consume when the cache is not under pressure.
@@ -116,7 +120,7 @@ public:
 
     WEBCORE_EXPORT void evictResources();
     WEBCORE_EXPORT void evictResources(SessionID);
-    
+
     void prune();
     void pruneSoon();
     unsigned size() const { return m_liveSize + m_deadSize; }
@@ -129,7 +133,7 @@ public:
     void removeFromLRUList(CachedResource&);
 
     // Called to adjust the cache totals when a resource changes size.
-    void adjustSize(bool live, int delta);
+    void adjustSize(bool live, long long delta);
 
     // Track decoded resources that are in the cache and referenced by a Web page.
     void insertInLiveDecodedResourcesList(CachedResource&);
@@ -152,12 +156,8 @@ public:
     WEBCORE_EXPORT void getOriginsWithCache(SecurityOriginSet& origins);
     WEBCORE_EXPORT HashSet<RefPtr<SecurityOrigin>> originsWithCache(SessionID) const;
 
-#if USE(CG)
-    // FIXME: Remove the USE(CG) once we either make NativeImagePtr a smart pointer on all platforms or
-    // remove the usage of CFRetain() in MemoryCache::addImageToCache() so as to make the code platform-independent.
-    WEBCORE_EXPORT bool addImageToCache(NativeImagePtr, const URL&, const String& domainForCachePartition);
+    WEBCORE_EXPORT bool addImageToCache(NativeImagePtr&&, const URL&, const String& domainForCachePartition);
     WEBCORE_EXPORT void removeImageFromCache(const URL&, const String& domainForCachePartition);
-#endif
 
     // pruneDead*() - Flush decoded and encoded data from resources not referenced by Web pages.
     // pruneLive*() - Flush decoded data from resources still referenced by Web pages.
@@ -220,6 +220,4 @@ private:
     Timer m_pruneTimer;
 };
 
-}
-
-#endif
+} // namespace WebCore

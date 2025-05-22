@@ -26,63 +26,75 @@
 #include "config.h"
 #include "PerformanceUserTiming.h"
 
-#if ENABLE(USER_TIMING)
+#if ENABLE(WEB_TIMING)
 
+#include "ExceptionCode.h"
 #include "Performance.h"
+#include "PerformanceEntry.h"
 #include "PerformanceMark.h"
 #include "PerformanceMeasure.h"
+#include "PerformanceTiming.h"
+#include <array>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/dtoa/utils.h>
-#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
 namespace {
 
-typedef HashMap<String, NavigationTimingFunction> RestrictedKeyMap;
-static RestrictedKeyMap restrictedKeyMap()
+typedef unsigned long long (PerformanceTiming::*NavigationTimingFunction)() const;
+
+static NavigationTimingFunction restrictedMarkFunction(const String& markName)
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(RestrictedKeyMap, map, ());
-    if (map.isEmpty()) {
-        map.add("navigationStart", &PerformanceTiming::navigationStart);
-        map.add("unloadEventStart", &PerformanceTiming::unloadEventStart);
-        map.add("unloadEventEnd", &PerformanceTiming::unloadEventEnd);
-        map.add("redirectStart", &PerformanceTiming::redirectStart);
-        map.add("redirectEnd", &PerformanceTiming::redirectEnd);
-        map.add("fetchStart", &PerformanceTiming::fetchStart);
-        map.add("domainLookupStart", &PerformanceTiming::domainLookupStart);
-        map.add("domainLookupEnd", &PerformanceTiming::domainLookupEnd);
-        map.add("connectStart", &PerformanceTiming::connectStart);
-        map.add("connectEnd", &PerformanceTiming::connectEnd);
-        map.add("secureConnectionStart", &PerformanceTiming::secureConnectionStart);
-        map.add("requestStart", &PerformanceTiming::requestStart);
-        map.add("responseStart", &PerformanceTiming::responseStart);
-        map.add("responseEnd", &PerformanceTiming::responseEnd);
-        map.add("domLoading", &PerformanceTiming::domLoading);
-        map.add("domInteractive", &PerformanceTiming::domInteractive);
-        map.add("domContentLoadedEventStart", &PerformanceTiming::domContentLoadedEventStart);
-        map.add("domContentLoadedEventEnd", &PerformanceTiming::domContentLoadedEventEnd);
-        map.add("domComplete", &PerformanceTiming::domComplete);
-        map.add("loadEventStart", &PerformanceTiming::loadEventStart);
-        map.add("loadEventEnd", &PerformanceTiming::loadEventEnd);
+    using MapPair = std::pair<ASCIILiteral, NavigationTimingFunction>;
+    static const std::array<MapPair, 21> pairs = { {
+        MapPair { ASCIILiteral("navigationStart"), &PerformanceTiming::navigationStart },
+        MapPair { ASCIILiteral("unloadEventStart"), &PerformanceTiming::unloadEventStart },
+        MapPair { ASCIILiteral("unloadEventEnd"), &PerformanceTiming::unloadEventEnd },
+        MapPair { ASCIILiteral("redirectStart"), &PerformanceTiming::redirectStart },
+        MapPair { ASCIILiteral("redirectEnd"), &PerformanceTiming::redirectEnd },
+        MapPair { ASCIILiteral("fetchStart"), &PerformanceTiming::fetchStart },
+        MapPair { ASCIILiteral("domainLookupStart"), &PerformanceTiming::domainLookupStart },
+        MapPair { ASCIILiteral("domainLookupEnd"), &PerformanceTiming::domainLookupEnd },
+        MapPair { ASCIILiteral("connectStart"), &PerformanceTiming::connectStart },
+        MapPair { ASCIILiteral("connectEnd"), &PerformanceTiming::connectEnd },
+        MapPair { ASCIILiteral("secureConnectionStart"), &PerformanceTiming::secureConnectionStart },
+        MapPair { ASCIILiteral("requestStart"), &PerformanceTiming::requestStart },
+        MapPair { ASCIILiteral("responseStart"), &PerformanceTiming::responseStart },
+        MapPair { ASCIILiteral("responseEnd"), &PerformanceTiming::responseEnd },
+        MapPair { ASCIILiteral("domLoading"), &PerformanceTiming::domLoading },
+        MapPair { ASCIILiteral("domInteractive"), &PerformanceTiming::domInteractive },
+        MapPair { ASCIILiteral("domContentLoadedEventStart"), &PerformanceTiming::domContentLoadedEventStart },
+        MapPair { ASCIILiteral("domContentLoadedEventEnd"), &PerformanceTiming::domContentLoadedEventEnd },
+        MapPair { ASCIILiteral("domComplete"), &PerformanceTiming::domComplete },
+        MapPair { ASCIILiteral("loadEventStart"), &PerformanceTiming::loadEventStart },
+        MapPair { ASCIILiteral("loadEventEnd"), &PerformanceTiming::loadEventEnd },
+    } };
+
+    static NeverDestroyed<HashMap<String, NavigationTimingFunction>> map;
+    if (map.get().isEmpty()) {
+        for (auto& pair : pairs)
+            map.get().add(pair.first, pair.second);
     }
-    return map;
+
+    return map.get().get(markName);
 }
 
 } // namespace anonymous
 
-UserTiming::UserTiming(Performance* performance)
+UserTiming::UserTiming(Performance& performance)
     : m_performance(performance)
 {
 }
 
-static void insertPerformanceEntry(PerformanceEntryMap& performanceEntryMap, PassRefPtr<PerformanceEntry> performanceEntry)
+static void insertPerformanceEntry(PerformanceEntryMap& performanceEntryMap, Ref<PerformanceEntry>&& performanceEntry)
 {
-    RefPtr<PerformanceEntry> entry = performanceEntry;
-    PerformanceEntryMap::iterator it = performanceEntryMap.find(entry->name());
+    RefPtr<PerformanceEntry> entry = WTFMove(performanceEntry);
+    auto it = performanceEntryMap.find(entry->name());
     if (it != performanceEntryMap.end())
-        it->value.append(entry);
+        it->value.append(WTFMove(entry));
     else
-        performanceEntryMap.set(entry->name(), Vector<RefPtr<PerformanceEntry>>{ entry });
+        performanceEntryMap.set(entry->name(), Vector<RefPtr<PerformanceEntry>> { WTFMove(entry) });
 }
 
 static void clearPeformanceEntries(PerformanceEntryMap& performanceEntryMap, const String& name)
@@ -95,16 +107,13 @@ static void clearPeformanceEntries(PerformanceEntryMap& performanceEntryMap, con
     performanceEntryMap.remove(name);
 }
 
-void UserTiming::mark(const String& markName, ExceptionCode& ec)
+ExceptionOr<void> UserTiming::mark(const String& markName)
 {
-    ec = 0;
-    if (restrictedKeyMap().contains(markName)) {
-        ec = SYNTAX_ERR;
-        return;
-    }
+    if (restrictedMarkFunction(markName))
+        return Exception { SYNTAX_ERR };
 
-    double startTime = m_performance->now();
-    insertPerformanceEntry(m_marksMap, PerformanceMark::create(markName, startTime));
+    insertPerformanceEntry(m_marksMap, PerformanceMark::create(markName, m_performance.now()));
+    return { };
 }
 
 void UserTiming::clearMarks(const String& markName)
@@ -112,48 +121,47 @@ void UserTiming::clearMarks(const String& markName)
     clearPeformanceEntries(m_marksMap, markName);
 }
 
-double UserTiming::findExistingMarkStartTime(const String& markName, ExceptionCode& ec)
+ExceptionOr<double> UserTiming::findExistingMarkStartTime(const String& markName)
 {
-    ec = 0;
-
     if (m_marksMap.contains(markName))
         return m_marksMap.get(markName).last()->startTime();
 
-    if (restrictedKeyMap().contains(markName)) {
-        double value = static_cast<double>((m_performance->timing()->*(restrictedKeyMap().get(markName)))());
-        if (!value) {
-            ec = INVALID_ACCESS_ERR;
-            return 0.0;
-        }
-        return value - m_performance->timing()->navigationStart();
+    if (auto function = restrictedMarkFunction(markName)) {
+        double value = static_cast<double>((m_performance.timing().*(function))());
+        if (!value)
+            return Exception { INVALID_ACCESS_ERR };
+        return value - m_performance.timing().navigationStart();
     }
 
-    ec = SYNTAX_ERR;
-    return 0.0;
+    return Exception { SYNTAX_ERR };
 }
 
-void UserTiming::measure(const String& measureName, const String& startMark, const String& endMark, ExceptionCode& ec)
+ExceptionOr<void> UserTiming::measure(const String& measureName, const String& startMark, const String& endMark)
 {
     double startTime = 0.0;
     double endTime = 0.0;
 
     if (startMark.isNull())
-        endTime = m_performance->now();
+        endTime = m_performance.now();
     else if (endMark.isNull()) {
-        endTime = m_performance->now();
-        startTime = findExistingMarkStartTime(startMark, ec);
-        if (ec)
-            return;
+        endTime = m_performance.now();
+        auto startMarkResult = findExistingMarkStartTime(startMark);
+        if (startMarkResult.hasException())
+            return startMarkResult.releaseException();
+        endTime = startMarkResult.releaseReturnValue();
     } else {
-        endTime = findExistingMarkStartTime(endMark, ec);
-        if (ec)
-            return;
-        startTime = findExistingMarkStartTime(startMark, ec);
-        if (ec)
-            return;
+        auto endMarkResult = findExistingMarkStartTime(endMark);
+        if (endMarkResult.hasException())
+            return endMarkResult.releaseException();
+        auto startMarkResult = findExistingMarkStartTime(startMark);
+        if (startMarkResult.hasException())
+            return startMarkResult.releaseException();
+        startTime = startMarkResult.releaseReturnValue();
+        endTime = endMarkResult.releaseReturnValue();
     }
 
     insertPerformanceEntry(m_measuresMap, PerformanceMeasure::create(measureName, startTime, endTime));
+    return { };
 }
 
 void UserTiming::clearMeasures(const String& measureName)
@@ -161,47 +169,39 @@ void UserTiming::clearMeasures(const String& measureName)
     clearPeformanceEntries(m_measuresMap, measureName);
 }
 
-static Vector<RefPtr<PerformanceEntry> > convertToEntrySequence(const PerformanceEntryMap& performanceEntryMap)
+static Vector<RefPtr<PerformanceEntry>> convertToEntrySequence(const PerformanceEntryMap& performanceEntryMap)
 {
-    Vector<RefPtr<PerformanceEntry> > entries;
-
+    Vector<RefPtr<PerformanceEntry>> entries;
     for (auto& entry : performanceEntryMap.values())
         entries.appendVector(entry);
-
     return entries;
 }
 
-static Vector<RefPtr<PerformanceEntry> > getEntrySequenceByName(const PerformanceEntryMap& performanceEntryMap, const String& name)
+static Vector<RefPtr<PerformanceEntry>> getEntrySequenceByName(const PerformanceEntryMap& performanceEntryMap, const String& name)
 {
-    Vector<RefPtr<PerformanceEntry> > entries;
-
-    PerformanceEntryMap::const_iterator it = performanceEntryMap.find(name);
-    if (it != performanceEntryMap.end())
-        entries.appendVector(it->value);
-
-    return entries;
+    return performanceEntryMap.get(name);
 }
 
-Vector<RefPtr<PerformanceEntry> > UserTiming::getMarks() const
+Vector<RefPtr<PerformanceEntry>> UserTiming::getMarks() const
 {
     return convertToEntrySequence(m_marksMap);
 }
 
-Vector<RefPtr<PerformanceEntry> > UserTiming::getMarks(const String& name) const
+Vector<RefPtr<PerformanceEntry>> UserTiming::getMarks(const String& name) const
 {
     return getEntrySequenceByName(m_marksMap, name);
 }
 
-Vector<RefPtr<PerformanceEntry> > UserTiming::getMeasures() const
+Vector<RefPtr<PerformanceEntry>> UserTiming::getMeasures() const
 {
     return convertToEntrySequence(m_measuresMap);
 }
 
-Vector<RefPtr<PerformanceEntry> > UserTiming::getMeasures(const String& name) const
+Vector<RefPtr<PerformanceEntry>> UserTiming::getMeasures(const String& name) const
 {
     return getEntrySequenceByName(m_measuresMap, name);
 }
 
 } // namespace WebCore
 
-#endif // ENABLE(USER_TIMING)
+#endif // ENABLE(WEB_TIMING)

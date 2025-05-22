@@ -23,17 +23,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BorderEdge_h
-#define BorderEdge_h
+#pragma once
 
-#include "RenderObject.h"
+#include "Color.h"
+#include "LayoutUnit.h"
+#include "RenderObjectEnums.h"
+#include "RenderStyleConstants.h"
 
 namespace WebCore {
 
 typedef unsigned BorderEdgeFlags;
 
 class RenderStyle;
-class LayoutUnit;
 
 class BorderEdge {
 public:
@@ -45,13 +46,13 @@ public:
         AllBorderEdges = TopBorderEdge | BottomBorderEdge | LeftBorderEdge | RightBorderEdge
     };
 
-    BorderEdge();
-    BorderEdge(LayoutUnit edgeWidth, Color edgeColor, EBorderStyle edgeStyle, bool edgeIsTransparent, bool edgeIsPresent, float devicePixelRatio);
+    BorderEdge() = default;
+    BorderEdge(float edgeWidth, Color edgeColor, EBorderStyle edgeStyle, bool edgeIsTransparent, bool edgeIsPresent, float devicePixelRatio);
 
     static void getBorderEdgeInfo(BorderEdge edges[], const RenderStyle&, float deviceScaleFactor, bool includeLogicalLeftEdge = true, bool includeLogicalRightEdge = true);
 
     EBorderStyle style() const { return m_style; }
-    Color color() const { return m_color; }
+    const Color& color() const { return m_color; }
     bool isTransparent() const { return m_isTransparent; }
     bool isPresent() const { return m_isPresent; }
 
@@ -68,11 +69,11 @@ private:
 
     LayoutUnit m_width;
     Color m_color;
-    EBorderStyle m_style;
-    bool m_isTransparent;
-    bool m_isPresent;
-    float m_flooredToDevicePixelWidth;
-    float m_devicePixelRatio;
+    EBorderStyle m_style { BHIDDEN };
+    bool m_isTransparent { false };
+    bool m_isPresent { false };
+    float m_flooredToDevicePixelWidth { 0 };
+    float m_devicePixelRatio { 1 };
 };
 
 inline bool edgesShareColor(const BorderEdge& firstEdge, const BorderEdge& secondEdge) { return firstEdge.color() == secondEdge.color(); }
@@ -87,5 +88,3 @@ inline bool includesAdjacentEdges(BorderEdgeFlags flags)
 }
 
 } // namespace WebCore
-
-#endif // BorderEdge_h

@@ -27,14 +27,12 @@
  * SUCH DAMAGE.
  */
 
-#ifndef NamedFlowCollection_h
-#define NamedFlowCollection_h
+#pragma once
 
 #include "ContextDestructionObserver.h"
 #include "WebKitNamedFlow.h"
 #include <wtf/Forward.h>
 #include <wtf/ListHashSet.h>
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
 
@@ -57,7 +55,7 @@ public:
 
     virtual ~NamedFlowCollection() { }
 
-    PassRefPtr<DOMNamedFlowCollection> createCSSOMSnapshot();
+    Ref<DOMNamedFlowCollection> createCSSOMSnapshot();
 
 private:
     struct NamedFlowHashFunctions;
@@ -71,5 +69,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // NamedFlowCollection_h

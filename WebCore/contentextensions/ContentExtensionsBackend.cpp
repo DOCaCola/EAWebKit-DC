@@ -34,7 +34,9 @@
 #include "DFABytecodeInterpreter.h"
 #include "Document.h"
 #include "DocumentLoader.h"
+#include "ExtensionStyleSheets.h"
 #include "Frame.h"
+#include "FrameLoaderClient.h"
 #include "MainFrame.h"
 #include "ResourceLoadInfo.h"
 #include "URL.h"
@@ -58,7 +60,7 @@ void ContentExtensionsBackend::addContentExtension(const String& identifier, Ref
     }
 
     RefPtr<ContentExtension> extension = ContentExtension::create(identifier, adoptRef(*compiledContentExtension.leakRef()));
-    m_contentExtensions.set(identifier, WTF::move(extension));
+    m_contentExtensions.set(identifier, WTFMove(extension));
 }
 
 void ContentExtensionsBackend::removeContentExtension(const String& identifier)
@@ -144,8 +146,11 @@ StyleSheetContents* ContentExtensionsBackend::globalDisplayNoneStyleSheet(const 
     return contentExtension ? contentExtension->globalDisplayNoneStyleSheet() : nullptr;
 }
 
-void ContentExtensionsBackend::processContentExtensionRulesForLoad(ResourceRequest& request, ResourceType resourceType, DocumentLoader& initiatingDocumentLoader)
+BlockedStatus ContentExtensionsBackend::processContentExtensionRulesForLoad(const URL& url, ResourceType resourceType, DocumentLoader& initiatingDocumentLoader)
 {
+    if (m_contentExtensions.isEmpty())
+        return { };
+
     Document* currentDocument = nullptr;
     URL mainDocumentURL;
 
@@ -155,28 +160,30 @@ void ContentExtensionsBackend::processContentExtensionRulesForLoad(ResourceReque
         if (initiatingDocumentLoader.isLoadingMainResource()
             && frame->isMainFrame()
             && resourceType == ResourceType::Document)
-            mainDocumentURL = request.url();
+            mainDocumentURL = url;
         else if (Document* mainDocument = frame->mainFrame().document())
             mainDocumentURL = mainDocument->url();
     }
 
-    ResourceLoadInfo resourceLoadInfo = { request.url(), mainDocumentURL, resourceType };
+    ResourceLoadInfo resourceLoadInfo = { url, mainDocumentURL, resourceType };
     Vector<ContentExtensions::Action> actions = actionsForResourceLoad(resourceLoadInfo);
 
     bool willBlockLoad = false;
+    bool willBlockCookies = false;
+    bool willMakeHTTPS = false;
     for (const auto& action : actions) {
         switch (action.type()) {
         case ContentExtensions::ActionType::BlockLoad:
             willBlockLoad = true;
             break;
         case ContentExtensions::ActionType::BlockCookies:
-            request.setAllowCookies(false);
+            willBlockCookies = true;
             break;
         case ContentExtensions::ActionType::CSSDisplayNoneSelector:
             if (resourceType == ResourceType::Document)
                 initiatingDocumentLoader.addPendingContentExtensionDisplayNoneSelector(action.extensionIdentifier(), action.stringArgument(), action.actionID());
             else if (currentDocument)
-                currentDocument->styleSheetCollection().addDisplayNoneSelector(action.extensionIdentifier(), action.stringArgument(), action.actionID());
+                currentDocument->extensionStyleSheets().addDisplayNoneSelector(action.extensionIdentifier(), action.stringArgument(), action.actionID());
             break;
         case ContentExtensions::ActionType::CSSDisplayNoneStyleSheet: {
             StyleSheetContents* styleSheetContents = globalDisplayNoneStyleSheet(action.stringArgument());
@@ -184,8 +191,14 @@ void ContentExtensionsBackend::processContentExtensionRulesForLoad(ResourceReque
                 if (resourceType == ResourceType::Document)
                     initiatingDocumentLoader.addPendingContentExtensionSheet(action.stringArgument(), *styleSheetContents);
                 else if (currentDocument)
-                    currentDocument->styleSheetCollection().maybeAddContentExtensionSheet(action.stringArgument(), *styleSheetContents);
+                    currentDocument->extensionStyleSheets().maybeAddContentExtensionSheet(action.stringArgument(), *styleSheetContents);
             }
+            break;
+        }
+        case ContentExtensions::ActionType::MakeHTTPS: {
+            if ((url.protocolIs("http") || url.protocolIs("ws"))
+                && (!url.port() || isDefaultPortForProtocol(url.port().value(), url.protocol())))
+                willMakeHTTPS = true;
             break;
         }
         case ContentExtensions::ActionType::IgnorePreviousRules:
@@ -194,11 +207,16 @@ void ContentExtensionsBackend::processContentExtensionRulesForLoad(ResourceReque
         }
     }
 
-    if (willBlockLoad) {
-        if (currentDocument)
-            currentDocument->addConsoleMessage(MessageSource::ContentBlocker, MessageLevel::Info, makeString("Content blocker prevented frame displaying ", mainDocumentURL.string(), " from loading a resource from ", request.url().string()));
-        request = ResourceRequest();
+    if (currentDocument) {
+        if (willMakeHTTPS) {
+            ASSERT(url.protocolIs("http") || url.protocolIs("ws"));
+            String newProtocol = url.protocolIs("http") ? ASCIILiteral("https") : ASCIILiteral("wss");
+            currentDocument->addConsoleMessage(MessageSource::ContentBlocker, MessageLevel::Info, makeString("Content blocker promoted URL from ", url.string(), " to ", newProtocol));
+        }
+        if (willBlockLoad)
+            currentDocument->addConsoleMessage(MessageSource::ContentBlocker, MessageLevel::Info, makeString("Content blocker prevented frame displaying ", mainDocumentURL.string(), " from loading a resource from ", url.string()));
     }
+    return { willBlockLoad, willBlockCookies, willMakeHTTPS };
 }
 
 const String& ContentExtensionsBackend::displayNoneCSSRule()
@@ -207,6 +225,24 @@ const String& ContentExtensionsBackend::displayNoneCSSRule()
     return rule;
 }
 
+void applyBlockedStatusToRequest(const BlockedStatus& status, ResourceRequest& request)
+{
+    if (status.blockedCookies)
+        request.setAllowCookies(false);
+
+    if (status.madeHTTPS) {
+        const URL& originalURL = request.url();
+        ASSERT(originalURL.protocolIs("http"));
+        ASSERT(!originalURL.port() || isDefaultPortForProtocol(originalURL.port().value(), originalURL.protocol()));
+
+        URL newURL = originalURL;
+        newURL.setProtocol("https");
+        if (originalURL.port())
+            newURL.setPort(defaultPortForProtocol("https").value());
+        request.setURL(newURL);
+    }
+}
+    
 } // namespace ContentExtensions
 
 } // namespace WebCore

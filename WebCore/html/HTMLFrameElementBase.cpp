@@ -25,19 +25,19 @@
 #include "HTMLFrameElementBase.h"
 
 #include "Document.h"
-#include "EventNames.h"
 #include "FocusController.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameView.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
-#include "URL.h"
+#include "JSDOMBinding.h"
 #include "Page.h"
 #include "RenderWidget.h"
 #include "ScriptController.h"
 #include "Settings.h"
 #include "SubframeLoader.h"
+#include "URL.h"
 
 namespace WebCore {
 
@@ -94,11 +94,13 @@ void HTMLFrameElementBase::parseAttribute(const QualifiedName& name, const Atomi
 {
     if (name == srcdocAttr)
         setLocation("about:srcdoc");
-    else if (name == srcAttr && !fastHasAttribute(srcdocAttr))
+    else if (name == srcAttr && !hasAttributeWithoutSynchronization(srcdocAttr))
         setLocation(stripLeadingAndTrailingHTMLSpaces(value));
-    else if (name == HTMLNames::idAttr) {
+    else if (name == idAttr) {
         HTMLFrameOwnerElement::parseAttribute(name, value);
-        m_frameName = value;
+        // Falling back to using the 'id' attribute is not standard but some content relies on this behavior.
+        if (!hasAttributeWithoutSynchronization(nameAttr))
+            m_frameName = value;
     } else if (name == nameAttr) {
         m_frameName = value;
         // FIXME: If we are already attached, this doesn't actually change the frame's name.
@@ -112,9 +114,9 @@ void HTMLFrameElementBase::parseAttribute(const QualifiedName& name, const Atomi
         // FIXME: If we are already attached, this has no effect.
     } else if (name == scrollingAttr) {
         // Auto and yes both simply mean "allow scrolling." No means "don't allow scrolling."
-        if (equalIgnoringCase(value, "auto") || equalIgnoringCase(value, "yes"))
+        if (equalLettersIgnoringASCIICase(value, "auto") || equalLettersIgnoringASCIICase(value, "yes"))
             m_scrolling = document().frameElementsShouldIgnoreScrolling() ? ScrollbarAlwaysOff : ScrollbarAuto;
-        else if (equalIgnoringCase(value, "no"))
+        else if (equalLettersIgnoringASCIICase(value, "no"))
             m_scrolling = ScrollbarAlwaysOff;
         // FIXME: If we are already attached, this has no effect.
     } else
@@ -124,6 +126,7 @@ void HTMLFrameElementBase::parseAttribute(const QualifiedName& name, const Atomi
 void HTMLFrameElementBase::setNameAndOpenURL()
 {
     m_frameName = getNameAttribute();
+    // Falling back to using the 'id' attribute is not standard but some content relies on this behavior.
     if (m_frameName.isNull())
         m_frameName = getIdAttribute();
     openURL();
@@ -150,7 +153,7 @@ void HTMLFrameElementBase::finishedInsertingSubtree()
         return;
 
     if (!renderer())
-        setNeedsStyleRecalc(ReconstructRenderTree);
+        invalidateStyleAndRenderersForSubtree();
     setNameAndOpenURL();
 }
 
@@ -164,9 +167,9 @@ void HTMLFrameElementBase::didAttachRenderers()
 
 URL HTMLFrameElementBase::location() const
 {
-    if (fastHasAttribute(srcdocAttr))
+    if (hasAttributeWithoutSynchronization(srcdocAttr))
         return URL(ParsedURLString, "about:srcdoc");
-    return document().completeURL(fastGetAttribute(srcAttr));
+    return document().completeURL(attributeWithoutSynchronization(srcAttr));
 }
 
 void HTMLFrameElementBase::setLocation(const String& str)
@@ -179,6 +182,16 @@ void HTMLFrameElementBase::setLocation(const String& str)
 
     if (inDocument())
         openURL(LockHistory::No, LockBackForwardList::No);
+}
+
+void HTMLFrameElementBase::setLocation(JSC::ExecState& state, const String& newLocation)
+{
+    if (protocolIsJavaScript(stripLeadingAndTrailingHTMLSpaces(newLocation))) {
+        if (!BindingSecurity::shouldAllowAccessToNode(state, contentDocument()))
+            return;
+    }
+
+    setLocation(newLocation);
 }
 
 bool HTMLFrameElementBase::supportsFocus() const
@@ -199,7 +212,7 @@ void HTMLFrameElementBase::setFocus(bool received)
 
 bool HTMLFrameElementBase::isURLAttribute(const Attribute& attribute) const
 {
-    return attribute.name() == srcAttr || HTMLFrameOwnerElement::isURLAttribute(attribute);
+    return attribute.name() == srcAttr || attribute.name() == longdescAttr || HTMLFrameOwnerElement::isURLAttribute(attribute);
 }
 
 bool HTMLFrameElementBase::isHTMLContentAttribute(const Attribute& attribute) const

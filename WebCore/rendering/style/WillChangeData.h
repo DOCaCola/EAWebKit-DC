@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WillChangeData_h
-#define WillChangeData_h
+#pragma once
 
 #include "CSSPropertyNames.h"
 #include "RenderStyleConstants.h"
@@ -53,7 +52,10 @@ public:
     bool containsScrollPosition() const;
     bool containsContents() const;
     bool containsProperty(CSSPropertyID) const;
-    bool createsStackingContext() const;
+
+    bool canCreateStackingContext() const { return m_canCreateStackingContext; }
+    bool canTriggerCompositing() const { return m_canTriggerCompositing; }
+    bool canTriggerCompositingOnInline() const { return m_canTriggerCompositingOnInline; }
 
     enum Feature {
         ScrollPosition,
@@ -66,6 +68,8 @@ public:
     
     typedef std::pair<Feature, CSSPropertyID> FeaturePropertyPair;
     FeaturePropertyPair featureAt(size_t) const;
+
+    static bool propertyCreatesStackingContext(CSSPropertyID);
 
 private:
     WillChangeData()
@@ -118,9 +122,9 @@ private:
     };
 
     Vector<AnimatableFeature, 1> m_animatableFeatures;
+    bool m_canCreateStackingContext { false };
+    bool m_canTriggerCompositing { false };
+    bool m_canTriggerCompositingOnInline { false };
 };
 
-
 } // namespace WebCore
-
-#endif // WillChangeData_h

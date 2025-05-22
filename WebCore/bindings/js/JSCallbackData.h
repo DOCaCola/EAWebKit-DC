@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2007-2009, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JSCallbackData_h
-#define JSCallbackData_h
+#pragma once
 
 #include "JSDOMBinding.h"
 #include "JSDOMGlobalObject.h"
@@ -45,11 +44,13 @@ namespace WebCore {
 
 class JSCallbackData {
 public:
-    static void deleteData(void*);
+    enum class CallbackType { Function, Object, FunctionOrObject };
 
-    JSCallbackData(JSC::JSObject* callback, JSDOMGlobalObject* globalObject)
-        : m_callback(globalObject->vm(), callback)
-        , m_globalObject(globalObject->vm(), globalObject)
+    JSDOMGlobalObject* globalObject() { return m_globalObject.get(); }
+
+protected:
+    explicit JSCallbackData(JSDOMGlobalObject* globalObject)
+        : m_globalObject(globalObject)
 #ifndef NDEBUG
         , m_thread(currentThread())
 #endif
@@ -62,31 +63,74 @@ public:
         ASSERT(m_thread == currentThread());
 #endif
     }
-
-    JSC::JSObject* callback() { return m_callback.get(); }
-    JSDOMGlobalObject* globalObject() { return m_globalObject.get(); }
     
-    JSC::JSValue invokeCallback(JSC::MarkedArgumentBuffer&, bool* raisedException = 0);
-    JSC::JSValue invokeCallback(JSC::JSValue thisValue, JSC::MarkedArgumentBuffer&, bool* raisedException = 0);
+    static JSC::JSValue invokeCallback(JSDOMGlobalObject&, JSC::JSObject* callback, JSC::MarkedArgumentBuffer&, CallbackType, JSC::PropertyName functionName, NakedPtr<JSC::Exception>& returnedException);
 
 private:
-    JSC::Strong<JSC::JSObject> m_callback;
-    JSC::Strong<JSDOMGlobalObject> m_globalObject;
+    JSC::Weak<JSDOMGlobalObject> m_globalObject;
 #ifndef NDEBUG
     ThreadIdentifier m_thread;
 #endif
 };
 
+class JSCallbackDataStrong : public JSCallbackData {
+public:
+    JSCallbackDataStrong(JSC::JSObject* callback, JSDOMGlobalObject* globalObject, void*)
+        : JSCallbackData(globalObject)
+        , m_callback(globalObject->vm(), callback)
+    {
+    }
+
+    JSC::JSObject* callback() { return m_callback.get(); }
+
+    JSC::JSValue invokeCallback(JSC::MarkedArgumentBuffer& args, CallbackType callbackType, JSC::PropertyName functionName, NakedPtr<JSC::Exception>& returnedException)
+    {
+        auto* globalObject = this->globalObject();
+        if (!globalObject)
+            return { };
+
+        return JSCallbackData::invokeCallback(*globalObject, callback(), args, callbackType, functionName, returnedException);
+    }
+
+private:
+    JSC::Strong<JSC::JSObject> m_callback;
+};
+
+class JSCallbackDataWeak : public JSCallbackData {
+public:
+    JSCallbackDataWeak(JSC::JSObject* callback, JSDOMGlobalObject* globalObject, void* owner)
+        : JSCallbackData(globalObject)
+        , m_callback(callback, &m_weakOwner, owner)
+    {
+    }
+
+    JSC::JSObject* callback() { return m_callback.get(); }
+
+    JSC::JSValue invokeCallback(JSC::MarkedArgumentBuffer& args, CallbackType callbackType, JSC::PropertyName functionName, NakedPtr<JSC::Exception>& returnedException)
+    {
+        auto* globalObject = this->globalObject();
+        if (!globalObject)
+            return { };
+
+        return JSCallbackData::invokeCallback(*globalObject, callback(), args, callbackType, functionName, returnedException);
+    }
+
+private:
+    class WeakOwner : public JSC::WeakHandleOwner {
+        bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&) override;
+    };
+    WeakOwner m_weakOwner;
+    JSC::Weak<JSC::JSObject> m_callback;
+};
+
 class DeleteCallbackDataTask : public ScriptExecutionContext::Task {
 public:
-    DeleteCallbackDataTask(JSCallbackData* data)
-        : ScriptExecutionContext::Task(ScriptExecutionContext::Task::CleanupTask, [data] (ScriptExecutionContext&) {
-            delete data;
+    template <typename CallbackDataType>
+    explicit DeleteCallbackDataTask(CallbackDataType* data)
+        : ScriptExecutionContext::Task(ScriptExecutionContext::Task::CleanupTask, [data = std::unique_ptr<CallbackDataType>(data)] (ScriptExecutionContext&) {
         })
     {
     }
 };
 
 } // namespace WebCore
-
-#endif // JSCallbackData_h

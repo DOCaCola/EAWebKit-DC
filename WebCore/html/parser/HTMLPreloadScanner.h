@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef HTMLPreloadScanner_h
-#define HTMLPreloadScanner_h
+#pragma once
 
 #include "CSSPreloadScanner.h"
 #include "HTMLTokenizer.h"
@@ -41,6 +40,8 @@ public:
     void scan(const HTMLToken&, PreloadRequestStream&, Document&);
 
     void setPredictedBaseElementURL(const URL& url) { m_predictedBaseElementURL = url; }
+    
+    bool inPicture() { return !m_pictureSourceState.isEmpty(); }
 
 private:
     enum class TagId {
@@ -50,12 +51,14 @@ private:
         Link,
         Script,
         Meta,
+        Source,
 
         // These tags are not scanned by the StartTagScanner.
         Unknown,
         Style,
         Base,
         Template,
+        Picture
     };
 
     class StartTagScanner;
@@ -72,9 +75,10 @@ private:
 
     URL m_predictedBaseElementURL;
     bool m_inStyle { false };
-#if ENABLE(TEMPLATE_ELEMENT)
+    
+    Vector<bool> m_pictureSourceState;
+
     unsigned m_templateCount { 0 };
-#endif
 };
 
 class HTMLPreloadScanner {
@@ -93,6 +97,4 @@ private:
 
 WEBCORE_EXPORT bool testPreloadScannerViewportSupport(Document*);
 
-}
-
-#endif
+} // namespace WebCore

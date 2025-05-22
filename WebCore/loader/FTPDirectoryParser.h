@@ -68,8 +68,7 @@
 // This was originally Mozilla code, titled ParseFTPList.h
 // Original version of this file can currently be found at: http://mxr.mozilla.org/mozilla1.8/source/netwerk/streamconv/converters/ParseFTPList.h
 
-#ifndef FTPDirectoryParser_h
-#define FTPDirectoryParser_h
+#pragma once
 
 #include <wtf/text/WTFString.h>
 
@@ -127,9 +126,9 @@ struct ListResult
     {
         valid = false;
         type = FTPJunkEntry;
-        filename = 0;
+        filename = nullptr;
         filenameLength = 0;
-        linkname = 0;
+        linkname = nullptr;
         linknameLength = 0;
         fileSize.truncate(0);
         caseSensitive = false;
@@ -153,5 +152,3 @@ struct ListResult
 FTPEntryType parseOneFTPLine(const char* inputLine, ListState&, ListResult&);
                  
 } // namespace WebCore
-
-#endif // FTPDirectoryParser_h

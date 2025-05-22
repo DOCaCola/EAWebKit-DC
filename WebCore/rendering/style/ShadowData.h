@@ -22,8 +22,7 @@
  *
  */
 
-#ifndef ShadowData_h
-#define ShadowData_h
+#pragma once
 
 #include "Color.h"
 #include "FloatRect.h"
@@ -82,7 +81,7 @@ public:
     bool isWebkitBoxShadow() const { return m_isWebkitBoxShadow; }
 
     const ShadowData* next() const { return m_next.get(); }
-    void setNext(std::unique_ptr<ShadowData> shadow) { m_next = WTF::move(shadow); }
+    void setNext(std::unique_ptr<ShadowData> shadow) { m_next = WTFMove(shadow); }
 
     void adjustRectForShadow(LayoutRect&, int additionalOutlineSize = 0) const;
     void adjustRectForShadow(FloatRect&, int additionalOutlineSize = 0) const;
@@ -98,5 +97,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // ShadowData_h

@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ImmutableNFANodeBuilder_h
-#define ImmutableNFANodeBuilder_h
+#pragma once
 
 #include "ImmutableNFA.h"
 #include "MutableRangeList.h"
@@ -56,9 +55,9 @@ public:
 
     ImmutableNFANodeBuilder(ImmutableNFANodeBuilder&& other)
         : m_immutableNFA(other.m_immutableNFA)
-        , m_ranges(WTF::move(other.m_ranges))
-        , m_epsilonTransitionTargets(WTF::move(m_epsilonTransitionTargets))
-        , m_actions(WTF::move(other.m_actions))
+        , m_ranges(WTFMove(other.m_ranges))
+        , m_epsilonTransitionTargets(WTFMove(other.m_epsilonTransitionTargets))
+        , m_actions(WTFMove(other.m_actions))
         , m_nodeId(other.m_nodeId)
         , m_finalized(other.m_finalized)
     {
@@ -156,9 +155,9 @@ public:
             finalize();
 
         m_immutableNFA = other.m_immutableNFA;
-        m_ranges = WTF::move(other.m_ranges);
-        m_epsilonTransitionTargets = WTF::move(other.m_epsilonTransitionTargets);
-        m_actions = WTF::move(other.m_actions);
+        m_ranges = WTFMove(other.m_ranges);
+        m_epsilonTransitionTargets = WTFMove(other.m_epsilonTransitionTargets);
+        m_actions = WTFMove(other.m_actions);
         m_nodeId = other.m_nodeId;
         m_finalized = other.m_finalized;
 
@@ -224,10 +223,7 @@ private:
     bool m_finalized { true };
 };
 
-}
-
+} // namespace ContentExtensions
 } // namespace WebCore
 
 #endif // ENABLE(CONTENT_EXTENSIONS)
-
-#endif // ImmutableNFANodeBuilder_h

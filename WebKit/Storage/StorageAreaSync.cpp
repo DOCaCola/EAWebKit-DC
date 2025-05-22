@@ -47,7 +47,9 @@
 #include <EAWebKit/EAWebKitThreadInterface.h>
 //-EAWebKitChange
 
-namespace WebCore {
+using namespace WebCore;
+
+namespace WebKit {
 
 // If the StorageArea undergoes rapid changes, don't sync each change to disk.
 // Instead, queue up a batch of items to sync and actually do the sync at the following interval.
@@ -57,12 +59,12 @@ static const double StorageSyncInterval = 1.0;
 // much harder to starve the rest of LocalStorage and the OS's IO subsystem in general.
 static const int MaxiumItemsToSync = 100;
 
-inline StorageAreaSync::StorageAreaSync(PassRefPtr<StorageSyncManager> storageSyncManager, PassRefPtr<StorageAreaImpl> storageArea, const String& databaseIdentifier)
+inline StorageAreaSync::StorageAreaSync(RefPtr<StorageSyncManager>&& storageSyncManager, Ref<StorageAreaImpl>&& storageArea, const String& databaseIdentifier)
     : m_syncTimer(*this, &StorageAreaSync::syncTimerFired)
     , m_itemsCleared(false)
     , m_finalSyncScheduled(false)
-    , m_storageArea(storageArea)
-    , m_syncManager(storageSyncManager)
+    , m_storageArea(WTFMove(storageArea))
+    , m_syncManager(WTFMove(storageSyncManager))
     , m_databaseIdentifier(databaseIdentifier.isolatedCopy())
     , m_clearItemsWhileSyncing(false)
     , m_syncScheduled(false)
@@ -83,9 +85,9 @@ inline StorageAreaSync::StorageAreaSync(PassRefPtr<StorageSyncManager> storageSy
     });
 }
 
-Ref<StorageAreaSync> StorageAreaSync::create(PassRefPtr<StorageSyncManager> storageSyncManager, PassRefPtr<StorageAreaImpl> storageArea, const String& databaseIdentifier)
+Ref<StorageAreaSync> StorageAreaSync::create(RefPtr<StorageSyncManager>&& storageSyncManager, Ref<StorageAreaImpl>&& storageArea, const String& databaseIdentifier)
 {
-    return adoptRef(*new StorageAreaSync(storageSyncManager, storageArea, databaseIdentifier));
+    return adoptRef(*new StorageAreaSync(WTFMove(storageSyncManager), WTFMove(storageArea), databaseIdentifier));
 }
 
 StorageAreaSync::~StorageAreaSync()
@@ -176,7 +178,7 @@ void StorageAreaSync::syncTimerFired()
 
     bool partialSync = false;
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
 
         // Do not schedule another sync if we're still trying to complete the
         // previous one. But, if we're shutting down, schedule it anyway.
@@ -364,9 +366,9 @@ void StorageAreaSync::performImport()
 
 void StorageAreaSync::markImported()
 {
-    MutexLocker locker(m_importLock);
+    LockHolder locker(m_importLock);
     m_importComplete = true;
-    m_importCondition.signal();
+    m_importCondition.notifyOne();
 }
 
 // FIXME: In the future, we should allow use of StorageAreas while it's importing (when safe to do so).
@@ -390,7 +392,7 @@ void StorageAreaSync::blockUntilImportComplete()
 		return;
 	//-EAWebKitChange
 
-    MutexLocker locker(m_importLock);
+    LockHolder locker(m_importLock);
     while (!m_importComplete)
         m_importCondition.wait(m_importLock);
     m_storageArea = nullptr;
@@ -485,7 +487,7 @@ void StorageAreaSync::performSync()
     bool clearItems;
     HashMap<String, String> items;
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
 
         ASSERT(m_syncScheduled);
 
@@ -500,7 +502,7 @@ void StorageAreaSync::performSync()
     sync(clearItems, items);
 
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
         m_syncInProgress = false;
     }
 
@@ -532,10 +534,8 @@ void StorageAreaSync::deleteEmptyDatabase()
         query.finalize();
         m_database.close();
         if (StorageTracker::tracker().isActive()) {
-            StringImpl* databaseIdentifierCopy = &m_databaseIdentifier.impl()->isolatedCopy().leakRef();
-            callOnMainThread([databaseIdentifierCopy] {
-                StorageTracker::tracker().deleteOriginWithIdentifier(databaseIdentifierCopy);
-                databaseIdentifierCopy->deref();
+            callOnMainThread([databaseIdentifier = m_databaseIdentifier.isolatedCopy()] {
+                StorageTracker::tracker().deleteOriginWithIdentifier(databaseIdentifier);
             });
         } else {
             String databaseFilename = m_syncManager->fullDatabaseFilename(m_databaseIdentifier);

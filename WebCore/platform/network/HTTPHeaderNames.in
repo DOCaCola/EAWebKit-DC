@@ -49,6 +49,7 @@ Content-Security-Policy
 Content-Security-Policy-Report-Only
 Content-Type
 Content-Transfer-Encoding
+Content-Range
 Cookie
 Cookie2
 Date
@@ -67,6 +68,7 @@ Keep-Alive
 Last-Event-ID
 Last-Modified
 Location
+Link
 Origin
 Ping-From
 Ping-To
@@ -88,6 +90,7 @@ Timing-Allow-Origin
 Trailer
 Transfer-Encoding
 Upgrade
+Upgrade-Insecure-Requests
 User-Agent
 Vary
 Via

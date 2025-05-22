@@ -22,8 +22,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PluginViewBase_h
-#define PluginViewBase_h
+#pragma once
 
 #include "AudioHardwareListener.h"
 #include "BridgeJSC.h"
@@ -73,14 +72,16 @@ public:
 
     virtual bool shouldAllowNavigationFromDrags() const { return false; }
 
-    virtual bool isPluginViewBase() const { return true; }
+    bool isPluginViewBase() const override { return true; }
     virtual bool shouldNotAddLayer() const { return false; }
 
     virtual AudioHardwareActivityType audioHardwareActivity() const { return AudioHardwareActivityType::Unknown; }
 
     virtual void setJavaScriptPaused(bool) { }
 
-    virtual PassRefPtr<JSC::Bindings::Instance> bindingInstance() { return nullptr; }
+    virtual RefPtr<JSC::Bindings::Instance> bindingInstance() { return nullptr; }
+    
+    virtual void willDetatchRenderer() { }
 
 protected:
     explicit PluginViewBase(PlatformWidget widget = 0) : Widget(widget) { }
@@ -89,5 +90,3 @@ protected:
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_WIDGET(PluginViewBase, isPluginViewBase())
-
-#endif // PluginViewBase_h

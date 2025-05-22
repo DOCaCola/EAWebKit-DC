@@ -25,8 +25,7 @@
  *
  */
 
-#ifndef ViewportArguments_h
-#define ViewportArguments_h
+#pragma once
 
 #include "FloatSize.h"
 #include <wtf/Forward.h>
@@ -95,6 +94,7 @@ struct ViewportArguments {
     float userZoom { ValueAuto };
     float orientation { ValueAuto };
     float shrinkToFit { ValueAuto };
+    bool widthWasExplicit { false };
 
     bool operator==(const ViewportArguments& other) const
     {
@@ -111,7 +111,8 @@ struct ViewportArguments {
             && maxZoom == other.maxZoom
             && userZoom == other.userZoom
             && orientation == other.orientation
-            && shrinkToFit == other.shrinkToFit;
+            && shrinkToFit == other.shrinkToFit
+            && widthWasExplicit == other.widthWasExplicit;
     }
 
     bool operator!=(const ViewportArguments& other) const
@@ -132,9 +133,8 @@ WEBCORE_EXPORT void restrictMinimumScaleFactorToViewportSize(ViewportAttributes&
 WEBCORE_EXPORT void restrictScaleFactorToInitialScaleIfNotUserScalable(ViewportAttributes& result);
 float computeMinimumScaleFactorForContentContained(const ViewportAttributes& result, const IntSize& viewportSize, const IntSize& contentSize);
 
-void setViewportFeature(const String& keyString, const String& valueString, Document*, void* data);
-void reportViewportWarning(Document*, ViewportErrorCode, const String& replacement1, const String& replacement2);
+void setViewportFeature(ViewportArguments&, Document&, StringView key, StringView value);
+
+TextStream& operator<<(TextStream&, const ViewportArguments&);
 
 } // namespace WebCore
-
-#endif // ViewportArguments_h

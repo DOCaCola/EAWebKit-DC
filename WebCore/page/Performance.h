@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
  * Copyright (C) 2012 Intel Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,89 +30,77 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef Performance_h
-#define Performance_h
+#pragma once
 
 #if ENABLE(WEB_TIMING)
 
 #include "DOMWindowProperty.h"
 #include "EventTarget.h"
-#include "PerformanceEntryList.h"
-#include "PerformanceNavigation.h"
-#include "PerformanceTiming.h"
-#include "ScriptWrappable.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
-#include <wtf/RefPtr.h>
-#include <wtf/text/WTFString.h>
+#include "ExceptionOr.h"
 
 namespace WebCore {
 
 class Document;
-class ResourceRequest;
+class LoadTiming;
+class PerformanceEntry;
+class PerformanceNavigation;
+class PerformanceTiming;
 class ResourceResponse;
+class URL;
 class UserTiming;
 
-class Performance final : public ScriptWrappable, public RefCounted<Performance>, public DOMWindowProperty, public EventTargetWithInlineData {
+class Performance final : public RefCounted<Performance>, public DOMWindowProperty, public EventTargetWithInlineData {
 public:
-    static Ref<Performance> create(Frame* frame) { return adoptRef(*new Performance(frame)); }
+    static Ref<Performance> create(Frame& frame) { return adoptRef(*new Performance(frame)); }
     ~Performance();
 
-    virtual EventTargetInterface eventTargetInterface() const override { return PerformanceEventTargetInterfaceType; }
-    virtual ScriptExecutionContext* scriptExecutionContext() const override;
-
-    PerformanceNavigation* navigation() const;
-    PerformanceTiming* timing() const;
+    PerformanceNavigation& navigation();
+    PerformanceTiming& timing();
     double now() const;
 
-#if ENABLE(PERFORMANCE_TIMELINE)
-    PassRefPtr<PerformanceEntryList> webkitGetEntries() const;
-    PassRefPtr<PerformanceEntryList> webkitGetEntriesByType(const String& entryType);
-    PassRefPtr<PerformanceEntryList> webkitGetEntriesByName(const String& name, const String& entryType);
-#endif
+    Vector<RefPtr<PerformanceEntry>> getEntries() const;
+    Vector<RefPtr<PerformanceEntry>> getEntriesByType(const String& entryType) const;
+    Vector<RefPtr<PerformanceEntry>> getEntriesByName(const String& name, const String& entryType) const;
 
-#if ENABLE(RESOURCE_TIMING)
-    void webkitClearResourceTimings();
-    void webkitSetResourceTimingBufferSize(unsigned int);
+    void clearResourceTimings();
+    void setResourceTimingBufferSize(unsigned);
 
-    void addResourceTiming(const String& initiatorName, Document*, const ResourceRequest&, const ResourceResponse&, double initiationTime, double finishTime);
-#endif
+    void addResourceTiming(const String& initiatorName, Document*, const URL& originalURL, const ResourceResponse&, const LoadTiming&);
 
-    using RefCounted<Performance>::ref;
-    using RefCounted<Performance>::deref;
+    using RefCounted::ref;
+    using RefCounted::deref;
 
-#if ENABLE(USER_TIMING)
-    void webkitMark(const String& markName, ExceptionCode&);
-    void webkitClearMarks(const String& markName);
+    ExceptionOr<void> mark(const String& markName);
+    void clearMarks(const String& markName);
 
-    void webkitMeasure(const String& measureName, const String& startMark, const String& endMark, ExceptionCode&);
-    void webkitClearMeasures(const String& measureName);
-#endif // ENABLE(USER_TIMING)
+    ExceptionOr<void> measure(const String& measureName, const String& startMark, const String& endMark);
+    void clearMeasures(const String& measureName);
+
+    static double reduceTimeResolution(double seconds);
 
 private:
-    explicit Performance(Frame*);
+    explicit Performance(Frame&);
 
-    virtual void refEventTarget() override { ref(); }
-    virtual void derefEventTarget() override { deref(); }
-    bool isResourceTimingBufferFull();
+    EventTargetInterface eventTargetInterface() const final { return PerformanceEventTargetInterfaceType; }
+    ScriptExecutionContext* scriptExecutionContext() const final;
+
+    void refEventTarget() final { ref(); }
+    void derefEventTarget() final { deref(); }
+
+    bool isResourceTimingBufferFull() const;
 
     mutable RefPtr<PerformanceNavigation> m_navigation;
     mutable RefPtr<PerformanceTiming> m_timing;
-    
-#if ENABLE(RESOURCE_TIMING)
+
+    // https://w3c.github.io/resource-timing/#extensions-performance-interface recommends size of 150.
     Vector<RefPtr<PerformanceEntry>> m_resourceTimingBuffer;
-    unsigned m_resourceTimingBufferSize;
-#endif
+    unsigned m_resourceTimingBufferSize { 150 };
 
     double m_referenceTime;
 
-#if ENABLE(USER_TIMING)
-    RefPtr<UserTiming> m_userTiming;
-#endif // ENABLE(USER_TIMING)
+    std::unique_ptr<UserTiming> m_userTiming;
 };
 
 }
 
 #endif // ENABLE(WEB_TIMING)
-
-#endif // Performance_h

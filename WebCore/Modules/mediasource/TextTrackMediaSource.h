@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef TextTrackMediaSource_h
-#define TextTrackMediaSource_h
+#pragma once
 
 #if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
 
@@ -36,11 +35,9 @@ class SourceBuffer;
 
 class TextTrackMediaSource {
 public:
-    static SourceBuffer* sourceBuffer(TextTrack* track) { return track->sourceBuffer(); }
+    static SourceBuffer* sourceBuffer(TextTrack& track) { return track.sourceBuffer(); }
 };
 
-}
+} // namespace WebCore
 
-#endif
-
-#endif
+#endif // ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)

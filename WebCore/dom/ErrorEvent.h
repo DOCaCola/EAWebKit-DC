@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,61 +29,62 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ErrorEvent_h
-#define ErrorEvent_h
+#pragma once
 
 #include "Event.h"
+#include "SerializedScriptValue.h"
+#include <heap/Strong.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-struct ErrorEventInit : public EventInit {
-    ErrorEventInit();
-
-    String message;
-    String filename;
-    unsigned lineno;
-    unsigned colno;
-};
-
 class ErrorEvent final : public Event {
 public:
-    static Ref<ErrorEvent> create()
+    static Ref<ErrorEvent> create(const String& message, const String& fileName, unsigned lineNumber, unsigned columnNumber, JSC::Strong<JSC::Unknown> error)
     {
-        return adoptRef(*new ErrorEvent);
+        return adoptRef(*new ErrorEvent(message, fileName, lineNumber, columnNumber, error));
     }
-    static Ref<ErrorEvent> create(const String& message, const String& fileName, unsigned lineNumber, unsigned columnNumber)
+
+    struct Init : EventInit {
+        String message;
+        String filename;
+        unsigned lineno { 0 };
+        unsigned colno { 0 };
+        JSC::JSValue error;
+    };
+
+    static Ref<ErrorEvent> create(JSC::ExecState& state, const AtomicString& type, const Init& initializer, IsTrusted isTrusted = IsTrusted::No)
     {
-        return adoptRef(*new ErrorEvent(message, fileName, lineNumber, columnNumber));
+        return adoptRef(*new ErrorEvent(state, type, initializer, isTrusted));
     }
-    static Ref<ErrorEvent> create(const AtomicString& type, const ErrorEventInit& initializer)
-    {
-        return adoptRef(*new ErrorEvent(type, initializer));
-    }
+
     virtual ~ErrorEvent();
 
     const String& message() const { return m_message; }
     const String& filename() const { return m_fileName; }
     unsigned lineno() const { return m_lineNumber; }
     unsigned colno() const { return m_columnNumber; }
+    JSC::JSValue error(JSC::ExecState&, JSC::JSGlobalObject&);
 
-    virtual EventInterface eventInterface() const override;
+    EventInterface eventInterface() const override;
 
 private:
-    ErrorEvent();
-    ErrorEvent(const String& message, const String& fileName, unsigned lineNumber, unsigned columnNumber);
-    ErrorEvent(const AtomicString&, const ErrorEventInit&);
+    ErrorEvent(const String& message, const String& fileName, unsigned lineNumber, unsigned columnNumber, JSC::Strong<JSC::Unknown> error);
+    ErrorEvent(JSC::ExecState&, const AtomicString&, const Init&, IsTrusted);
 
-    virtual bool isErrorEvent() const override;
+    RefPtr<SerializedScriptValue> trySerializeError(JSC::ExecState&);
+
+    bool isErrorEvent() const override;
 
     String m_message;
     String m_fileName;
     unsigned m_lineNumber;
     unsigned m_columnNumber;
+    JSC::Strong<JSC::Unknown> m_error;
+    RefPtr<SerializedScriptValue> m_serializedDetail;
+    bool m_triedToSerialize { false };
 };
 
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_EVENT(ErrorEvent)
-
-#endif // ErrorEvent_h

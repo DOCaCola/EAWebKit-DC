@@ -25,7 +25,7 @@
 #ifndef RTCDataChannelHandlerClient_h
 #define RTCDataChannelHandlerClient_h
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include <wtf/text/WTFString.h>
 
@@ -46,10 +46,13 @@ public:
     virtual void didReceiveStringData(const String&) = 0;
     virtual void didReceiveRawData(const char*, size_t) = 0;
     virtual void didDetectError() = 0;
+
+    virtual void protect() = 0;
+    virtual void unprotect() = 0;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)
 
 #endif // RTCDataChannelHandlerClient_h

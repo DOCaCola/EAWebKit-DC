@@ -28,17 +28,15 @@
 #include "MessagePort.h"
 
 #include "Document.h"
-#include "EventException.h"
+#include "EventNames.h"
+#include "ExceptionCode.h"
 #include "MessageEvent.h"
-#include "SecurityOrigin.h"
 #include "WorkerGlobalScope.h"
 
 namespace WebCore {
 
 MessagePort::MessagePort(ScriptExecutionContext& scriptExecutionContext)
-    : m_started(false)
-    , m_closed(false)
-    , m_scriptExecutionContext(&scriptExecutionContext)
+    : m_scriptExecutionContext(&scriptExecutionContext)
 {
     m_scriptExecutionContext->createdMessagePort(*this);
 
@@ -52,35 +50,31 @@ MessagePort::~MessagePort()
         m_scriptExecutionContext->destroyedMessagePort(*this);
 }
 
-void MessagePort::postMessage(PassRefPtr<SerializedScriptValue> message, MessagePort* port, ExceptionCode& ec)
+ExceptionOr<void> MessagePort::postMessage(JSC::ExecState& state, JSC::JSValue messageValue, Vector<JSC::Strong<JSC::JSObject>>&& transfer)
 {
-    MessagePortArray ports;
-    if (port)
-        ports.append(port);
-    postMessage(message, &ports, ec);
-}
+    Vector<RefPtr<MessagePort>> ports;
+    auto message = SerializedScriptValue::create(state, messageValue, WTFMove(transfer), ports);
+    if (message.hasException())
+        return message.releaseException();
 
-void MessagePort::postMessage(PassRefPtr<SerializedScriptValue> message, const MessagePortArray* ports, ExceptionCode& ec)
-{
     if (!isEntangled())
-        return;
+        return { };
     ASSERT(m_scriptExecutionContext);
 
     std::unique_ptr<MessagePortChannelArray> channels;
     // Make sure we aren't connected to any of the passed-in ports.
-    if (ports) {
-        for (unsigned int i = 0; i < ports->size(); ++i) {
-            MessagePort* dataPort = (*ports)[i].get();
-            if (dataPort == this || m_entangledChannel->isConnectedTo(dataPort)) {
-                ec = DATA_CLONE_ERR;
-                return;
-            }
+    if (!ports.isEmpty()) {
+        for (auto& dataPort : ports) {
+            if (dataPort == this || m_entangledChannel->isConnectedTo(dataPort.get()))
+                return Exception { DATA_CLONE_ERR };
         }
-        channels = MessagePort::disentanglePorts(ports, ec);
-        if (ec)
-            return;
+        auto disentangleResult = MessagePort::disentanglePorts(WTFMove(ports));
+        if (disentangleResult.hasException())
+            return disentangleResult.releaseException();
+        channels = disentangleResult.releaseReturnValue();
     }
-    m_entangledChannel->postMessageToRemote(message, WTF::move(channels));
+    m_entangledChannel->postMessageToRemote(message.releaseReturnValue(), WTFMove(channels));
+    return { };
 }
 
 std::unique_ptr<MessagePortChannel> MessagePort::disentangle()
@@ -94,7 +88,7 @@ std::unique_ptr<MessagePortChannel> MessagePort::disentangle()
     m_scriptExecutionContext->destroyedMessagePort(*this);
     m_scriptExecutionContext = nullptr;
 
-    return WTF::move(m_entangledChannel);
+    return WTFMove(m_entangledChannel);
 }
 
 // Invoked to notify us that there are messages available for this port.
@@ -126,7 +120,7 @@ void MessagePort::close()
     m_closed = true;
 }
 
-void MessagePort::entangle(std::unique_ptr<MessagePortChannel> remote)
+void MessagePort::entangle(std::unique_ptr<MessagePortChannel>&& remote)
 {
     // Only invoked to set our initial entanglement.
     ASSERT(!m_entangledChannel);
@@ -134,7 +128,7 @@ void MessagePort::entangle(std::unique_ptr<MessagePortChannel> remote)
 
     // Don't entangle the ports if the channel is closed.
     if (remote->entangleIfOpen(this))
-        m_entangledChannel = WTF::move(remote);
+        m_entangledChannel = WTFMove(remote);
 }
 
 void MessagePort::contextDestroyed()
@@ -143,7 +137,7 @@ void MessagePort::contextDestroyed()
     // Must be closed before blowing away the cached context, to ensure that we get no more calls to messageAvailable().
     // ScriptExecutionContext::closeMessagePorts() takes care of that.
     ASSERT(m_closed);
-    m_scriptExecutionContext = 0;
+    m_scriptExecutionContext = nullptr;
 }
 
 void MessagePort::dispatchMessages()
@@ -160,10 +154,8 @@ void MessagePort::dispatchMessages()
         if (is<WorkerGlobalScope>(*m_scriptExecutionContext) && downcast<WorkerGlobalScope>(*m_scriptExecutionContext).isClosing())
             return;
 
-        std::unique_ptr<MessagePortArray> ports = MessagePort::entanglePorts(*m_scriptExecutionContext, WTF::move(channels));
-        RefPtr<Event> evt = MessageEvent::create(WTF::move(ports), message.release());
-
-        dispatchEvent(evt.release(), ASSERT_NO_EXCEPTION);
+        auto ports = MessagePort::entanglePorts(*m_scriptExecutionContext, WTFMove(channels));
+        dispatchEvent(MessageEvent::create(WTFMove(ports), WTFMove(message)));
     }
 }
 
@@ -180,55 +172,48 @@ bool MessagePort::hasPendingActivity()
 
 MessagePort* MessagePort::locallyEntangledPort()
 {
-    return m_entangledChannel ? m_entangledChannel->locallyEntangledPort(m_scriptExecutionContext) : 0;
+    return m_entangledChannel ? m_entangledChannel->locallyEntangledPort(m_scriptExecutionContext) : nullptr;
 }
 
-std::unique_ptr<MessagePortChannelArray> MessagePort::disentanglePorts(const MessagePortArray* ports, ExceptionCode& ec)
+ExceptionOr<std::unique_ptr<MessagePortChannelArray>> MessagePort::disentanglePorts(Vector<RefPtr<MessagePort>>&& ports)
 {
-    if (!ports || !ports->size())
+    if (ports.isEmpty())
         return nullptr;
 
-    // HashSet used to efficiently check for duplicates in the passed-in array.
-    HashSet<MessagePort*> portSet;
-
     // Walk the incoming array - if there are any duplicate ports, or null ports or cloned ports, throw an error (per section 8.3.3 of the HTML5 spec).
-    for (unsigned int i = 0; i < ports->size(); ++i) {
-        MessagePort* port = (*ports)[i].get();
-        if (!port || port->isNeutered() || portSet.contains(port)) {
-            ec = DATA_CLONE_ERR;
-            return nullptr;
-        }
-        portSet.add(port);
+    HashSet<MessagePort*> portSet;
+    for (auto& port : ports) {
+        if (!port || port->isNeutered() || !portSet.add(port.get()).isNewEntry)
+            return Exception { DATA_CLONE_ERR };
     }
 
     // Passed-in ports passed validity checks, so we can disentangle them.
-    auto portArray = std::make_unique<MessagePortChannelArray>(ports->size());
-    for (unsigned int i = 0 ; i < ports->size() ; ++i) {
-        std::unique_ptr<MessagePortChannel> channel = (*ports)[i]->disentangle();
-        (*portArray)[i] = WTF::move(channel);
-    }
-    return portArray;
+    auto portArray = std::make_unique<MessagePortChannelArray>(ports.size());
+    for (unsigned i = 0 ; i < ports.size(); ++i)
+        (*portArray)[i] = ports[i]->disentangle();
+    return WTFMove(portArray);
 }
 
-std::unique_ptr<MessagePortArray> MessagePort::entanglePorts(ScriptExecutionContext& context, std::unique_ptr<MessagePortChannelArray> channels)
+Vector<RefPtr<MessagePort>> MessagePort::entanglePorts(ScriptExecutionContext& context, std::unique_ptr<MessagePortChannelArray>&& channels)
 {
     if (!channels || !channels->size())
-        return nullptr;
+        return { };
 
-    auto portArray = std::make_unique<MessagePortArray>(channels->size());
+    Vector<RefPtr<MessagePort>> portArray;
+    portArray.reserveInitialCapacity(channels->size());
     for (unsigned int i = 0; i < channels->size(); ++i) {
-        RefPtr<MessagePort> port = MessagePort::create(context);
-        port->entangle(WTF::move((*channels)[i]));
-        (*portArray)[i] = port.release();
+        auto port = MessagePort::create(context);
+        port->entangle(WTFMove((*channels)[i]));
+        portArray.uncheckedAppend(WTFMove(port));
     }
     return portArray;
 }
 
-bool MessagePort::addEventListener(const AtomicString& eventType, RefPtr<EventListener>&& listener, bool useCapture)
+bool MessagePort::addEventListener(const AtomicString& eventType, Ref<EventListener>&& listener, const AddEventListenerOptions& options)
 {
-    if (listener && listener->isAttribute() && eventType == eventNames().messageEvent)
+    if (listener->isAttribute() && eventType == eventNames().messageEvent)
         start();
-    return EventTargetWithInlineData::addEventListener(eventType, WTF::move(listener), useCapture);
+    return EventTargetWithInlineData::addEventListener(eventType, WTFMove(listener), options);
 }
 
 } // namespace WebCore

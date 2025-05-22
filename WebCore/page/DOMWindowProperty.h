@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DOMWindowProperty_h
-#define DOMWindowProperty_h
+#pragma once
 
 namespace WebCore {
 
@@ -35,8 +34,8 @@ class DOMWindowProperty {
 public:
     explicit DOMWindowProperty(Frame*);
 
-    virtual void disconnectFrameForPageCache();
-    virtual void reconnectFrameFromPageCache(Frame*);
+    virtual void disconnectFrameForDocumentSuspension();
+    virtual void reconnectFrameFromDocumentSuspension(Frame*);
     virtual void willDestroyGlobalObjectInCachedFrame();
     virtual void willDestroyGlobalObjectInFrame();
     virtual void willDetachGlobalObjectFromFrame();
@@ -50,6 +49,4 @@ protected:
     DOMWindow* m_associatedDOMWindow;
 };
 
-}
-
-#endif
+} // namespace WebCore

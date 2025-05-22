@@ -47,13 +47,10 @@ public:
     const Vector<float>& values() const;
     bool setValues(const Vector<float>&);
 
-    virtual void platformApplySoftware();
-#if ENABLE(OPENCL)
-    virtual bool platformApplyOpenCL();
-#endif
-    virtual void dump();
+    void platformApplySoftware() override;
+    void dump() override;
 
-    virtual TextStream& externalRepresentation(TextStream&, int indention) const;
+    TextStream& externalRepresentation(TextStream&, int indention) const override;
 
     static inline void calculateSaturateComponents(float* components, float value);
     static inline void calculateHueRotateComponents(float* components, float value);

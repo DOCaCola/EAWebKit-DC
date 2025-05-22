@@ -42,20 +42,20 @@ DOMWindowProperty::DOMWindowProperty(Frame* frame)
     // We should fix that.  <rdar://problem/11567132>
     if (m_frame) {
         m_associatedDOMWindow = m_frame->document()->domWindow();
-        m_associatedDOMWindow->registerProperty(this);
+        m_associatedDOMWindow->registerProperty(*this);
     }
 }
 
 DOMWindowProperty::~DOMWindowProperty()
 {
     if (m_associatedDOMWindow)
-        m_associatedDOMWindow->unregisterProperty(this);
+        m_associatedDOMWindow->unregisterProperty(*this);
 
     m_associatedDOMWindow = nullptr;
     m_frame = nullptr;
 }
 
-void DOMWindowProperty::disconnectFrameForPageCache()
+void DOMWindowProperty::disconnectFrameForDocumentSuspension()
 {
     // If this property is being disconnected from its Frame to enter the PageCache, it must have
     // been created with a Frame in the first place.
@@ -65,7 +65,7 @@ void DOMWindowProperty::disconnectFrameForPageCache()
     m_frame = nullptr;
 }
 
-void DOMWindowProperty::reconnectFrameFromPageCache(Frame* frame)
+void DOMWindowProperty::reconnectFrameFromDocumentSuspension(Frame* frame)
 {
     // If this property is being reconnected to its Frame to enter the PageCache, it must have
     // been disconnected from its Frame in the first place and it should still have an associated DOMWindow.
@@ -86,7 +86,7 @@ void DOMWindowProperty::willDestroyGlobalObjectInCachedFrame()
     // DOMWindowProperty lifetime isn't tied directly to the DOMWindow itself so it is important that it unregister
     // itself from any DOMWindow it is associated with if that DOMWindow is going away.
     if (m_associatedDOMWindow)
-        m_associatedDOMWindow->unregisterProperty(this);
+        m_associatedDOMWindow->unregisterProperty(*this);
     m_associatedDOMWindow = nullptr;
     m_frame = nullptr;
 }
@@ -100,7 +100,7 @@ void DOMWindowProperty::willDestroyGlobalObjectInFrame()
     // DOMWindowProperty lifetime isn't tied directly to the DOMWindow itself so it is important that it unregister
     // itself from any DOMWindow it is associated with if that DOMWindow is going away.
     if (m_associatedDOMWindow)
-        m_associatedDOMWindow->unregisterProperty(this);
+        m_associatedDOMWindow->unregisterProperty(*this);
     m_associatedDOMWindow = nullptr;
     m_frame = nullptr;
 }

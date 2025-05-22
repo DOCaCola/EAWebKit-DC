@@ -37,31 +37,35 @@ namespace WebCore {
 
 void JSAudioTrack::visitAdditionalChildren(SlotVisitor& visitor)
 {
-    visitor.addOpaqueRoot(root(&impl()));
+    visitor.addOpaqueRoot(root(&wrapped()));
 }
 
-void JSAudioTrack::setKind(ExecState* exec, JSValue value)
+void JSAudioTrack::setKind(ExecState& state, JSValue value)
 {
 #if ENABLE(MEDIA_SOURCE)
-    auto& string = value.toString(exec)->value(exec);
-    if (exec->hadException())
-        return;
-    impl().setKind(string);
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    auto string = value.toWTFString(&state);
+    RETURN_IF_EXCEPTION(scope, void());
+    wrapped().setKind(string);
 #else
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(value);
 #endif
 }
 
-void JSAudioTrack::setLanguage(ExecState* exec, JSValue value)
+void JSAudioTrack::setLanguage(ExecState& state, JSValue value)
 {
 #if ENABLE(MEDIA_SOURCE)
-    auto& string = value.toString(exec)->value(exec);
-    if (exec->hadException())
-        return;
-    impl().setLanguage(string);
+    VM& vm = state.vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
+    auto string = value.toWTFString(&state);
+    RETURN_IF_EXCEPTION(scope, void());
+    wrapped().setLanguage(string);
 #else
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(value);
 #endif
 }

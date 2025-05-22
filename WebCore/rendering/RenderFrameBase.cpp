@@ -33,8 +33,8 @@
 
 namespace WebCore {
 
-RenderFrameBase::RenderFrameBase(HTMLFrameElementBase& element, Ref<RenderStyle>&& style)
-    : RenderWidget(element, WTF::move(style))
+RenderFrameBase::RenderFrameBase(HTMLFrameElementBase& element, RenderStyle&& style)
+    : RenderWidget(element, WTFMove(style))
 {
 }
 

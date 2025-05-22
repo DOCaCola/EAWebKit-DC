@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2015-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,9 +29,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WorkerRuntimeAgent_h
-#define WorkerRuntimeAgent_h
+#pragma once
 
+#include "InspectorWebAgentBase.h"
 #include <inspector/agents/InspectorRuntimeAgent.h>
 
 namespace WebCore {
@@ -40,26 +41,21 @@ typedef String ErrorString;
 
 class WorkerRuntimeAgent final : public Inspector::InspectorRuntimeAgent {
 public:
-    WorkerRuntimeAgent(Inspector::InjectedScriptManager*, WorkerGlobalScope*);
-    virtual ~WorkerRuntimeAgent() { }
+    WorkerRuntimeAgent(WorkerAgentContext&);
+    ~WorkerRuntimeAgent() { }
 
-    virtual void didCreateFrontendAndBackend(Inspector::FrontendChannel*, Inspector::BackendDispatcher*) override;
-    virtual void willDestroyFrontendAndBackend(Inspector::DisconnectReason) override;
-
-    virtual void run(ErrorString&) override;
-
-    void pauseWorkerGlobalScope(WorkerGlobalScope*);
+    void didCreateFrontendAndBackend(Inspector::FrontendRouter*, Inspector::BackendDispatcher*) override;
+    void willDestroyFrontendAndBackend(Inspector::DisconnectReason) override;
 
 private:
-    virtual JSC::VM& globalVM() override;
-    virtual Inspector::InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
-    virtual void muteConsole() override;
-    virtual void unmuteConsole() override;
-    WorkerGlobalScope* m_workerGlobalScope;
+    Inspector::InjectedScript injectedScriptForEval(ErrorString&, const int* executionContextId) override;
+
+    // We don't need to mute console for workers.
+    void muteConsole() override { }
+    void unmuteConsole() override { }
+
     RefPtr<Inspector::RuntimeBackendDispatcher> m_backendDispatcher;
-    bool m_paused;
+    WorkerGlobalScope& m_workerGlobalScope;
 };
 
 } // namespace WebCore
-
-#endif // !defined(InspectorPagerAgent_h)

@@ -24,14 +24,19 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebStorageNamespaceProvider_h
-#define WebStorageNamespaceProvider_h
+#pragma once
 //+EAWebKitChange
 //4/15/2015
 // This file has one modification. At various places, it fixes up the include paths of the files in webcore directory. Merge carefully for next iteration.
 //-EAWebKitChange
 
 #include <StorageNamespaceProvider.h>
+
+namespace WebCore {
+struct SecurityOriginData;
+}
+
+namespace WebKit {
 
 class WebStorageNamespaceProvider final : public WebCore::StorageNamespaceProvider {
 public:
@@ -41,7 +46,7 @@ public:
     static void closeLocalStorage();
 
     static void clearLocalStorageForAllOrigins();
-    static void clearLocalStorageForOrigin(WebCore::SecurityOrigin*);
+    static void clearLocalStorageForOrigin(const WebCore::SecurityOriginData&);
     static void closeIdleLocalStorageDatabases();
     // DumpRenderTree helper that triggers a StorageArea sync.
     static void syncLocalStorage();
@@ -49,11 +54,11 @@ public:
 private:
     explicit WebStorageNamespaceProvider(const String& localStorageDatabasePath);
 
-    virtual RefPtr<WebCore::StorageNamespace> createSessionStorageNamespace(WebCore::Page&, unsigned quota) override;
-    virtual RefPtr<WebCore::StorageNamespace> createLocalStorageNamespace(unsigned quota) override;
-    virtual RefPtr<WebCore::StorageNamespace> createTransientLocalStorageNamespace(WebCore::SecurityOrigin&, unsigned quota) override;
+    RefPtr<WebCore::StorageNamespace> createSessionStorageNamespace(WebCore::Page&, unsigned quota) override;
+    RefPtr<WebCore::StorageNamespace> createLocalStorageNamespace(unsigned quota) override;
+    RefPtr<WebCore::StorageNamespace> createTransientLocalStorageNamespace(WebCore::SecurityOrigin&, unsigned quota) override;
 
     const String m_localStorageDatabasePath;
 };
 
-#endif // WebStorageNamespaceProvider_h
+} // namespace WebKit

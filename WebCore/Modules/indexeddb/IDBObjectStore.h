@@ -1,131 +1,139 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- * 2.  Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBObjectStore_h
-#define IDBObjectStore_h
-
-#include "Dictionary.h"
-#include "IDBCursor.h"
-#include "IDBDatabaseMetadata.h"
-#include "IDBIndex.h"
-#include "IDBKey.h"
-#include "IDBKeyRange.h"
-#include "IDBRequest.h"
-#include "IDBTransaction.h"
-#include "ScriptWrappable.h"
-#include "SerializedScriptValue.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
-#include <wtf/RefPtr.h>
-#include <wtf/text/WTFString.h>
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
+
+#include "ActiveDOMObject.h"
+#include "ExceptionOr.h"
+#include "IDBCursorDirection.h"
+#include "IDBKeyPath.h"
+#include "IDBObjectStoreInfo.h"
+#include <wtf/HashSet.h>
+
+namespace JSC {
+class ExecState;
+class JSValue;
+class SlotVisitor;
+}
 
 namespace WebCore {
 
 class DOMStringList;
-class IDBAny;
+class IDBIndex;
+class IDBKey;
+class IDBKeyRange;
+class IDBRequest;
+class IDBTransaction;
 
-class IDBObjectStore : public ScriptWrappable, public RefCounted<IDBObjectStore> {
+struct IDBKeyRangeData;
+
+namespace IndexedDB {
+enum class ObjectStoreOverwriteMode;
+}
+
+class IDBObjectStore final : public ActiveDOMObject {
 public:
-    static Ref<IDBObjectStore> create(const IDBObjectStoreMetadata& metadata, IDBTransaction* transaction)
-    {
-        return adoptRef(*new IDBObjectStore(metadata, transaction));
-    }
-    ~IDBObjectStore() { }
+    IDBObjectStore(ScriptExecutionContext&, const IDBObjectStoreInfo&, IDBTransaction&);
+    ~IDBObjectStore();
 
-    // Implement the IDBObjectStore IDL
-    int64_t id() const { return m_metadata.id; }
-    const String name() const { return m_metadata.name; }
-    PassRefPtr<IDBAny> keyPathAny() const { return IDBAny::create(m_metadata.keyPath); }
-    const IDBKeyPath keyPath() const { return m_metadata.keyPath; }
-    PassRefPtr<DOMStringList> indexNames() const;
-    PassRefPtr<IDBTransaction> transaction() const { return m_transaction; }
-    bool autoIncrement() const { return m_metadata.autoIncrement; }
+    const String& name() const;
+    ExceptionOr<void> setName(const String&);
+    const std::optional<IDBKeyPath>& keyPath() const;
+    RefPtr<DOMStringList> indexNames() const;
+    IDBTransaction& transaction();
+    bool autoIncrement() const;
 
-    PassRefPtr<IDBRequest> add(JSC::ExecState*, Deprecated::ScriptValue&, ExceptionCode&);
-    PassRefPtr<IDBRequest> put(JSC::ExecState*, Deprecated::ScriptValue&, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, const String& direction, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, const String& direction, IDBDatabaseBackend::TaskType, ExceptionCode&);
-    PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, const Deprecated::ScriptValue& key, const String& direction, ExceptionCode&);
+    struct IndexParameters {
+        bool unique;
+        bool multiEntry;
+    };
 
-    PassRefPtr<IDBRequest> get(ScriptExecutionContext*, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> get(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, ExceptionCode&);
-    PassRefPtr<IDBRequest> add(JSC::ExecState*, Deprecated::ScriptValue&, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> put(JSC::ExecState*, Deprecated::ScriptValue&, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> deleteFunction(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, ExceptionCode&);
-    PassRefPtr<IDBRequest> deleteFunction(ScriptExecutionContext*, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> clear(ScriptExecutionContext*, ExceptionCode&);
+    ExceptionOr<Ref<IDBRequest>> openCursor(JSC::ExecState&, RefPtr<IDBKeyRange>, IDBCursorDirection);
+    ExceptionOr<Ref<IDBRequest>> openCursor(JSC::ExecState&, JSC::JSValue key, IDBCursorDirection);
+    ExceptionOr<Ref<IDBRequest>> openKeyCursor(JSC::ExecState&, RefPtr<IDBKeyRange>, IDBCursorDirection);
+    ExceptionOr<Ref<IDBRequest>> openKeyCursor(JSC::ExecState&, JSC::JSValue key, IDBCursorDirection);
+    ExceptionOr<Ref<IDBRequest>> get(JSC::ExecState&, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> get(JSC::ExecState&, IDBKeyRange*);
+    ExceptionOr<Ref<IDBRequest>> getKey(JSC::ExecState&, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> getKey(JSC::ExecState&, IDBKeyRange*);
+    ExceptionOr<Ref<IDBRequest>> add(JSC::ExecState&, JSC::JSValue, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> put(JSC::ExecState&, JSC::JSValue, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> deleteFunction(JSC::ExecState&, IDBKeyRange*);
+    ExceptionOr<Ref<IDBRequest>> deleteFunction(JSC::ExecState&, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> clear(JSC::ExecState&);
+    ExceptionOr<Ref<IDBIndex>> createIndex(JSC::ExecState&, const String& name, IDBKeyPath&&, const IndexParameters&);
+    ExceptionOr<Ref<IDBIndex>> index(const String& name);
+    ExceptionOr<void> deleteIndex(const String& name);
+    ExceptionOr<Ref<IDBRequest>> count(JSC::ExecState&, IDBKeyRange*);
+    ExceptionOr<Ref<IDBRequest>> count(JSC::ExecState&, JSC::JSValue key);
+    ExceptionOr<Ref<IDBRequest>> getAll(JSC::ExecState&, RefPtr<IDBKeyRange>, std::optional<uint32_t> count);
+    ExceptionOr<Ref<IDBRequest>> getAll(JSC::ExecState&, JSC::JSValue key, std::optional<uint32_t> count);
+    ExceptionOr<Ref<IDBRequest>> getAllKeys(JSC::ExecState&, RefPtr<IDBKeyRange>, std::optional<uint32_t> count);
+    ExceptionOr<Ref<IDBRequest>> getAllKeys(JSC::ExecState&, JSC::JSValue key, std::optional<uint32_t> count);
 
-    PassRefPtr<IDBIndex> createIndex(ScriptExecutionContext* context, const String& name, const String& keyPath, const Dictionary& options, ExceptionCode& ec) { return createIndex(context, name, IDBKeyPath(keyPath), options, ec); }
-    PassRefPtr<IDBIndex> createIndex(ScriptExecutionContext* context, const String& name, const Vector<String>& keyPath, const Dictionary& options, ExceptionCode& ec) { return createIndex(context, name, IDBKeyPath(keyPath), options, ec); }
-    PassRefPtr<IDBIndex> createIndex(ScriptExecutionContext*, const String& name, const IDBKeyPath&, const Dictionary&, ExceptionCode&);
-    PassRefPtr<IDBIndex> createIndex(ScriptExecutionContext*, const String& name, const IDBKeyPath&, bool unique, bool multiEntry, ExceptionCode&);
+    ExceptionOr<Ref<IDBRequest>> putForCursorUpdate(JSC::ExecState&, JSC::JSValue, JSC::JSValue key);
 
-    PassRefPtr<IDBIndex> index(const String& name, ExceptionCode&);
-    void deleteIndex(const String& name, ExceptionCode&);
+    void markAsDeleted();
+    bool isDeleted() const { return m_deleted; }
 
-    PassRefPtr<IDBRequest> count(ScriptExecutionContext* context, ExceptionCode& ec) { return count(context, static_cast<IDBKeyRange*>(nullptr), ec); }
-    PassRefPtr<IDBRequest> count(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, ExceptionCode&);
-    PassRefPtr<IDBRequest> count(ScriptExecutionContext*, const Deprecated::ScriptValue& key, ExceptionCode&);
+    const IDBObjectStoreInfo& info() const { return m_info; }
 
-    PassRefPtr<IDBRequest> put(IDBDatabaseBackend::PutMode, PassRefPtr<IDBAny> source, JSC::ExecState*, Deprecated::ScriptValue&, const Deprecated::ScriptValue& key, ExceptionCode&);
-    PassRefPtr<IDBRequest> put(IDBDatabaseBackend::PutMode, PassRefPtr<IDBAny> source, JSC::ExecState*, Deprecated::ScriptValue&, PassRefPtr<IDBKey>, ExceptionCode&);
-    void markDeleted() { m_deleted = true; }
-    void transactionFinished();
+    void rollbackForVersionChangeAbort();
 
-    IDBObjectStoreMetadata metadata() const { return m_metadata; }
-    void setMetadata(const IDBObjectStoreMetadata& metadata) { m_metadata = metadata; }
+    void ref();
+    void deref();
 
-    typedef Vector<RefPtr<IDBKey>> IndexKeys;
-    typedef HashMap<String, IndexKeys> IndexKeyMap;
-
-    IDBDatabaseBackend* backendDB() const;
+    void visitReferencedIndexes(JSC::SlotVisitor&) const;
+    void renameReferencedIndex(IDBIndex&, const String& newName);
 
 private:
-    IDBObjectStore(const IDBObjectStoreMetadata&, IDBTransaction*);
+    enum class InlineKeyCheck { Perform, DoNotPerform };
+    ExceptionOr<Ref<IDBRequest>> putOrAdd(JSC::ExecState&, JSC::JSValue, RefPtr<IDBKey>, IndexedDB::ObjectStoreOverwriteMode, InlineKeyCheck);
+    ExceptionOr<Ref<IDBRequest>> doCount(JSC::ExecState&, const IDBKeyRangeData&);
+    ExceptionOr<Ref<IDBRequest>> doDelete(JSC::ExecState&, IDBKeyRange*);
 
-    int64_t findIndexId(const String& name) const;
-    bool containsIndex(const String& name) const
-    {
-        return findIndexId(name) != IDBIndexMetadata::InvalidId;
-    }
+    const char* activeDOMObjectName() const final;
+    bool canSuspendForDocumentSuspension() const final;
+    bool hasPendingActivity() const final;
 
-    IDBObjectStoreMetadata m_metadata;
-    RefPtr<IDBTransaction> m_transaction;
-    bool m_deleted;
+    IDBObjectStoreInfo m_info;
+    IDBObjectStoreInfo m_originalInfo;
 
-    typedef HashMap<String, RefPtr<IDBIndex>> IDBIndexMap;
-    IDBIndexMap m_indexMap;
+    // IDBObjectStore objects are always owned by their referencing IDBTransaction.
+    // ObjectStores will never outlive transactions so its okay to keep a raw C++ reference here.
+    IDBTransaction& m_transaction;
+
+    bool m_deleted { false };
+
+    mutable Lock m_referencedIndexLock;
+    HashMap<String, std::unique_ptr<IDBIndex>> m_referencedIndexes;
+    HashMap<uint64_t, std::unique_ptr<IDBIndex>> m_deletedIndexes;
 };
 
 } // namespace WebCore
 
-#endif
-
-#endif // IDBObjectStore_h
+#endif // ENABLE(INDEXED_DATABASE)

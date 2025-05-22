@@ -17,8 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef JSEventListener_h
-#define JSEventListener_h
+#pragma once
 
 #include "DOMWrapperWorld.h"
 #include "EventListener.h"
@@ -26,6 +25,8 @@
 #include <heap/Weak.h>
 #include <heap/WeakInlines.h>
 #include <wtf/Ref.h>
+#include <wtf/text/TextPosition.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
@@ -41,6 +42,14 @@ public:
         return adoptRef(*new JSEventListener(listener, wrapper, isAttribute, world));
     }
 
+    static RefPtr<JSEventListener> create(JSC::JSValue listener, JSC::JSObject& wrapper, bool isAttribute, DOMWrapperWorld& world)
+    {
+        if (UNLIKELY(!listener.isObject()))
+            return nullptr;
+
+        return adoptRef(new JSEventListener(JSC::asObject(listener), &wrapper, isAttribute, world));
+    }
+
     static const JSEventListener* cast(const EventListener* listener)
     {
         return listener->type() == JSEventListenerType
@@ -50,7 +59,7 @@ public:
 
     virtual ~JSEventListener();
 
-    virtual bool operator==(const EventListener& other) override;
+    bool operator==(const EventListener& other) const override;
 
     // Returns true if this event listener was created for an event handler attribute, like "onload" or "onclick".
     bool isAttribute() const { return m_isAttribute; }
@@ -61,14 +70,17 @@ public:
     JSC::JSObject* wrapper() const { return m_wrapper.get(); }
     void setWrapper(JSC::VM&, JSC::JSObject* wrapper) const { m_wrapper = JSC::Weak<JSC::JSObject>(wrapper); }
 
+    virtual String sourceURL() const { return String(); }
+    virtual TextPosition sourcePosition() const { return TextPosition(); }
+
 private:
     virtual JSC::JSObject* initializeJSFunction(ScriptExecutionContext*) const;
-    virtual void visitJSFunction(JSC::SlotVisitor&) override;
-    virtual bool virtualisAttribute() const override;
+    void visitJSFunction(JSC::SlotVisitor&) override;
+    bool virtualisAttribute() const override;
 
 protected:
     JSEventListener(JSC::JSObject* function, JSC::JSObject* wrapper, bool isAttribute, DOMWrapperWorld&);
-    virtual void handleEvent(ScriptExecutionContext*, Event*) override;
+    void handleEvent(ScriptExecutionContext*, Event*) override;
 
 private:
     mutable JSC::Weak<JSC::JSObject> m_jsFunction;
@@ -94,14 +106,11 @@ void setDocumentEventHandlerAttribute(JSC::ExecState&, JSC::JSObject&, HTMLEleme
 JSC::JSValue documentEventHandlerAttribute(Document&, const AtomicString& eventType);
 void setDocumentEventHandlerAttribute(JSC::ExecState&, JSC::JSObject&, Document&, const AtomicString& eventType, JSC::JSValue);
 
-Ref<JSEventListener> createJSEventListenerForAdd(JSC::ExecState&, JSC::JSObject& listener, JSC::JSObject& wrapper);
-Ref<JSEventListener> createJSEventListenerForRemove(JSC::ExecState&, JSC::JSObject& listener, JSC::JSObject& wrapper);
-
 inline JSC::JSObject* JSEventListener::jsFunction(ScriptExecutionContext* scriptExecutionContext) const
 {
     // initializeJSFunction can trigger code that deletes this event listener
     // before we're done. It should always return 0 in this case.
-    Ref<JSEventListener> protect(const_cast<JSEventListener&>(*this));
+    auto protect = makeRef(const_cast<JSEventListener&>(*this));
     JSC::Strong<JSC::JSObject> wrapper(m_isolatedWorld->vm(), m_wrapper.get());
 
     if (!m_jsFunction) {
@@ -128,11 +137,4 @@ inline JSC::JSObject* JSEventListener::jsFunction(ScriptExecutionContext* script
     return m_jsFunction.get();
 }
 
-inline Ref<JSEventListener> createJSEventListenerForRemove(JSC::ExecState& state, JSC::JSObject& listener, JSC::JSObject& wrapper)
-{
-    return createJSEventListenerForAdd(state, listener, wrapper);
-}
-
 } // namespace WebCore
-
-#endif // JSEventListener_h

@@ -23,13 +23,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ValidationMessageClient_h
-#define ValidationMessageClient_h
+#pragma once
 
 #include <wtf/Forward.h>
 
 namespace WebCore {
 
+class Document;
 class Element;
 
 class ValidationMessageClient {
@@ -48,8 +48,10 @@ public:
     // Returns true if the validation message for the specified anchor element
     // is visible.
     virtual bool isValidationMessageVisible(const Element& anchor) = 0;
+
+    virtual void updateValidationBubbleStateIfNeeded() = 0;
+
+    virtual void documentDetached(Document&) = 0;
 };
 
-}
-
-#endif
+} // namespace WebCore

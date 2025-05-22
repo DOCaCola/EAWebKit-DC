@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MutableRange_h
-#define MutableRange_h
+#pragma once
 
 #if ENABLE(CONTENT_EXTENSIONS)
 
@@ -54,7 +53,7 @@ public:
     }
 
     MutableRange(DataType&& data, uint32_t nextRangeIndex, CharacterType first, CharacterType last)
-        : data(WTF::move(data))
+        : data(WTFMove(data))
         , nextRangeIndex(nextRangeIndex)
         , first(first)
         , last(last)
@@ -63,7 +62,7 @@ public:
     }
 
     MutableRange(MutableRange&& other)
-        : data(WTF::move(other.data))
+        : data(WTFMove(other.data))
         , nextRangeIndex(other.nextRangeIndex)
         , first(other.first)
         , last(other.last)
@@ -73,10 +72,10 @@ public:
 
     TypedMutableRange& operator=(TypedMutableRange&& other)
     {
-        data = WTF::move(other.data);
-        nextRangeIndex = WTF::move(other.nextRangeIndex);
-        first = WTF::move(other.first);
-        last = WTF::move(other.last);
+        data = WTFMove(other.data);
+        nextRangeIndex = WTFMove(other.nextRangeIndex);
+        first = WTFMove(other.first);
+        last = WTFMove(other.last);
         return *this;
     }
 
@@ -91,10 +90,7 @@ public:
     CharacterType last;
 };
 
-}
-
+} // namespace ContentExtensions
 } // namespace WebCore
 
 #endif // ENABLE(CONTENT_EXTENSIONS)
-
-#endif // MutableRange_h

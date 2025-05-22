@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2012, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,38 +23,48 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LoaderStrategy_h
-#define LoaderStrategy_h
+#pragma once
 
 #include "ResourceHandleTypes.h"
+#include "ResourceLoadPriority.h"
+#include "ResourceLoaderOptions.h"
+#include <wtf/SHA1.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
-class BlobRegistry;
+class CachedResource;
 class Frame;
+class NetscapePlugInStreamLoader;
+class NetscapePlugInStreamLoaderClient;
 class NetworkingContext;
 class ResourceError;
-class ResourceLoadScheduler;
+class ResourceLoader;
 class ResourceRequest;
 class ResourceResponse;
+class SharedBuffer;
+class SubresourceLoader;
+class URL;
 
 class WEBCORE_EXPORT LoaderStrategy {
 public:
-    virtual ResourceLoadScheduler* resourceLoadScheduler();
+    virtual RefPtr<SubresourceLoader> loadResource(Frame&, CachedResource&, const ResourceRequest&, const ResourceLoaderOptions&) = 0;
+    virtual void loadResourceSynchronously(NetworkingContext*, unsigned long identifier, const ResourceRequest&, StoredCredentials, ClientCredentialPolicy, ResourceError&, ResourceResponse&, Vector<char>& data) = 0;
 
-    virtual void loadResourceSynchronously(NetworkingContext*, unsigned long identifier, const ResourceRequest&, StoredCredentials, ClientCredentialPolicy, ResourceError&, ResourceResponse&, Vector<char>& data);
+    virtual void remove(ResourceLoader*) = 0;
+    virtual void setDefersLoading(ResourceLoader*, bool) = 0;
+    virtual void crossOriginRedirectReceived(ResourceLoader*, const URL& redirectURL) = 0;
 
-    virtual BlobRegistry* createBlobRegistry();
+    virtual void servePendingRequests(ResourceLoadPriority minimumPriority = ResourceLoadPriority::VeryLow) = 0;
+    virtual void suspendPendingRequests() = 0;
+    virtual void resumePendingRequests() = 0;
 
-    virtual void createPingHandle(NetworkingContext*, ResourceRequest&, bool shouldUseCredentialStorage);
+    virtual void createPingHandle(NetworkingContext*, ResourceRequest&, bool shouldUseCredentialStorage, bool shouldFollowRedirects) = 0;
+
+    virtual void storeDerivedDataToCache(const SHA1::Digest& bodyKey, const String& type, const String& partition, WebCore::SharedBuffer&) = 0;
 
 protected:
-    virtual ~LoaderStrategy()
-    {
-    }
+    virtual ~LoaderStrategy();
 };
 
 } // namespace WebCore
-
-#endif // LoaderStrategy_h

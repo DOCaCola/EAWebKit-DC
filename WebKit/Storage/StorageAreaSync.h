@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StorageAreaSync_h
-#define StorageAreaSync_h
+#pragma once
 
 //+EAWebKitChange
 //4/15/2015
@@ -34,18 +33,21 @@
 
 #include <SQLiteDatabase.h>
 #include <Timer.h>
+#include <wtf/Condition.h>
 #include <wtf/HashMap.h>
 #include <wtf/text/StringHash.h>
 
 namespace WebCore {
-
-class Frame;
-class StorageAreaImpl;
 class StorageSyncManager;
+}
+
+namespace WebKit {
+
+class StorageAreaImpl;
 
 class StorageAreaSync : public ThreadSafeRefCounted<StorageAreaSync> {
 public:
-    static Ref<StorageAreaSync> create(PassRefPtr<StorageSyncManager>, PassRefPtr<StorageAreaImpl>, const String& databaseIdentifier);
+    static Ref<StorageAreaSync> create(RefPtr<WebCore::StorageSyncManager>&&, Ref<StorageAreaImpl>&&, const String& databaseIdentifier);
     ~StorageAreaSync();
 
     void scheduleFinalSync();
@@ -58,19 +60,19 @@ public:
     void scheduleSync();
 
 private:
-    StorageAreaSync(PassRefPtr<StorageSyncManager>, PassRefPtr<StorageAreaImpl>, const String& databaseIdentifier);
+    StorageAreaSync(RefPtr<WebCore::StorageSyncManager>&&, Ref<StorageAreaImpl>&&, const String& databaseIdentifier);
 
-    Timer m_syncTimer;
+    WebCore::Timer m_syncTimer;
     HashMap<String, String> m_changedItems;
     bool m_itemsCleared;
 
     bool m_finalSyncScheduled;
 
     RefPtr<StorageAreaImpl> m_storageArea;
-    RefPtr<StorageSyncManager> m_syncManager;
+    RefPtr<WebCore::StorageSyncManager> m_syncManager;
 
     // The database handle will only ever be opened and used on the background thread.
-    SQLiteDatabase m_database;
+    WebCore::SQLiteDatabase m_database;
 
     // The following members are subject to thread synchronization issues.
 public:
@@ -91,7 +93,7 @@ private:
 
     const String m_databaseIdentifier;
 
-    Mutex m_syncLock;
+    Lock m_syncLock;
     HashMap<String, String> m_itemsPendingSync;
     bool m_clearItemsWhileSyncing;
     bool m_syncScheduled;
@@ -100,13 +102,11 @@ private:
 
     bool m_syncCloseDatabase;
 
-    mutable Mutex m_importLock;
-    ThreadCondition m_importCondition;
+    mutable Lock m_importLock;
+    Condition m_importCondition;
     bool m_importComplete;
     void markImported();
     void migrateItemTableIfNeeded();
 };
 
 } // namespace WebCore
-
-#endif // StorageAreaSync_h

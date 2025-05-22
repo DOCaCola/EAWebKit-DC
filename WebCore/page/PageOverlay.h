@@ -23,14 +23,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PageOverlay_h
-#define PageOverlay_h
+#pragma once
 
 #include "Color.h"
 #include "FloatPoint.h"
 #include "IntRect.h"
 #include "Timer.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/text/WTFString.h>
 
@@ -52,7 +50,6 @@ public:
         virtual ~Client() { }
     
     public:
-        virtual void pageOverlayDestroyed(PageOverlay&) = 0;
         virtual void willMoveToPage(PageOverlay&, Page*) = 0;
         virtual void didMoveToPage(PageOverlay&, Page*) = 0;
         virtual void drawRect(PageOverlay&, GraphicsContext&, const IntRect& dirtyRect) = 0;
@@ -78,6 +75,7 @@ public:
     virtual PageOverlayID pageOverlayID() const { return m_pageOverlayID; }
 
     void setPage(Page*);
+    Page* page() const { return m_page; }
     WEBCORE_EXPORT void setNeedsDisplay(const IntRect& dirtyRect);
     WEBCORE_EXPORT void setNeedsDisplay();
 
@@ -107,11 +105,16 @@ public:
 
     WEBCORE_EXPORT IntSize viewToOverlayOffset() const;
 
-    RGBA32 backgroundColor() const { return m_backgroundColor; }
-    void setBackgroundColor(RGBA32);
+    const Color& backgroundColor() const { return m_backgroundColor; }
+    void setBackgroundColor(const Color&);
+
+    void setShouldIgnoreMouseEventsOutsideBounds(bool flag) { m_shouldIgnoreMouseEventsOutsideBounds = flag; }
 
     // FIXME: PageOverlay should own its layer, instead of PageOverlayController.
     WEBCORE_EXPORT GraphicsLayer& layer();
+
+    bool needsSynchronousScrolling() const { return m_needsSynchronousScrolling; }
+    void setNeedsSynchronousScrolling(bool needsSynchronousScrolling) { m_needsSynchronousScrolling = needsSynchronousScrolling; }
 
 private:
     explicit PageOverlay(Client&, OverlayType);
@@ -120,10 +123,10 @@ private:
     void fadeAnimationTimerFired();
 
     Client& m_client;
-    Page* m_page;
+    Page* m_page { nullptr };
 
     Timer m_fadeAnimationTimer;
-    double m_fadeAnimationStartTime;
+    double m_fadeAnimationStartTime { 0 };
     double m_fadeAnimationDuration;
 
     enum FadeAnimationType {
@@ -132,16 +135,18 @@ private:
         FadeOutAnimation,
     };
 
-    FadeAnimationType m_fadeAnimationType;
-    float m_fractionFadedIn;
+    FadeAnimationType m_fadeAnimationType { NoAnimation };
+    float m_fractionFadedIn { 1 };
+
+    bool m_needsSynchronousScrolling;
 
     OverlayType m_overlayType;
     IntRect m_overrideFrame;
 
-    RGBA32 m_backgroundColor;
+    Color m_backgroundColor { Color::transparent };
     PageOverlayID m_pageOverlayID;
+
+    bool m_shouldIgnoreMouseEventsOutsideBounds { true };
 };
 
 } // namespace WebKit
-
-#endif // PageOverlay_h

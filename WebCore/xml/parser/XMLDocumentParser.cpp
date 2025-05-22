@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2000 Peter Kelly (pmk@post.com)
- * Copyright (C) 2005, 2006, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2005-2017 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Alexey Proskuryakov (ap@webkit.org)
  * Copyright (C) 2007 Samuel Weinig (sam@webkit.org)
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
@@ -27,9 +27,7 @@
 #include "XMLDocumentParser.h"
 
 #include "CDATASection.h"
-#include "CachedScript.h"
 #include "Comment.h"
-#include "CachedResourceLoader.h"
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "DocumentType.h"
@@ -40,6 +38,7 @@
 #include "HTMLNames.h"
 #include "HTMLStyleElement.h"
 #include "ImageLoader.h"
+#include "PendingScript.h"
 #include "ProcessingInstruction.h"
 #include "ResourceError.h"
 #include "ResourceRequest.h"
@@ -48,6 +47,7 @@
 #include "SVGStyleElement.h"
 #include "ScriptElement.h"
 #include "ScriptSourceCode.h"
+#include "StyleScope.h"
 #include "TextResourceDecoder.h"
 #include "TreeDepthLimit.h"
 #include <wtf/Ref.h>
@@ -100,14 +100,15 @@ void XMLDocumentParser::clearCurrentNodeStack()
     }
 }
 
-void XMLDocumentParser::insert(const SegmentedString&)
+void XMLDocumentParser::insert(SegmentedString&&)
 {
     ASSERT_NOT_REACHED();
 }
 
-void XMLDocumentParser::append(PassRefPtr<StringImpl> inputSource)
+void XMLDocumentParser::append(RefPtr<StringImpl>&& inputSource)
 {
-    SegmentedString source(inputSource);
+    String source { WTFMove(inputSource) };
+
     if (m_sawXSLTransform || !m_sawFirstElement)
         m_originalSourceForTransform.append(source);
 
@@ -119,7 +120,7 @@ void XMLDocumentParser::append(PassRefPtr<StringImpl> inputSource)
         return;
     }
 
-    doWrite(source.toString());
+    doWrite(source);
 
     // After parsing, dispatch image beforeload events.
     ImageLoader::dispatchPendingBeforeLoadEvents();
@@ -128,7 +129,7 @@ void XMLDocumentParser::append(PassRefPtr<StringImpl> inputSource)
 void XMLDocumentParser::handleError(XMLErrors::ErrorType type, const char* m, TextPosition position)
 {
     if (!m_xmlErrors)
-        m_xmlErrors = std::make_unique<XMLErrors>(document());
+        m_xmlErrors = std::make_unique<XMLErrors>(*document());
     m_xmlErrors->handleError(type, m, position);
     if (type != XMLErrors::warning)
         m_sawError = true;
@@ -136,12 +137,15 @@ void XMLDocumentParser::handleError(XMLErrors::ErrorType type, const char* m, Te
         stopParsing();
 }
 
-void XMLDocumentParser::enterText()
+void XMLDocumentParser::createLeafTextNode()
 {
+    if (m_leafTextNode)
+        return;
+
     ASSERT(m_bufferedText.size() == 0);
     ASSERT(!m_leafTextNode);
     m_leafTextNode = Text::create(m_currentNode->document(), "");
-    m_currentNode->parserAppendChild(m_leafTextNode.get());
+    m_currentNode->parserAppendChild(*m_leafTextNode);
 }
 
 static inline String toString(const xmlChar* string, size_t size) 
@@ -149,20 +153,23 @@ static inline String toString(const xmlChar* string, size_t size)
     return String::fromUTF8(reinterpret_cast<const char*>(string), size); 
 }
 
-
-void XMLDocumentParser::exitText()
+bool XMLDocumentParser::updateLeafTextNode()
 {
     if (isStopped())
-        return;
+        return false;
 
     if (!m_leafTextNode)
-        return;
+        return true;
 
-    m_leafTextNode->appendData(toString(m_bufferedText.data(), m_bufferedText.size()), IGNORE_EXCEPTION);
-    Vector<xmlChar> empty;
-    m_bufferedText.swap(empty);
+    // This operation might fire mutation event, see below.
+    m_leafTextNode->appendData(toString(m_bufferedText.data(), m_bufferedText.size()));
+    m_bufferedText = { };
 
     m_leafTextNode = nullptr;
+
+    // Hence, we need to check again whether the parser is stopped, since mutation
+    // event handlers executed by appendData might have detached this parser.
+    return !isStopped();
 }
 
 void XMLDocumentParser::detach()
@@ -191,8 +198,8 @@ void XMLDocumentParser::end()
     if (m_sawError)
         insertErrorMessageBlock();
     else {
-        exitText();
-        document()->styleResolverChanged(RecalcStyleImmediately);
+        updateLeafTextNode();
+        document()->styleScope().didChangeStyleSheetEnvironment();
     }
 
     if (isParsing())
@@ -220,35 +227,17 @@ void XMLDocumentParser::insertErrorMessageBlock()
     m_xmlErrors->insertErrorMessageBlock();
 }
 
-void XMLDocumentParser::notifyFinished(CachedResource* unusedResource)
+void XMLDocumentParser::notifyFinished(PendingScript& pendingScript)
 {
-    ASSERT_UNUSED(unusedResource, unusedResource == m_pendingScript);
-    ASSERT(m_pendingScript->accessCount() > 0);
-
-    ScriptSourceCode sourceCode(m_pendingScript.get());
-    bool errorOccurred = m_pendingScript->errorOccurred();
-    bool wasCanceled = m_pendingScript->wasCanceled();
-
-    m_pendingScript->removeClient(this);
-    m_pendingScript = nullptr;
-
-    RefPtr<Element> e = m_scriptElement;
-    m_scriptElement = nullptr;
-
-    ScriptElement* scriptElement = toScriptElementIfPossible(e.get());
-    ASSERT(scriptElement);
+    ASSERT(&pendingScript == m_pendingScript.get());
 
     // JavaScript can detach this parser, make sure it's kept alive even if detached.
-    Ref<XMLDocumentParser> protect(*this);
-    
-    if (errorOccurred)
-        scriptElement->dispatchErrorEvent();
-    else if (!wasCanceled) {
-        scriptElement->executeScript(sourceCode);
-        scriptElement->dispatchLoadEvent();
-    }
+    Ref<XMLDocumentParser> protectedThis(*this);
 
-    m_scriptElement = nullptr;
+    m_pendingScript = nullptr;
+    pendingScript.clearClient();
+
+    pendingScript.element().executePendingScript(pendingScript);
 
     if (!isDetached() && !m_requestingScript)
         resumeParsing();

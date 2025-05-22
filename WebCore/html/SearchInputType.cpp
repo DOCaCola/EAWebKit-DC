@@ -76,9 +76,9 @@ void SearchInputType::maxResultsAttributeChanged()
         updateResultButtonPseudoType(*m_resultsButton, element().maxResults());
 }
 
-RenderPtr<RenderElement> SearchInputType::createInputRenderer(Ref<RenderStyle>&& style)
+RenderPtr<RenderElement> SearchInputType::createInputRenderer(RenderStyle&& style)
 {
-    return createRenderer<RenderSearchField>(element(), WTF::move(style));
+    return createRenderer<RenderSearchField>(element(), WTFMove(style));
 }
 
 const AtomicString& SearchInputType::formControlType() const
@@ -107,14 +107,14 @@ void SearchInputType::createShadowSubtree()
     ASSERT(container);
     ASSERT(textWrapper);
 
-    RefPtr<SearchFieldResultsButtonElement> resultsButton = SearchFieldResultsButtonElement::create(element().document());
-    m_resultsButton = resultsButton.get();
-    updateResultButtonPseudoType(*m_resultsButton, element().maxResults());
-    container->insertBefore(m_resultsButton, textWrapper, IGNORE_EXCEPTION);
+    auto resultsButton = SearchFieldResultsButtonElement::create(element().document());
+    m_resultsButton = resultsButton.ptr();
+    updateResultButtonPseudoType(resultsButton.get(), element().maxResults());
+    container->insertBefore(resultsButton, textWrapper);
 
-    RefPtr<SearchFieldCancelButtonElement> cancelButton = SearchFieldCancelButtonElement::create(element().document());
-    m_cancelButton = cancelButton.get();
-    container->insertBefore(m_cancelButton, textWrapper->nextSibling(), IGNORE_EXCEPTION);
+    auto cancelButton = SearchFieldCancelButtonElement::create(element().document());
+    m_cancelButton = cancelButton.ptr();
+    container->insertBefore(cancelButton, textWrapper->nextSibling());
 }
 
 HTMLElement* SearchInputType::resultsButtonElement() const
@@ -127,19 +127,19 @@ HTMLElement* SearchInputType::cancelButtonElement() const
     return m_cancelButton;
 }
 
-void SearchInputType::handleKeydownEvent(KeyboardEvent* event)
+void SearchInputType::handleKeydownEvent(KeyboardEvent& event)
 {
     if (element().isDisabledOrReadOnly()) {
         TextFieldInputType::handleKeydownEvent(event);
         return;
     }
 
-    const String& key = event->keyIdentifier();
+    const String& key = event.keyIdentifier();
     if (key == "U+001B") {
         Ref<HTMLInputElement> input(this->element());
-        input->setValueForUser("");
+        input->setValueForUser(emptyString());
         input->onSearch();
-        event->setDefaultHandled();
+        event.setDefaultHandled();
         return;
     }
     TextFieldInputType::handleKeydownEvent(event);
@@ -180,7 +180,7 @@ void SearchInputType::searchEventTimerFired()
 
 bool SearchInputType::searchEventsShouldBeDispatched() const
 {
-    return element().fastHasAttribute(incrementalAttr);
+    return element().hasAttributeWithoutSynchronization(incrementalAttr);
 }
 
 void SearchInputType::didSetValueByUserEdit()

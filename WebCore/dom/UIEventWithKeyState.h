@@ -21,58 +21,66 @@
  *
  */
 
-#ifndef UIEventWithKeyState_h
-#define UIEventWithKeyState_h
+#pragma once
 
+#include "EventModifierInit.h"
 #include "UIEvent.h"
 
 namespace WebCore {
 
-    class UIEventWithKeyState : public UIEvent {
-    public:
-        bool ctrlKey() const { return m_ctrlKey; }
-        bool shiftKey() const { return m_shiftKey; }
-        bool altKey() const { return m_altKey; }
-        bool metaKey() const { return m_metaKey; }
+class UIEventWithKeyState : public UIEvent {
+public:
+    bool ctrlKey() const { return m_ctrlKey; }
+    bool shiftKey() const { return m_shiftKey; }
+    bool altKey() const { return m_altKey; }
+    bool metaKey() const { return m_metaKey; }
+    bool altGraphKey() const { return m_altGraphKey; }
+    bool capsLockKey() const { return m_capsLockKey; }
 
-    protected:
-        UIEventWithKeyState()
-            : m_ctrlKey(false)
-            , m_altKey(false)
-            , m_shiftKey(false)
-            , m_metaKey(false)
-        {
-        }
+protected:
+    UIEventWithKeyState() = default;
 
-        UIEventWithKeyState(const AtomicString& type, bool canBubble, bool cancelable, PassRefPtr<AbstractView> view,
-                            int detail, bool ctrlKey, bool altKey, bool shiftKey, bool metaKey)
-            : UIEvent(type, canBubble, cancelable, view, detail)
-            , m_ctrlKey(ctrlKey)
-            , m_altKey(altKey)
-            , m_shiftKey(shiftKey)
-            , m_metaKey(metaKey)
-        {
-        }
+    UIEventWithKeyState(const AtomicString& type, bool canBubble, bool cancelable, DOMWindow* view, int detail, bool ctrlKey, bool altKey, bool shiftKey, bool metaKey)
+        : UIEvent(type, canBubble, cancelable, view, detail)
+        , m_ctrlKey(ctrlKey)
+        , m_altKey(altKey)
+        , m_shiftKey(shiftKey)
+        , m_metaKey(metaKey)
+    {
+    }
 
-        UIEventWithKeyState(const AtomicString& type, bool canBubble, bool cancelable, double timestamp, PassRefPtr<AbstractView> view,
-                            int detail, bool ctrlKey, bool altKey, bool shiftKey, bool metaKey)
+    UIEventWithKeyState(const AtomicString& type, bool canBubble, bool cancelable, double timestamp, DOMWindow* view,
+        int detail, bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey, bool capsLockKey)
             : UIEvent(type, canBubble, cancelable, timestamp, view, detail)
             , m_ctrlKey(ctrlKey)
             , m_altKey(altKey)
             , m_shiftKey(shiftKey)
             , m_metaKey(metaKey)
-        {
-        }
+            , m_altGraphKey(altGraphKey)
+            , m_capsLockKey(capsLockKey)
+    {
+    }
 
-        // Expose these so init functions can set them.
-        bool m_ctrlKey : 1;
-        bool m_altKey : 1;
-        bool m_shiftKey : 1;
-        bool m_metaKey : 1;
-    };
+    UIEventWithKeyState(const AtomicString& type, const EventModifierInit& initializer, IsTrusted isTrusted)
+        : UIEvent(type, initializer, isTrusted)
+        , m_ctrlKey(initializer.ctrlKey)
+        , m_altKey(initializer.altKey)
+        , m_shiftKey(initializer.shiftKey)
+        , m_metaKey(initializer.metaKey)
+        , m_altGraphKey(initializer.modifierAltGraph)
+        , m_capsLockKey(initializer.modifierCapsLock)
+    {
+    }
 
-    WEBCORE_EXPORT UIEventWithKeyState* findEventWithKeyState(Event*);
+    // Expose these so init functions can set them.
+    bool m_ctrlKey { false };
+    bool m_altKey { false };
+    bool m_shiftKey { false };
+    bool m_metaKey { false };
+    bool m_altGraphKey { false };
+    bool m_capsLockKey { false };
+};
+
+WEBCORE_EXPORT UIEventWithKeyState* findEventWithKeyState(Event*);
 
 } // namespace WebCore
-
-#endif // UIEventWithKeyState_h

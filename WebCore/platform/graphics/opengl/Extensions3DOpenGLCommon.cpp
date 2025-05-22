@@ -34,13 +34,17 @@
 
 #if PLATFORM(IOS)
 #include <OpenGLES/ES2/glext.h>
+#include <OpenGLES/ES3/gl.h>
 #else
 #if USE(OPENGL_ES_2)
 #include "OpenGLESShims.h"
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #elif PLATFORM(MAC)
+#define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
+#undef GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #elif PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(WIN)
 #include "OpenGLShims.h"
 #endif
@@ -51,22 +55,22 @@
 
 namespace WebCore {
 
-Extensions3DOpenGLCommon::Extensions3DOpenGLCommon(GraphicsContext3D* context)
+Extensions3DOpenGLCommon::Extensions3DOpenGLCommon(GraphicsContext3D* context, bool useIndexedGetString)
     : m_initializedAvailableExtensions(false)
     , m_context(context)
     , m_isNVIDIA(false)
     , m_isAMD(false)
     , m_isIntel(false)
     , m_isImagination(false)
-    , m_maySupportMultisampling(true)
     , m_requiresBuiltInFunctionEmulation(false)
     , m_requiresRestrictedMaximumTextureSize(false)
+    , m_useIndexedGetString(useIndexedGetString)
 {
     m_vendor = String(reinterpret_cast<const char*>(::glGetString(GL_VENDOR)));
     m_renderer = String(reinterpret_cast<const char*>(::glGetString(GL_RENDERER)));
 
     Vector<String> vendorComponents;
-    m_vendor.lower().split(' ', vendorComponents);
+    m_vendor.convertToASCIILowercase().split(' ', vendorComponents);
     if (vendorComponents.contains("nvidia"))
         m_isNVIDIA = true;
     if (vendorComponents.contains("ati") || vendorComponents.contains("amd"))
@@ -80,17 +84,8 @@ Extensions3DOpenGLCommon::Extensions3DOpenGLCommon(GraphicsContext3D* context)
     if (m_isAMD || m_isIntel)
         m_requiresBuiltInFunctionEmulation = true;
 
-    // Currently in Mac we only allow multisampling if the vendor is NVIDIA,
-    // or if the vendor is AMD/ATI and the system is 10.7.2 and above.
-
-    bool systemSupportsMultisampling = true;
-
-    if (m_isAMD && !systemSupportsMultisampling)
-        m_maySupportMultisampling = false;
-
     // Intel HD 3000 devices have problems with large textures. <rdar://problem/16649140>
-    if (m_isIntel)
-        m_requiresRestrictedMaximumTextureSize = m_renderer.startsWith("Intel HD Graphics 3000");
+    m_requiresRestrictedMaximumTextureSize = m_renderer.startsWith("Intel HD Graphics 3000");
 #endif
 }
 
@@ -102,6 +97,12 @@ bool Extensions3DOpenGLCommon::supports(const String& name)
 {
     if (!m_initializedAvailableExtensions)
         initializeAvailableExtensions();
+
+    // We explicitly do not support this extension until
+    // we fix the following bug:
+    // https://bugs.webkit.org/show_bug.cgi?id=149734
+    if (name == "GL_ANGLE_translated_shader_source")
+        return false;
 
     return supportsExtension(name);
 }
@@ -184,22 +185,20 @@ String Extensions3DOpenGLCommon::getTranslatedShaderSourceANGLE(Platform3DObject
 
     String translatedShaderSource;
     String shaderInfoLog;
-    int extraCompileOptions = SH_CLAMP_INDIRECT_ARRAY_BOUNDS | SH_UNFOLD_SHORT_CIRCUIT | SH_ENFORCE_PACKING_RESTRICTIONS | SH_INIT_VARYINGS_WITHOUT_STATIC_USE | SH_LIMIT_EXPRESSION_COMPLEXITY | SH_LIMIT_CALL_STACK_DEPTH;
+    int extraCompileOptions = SH_CLAMP_INDIRECT_ARRAY_BOUNDS | SH_UNFOLD_SHORT_CIRCUIT | SH_INIT_OUTPUT_VARIABLES | SH_ENFORCE_PACKING_RESTRICTIONS | SH_LIMIT_EXPRESSION_COMPLEXITY | SH_LIMIT_CALL_STACK_DEPTH;
 
     if (m_requiresBuiltInFunctionEmulation)
-        extraCompileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
+        extraCompileOptions |= SH_EMULATE_ABS_INT_FUNCTION;
 
-    Vector<ANGLEShaderSymbol> symbols;
+    Vector<std::pair<ANGLEShaderSymbolType, sh::ShaderVariable>> symbols;
     bool isValid = compiler.compileShaderSource(entry.source.utf8().data(), shaderType, translatedShaderSource, shaderInfoLog, symbols, extraCompileOptions);
 
     entry.log = shaderInfoLog;
     entry.isValid = isValid;
 
-    size_t numSymbols = symbols.size();
-    for (size_t i = 0; i < numSymbols; ++i) {
-        ANGLEShaderSymbol shaderSymbol = symbols[i];
-        GraphicsContext3D::SymbolInfo symbolInfo(shaderSymbol.dataType, shaderSymbol.size, shaderSymbol.mappedName, shaderSymbol.precision, shaderSymbol.staticUse);
-        entry.symbolMap(shaderSymbol.symbolType).set(shaderSymbol.name, symbolInfo);
+    for (const std::pair<ANGLEShaderSymbolType, sh::ShaderVariable>& pair : symbols) {
+        const std::string& name = pair.second.name;
+        entry.symbolMap(pair.first).set(String(name.c_str(), name.length()), pair.second);
     }
 
     if (!isValid)
@@ -210,11 +209,30 @@ String Extensions3DOpenGLCommon::getTranslatedShaderSourceANGLE(Platform3DObject
 
 void Extensions3DOpenGLCommon::initializeAvailableExtensions()
 {
-    String extensionsString = getExtensions();
-    Vector<String> availableExtensions;
-    extensionsString.split(' ', availableExtensions);
-    for (size_t i = 0; i < availableExtensions.size(); ++i)
-        m_availableExtensions.add(availableExtensions[i]);
+#if PLATFORM(MAC) || (PLATFORM(GTK) && !USE(OPENGL_ES_2))
+    if (m_useIndexedGetString) {
+        GLint numExtensions = 0;
+        ::glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+        for (GLint i = 0; i < numExtensions; ++i)
+            m_availableExtensions.add(glGetStringi(GL_EXTENSIONS, i));
+
+        if (!m_availableExtensions.contains(ASCIILiteral("GL_ARB_texture_storage"))) {
+            GLint majorVersion;
+            glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
+            GLint minorVersion;
+            glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
+            if (majorVersion > 4 || (majorVersion == 4 && minorVersion >= 2))
+                m_availableExtensions.add(ASCIILiteral("GL_ARB_texture_storage"));
+        }
+    } else
+#endif
+    {
+        String extensionsString = getExtensions();
+        Vector<String> availableExtensions;
+        extensionsString.split(' ', availableExtensions);
+        for (size_t i = 0; i < availableExtensions.size(); ++i)
+            m_availableExtensions.add(availableExtensions[i]);
+    }
     m_initializedAvailableExtensions = true;
 }
 

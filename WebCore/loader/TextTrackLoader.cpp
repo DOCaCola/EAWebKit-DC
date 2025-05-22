@@ -36,7 +36,6 @@
 #include "CrossOriginAccessControl.h"
 #include "Document.h"
 #include "Logging.h"
-#include "SecurityOrigin.h"
 #include "SharedBuffer.h"
 #include "VTTCue.h"
 #include "WebVTTParser.h"
@@ -56,7 +55,7 @@ TextTrackLoader::TextTrackLoader(TextTrackLoaderClient& client, ScriptExecutionC
 TextTrackLoader::~TextTrackLoader()
 {
     if (m_resource)
-        m_resource->removeClient(this);
+        m_resource->removeClient(*this);
 }
 
 void TextTrackLoader::cueLoadTimerFired()
@@ -73,19 +72,19 @@ void TextTrackLoader::cueLoadTimerFired()
 void TextTrackLoader::cancelLoad()
 {
     if (m_resource) {
-        m_resource->removeClient(this);
+        m_resource->removeClient(*this);
         m_resource = nullptr;
     }
 }
 
-void TextTrackLoader::processNewCueData(CachedResource* resource)
+void TextTrackLoader::processNewCueData(CachedResource& resource)
 {
-    ASSERT(m_resource == resource);
-    
-    if (m_state == Failed || !resource->resourceBuffer())
+    ASSERT_UNUSED(resource, m_resource == &resource);
+
+    if (m_state == Failed || !m_resource->resourceBuffer())
         return;
-    
-    auto* buffer = resource->resourceBuffer();
+
+    auto* buffer = m_resource->resourceBuffer();
     if (m_parseOffset == buffer->size())
         return;
 
@@ -102,38 +101,37 @@ void TextTrackLoader::processNewCueData(CachedResource* resource)
 }
 
 // FIXME: This is a very unusual pattern, no other CachedResourceClient does this. Refactor to use notifyFinished() instead.
-void TextTrackLoader::deprecatedDidReceiveCachedResource(CachedResource* resource)
+void TextTrackLoader::deprecatedDidReceiveCachedResource(CachedResource& resource)
 {
-    ASSERT(m_resource == resource);
-    
-    if (!resource->resourceBuffer())
+    ASSERT_UNUSED(resource, m_resource == &resource);
+
+    if (!m_resource->resourceBuffer())
         return;
-    
-    processNewCueData(resource);
+
+    processNewCueData(*m_resource);
 }
 
 void TextTrackLoader::corsPolicyPreventedLoad()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(String, consoleMessage, (ASCIILiteral("Cross-origin text track load denied by Cross-Origin Resource Sharing policy.")));
+    static NeverDestroyed<String> consoleMessage(ASCIILiteral("Cross-origin text track load denied by Cross-Origin Resource Sharing policy."));
     Document* document = downcast<Document>(m_scriptExecutionContext);
     document->addConsoleMessage(MessageSource::Security, MessageLevel::Error, consoleMessage);
     m_state = Failed;
 }
 
-void TextTrackLoader::notifyFinished(CachedResource* resource)
+void TextTrackLoader::notifyFinished(CachedResource& resource)
 {
-    ASSERT(m_resource == resource);
+    ASSERT_UNUSED(resource, m_resource == &resource);
 
-    Document* document = downcast<Document>(m_scriptExecutionContext);
-    if (!m_crossOriginMode.isNull() && !resource->passesSameOriginPolicyCheck(*document->securityOrigin()))
+    if (m_resource->resourceError().isAccessControl())
         corsPolicyPreventedLoad();
 
     if (m_state != Failed) {
-        processNewCueData(resource);
+        processNewCueData(*m_resource);
         if (m_cueParser)
             m_cueParser->fileFinished();
         if (m_state != Failed)
-            m_state = resource->errorOccurred() ? Failed : Finished;
+            m_state = m_resource->errorOccurred() ? Failed : Finished;
     }
 
     if (m_state == Finished && m_cueParser)
@@ -141,7 +139,7 @@ void TextTrackLoader::notifyFinished(CachedResource* resource)
 
     if (!m_cueLoadTimer.isActive())
         m_cueLoadTimer.startOneShot(0);
-    
+
     cancelLoad();
 }
 
@@ -153,28 +151,17 @@ bool TextTrackLoader::load(const URL& url, const String& crossOriginMode, bool i
     Document* document = downcast<Document>(m_scriptExecutionContext);
 
     ResourceLoaderOptions options = CachedResourceLoader::defaultCachedResourceOptions();
-    options.setContentSecurityPolicyImposition(isInitiatingElementInUserAgentShadowTree ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck);
+    options.contentSecurityPolicyImposition = isInitiatingElementInUserAgentShadowTree ? ContentSecurityPolicyImposition::SkipPolicyCheck : ContentSecurityPolicyImposition::DoPolicyCheck;
 
     CachedResourceRequest cueRequest(ResourceRequest(document->completeURL(url)), options);
+    cueRequest.setAsPotentiallyCrossOrigin(crossOriginMode, *document);
 
-    if (!crossOriginMode.isNull()) {
-        m_crossOriginMode = crossOriginMode;
-        StoredCredentials allowCredentials = equalIgnoringCase(crossOriginMode, "use-credentials") ? AllowStoredCredentials : DoNotAllowStoredCredentials;
-        updateRequestForAccessControl(cueRequest.mutableResourceRequest(), document->securityOrigin(), allowCredentials);
-    } else {
-        // Cross-origin resources that are not suitably CORS-enabled may not load.
-        if (!document->securityOrigin()->canRequest(url)) {
-            corsPolicyPreventedLoad();
-            return false;
-        }
-    }
-
-    m_resource = document->cachedResourceLoader().requestTextTrack(cueRequest);
+    m_resource = document->cachedResourceLoader().requestTextTrack(WTFMove(cueRequest));
     if (!m_resource)
         return false;
 
-    m_resource->addClient(this);
-    
+    m_resource->addClient(*this);
+
     return true;
 }
 
@@ -187,12 +174,10 @@ void TextTrackLoader::newCuesParsed()
     m_cueLoadTimer.startOneShot(0);
 }
 
-#if ENABLE(WEBVTT_REGIONS)
 void TextTrackLoader::newRegionsParsed()
 {
     m_client.newRegionsAvailable(this);
 }
-#endif
 
 void TextTrackLoader::fileFailedToParse()
 {
@@ -218,14 +203,13 @@ void TextTrackLoader::getNewCues(Vector<RefPtr<TextTrackCue>>& outputCues)
     }
 }
 
-#if ENABLE(WEBVTT_REGIONS)
 void TextTrackLoader::getNewRegions(Vector<RefPtr<VTTRegion>>& outputRegions)
 {
     ASSERT(m_cueParser);
     if (m_cueParser)
         m_cueParser->getNewRegions(outputRegions);
 }
-#endif
+
 }
 
 #endif

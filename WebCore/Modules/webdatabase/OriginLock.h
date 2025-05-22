@@ -23,12 +23,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef OriginLock_h
-#define OriginLock_h
+#pragma once
 
 #include "FileSystem.h"
+#include <wtf/Lock.h>
 #include <wtf/ThreadSafeRefCounted.h>
-#include <wtf/ThreadingPrimitives.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
@@ -48,12 +47,10 @@ private:
     static String lockFileNameForPath(String originPath);
 
     String m_lockFileName;
-    Mutex m_mutex;
+    Lock m_mutex;
 #if USE(FILE_LOCK)
     PlatformFileHandle m_lockHandle;
 #endif
 };
 
 } // namespace WebCore
-
-#endif // OriginLock_h

@@ -28,7 +28,6 @@
 #include "Document.h"
 #include "ElementIterator.h"
 #include "Event.h"
-#include "EventNames.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
@@ -86,7 +85,7 @@ void HTMLFrameSetElement::parseAttribute(const QualifiedName& name, const Atomic
         if (!value.isNull()) {
             m_rowLengths = newLengthArray(value.string(), m_totalRows);
             // FIXME: Would be nice to optimize the case where m_rowLengths did not change.
-            setNeedsStyleRecalc();
+            invalidateStyleForSubtree();
         }
         return;
     }
@@ -97,17 +96,17 @@ void HTMLFrameSetElement::parseAttribute(const QualifiedName& name, const Atomic
         if (!value.isNull()) {
             m_colLengths = newLengthArray(value.string(), m_totalCols);
             // FIXME: Would be nice to optimize the case where m_colLengths did not change.
-            setNeedsStyleRecalc();
+            invalidateStyleForSubtree();
         }
         return;
     }
 
     if (name == frameborderAttr) {
         if (!value.isNull()) {
-            if (equalIgnoringCase(value, "no") || equalIgnoringCase(value, "0")) {
+            if (equalLettersIgnoringASCIICase(value, "no") || value == "0") {
                 m_frameborder = false;
                 m_frameborderSet = true;
-            } else if (equalIgnoringCase(value, "yes") || equalIgnoringCase(value, "1")) {
+            } else if (equalLettersIgnoringASCIICase(value, "yes") || value == "1") {
                 m_frameborderSet = true;
             }
         } else {
@@ -154,15 +153,15 @@ bool HTMLFrameSetElement::rendererIsNeeded(const RenderStyle& style)
 {
     // For compatibility, frames render even when display: none is set.
     // However, we delay creating a renderer until stylesheets have loaded. 
-    return style.isStyleAvailable();
+    return !style.isPlaceholderStyle();
 }
 
-RenderPtr<RenderElement> HTMLFrameSetElement::createElementRenderer(Ref<RenderStyle>&& style, const RenderTreePosition&)
+RenderPtr<RenderElement> HTMLFrameSetElement::createElementRenderer(RenderStyle&& style, const RenderTreePosition&)
 {
-    if (style.get().hasContent())
-        return RenderElement::createFor(*this, WTF::move(style));
+    if (style.hasContent())
+        return RenderElement::createFor(*this, WTFMove(style));
     
-    return createRenderer<RenderFrameSet>(*this, WTF::move(style));
+    return createRenderer<RenderFrameSet>(*this, WTFMove(style));
 }
 
 HTMLFrameSetElement* HTMLFrameSetElement::findContaining(Element* descendant)
@@ -189,25 +188,21 @@ void HTMLFrameSetElement::willAttachRenderers()
         m_noresize = containingFrameSet->noResize();
 }
 
-void HTMLFrameSetElement::defaultEventHandler(Event* event)
+void HTMLFrameSetElement::defaultEventHandler(Event& event)
 {
-    ASSERT(event);
-    if (is<MouseEvent>(*event) && !m_noresize && is<RenderFrameSet>(renderer())) {
+    if (is<MouseEvent>(event) && !m_noresize && is<RenderFrameSet>(renderer())) {
         if (downcast<RenderFrameSet>(*renderer()).userResize(downcast<MouseEvent>(event))) {
-            event->setDefaultHandled();
+            event.setDefaultHandled();
             return;
         }
     }
     HTMLElement::defaultEventHandler(event);
 }
 
-bool HTMLFrameSetElement::willRecalcStyle(Style::Change)
+void HTMLFrameSetElement::willRecalcStyle(Style::Change)
 {
-    if (needsStyleRecalc() && renderer()) {
+    if (needsStyleRecalc() && renderer())
         renderer()->setNeedsLayout();
-        clearNeedsStyleRecalc();
-    }
-    return true;
 }
 
 Node::InsertionNotificationRequest HTMLFrameSetElement::insertedInto(ContainerNode& insertionPoint)

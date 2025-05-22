@@ -24,8 +24,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef StorageTracker_h
-#define StorageTracker_h
+#pragma once
 //+EAWebKitChange
 //4/15/2015
 // This file has one modification. At various places, it fixes up the include paths of the files in webcore directory. Merge carefully for next iteration.
@@ -38,29 +37,28 @@
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
-
-class StorageTask;
 class StorageThread;
 class SecurityOrigin;
-class StorageTrackerClient;    
+class StorageTrackerClient;
+struct SecurityOriginData;
+}
+
+namespace WebKit {
 
 class StorageTracker {
     WTF_MAKE_NONCOPYABLE(StorageTracker);
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    WEBCORE_EXPORT static void initializeTracker(const String& storagePath, StorageTrackerClient*);
-    WEBCORE_EXPORT static StorageTracker& tracker();
-
-    void setDatabaseDirectoryPath(const String&);
-    String databaseDirectoryPath() const;
+    static void initializeTracker(const String& storagePath, WebCore::StorageTrackerClient*);
+    static StorageTracker& tracker();
 
     void setOriginDetails(const String& originIdentifier, const String& databaseFile);
     
-    WEBCORE_EXPORT void deleteAllOrigins();
-    WEBCORE_EXPORT void deleteOrigin(SecurityOrigin*);
+    void deleteAllOrigins();
+    void deleteOrigin(const WebCore::SecurityOriginData&);
     void deleteOriginWithIdentifier(const String& originIdentifier);
-    WEBCORE_EXPORT void origins(Vector<RefPtr<SecurityOrigin>>& result);
-    WEBCORE_EXPORT long long diskUsageForOrigin(SecurityOrigin*);
+    Vector<WebCore::SecurityOriginData> origins();
+    long long diskUsageForOrigin(WebCore::SecurityOrigin*);
     
     void cancelDeletingOrigin(const String& originIdentifier);
     
@@ -69,7 +67,7 @@ public:
     double storageDatabaseIdleInterval() { return m_StorageDatabaseIdleInterval; }
     void setStorageDatabaseIdleInterval(double interval) { m_StorageDatabaseIdleInterval = interval; }
 
-    WEBCORE_EXPORT void syncFileSystemAndTrackerDatabase();
+    void syncFileSystemAndTrackerDatabase();
 
 private:
     explicit StorageTracker(const String& storagePath);
@@ -100,20 +98,20 @@ private:
     void syncImportOriginIdentifiers();
 
     // Mutex for m_database and m_storageDirectoryPath.
-    Mutex m_databaseMutex;
-    SQLiteDatabase m_database;
+    Lock m_databaseMutex;
+    WebCore::SQLiteDatabase m_database;
     String m_storageDirectoryPath;
 
-    Mutex m_clientMutex;
-    StorageTrackerClient* m_client;
+    Lock m_clientMutex;
+    WebCore::StorageTrackerClient* m_client;
 
     // Guard for m_originSet and m_originsBeingDeleted.
-    Mutex m_originSetMutex;
+    Lock m_originSetMutex;
     typedef HashSet<String> OriginSet;
     OriginSet m_originSet;
     OriginSet m_originsBeingDeleted;
 
-    std::unique_ptr<StorageThread> m_thread;
+    std::unique_ptr<WebCore::StorageThread> m_thread;
     
     bool m_isActive;
     bool m_needsInitialization;
@@ -121,5 +119,3 @@ private:
 };
     
 } // namespace WebCore
-
-#endif // StorageTracker_h

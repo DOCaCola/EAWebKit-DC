@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2004, 2005, 2006, 2009 Apple Inc. All rights reserved.
- * Copyright (C) 2011, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -62,6 +61,7 @@ const double ForceAtForceClick = 2;
 
     // These button numbers match the ones used in the DOM API, 0 through 2, except for NoButton which isn't specified.
     enum MouseButton : int8_t { NoButton = -1, LeftButton, MiddleButton, RightButton };
+    enum SyntheticClickType : int8_t { NoTap, OneFingerTap, TwoFingerTap };
 
     class PlatformMouseEvent : public PlatformEvent {
     public:
@@ -80,7 +80,7 @@ const double ForceAtForceClick = 2;
         }
 
         PlatformMouseEvent(const IntPoint& position, const IntPoint& globalPosition, MouseButton button, PlatformEvent::Type type,
-                           int clickCount, bool shiftKey, bool ctrlKey, bool altKey, bool metaKey, double timestamp, double force)
+                           int clickCount, bool shiftKey, bool ctrlKey, bool altKey, bool metaKey, double timestamp, double force, SyntheticClickType syntheticClickType)
             : PlatformEvent(type, shiftKey, ctrlKey, altKey, metaKey, timestamp)
             , m_position(position)
             , m_globalPosition(globalPosition)
@@ -88,6 +88,7 @@ const double ForceAtForceClick = 2;
             , m_clickCount(clickCount)
             , m_modifierFlags(0)
             , m_force(force)
+            , m_syntheticClickType(syntheticClickType)
 #if PLATFORM(MAC)
             , m_eventNumber(0)
             , m_menuTypeForEvent(0)
@@ -107,7 +108,7 @@ const double ForceAtForceClick = 2;
         int clickCount() const { return m_clickCount; }
         unsigned modifierFlags() const { return m_modifierFlags; }
         double force() const { return m_force; }
-        
+        SyntheticClickType syntheticClickType() const { return m_syntheticClickType; }
 
 #if PLATFORM(GTK) 
         explicit PlatformMouseEvent(GdkEventButton*);
@@ -150,6 +151,7 @@ const double ForceAtForceClick = 2;
         int m_clickCount;
         unsigned m_modifierFlags;
         double m_force { 0 };
+        SyntheticClickType m_syntheticClickType { NoTap };
 
 #if PLATFORM(MAC)
         int m_eventNumber;
@@ -158,14 +160,19 @@ const double ForceAtForceClick = 2;
         bool m_didActivateWebView;
 #endif
     };
-    //+EAWebKitChange
-    //4/02/2015
-#if PLATFORM(WIN) || PLATFORM(EA)
-    //-EAWebKitChange
-    // These methods are necessary to work around the fact that MSVC will not find a most-specific
+
+#if COMPILER(MSVC)
+    // These functions are necessary to work around the fact that MSVC will not find a most-specific
     // operator== to use after implicitly converting MouseButton to an unsigned short.
-    bool operator==(unsigned short a, MouseButton b);
-    bool operator!=(unsigned short a, MouseButton b);
+    inline bool operator==(unsigned short a, MouseButton b)
+    {
+        return a == static_cast<unsigned short>(b);
+    }
+
+    inline bool operator!=(unsigned short a, MouseButton b)
+    {
+        return a != static_cast<unsigned short>(b);
+    }
 #endif
 
 } // namespace WebCore

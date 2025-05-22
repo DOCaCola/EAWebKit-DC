@@ -18,15 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef CSSInitialValue_h
-#define CSSInitialValue_h
+#pragma once
 
 #include "CSSValue.h"
-#include <wtf/PassRefPtr.h>
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class CSSInitialValue : public CSSValue {
+class CSSInitialValue final : public CSSValue {
 public:
     static Ref<CSSInitialValue> createExplicit()
     {
@@ -43,18 +42,23 @@ public:
 
     bool equals(const CSSInitialValue&) const { return true; }
 
+#if COMPILER(MSVC)
+    // FIXME: This should be private, but for some reason MSVC then fails to invoke it from LazyNeverDestroyed::construct.
+public:
+#else
 private:
+    friend class LazyNeverDestroyed<CSSInitialValue>;
+#endif
     CSSInitialValue(bool implicit)
         : CSSValue(InitialClass)
         , m_isImplicit(implicit)
     {
     }
 
+private:
     bool m_isImplicit;
 };
 
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_CSS_VALUE(CSSInitialValue, isInitialValue())
-
-#endif // CSSInitialValue_h

@@ -29,14 +29,13 @@
 #include "RenderElement.h"
 #include "RenderTreeAsText.h"
 #include "SVGElement.h"
-#include "SVGPreserveAspectRatio.h"
 #include "SVGRenderingContext.h"
 #include "SVGURIReference.h"
 #include "TextStream.h"
 
 namespace WebCore {
 
-FEImage::FEImage(Filter& filter, RefPtr<Image> image, const SVGPreserveAspectRatio& preserveAspectRatio)
+FEImage::FEImage(Filter& filter, RefPtr<Image> image, const SVGPreserveAspectRatioValue& preserveAspectRatio)
     : FilterEffect(filter)
     , m_image(image)
     , m_document(nullptr)
@@ -44,7 +43,7 @@ FEImage::FEImage(Filter& filter, RefPtr<Image> image, const SVGPreserveAspectRat
 {
 }
 
-FEImage::FEImage(Filter& filter, Document& document, const String& href, const SVGPreserveAspectRatio& preserveAspectRatio)
+FEImage::FEImage(Filter& filter, Document& document, const String& href, const SVGPreserveAspectRatioValue& preserveAspectRatio)
     : FilterEffect(filter)
     , m_document(&document)
     , m_href(href)
@@ -52,12 +51,12 @@ FEImage::FEImage(Filter& filter, Document& document, const String& href, const S
 {
 }
 
-Ref<FEImage> FEImage::createWithImage(Filter& filter, RefPtr<Image> image, const SVGPreserveAspectRatio& preserveAspectRatio)
+Ref<FEImage> FEImage::createWithImage(Filter& filter, RefPtr<Image> image, const SVGPreserveAspectRatioValue& preserveAspectRatio)
 {
     return adoptRef(*new FEImage(filter, image, preserveAspectRatio));
 }
 
-Ref<FEImage> FEImage::createWithIRIReference(Filter& filter, Document& document, const String& href, const SVGPreserveAspectRatio& preserveAspectRatio)
+Ref<FEImage> FEImage::createWithIRIReference(Filter& filter, Document& document, const String& href, const SVGPreserveAspectRatioValue& preserveAspectRatio)
 {
     return adoptRef(*new FEImage(filter, document, href, preserveAspectRatio));
 }
@@ -112,12 +111,12 @@ void FEImage::platformApplySoftware()
     IntPoint paintLocation = absolutePaintRect().location();
     destRect.move(-paintLocation.x(), -paintLocation.y());
 
-    // FEImage results are always in ColorSpaceDeviceRGB
-    setResultColorSpace(ColorSpaceDeviceRGB);
+    // FEImage results are always in ColorSpaceSRGB
+    setResultColorSpace(ColorSpaceSRGB);
 
     if (renderer) {
         const AffineTransform& absoluteTransform = filter().absoluteTransform();
-        resultImage->context()->concatCTM(absoluteTransform);
+        resultImage->context().concatCTM(absoluteTransform);
 
         SVGElement* contextNode = downcast<SVGElement>(renderer->element());
         if (contextNode->hasRelativeLengths()) {
@@ -127,7 +126,7 @@ void FEImage::platformApplySoftware()
             // If we're referencing an element with percentage units, eg. <rect with="30%"> those values were resolved against the viewport.
             // Build up a transformation that maps from the viewport space to the filter primitive subregion.
             if (lengthContext.determineViewport(viewportSize))
-                resultImage->context()->concatCTM(makeMapBetweenRects(FloatRect(FloatPoint(), viewportSize), destRect));
+                resultImage->context().concatCTM(makeMapBetweenRects(FloatRect(FloatPoint(), viewportSize), destRect));
         }
 
         AffineTransform contentTransformation;
@@ -135,7 +134,7 @@ void FEImage::platformApplySoftware()
         return;
     }
 
-    resultImage->context()->drawImage(m_image.get(), ColorSpaceDeviceRGB, destRect, srcRect);
+    resultImage->context().drawImage(*m_image, destRect, srcRect);
 }
 
 void FEImage::dump()

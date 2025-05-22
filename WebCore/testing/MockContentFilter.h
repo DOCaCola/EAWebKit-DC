@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MockContentFilter_h
-#define MockContentFilter_h
+#pragma once
 
 #include "MockContentFilterSettings.h"
 #include "PlatformContentFilter.h"
@@ -36,33 +35,25 @@ class MockContentFilter final : public PlatformContentFilter {
 
 public:
     static void ensureInstalled();
-    static bool enabled();
     static std::unique_ptr<MockContentFilter> create();
 
     void willSendRequest(ResourceRequest&, const ResourceResponse&) override;
     void responseReceived(const ResourceResponse&) override;
     void addData(const char* data, int length) override;
     void finishedAddingData() override;
-    bool needsMoreData() const override;
-    bool didBlockData() const override;
     Ref<SharedBuffer> replacementData() const override;
+#if ENABLE(CONTENT_FILTERING)
     ContentFilterUnblockHandler unblockHandler() const override;
+#endif
     String unblockRequestDeniedScript() const override;
 
 private:
-    enum class Status {
-        NeedsMoreData,
-        Allowed,
-        Blocked
-    };
+    static bool enabled();
 
     MockContentFilter() = default;
     void maybeDetermineStatus(MockContentFilterSettings::DecisionPoint);
 
     Vector<char> m_replacementData;
-    Status m_status { Status::NeedsMoreData };
 };
 
 } // namespace WebCore
-
-#endif // MockContentFilter_h

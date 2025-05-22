@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef InsertNodeBeforeCommand_h
-#define InsertNodeBeforeCommand_h
+#pragma once
 
 #include "EditCommand.h"
 
@@ -35,18 +34,18 @@ public:
     static Ref<InsertNodeBeforeCommand> create(RefPtr<Node>&& childToInsert, RefPtr<Node>&& childToInsertBefore,
         ShouldAssumeContentIsAlwaysEditable shouldAssumeContentIsAlwaysEditable, EditAction editingAction = EditActionInsert)
     {
-        return adoptRef(*new InsertNodeBeforeCommand(WTF::move(childToInsert), WTF::move(childToInsertBefore), shouldAssumeContentIsAlwaysEditable, editingAction));
+        return adoptRef(*new InsertNodeBeforeCommand(WTFMove(childToInsert), WTFMove(childToInsertBefore), shouldAssumeContentIsAlwaysEditable, editingAction));
     }
 
 protected:
     InsertNodeBeforeCommand(RefPtr<Node>&& childToInsert, RefPtr<Node>&& childToInsertBefore, ShouldAssumeContentIsAlwaysEditable, EditAction);
 
 private:
-    virtual void doApply() override;
-    virtual void doUnapply() override;
+    void doApply() override;
+    void doUnapply() override;
 
 #ifndef NDEBUG
-    virtual void getNodesInCommand(HashSet<Node*>&) override;
+    void getNodesInCommand(HashSet<Node*>&) override;
 #endif
 
     RefPtr<Node> m_insertChild;
@@ -55,5 +54,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // InsertNodeBeforeCommand_h

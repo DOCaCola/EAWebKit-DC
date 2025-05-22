@@ -23,22 +23,29 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IDBKey_h
-#define IDBKey_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
+#include "IndexedDB.h"
+#include "ThreadSafeDataBuffer.h"
 #include <wtf/Forward.h>
 #include <wtf/RefCounted.h>
+#include <wtf/Variant.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
+
+using WebCore::IndexedDB::KeyType;
+
+namespace JSC {
+class JSArrayBuffer;
+class JSArrayBufferView;
+}
 
 namespace WebCore {
 
 class IDBKey : public RefCounted<IDBKey> {
 public:
-    typedef Vector<RefPtr<IDBKey>> KeyArray;
-
     static Ref<IDBKey> createInvalid()
     {
         return adoptRef(*new IDBKey());
@@ -46,7 +53,7 @@ public:
 
     static Ref<IDBKey> createNumber(double number)
     {
-        return adoptRef(*new IDBKey(NumberType, number));
+        return adoptRef(*new IDBKey(KeyType::Number, number));
     }
 
     static Ref<IDBKey> createString(const String& string)
@@ -56,12 +63,12 @@ public:
 
     static Ref<IDBKey> createDate(double date)
     {
-        return adoptRef(*new IDBKey(DateType, date));
+        return adoptRef(*new IDBKey(KeyType::Date, date));
     }
 
-    static PassRefPtr<IDBKey> createMultiEntryArray(const KeyArray& array)
+    static Ref<IDBKey> createMultiEntryArray(const Vector<RefPtr<IDBKey>>& array)
     {
-        KeyArray result;
+        Vector<RefPtr<IDBKey>> result;
 
         size_t sizeEstimate = 0;
         for (auto& key : array) {
@@ -70,7 +77,7 @@ public:
 
             bool skip = false;
             for (auto& resultKey : result) {
-                if (key->isEqual(resultKey.get())) {
+                if (key->isEqual(*resultKey)) {
                     skip = true;
                     break;
                 }
@@ -80,12 +87,12 @@ public:
                 sizeEstimate += key->m_sizeEstimate;
             }
         }
-        RefPtr<IDBKey> idbKey = adoptRef(new IDBKey(result, sizeEstimate));
+        Ref<IDBKey> idbKey = adoptRef(*new IDBKey(result, sizeEstimate));
         ASSERT(idbKey->isValid());
-        return idbKey.release();
+        return idbKey;
     }
 
-    static Ref<IDBKey> createArray(const KeyArray& array)
+    static Ref<IDBKey> createArray(const Vector<RefPtr<IDBKey>>& array)
     {
         size_t sizeEstimate = 0;
         for (auto& key : array)
@@ -94,53 +101,52 @@ public:
         return adoptRef(*new IDBKey(array, sizeEstimate));
     }
 
+    static Ref<IDBKey> createBinary(const ThreadSafeDataBuffer&);
+    static Ref<IDBKey> createBinary(JSC::JSArrayBuffer&);
+    static Ref<IDBKey> createBinary(JSC::JSArrayBufferView&);
+
     WEBCORE_EXPORT ~IDBKey();
 
-    // In order of the least to the highest precedent in terms of sort order.
-    enum Type {
-        MaxType = -1,
-        InvalidType = 0,
-        ArrayType,
-        StringType,
-        DateType,
-        NumberType,
-        MinType
-    };
-
-    Type type() const { return m_type; }
+    KeyType type() const { return m_type; }
     WEBCORE_EXPORT bool isValid() const;
 
-    const KeyArray& array() const
+    const Vector<RefPtr<IDBKey>>& array() const
     {
-        ASSERT(m_type == ArrayType);
-        return m_array;
+        ASSERT(m_type == KeyType::Array);
+        return WTF::get<Vector<RefPtr<IDBKey>>>(m_value);
     }
 
     const String& string() const
     {
-        ASSERT(m_type == StringType);
-        return m_string;
+        ASSERT(m_type == KeyType::String);
+        return WTF::get<String>(m_value);
     }
 
     double date() const
     {
-        ASSERT(m_type == DateType);
-        return m_number;
+        ASSERT(m_type == KeyType::Date);
+        return WTF::get<double>(m_value);
     }
 
     double number() const
     {
-        ASSERT(m_type == NumberType);
-        return m_number;
+        ASSERT(m_type == KeyType::Number);
+        return WTF::get<double>(m_value);
     }
 
-    int compare(const IDBKey* other) const;
-    bool isLessThan(const IDBKey* other) const;
-    bool isEqual(const IDBKey* other) const;
+    const ThreadSafeDataBuffer& binary() const
+    {
+        ASSERT(m_type == KeyType::Binary);
+        return WTF::get<ThreadSafeDataBuffer>(m_value);
+    }
+
+    int compare(const IDBKey& other) const;
+    bool isLessThan(const IDBKey& other) const;
+    bool isEqual(const IDBKey& other) const;
 
     size_t sizeEstimate() const { return m_sizeEstimate; }
 
-    static int compareTypes(Type a, Type b)
+    static int compareTypes(KeyType a, KeyType b)
     {
         return b - a;
     }
@@ -148,20 +154,24 @@ public:
     using RefCounted<IDBKey>::ref;
     using RefCounted<IDBKey>::deref;
 
-#ifndef NDEBUG
+#if !LOG_DISABLED
     String loggingString() const;
 #endif
 
 private:
-    IDBKey() : m_type(InvalidType), m_number(0), m_sizeEstimate(OverheadSize) { }
-    IDBKey(Type type, double number) : m_type(type), m_number(number), m_sizeEstimate(OverheadSize + sizeof(double)) { }
-    explicit IDBKey(const String& value) : m_type(StringType), m_string(value), m_number(0), m_sizeEstimate(OverheadSize + value.length() * sizeof(UChar)) { }
-    IDBKey(const KeyArray& keyArray, size_t arraySize) : m_type(ArrayType), m_array(keyArray), m_number(0), m_sizeEstimate(OverheadSize + arraySize) { }
+    IDBKey()
+        : m_type(KeyType::Invalid)
+        , m_sizeEstimate(OverheadSize)
+    {
+    }
 
-    const Type m_type;
-    const KeyArray m_array;
-    const String m_string;
-    const double m_number;
+    IDBKey(KeyType, double number);
+    explicit IDBKey(const String& value);
+    IDBKey(const Vector<RefPtr<IDBKey>>& keyArray, size_t arraySize);
+    explicit IDBKey(const ThreadSafeDataBuffer&);
+
+    const KeyType m_type;
+    Variant<Vector<RefPtr<IDBKey>>, String, double, ThreadSafeDataBuffer> m_value;
 
     const size_t m_sizeEstimate;
 
@@ -169,8 +179,43 @@ private:
     enum { OverheadSize = 16 };
 };
 
+inline int compareBinaryKeyData(const Vector<uint8_t>& a, const Vector<uint8_t>& b)
+{
+    size_t length = std::min(a.size(), b.size());
+
+    for (size_t i = 0; i < length; ++i) {
+        if (a[i] > b[i])
+            return 1;
+        if (a[i] < b[i])
+            return -1;
+    }
+
+    if (a.size() == b.size())
+        return 0;
+
+    if (a.size() > b.size())
+        return 1;
+
+    return -1;
 }
 
-#endif // ENABLE(INDEXED_DATABASE)
+inline int compareBinaryKeyData(const ThreadSafeDataBuffer& a, const ThreadSafeDataBuffer& b)
+{
+    auto* aData = a.data();
+    auto* bData = b.data();
 
-#endif // IDBKey_h
+    // Covers the cases where both pointers are null as well as both pointing to the same buffer.
+    if (aData == bData)
+        return 0;
+
+    if (aData && !bData)
+        return 1;
+    if (!aData && bData)
+        return -1;
+
+    return compareBinaryKeyData(*aData, *bData);
+}
+
+} // namespace WebCore
+
+#endif // ENABLE(INDEXED_DATABASE)

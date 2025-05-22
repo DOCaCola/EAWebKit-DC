@@ -1117,8 +1117,8 @@ String listMarkerText(EListStyleType type, int value)
     return builder.toString();
 }
 
-RenderListMarker::RenderListMarker(RenderListItem& listItem, Ref<RenderStyle>&& style)
-    : RenderBox(listItem.document(), WTF::move(style), 0)
+RenderListMarker::RenderListMarker(RenderListItem& listItem, RenderStyle&& style)
+    : RenderBox(listItem.document(), WTFMove(style), 0)
     , m_listItem(listItem)
 {
     // init RenderObject attributes
@@ -1184,24 +1184,25 @@ void RenderListMarker::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffse
     LayoutPoint boxOrigin(paintOffset + location());
     LayoutRect overflowRect(visualOverflowRect());
     overflowRect.moveBy(boxOrigin);
-    overflowRect.inflate(maximalOutlineSize(paintInfo.phase));
-
     if (!paintInfo.rect.intersects(overflowRect))
         return;
 
     LayoutRect box(boxOrigin, size());
     
-    FloatRect marker = getRelativeMarkerRect();
-    marker.moveBy(boxOrigin);
+    auto markerRect = getRelativeMarkerRect();
+    markerRect.moveBy(boxOrigin);
+    if (markerRect.isEmpty())
+        return;
 
-    GraphicsContext* context = paintInfo.context;
+    GraphicsContext& context = paintInfo.context();
 
     if (isImage()) {
-        context->drawImage(m_image->image(this, marker.size()).get(), style().colorSpace(), marker);
+        if (RefPtr<Image> markerImage = m_image->image(this, markerRect.size()))
+            context.drawImage(*markerImage, markerRect);
         if (selectionState() != SelectionNone) {
             LayoutRect selRect = localSelectionRect();
             selRect.moveBy(boxOrigin);
-            context->fillRect(snappedIntRect(selRect), m_listItem.selectionBackgroundColor(), style().colorSpace());
+            context.fillRect(snappedIntRect(selRect), m_listItem.selectionBackgroundColor());
         }
         return;
     }
@@ -1209,26 +1210,26 @@ void RenderListMarker::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffse
     if (selectionState() != SelectionNone) {
         LayoutRect selRect = localSelectionRect();
         selRect.moveBy(boxOrigin);
-        context->fillRect(snappedIntRect(selRect), m_listItem.selectionBackgroundColor(), style().colorSpace());
+        context.fillRect(snappedIntRect(selRect), m_listItem.selectionBackgroundColor());
     }
 
     const Color color(style().visitedDependentColor(CSSPropertyColor));
-    context->setStrokeColor(color, style().colorSpace());
-    context->setStrokeStyle(SolidStroke);
-    context->setStrokeThickness(1.0f);
-    context->setFillColor(color, style().colorSpace());
+    context.setStrokeColor(color);
+    context.setStrokeStyle(SolidStroke);
+    context.setStrokeThickness(1.0f);
+    context.setFillColor(color);
 
     EListStyleType type = style().listStyleType();
     switch (type) {
         case Disc:
-            context->drawEllipse(marker);
+            context.drawEllipse(markerRect);
             return;
         case Circle:
-            context->setFillColor(Color::transparent, ColorSpaceDeviceRGB);
-            context->drawEllipse(marker);
+            context.setFillColor(Color::transparent);
+            context.drawEllipse(markerRect);
             return;
         case Square:
-            context->drawRect(marker);
+            context.drawRect(markerRect);
             return;
         case NoneListStyle:
             return;
@@ -1315,24 +1316,24 @@ void RenderListMarker::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffse
         return;
 
     const FontCascade& font = style().fontCascade();
-    TextRun textRun = RenderBlock::constructTextRun(this, font, m_text, style());
+    TextRun textRun = RenderBlock::constructTextRun(m_text, style());
 
-    GraphicsContextStateSaver stateSaver(*context, false);
+    GraphicsContextStateSaver stateSaver(context, false);
     if (!style().isHorizontalWritingMode()) {
-        marker.moveBy(-boxOrigin);
-        marker = marker.transposedRect();
-        marker.moveBy(FloatPoint(box.x(), box.y() - logicalHeight()));
+        markerRect.moveBy(-boxOrigin);
+        markerRect = markerRect.transposedRect();
+        markerRect.moveBy(FloatPoint(box.x(), box.y() - logicalHeight()));
         stateSaver.save();
-        context->translate(marker.x(), marker.maxY());
-        context->rotate(static_cast<float>(deg2rad(90.)));
-        context->translate(-marker.x(), -marker.maxY());
+        context.translate(markerRect.x(), markerRect.maxY());
+        context.rotate(static_cast<float>(deg2rad(90.)));
+        context.translate(-markerRect.x(), -markerRect.maxY());
     }
 
-    FloatPoint textOrigin = FloatPoint(marker.x(), marker.y() + style().fontMetrics().ascent());
+    FloatPoint textOrigin = FloatPoint(markerRect.x(), markerRect.y() + style().fontMetrics().ascent());
     textOrigin = roundPointToDevicePixels(LayoutPoint(textOrigin), document().deviceScaleFactor(), style().isLeftToRightDirection());
 
     if (type == Asterisks || type == Footnotes)
-        context->drawText(font, textRun, textOrigin);
+        context.drawText(font, textRun, textOrigin);
     else {
         const UChar suffix = listMarkerSuffix(type, m_listItem.value());
 
@@ -1363,7 +1364,7 @@ void RenderListMarker::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffse
         }
         textRun.setText(StringView(toDraw));
 
-        context->drawText(font, textRun, textOrigin);
+        context.drawText(font, textRun, textOrigin);
     }
 }
 
@@ -1371,6 +1372,14 @@ void RenderListMarker::layout()
 {
     StackStats::LayoutCheckPoint layoutCheckPoint;
     ASSERT(needsLayout());
+
+    LayoutUnit blockOffset;
+    for (auto* box = parentBox(); box && box != &m_listItem; box = box->parentBox())
+        blockOffset += box->logicalTop();
+    if (style().isLeftToRightDirection())
+        m_lineOffsetForListItem = m_listItem.logicalLeftOffsetForLine(blockOffset, DoNotIndentText, LayoutUnit());
+    else
+        m_lineOffsetForListItem = m_listItem.logicalRightOffsetForLine(blockOffset, DoNotIndentText, LayoutUnit());
  
     if (isImage()) {
         updateMarginsAndContent();
@@ -1419,15 +1428,14 @@ void RenderListMarker::updateContent()
     if (!preferredLogicalWidthsDirty())
         return;
 
-    m_text = "";
+    m_text = emptyString();
 
     if (isImage()) {
         // FIXME: This is a somewhat arbitrary width.  Generated images for markers really won't become particularly useful
         // until we support the CSS3 marker pseudoclass to allow control over the width and height of the marker box.
         LayoutUnit bulletWidth = style().fontMetrics().ascent() / LayoutUnit(2);
         LayoutSize defaultBulletSize(bulletWidth, bulletWidth);
-        LayoutSize imageSize;
-        calculateImageIntrinsicDimensions(m_image.get(), defaultBulletSize, DoNotScaleByEffectiveZoom, imageSize);
+        LayoutSize imageSize = calculateImageIntrinsicDimensions(m_image.get(), defaultBulletSize, DoNotScaleByEffectiveZoom);
         m_image->setContainerSizeForRenderer(this, imageSize, style().effectiveZoom());
         return;
     }
@@ -1545,7 +1553,7 @@ void RenderListMarker::computePreferredLogicalWidths()
             break;
         case Asterisks:
         case Footnotes: {
-            TextRun run = RenderBlock::constructTextRun(this, font, m_text, style(), AllowTrailingExpansion | ForbidLeadingExpansion, DefaultTextRunFlags);
+            TextRun run = RenderBlock::constructTextRun(m_text, style());
             logicalWidth = font.width(run); // no suffix for these types
         }
             break;
@@ -1632,10 +1640,10 @@ void RenderListMarker::computePreferredLogicalWidths()
             if (m_text.isEmpty())
                 logicalWidth = 0;
             else {
-                TextRun run = RenderBlock::constructTextRun(this, font, m_text, style(), AllowTrailingExpansion | ForbidLeadingExpansion, DefaultTextRunFlags);
+                TextRun run = RenderBlock::constructTextRun(m_text, style());
                 LayoutUnit itemWidth = font.width(run);
                 UChar suffixSpace[2] = { listMarkerSuffix(type, m_listItem.value()), ' ' };
-                LayoutUnit suffixSpaceWidth = font.width(RenderBlock::constructTextRun(this, font, suffixSpace, 2, style()));
+                LayoutUnit suffixSpaceWidth = font.width(RenderBlock::constructTextRun(suffixSpace, 2, style()));
                 logicalWidth = itemWidth + suffixSpaceWidth;
             }
             break;
@@ -1710,8 +1718,8 @@ void RenderListMarker::updateMargins()
         
     }
 
-    style().setMarginStart(Length(marginStart, Fixed));
-    style().setMarginEnd(Length(marginEnd, Fixed));
+    mutableStyle().setMarginStart(Length(marginStart, Fixed));
+    mutableStyle().setMarginEnd(Length(marginEnd, Fixed));
 }
 
 LayoutUnit RenderListMarker::lineHeight(bool firstLine, LineDirectionMode direction, LinePositionMode linePositionMode) const
@@ -1765,7 +1773,7 @@ FloatRect RenderListMarker::getRelativeMarkerRect()
         case Asterisks:
         case Footnotes: {
             const FontCascade& font = style().fontCascade();
-            TextRun run = RenderBlock::constructTextRun(this, font, m_text, style(), AllowTrailingExpansion | ForbidLeadingExpansion, DefaultTextRunFlags);
+            TextRun run = RenderBlock::constructTextRun(m_text, style());
             relativeRect = FloatRect(0, 0, font.width(run), font.fontMetrics().height());
             break;
         }
@@ -1859,10 +1867,10 @@ FloatRect RenderListMarker::getRelativeMarkerRect()
             if (m_text.isEmpty())
                 return FloatRect();
             const FontCascade& font = style().fontCascade();
-            TextRun run = RenderBlock::constructTextRun(this, font, m_text, style(), AllowTrailingExpansion | ForbidLeadingExpansion, DefaultTextRunFlags);
+            TextRun run = RenderBlock::constructTextRun(m_text, style());
             float itemWidth = font.width(run);
             UChar suffixSpace[2] = { listMarkerSuffix(type, m_listItem.value()), ' ' };
-            float suffixSpaceWidth = font.width(RenderBlock::constructTextRun(this, font, suffixSpace, 2, style()));
+            float suffixSpaceWidth = font.width(RenderBlock::constructTextRun(suffixSpace, 2, style()));
             relativeRect = FloatRect(0, 0, itemWidth + suffixSpaceWidth, font.fontMetrics().height());
     }
 
@@ -1894,11 +1902,8 @@ LayoutRect RenderListMarker::selectionRectForRepaint(const RenderLayerModelObjec
     LayoutRect rect(0, rootBox.selectionTop() - y(), width(), rootBox.selectionHeight());
             
     if (clipToVisibleContent)
-        computeRectForRepaint(repaintContainer, rect);
-    else
-        rect = localToContainerQuad(FloatRect(rect), repaintContainer).enclosingBoundingBox();
-    
-    return rect;
+        return computeRectForRepaint(rect, repaintContainer);
+    return localToContainerQuad(FloatRect(rect), repaintContainer).enclosingBoundingBox();
 }
 
 } // namespace WebCore

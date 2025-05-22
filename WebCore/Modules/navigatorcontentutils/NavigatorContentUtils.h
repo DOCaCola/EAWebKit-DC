@@ -24,14 +24,13 @@
  * DAMAGE.
  */
 
-#ifndef NavigatorContentUtils_h
-#define NavigatorContentUtils_h
+#pragma once
 
 #if ENABLE(NAVIGATOR_CONTENT_UTILS)
 
+#include "ExceptionOr.h"
 #include "NavigatorContentUtilsClient.h"
 #include "Supplementable.h"
-#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
@@ -43,7 +42,7 @@ typedef int ExceptionCode;
 class NavigatorContentUtils final : public Supplement<Page> {
 public:
     explicit NavigatorContentUtils(std::unique_ptr<NavigatorContentUtilsClient> client)
-        : m_client(WTF::move(client))
+        : m_client(WTFMove(client))
     { }
 
     virtual ~NavigatorContentUtils();
@@ -51,11 +50,11 @@ public:
     static const char* supplementName();
     static NavigatorContentUtils* from(Page*);
 
-    static void registerProtocolHandler(Navigator*, const String& scheme, const String& url, const String& title, ExceptionCode&);
+    static ExceptionOr<void> registerProtocolHandler(Navigator&, const String& scheme, const String& url, const String& title);
 
 #if ENABLE(CUSTOM_SCHEME_HANDLER)
-    static String isProtocolHandlerRegistered(Navigator*, const String& scheme, const String& url, ExceptionCode&);
-    static void unregisterProtocolHandler(Navigator*, const String& scheme, const String& url, ExceptionCode&);
+    static ExceptionOr<String> isProtocolHandlerRegistered(Navigator&, const String& scheme, const String& url);
+    static ExceptionOr<void> unregisterProtocolHandler(Navigator&, const String& scheme, const String& url);
 #endif
 
 private:
@@ -67,5 +66,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(NAVIGATOR_CONTENT_UTILS)
-
-#endif // NavigatorContentUtils_h

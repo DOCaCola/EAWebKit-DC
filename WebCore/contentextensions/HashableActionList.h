@@ -23,10 +23,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HashableActionList_h
-#define HashableActionList_h
+#pragma once
 
-#include <wtf/StringHasher.h>
+#include <wtf/Hasher.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -91,7 +90,4 @@ struct HashableActionListHashTraits : public WTF::CustomHashTraits<HashableActio
 };
 
 } // namespace ContentExtensions
-
 } // namespace WebCore
-
-#endif

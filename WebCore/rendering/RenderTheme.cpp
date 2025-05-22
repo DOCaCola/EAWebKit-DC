@@ -42,7 +42,6 @@
 #include "PaintInfo.h"
 #include "RenderStyle.h"
 #include "RenderView.h"
-#include "Settings.h"
 #include "SpinButtonElement.h"
 #include "StringTruncator.h"
 #include "TextControlInnerElements.h"
@@ -68,7 +67,7 @@ using namespace HTMLNames;
 
 static Color& customFocusRingColor()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(Color, color, ());
+    static NeverDestroyed<Color> color;
     return color;
 }
 
@@ -79,7 +78,7 @@ RenderTheme::RenderTheme()
 {
 }
 
-void RenderTheme::adjustStyle(StyleResolver& styleResolver, RenderStyle& style, Element* element, bool UAHasAppearance, const BorderData& border, const FillLayer& background, const Color& backgroundColor)
+void RenderTheme::adjustStyle(StyleResolver& styleResolver, RenderStyle& style, const Element* element, bool UAHasAppearance, const BorderData& border, const FillLayer& background, const Color& backgroundColor)
 {
     // Force inline and table display styles to be inline-block (except for table- which is block)
     ControlPart part = style.appearance();
@@ -147,7 +146,7 @@ void RenderTheme::adjustStyle(StyleResolver& styleResolver, RenderStyle& style, 
         // Padding
         LengthBox paddingBox = m_theme->controlPadding(part, style.fontCascade(), style.paddingBox(), style.effectiveZoom());
         if (paddingBox != style.paddingBox())
-            style.setPaddingBox(paddingBox);
+            style.setPaddingBox(WTFMove(paddingBox));
 
         // Whitespace
         if (m_theme->controlRequiresPreWhiteSpace(part))
@@ -156,19 +155,19 @@ void RenderTheme::adjustStyle(StyleResolver& styleResolver, RenderStyle& style, 
         // Width / Height
         // The width and height here are affected by the zoom.
         // FIXME: Check is flawed, since it doesn't take min-width/max-width into account.
-        LengthSize controlSize = m_theme->controlSize(part, style.fontCascade(), LengthSize(style.width(), style.height()), style.effectiveZoom());
-        if (controlSize.width() != style.width())
-            style.setWidth(controlSize.width());
-        if (controlSize.height() != style.height())
-            style.setHeight(controlSize.height());
-                
+        LengthSize controlSize = m_theme->controlSize(part, style.fontCascade(), { style.width(), style.height() }, style.effectiveZoom());
+        if (controlSize.width != style.width())
+            style.setWidth(WTFMove(controlSize.width));
+        if (controlSize.height != style.height())
+            style.setHeight(WTFMove(controlSize.height));
+
         // Min-Width / Min-Height
         LengthSize minControlSize = m_theme->minimumControlSize(part, style.fontCascade(), style.effectiveZoom());
-        if (minControlSize.width() != style.minWidth())
-            style.setMinWidth(minControlSize.width());
-        if (minControlSize.height() != style.minHeight())
-            style.setMinHeight(minControlSize.height());
-                
+        if (minControlSize.width != style.minWidth())
+            style.setMinWidth(WTFMove(minControlSize.width));
+        if (minControlSize.height != style.minHeight())
+            style.setMinHeight(WTFMove(minControlSize.height));
+
         // Font
         if (auto themeFont = m_theme->controlFont(part, style.fontCascade(), style.effectiveZoom())) {
             // If overriding the specified font with the theme font, also override the line height with the standard line height.
@@ -253,6 +252,10 @@ void RenderTheme::adjustStyle(StyleResolver& styleResolver, RenderStyle& style, 
 #endif
     case CapsLockIndicatorPart:
         return adjustCapsLockIndicatorStyle(styleResolver, style, element);
+#if ENABLE(APPLE_PAY)
+    case ApplePayButtonPart:
+        return adjustApplePayButtonStyle(styleResolver, style, element);
+#endif
 #if ENABLE(ATTACHMENT_ELEMENT)
     case AttachmentPart:
         return adjustAttachmentStyle(styleResolver, style, element);
@@ -267,12 +270,15 @@ bool RenderTheme::paint(const RenderBox& box, ControlStates& controlStates, cons
     // If painting is disabled, but we aren't updating control tints, then just bail.
     // If we are updating control tints, just schedule a repaint if the theme supports tinting
     // for that control.
-    if (paintInfo.context->updatingControlTints()) {
+    if (paintInfo.context().updatingControlTints()) {
         if (controlSupportsTints(box))
             box.repaint();
         return false;
     }
-    if (paintInfo.context->paintingDisabled())
+    if (paintInfo.context().paintingDisabled())
+        return false;
+
+    if (UNLIKELY(paintInfo.context().isRecording()))
         return false;
 
     ControlPart part = box.style().appearance();
@@ -281,7 +287,7 @@ bool RenderTheme::paint(const RenderBox& box, ControlStates& controlStates, cons
     FloatRect devicePixelSnappedRect = snapRectToDevicePixels(rect, deviceScaleFactor);
 
 #if USE(NEW_THEME)
-    float pageScaleFactor = box.document().page() ? box.document().page()->pageScaleFactor() : 1.0f;
+    float pageScaleFactor = box.page().pageScaleFactor();
     
     switch (part) {
     case CheckboxPart:
@@ -292,7 +298,7 @@ bool RenderTheme::paint(const RenderBox& box, ControlStates& controlStates, cons
     case ButtonPart:
     case InnerSpinButtonPart:
         updateControlStatesForRenderer(box, controlStates);
-        m_theme->paint(part, controlStates, const_cast<GraphicsContext*>(paintInfo.context), devicePixelSnappedRect, box.style().effectiveZoom(), &box.view().frameView(), deviceScaleFactor, pageScaleFactor);
+        m_theme->paint(part, controlStates, paintInfo.context(), devicePixelSnappedRect, box.style().effectiveZoom(), &box.view().frameView(), deviceScaleFactor, pageScaleFactor);
         return false;
     default:
         break;
@@ -398,6 +404,10 @@ bool RenderTheme::paint(const RenderBox& box, ControlStates& controlStates, cons
 #endif
     case CapsLockIndicatorPart:
         return paintCapsLockIndicator(box, paintInfo, integralSnappedRect);
+#if ENABLE(APPLE_PAY)
+    case ApplePayButtonPart:
+        return paintApplePayButton(box, paintInfo, integralSnappedRect);
+#endif
 #if ENABLE(ATTACHMENT_ELEMENT)
     case AttachmentPart:
         return paintAttachment(box, paintInfo, integralSnappedRect);
@@ -411,7 +421,7 @@ bool RenderTheme::paint(const RenderBox& box, ControlStates& controlStates, cons
 
 bool RenderTheme::paintBorderOnly(const RenderBox& box, const PaintInfo& paintInfo, const LayoutRect& rect)
 {
-    if (paintInfo.context->paintingDisabled())
+    if (paintInfo.context().paintingDisabled())
         return false;
 
 #if PLATFORM(IOS)
@@ -465,7 +475,7 @@ bool RenderTheme::paintBorderOnly(const RenderBox& box, const PaintInfo& paintIn
 
 bool RenderTheme::paintDecorations(const RenderBox& box, const PaintInfo& paintInfo, const LayoutRect& rect)
 {
-    if (paintInfo.context->paintingDisabled())
+    if (paintInfo.context().paintingDisabled())
         return false;
 
     IntRect integralSnappedRect = snappedIntRect(rect);
@@ -699,9 +709,9 @@ bool RenderTheme::isControlStyled(const RenderStyle& style, const BorderData& bo
     case TextFieldPart:
     case TextAreaPart:
         // Test the style to see if the UA border and background match.
-        return (style.border() != border
-            || *style.backgroundLayers() != background
-			|| !style.backgroundColorEqualsToColorIgnoringVisited(backgroundColor));
+        return style.border() != border
+            || style.backgroundLayers() != background
+            || !style.backgroundColorEqualsToColorIgnoringVisited(backgroundColor);
     default:
         return false;
     }
@@ -743,7 +753,7 @@ void RenderTheme::updateControlStatesForRenderer(const RenderBox& box, ControlSt
     ControlStates newStates = extractControlStatesForRenderer(box);
     controlStates.setStates(newStates.states());
     if (isFocused(box))
-        controlStates.setTimeSinceControlWasFocused(box.document().page()->focusController().timeSinceFocusWasSet());
+        controlStates.setTimeSinceControlWasFocused(box.page().focusController().timeSinceFocusWasSet());
 }
 
 ControlStates::States RenderTheme::extractControlStatesForRenderer(const RenderObject& o) const
@@ -774,37 +784,19 @@ ControlStates::States RenderTheme::extractControlStatesForRenderer(const RenderO
     return states;
 }
 
-bool RenderTheme::isActive(const RenderObject& o) const
+bool RenderTheme::isActive(const RenderObject& renderer) const
 {
-    Page* page = o.document().page();
-    if (!page)
-        return false;
-
-    return page->focusController().isActive();
+    return renderer.page().focusController().isActive();
 }
 
 bool RenderTheme::isChecked(const RenderObject& o) const
 {
-    if (!o.node())
-        return false;
-
-    HTMLInputElement* inputElement = o.node()->toInputElement();
-    if (!inputElement)
-        return false;
-
-    return inputElement->shouldAppearChecked();
+    return is<HTMLInputElement>(o.node()) && downcast<HTMLInputElement>(*o.node()).shouldAppearChecked();
 }
 
 bool RenderTheme::isIndeterminate(const RenderObject& o) const
 {
-    if (!o.node())
-        return false;
-
-    HTMLInputElement* inputElement = o.node()->toInputElement();
-    if (!inputElement)
-        return false;
-
-    return inputElement->shouldAppearIndeterminate();
+    return is<HTMLInputElement>(o.node()) && downcast<HTMLInputElement>(*o.node()).shouldAppearIndeterminate();
 }
 
 bool RenderTheme::isEnabled(const RenderObject& renderer) const
@@ -884,7 +876,7 @@ bool RenderTheme::isDefault(const RenderObject& o) const
 
 #if !USE(NEW_THEME)
 
-void RenderTheme::adjustCheckboxStyle(StyleResolver&, RenderStyle& style, Element*) const
+void RenderTheme::adjustCheckboxStyle(StyleResolver&, RenderStyle& style, const Element*) const
 {
     // A summary of the rules for checkbox designed to match WinIE:
     // width/height - honored (WinIE actually scales its control for small widths, but lets it overflow for small heights.)
@@ -901,7 +893,7 @@ void RenderTheme::adjustCheckboxStyle(StyleResolver&, RenderStyle& style, Elemen
     style.setBoxShadow(nullptr);
 }
 
-void RenderTheme::adjustRadioStyle(StyleResolver&, RenderStyle& style, Element*) const
+void RenderTheme::adjustRadioStyle(StyleResolver&, RenderStyle& style, const Element*) const
 {
     // A summary of the rules for checkbox designed to match WinIE:
     // width/height - honored (WinIE actually scales its control for small widths, but lets it overflow for small heights.)
@@ -918,7 +910,7 @@ void RenderTheme::adjustRadioStyle(StyleResolver&, RenderStyle& style, Element*)
     style.setBoxShadow(nullptr);
 }
 
-void RenderTheme::adjustButtonStyle(StyleResolver&, RenderStyle& style, Element*) const
+void RenderTheme::adjustButtonStyle(StyleResolver&, RenderStyle& style, const Element*) const
 {
     // Most platforms will completely honor all CSS, and so we have no need to
     // adjust the style at all by default. We will still allow the theme a crack
@@ -926,25 +918,25 @@ void RenderTheme::adjustButtonStyle(StyleResolver&, RenderStyle& style, Element*
     setButtonSize(style);
 }
 
-void RenderTheme::adjustInnerSpinButtonStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustInnerSpinButtonStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 #endif
 
-void RenderTheme::adjustTextFieldStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustTextFieldStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustTextAreaStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustTextAreaStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustMenuListStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustMenuListStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
 #if ENABLE(METER_ELEMENT)
-void RenderTheme::adjustMeterStyle(StyleResolver&, RenderStyle& style, Element*) const
+void RenderTheme::adjustMeterStyle(StyleResolver&, RenderStyle& style, const Element*) const
 {
     style.setBoxShadow(nullptr);
 }
@@ -965,7 +957,7 @@ bool RenderTheme::paintMeter(const RenderObject&, const PaintInfo&, const IntRec
 }
 #endif
 
-void RenderTheme::adjustCapsLockIndicatorStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustCapsLockIndicatorStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
@@ -975,7 +967,7 @@ bool RenderTheme::paintCapsLockIndicator(const RenderObject&, const PaintInfo&, 
 }
 
 #if ENABLE(ATTACHMENT_ELEMENT)
-void RenderTheme::adjustAttachmentStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustAttachmentStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
@@ -993,20 +985,16 @@ LayoutUnit RenderTheme::sliderTickSnappingThreshold() const
 
 void RenderTheme::paintSliderTicks(const RenderObject& o, const PaintInfo& paintInfo, const IntRect& rect)
 {
-    Node* node = o.node();
-    if (!node)
+    if (!is<HTMLInputElement>(o.node()))
         return;
 
-    HTMLInputElement* input = node->toInputElement();
-    if (!input)
-        return;
-
-    HTMLDataListElement* dataList = downcast<HTMLDataListElement>(input->list());
+    auto& input = downcast<HTMLInputElement>(*o.node());
+    auto* dataList = downcast<HTMLDataListElement>(input.list());
     if (!dataList)
         return;
 
-    double min = input->minimum();
-    double max = input->maximum();
+    double min = input.minimum();
+    double max = input.maximum();
     ControlPart part = o.style().appearance();
     // We don't support ticks on alternate sliders like MediaVolumeSliders.
     if (part !=  SliderHorizontalPart && part != SliderVerticalPart)
@@ -1014,7 +1002,7 @@ void RenderTheme::paintSliderTicks(const RenderObject& o, const PaintInfo& paint
     bool isHorizontal = part ==  SliderHorizontalPart;
 
     IntSize thumbSize;
-    const RenderObject* thumbRenderer = input->sliderThumbElement()->renderer();
+    const RenderObject* thumbRenderer = input.sliderThumbElement()->renderer();
     if (thumbRenderer) {
         const RenderStyle& thumbStyle = thumbRenderer->style();
         int thumbWidth = thumbStyle.width().intValue();
@@ -1029,7 +1017,7 @@ void RenderTheme::paintSliderTicks(const RenderObject& o, const PaintInfo& paint
     int tickRegionSideMargin = 0;
     int tickRegionWidth = 0;
     IntRect trackBounds;
-    RenderObject* trackRenderer = input->sliderTrackElement()->renderer();
+    RenderObject* trackRenderer = input.sliderTrackElement()->renderer();
     // We can ignoring transforms because transform is handled by the graphics context.
     if (trackRenderer)
         trackBounds = trackRenderer->absoluteBoundingBoxRectIgnoringTransforms();
@@ -1053,15 +1041,15 @@ void RenderTheme::paintSliderTicks(const RenderObject& o, const PaintInfo& paint
         tickRegionWidth = trackBounds.height() - thumbSize.width();
     }
     Ref<HTMLCollection> options = dataList->options();
-    GraphicsContextStateSaver stateSaver(*paintInfo.context);
-    paintInfo.context->setFillColor(o.style().visitedDependentColor(CSSPropertyColor), ColorSpaceDeviceRGB);
+    GraphicsContextStateSaver stateSaver(paintInfo.context());
+    paintInfo.context().setFillColor(o.style().visitedDependentColor(CSSPropertyColor));
     for (unsigned i = 0; Node* node = options->item(i); i++) {
         ASSERT(is<HTMLOptionElement>(*node));
         HTMLOptionElement& optionElement = downcast<HTMLOptionElement>(*node);
         String value = optionElement.value();
-        if (!input->isValidValue(value))
+        if (!input.isValidValue(value))
             continue;
-        double parsedValue = parseToDoubleForNumberType(input->sanitizeValue(value));
+        double parsedValue = parseToDoubleForNumberType(input.sanitizeValue(value));
         double tickFraction = (parsedValue - min) / (max - min);
         double tickRatio = isHorizontal && o.style().isLeftToRightDirection() ? tickFraction : 1.0 - tickFraction;
         double tickPosition = round(tickRegionSideMargin + tickRegionWidth * tickRatio);
@@ -1069,7 +1057,7 @@ void RenderTheme::paintSliderTicks(const RenderObject& o, const PaintInfo& paint
             tickRect.setX(tickPosition);
         else
             tickRect.setY(tickPosition);
-        paintInfo.context->fillRect(tickRect);
+        paintInfo.context().fillRect(tickRect);
     }
 }
 #endif
@@ -1084,7 +1072,7 @@ double RenderTheme::animationDurationForProgressBar(RenderProgress&) const
     return 0;
 }
 
-void RenderTheme::adjustProgressBarStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustProgressBarStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
@@ -1093,54 +1081,54 @@ IntRect RenderTheme::progressBarRectForBounds(const RenderObject&, const IntRect
     return bounds;
 }
 
-bool RenderTheme::shouldHaveSpinButton(HTMLInputElement& inputElement) const
+bool RenderTheme::shouldHaveSpinButton(const HTMLInputElement& inputElement) const
 {
     return inputElement.isSteppable() && !inputElement.isRangeControl();
 }
 
-bool RenderTheme::shouldHaveCapsLockIndicator(HTMLInputElement&) const
+bool RenderTheme::shouldHaveCapsLockIndicator(const HTMLInputElement&) const
 {
     return false;
 }
 
-void RenderTheme::adjustMenuListButtonStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustMenuListButtonStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustMediaControlStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustMediaControlStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSliderTrackStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSliderTrackStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSliderThumbStyle(StyleResolver&, RenderStyle& style, Element* element) const
+void RenderTheme::adjustSliderThumbStyle(StyleResolver&, RenderStyle& style, const Element* element) const
 {
     adjustSliderThumbSize(style, element);
 }
 
-void RenderTheme::adjustSliderThumbSize(RenderStyle&, Element*) const
+void RenderTheme::adjustSliderThumbSize(RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSearchFieldStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSearchFieldStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSearchFieldCancelButtonStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSearchFieldCancelButtonStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSearchFieldDecorationPartStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSearchFieldDecorationPartStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSearchFieldResultsDecorationPartStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSearchFieldResultsDecorationPartStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
-void RenderTheme::adjustSearchFieldResultsButtonStyle(StyleResolver&, RenderStyle&, Element*) const
+void RenderTheme::adjustSearchFieldResultsButtonStyle(StyleResolver&, RenderStyle&, const Element*) const
 {
 }
 
@@ -1159,18 +1147,18 @@ void RenderTheme::platformColorsDidChange()
     Page::updateStyleForAllPagesAfterGlobalChangeInEnvironment();
 }
 
-FontDescription& RenderTheme::cachedSystemFontDescription(CSSValueID systemFontID) const
+FontCascadeDescription& RenderTheme::cachedSystemFontDescription(CSSValueID systemFontID) const
 {
-    static NeverDestroyed<FontDescription> caption;
-    static NeverDestroyed<FontDescription> icon;
-    static NeverDestroyed<FontDescription> menu;
-    static NeverDestroyed<FontDescription> messageBox;
-    static NeverDestroyed<FontDescription> smallCaption;
-    static NeverDestroyed<FontDescription> statusBar;
-    static NeverDestroyed<FontDescription> webkitMiniControl;
-    static NeverDestroyed<FontDescription> webkitSmallControl;
-    static NeverDestroyed<FontDescription> webkitControl;
-    static NeverDestroyed<FontDescription> defaultDescription;
+    static NeverDestroyed<FontCascadeDescription> caption;
+    static NeverDestroyed<FontCascadeDescription> icon;
+    static NeverDestroyed<FontCascadeDescription> menu;
+    static NeverDestroyed<FontCascadeDescription> messageBox;
+    static NeverDestroyed<FontCascadeDescription> smallCaption;
+    static NeverDestroyed<FontCascadeDescription> statusBar;
+    static NeverDestroyed<FontCascadeDescription> webkitMiniControl;
+    static NeverDestroyed<FontCascadeDescription> webkitSmallControl;
+    static NeverDestroyed<FontCascadeDescription> webkitControl;
+    static NeverDestroyed<FontCascadeDescription> defaultDescription;
 
     switch (systemFontID) {
     case CSSValueCaption:
@@ -1199,7 +1187,7 @@ FontDescription& RenderTheme::cachedSystemFontDescription(CSSValueID systemFontI
     }
 }
 
-void RenderTheme::systemFont(CSSValueID systemFontID, FontDescription& fontDescription) const
+void RenderTheme::systemFont(CSSValueID systemFontID, FontCascadeDescription& fontDescription) const
 {
     fontDescription = cachedSystemFontDescription(systemFontID);
     if (fontDescription.isAbsoluteSize())
@@ -1297,14 +1285,14 @@ Color RenderTheme::tapHighlightColor()
 // Value chosen by observation. This can be tweaked.
 static const int minColorContrastValue = 1300;
 // For transparent or translucent background color, use lightening.
-static const int minDisabledColorAlphaValue = 128;
+static const float minDisabledColorAlphaValue = 0.5;
 
 Color RenderTheme::disabledTextColor(const Color& textColor, const Color& backgroundColor) const
 {
     // The explicit check for black is an optimization for the 99% case (black on white).
     // This also means that black on black will turn into grey on black when disabled.
     Color disabledColor;
-    if (textColor.rgb() == Color::black || backgroundColor.alpha() < minDisabledColorAlphaValue || differenceSquared(textColor, Color::white) > differenceSquared(backgroundColor, Color::white))
+    if (Color::isBlackColor(textColor) || backgroundColor.alphaAsFloat() < minDisabledColorAlphaValue || differenceSquared(textColor, Color::white) > differenceSquared(backgroundColor, Color::white))
         disabledColor = textColor.light();
     else
         disabledColor = textColor.dark();
@@ -1346,9 +1334,19 @@ String RenderTheme::fileListNameForWidth(const FileList* fileList, const FontCas
     else if (fileList->length() == 1)
         string = fileList->item(0)->name();
     else
-        return StringTruncator::rightTruncate(multipleFileUploadText(fileList->length()), width, font, StringTruncator::EnableRoundingHacks);
+        return StringTruncator::rightTruncate(multipleFileUploadText(fileList->length()), width, font);
 
-    return StringTruncator::centerTruncate(string, width, font, StringTruncator::EnableRoundingHacks);
+    return StringTruncator::centerTruncate(string, width, font);
 }
+
+#if ENABLE(TOUCH_EVENTS)
+Color RenderTheme::platformTapHighlightColor() const
+{
+    // This color is expected to be drawn on a semi-transparent overlay,
+    // making it more transparent than its alpha value indicates.
+    static NeverDestroyed<const Color> defaultTapHighlightColor = Color(0, 0, 0, 102);
+    return defaultTapHighlightColor;
+}
+#endif
 
 } // namespace WebCore

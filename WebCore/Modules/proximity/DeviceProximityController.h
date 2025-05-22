@@ -23,8 +23,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DeviceProximityController_h
-#define DeviceProximityController_h
+#pragma once
 
 #if ENABLE(PROXIMITY_EVENTS)
 
@@ -43,7 +42,7 @@ public:
     DeviceProximityClient* deviceProximityClient();
 
     virtual bool hasLastData();
-    virtual PassRefPtr<Event> getLastEvent();
+    virtual RefPtr<Event> getLastEvent();
 
     static const char* supplementName();
     static DeviceProximityController* from(Page*);
@@ -53,4 +52,3 @@ public:
 } // namespace WebCore
 
 #endif // PROXIMITY_EVENTS
-#endif // DeviceProximityController_h

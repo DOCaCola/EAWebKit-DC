@@ -22,8 +22,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PointerLockController_h
-#define PointerLockController_h
+#pragma once
 
 #if ENABLE(POINTER_LOCK)
 
@@ -36,6 +35,7 @@ class Element;
 class Document;
 class Page;
 class PlatformMouseEvent;
+class PlatformWheelEvent;
 class VoidCallback;
 
 class PointerLockController {
@@ -44,16 +44,20 @@ class PointerLockController {
 public:
     explicit PointerLockController(Page&);
     void requestPointerLock(Element* target);
-    void requestPointerUnlock();
-    void elementRemoved(Element*);
-    void documentDetached(Document*);
-    bool lockPending() const;
-    Element* element() const;
 
-    void didAcquirePointerLock();
-    void didNotAcquirePointerLock();
-    void didLosePointerLock();
+    void requestPointerUnlock();
+    void requestPointerUnlockAndForceCursorVisible();
+    void elementRemoved(Element&);
+    void documentDetached(Document&);
+    bool isLocked() const;
+    WEBCORE_EXPORT bool lockPending() const;
+    WEBCORE_EXPORT Element* element() const;
+
+    WEBCORE_EXPORT void didAcquirePointerLock();
+    WEBCORE_EXPORT void didNotAcquirePointerLock();
+    WEBCORE_EXPORT void didLosePointerLock();
     void dispatchLockedMouseEvent(const PlatformMouseEvent&, const AtomicString& eventType);
+    void dispatchLockedWheelEvent(const PlatformWheelEvent&);
 
 private:
     void clearElement();
@@ -61,6 +65,7 @@ private:
     void enqueueEvent(const AtomicString& type, Document*);
     Page& m_page;
     bool m_lockPending;
+    bool m_forceCursorVisibleUponUnlock { false };
     RefPtr<Element> m_element;
     RefPtr<Document> m_documentOfRemovedElementWhileWaitingForUnlock;
 };
@@ -68,5 +73,3 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(POINTER_LOCK)
-
-#endif // PointerLockController_h

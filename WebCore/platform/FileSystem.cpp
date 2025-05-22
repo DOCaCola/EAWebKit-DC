@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2007-2017 Apple Inc. All rights reserved.
  * Copyright (C) 2015 Canon Inc. All rights reserved.
  * Copyright (C) 2015 Electronic Arts, Inc.  All rights reserved.
  *
@@ -28,13 +28,14 @@
 #include "config.h"
 #include "FileSystem.h"
 
+#include "ScopeGuard.h"
 #include <wtf/HexNumber.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
 //+EAWebKitChange
 //9/23/2015 added && !PLATFORM(EA)
-#if !PLATFORM(WIN) && !PLATFORM(EA)
+#if !OS(WINDOWS) && !PLATFORM(EA)
 //-EAWebKitChange
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -86,26 +87,174 @@ static const bool needsEscaping[128] = {
     /* 78-7F */ false, false, false, false, true,  false, false, true, 
 };
 
-static inline bool shouldEscapeUChar(UChar c)
+static inline bool shouldEscapeUChar(UChar character, UChar previousCharacter, UChar nextCharacter)
 {
-    return c > 127 ? false : needsEscaping[c];
+    if (character <= 127)
+        return needsEscaping[character];
+
+    if (U16_IS_LEAD(character) && !U16_IS_TRAIL(nextCharacter))
+        return true;
+
+    if (U16_IS_TRAIL(character) && !U16_IS_LEAD(previousCharacter))
+        return true;
+
+    return false;
 }
 
 String encodeForFileName(const String& inputString)
 {
-    StringBuilder result;
-    StringImpl* stringImpl = inputString.impl();
     unsigned length = inputString.length();
+    if (!length)
+        return inputString;
+
+    StringBuilder result;
+    result.reserveCapacity(length);
+
+    UChar previousCharacter;
+    UChar character = 0;
+    UChar nextCharacter = inputString[0];
     for (unsigned i = 0; i < length; ++i) {
-        UChar character = (*stringImpl)[i];
-        if (shouldEscapeUChar(character)) {
-            result.append('%');
-            appendByteAsHex(character, result);
+        previousCharacter = character;
+        character = nextCharacter;
+        nextCharacter = i + 1 < length ? inputString[i + 1] : 0;
+
+        if (shouldEscapeUChar(character, previousCharacter, nextCharacter)) {
+            if (character <= 255) {
+                result.append('%');
+                appendByteAsHex(character, result);
+            } else {
+                result.appendLiteral("%+");
+                appendByteAsHex(character >> 8, result);
+                appendByteAsHex(character, result);
+            }
         } else
             result.append(character);
     }
 
     return result.toString();
+}
+
+String decodeFromFilename(const String& inputString)
+{
+    unsigned length = inputString.length();
+    if (!length)
+        return inputString;
+
+    StringBuilder result;
+    result.reserveCapacity(length);
+
+    for (unsigned i = 0; i < length; ++i) {
+        if (inputString[i] != '%') {
+            result.append(inputString[i]);
+            continue;
+        }
+
+        // If the input string is a valid encoded filename, it must be at least 2 characters longer
+        // than the current index to account for this percent encoded value.
+        if (i + 2 >= length)
+            return { };
+
+        if (inputString[i+1] != '+') {
+            if (!isASCIIHexDigit(inputString[i + 1]))
+                return { };
+            if (!isASCIIHexDigit(inputString[i + 2]))
+                return { };
+            result.append(toASCIIHexValue(inputString[i + 1], inputString[i + 2]));
+            i += 2;
+            continue;
+        }
+
+        // If the input string is a valid encoded filename, it must be at least 5 characters longer
+        // than the current index to account for this percent encoded value.
+        if (i + 5 >= length)
+            return { };
+
+        if (!isASCIIHexDigit(inputString[i + 2]))
+            return { };
+        if (!isASCIIHexDigit(inputString[i + 3]))
+            return { };
+        if (!isASCIIHexDigit(inputString[i + 4]))
+            return { };
+        if (!isASCIIHexDigit(inputString[i + 5]))
+            return { };
+
+        result.append(toASCIIHexValue(inputString[i + 2], inputString[i + 3]) << 8 | toASCIIHexValue(inputString[i + 4], inputString[i + 5]));
+        i += 5;
+    }
+
+    return result.toString();
+}
+
+String lastComponentOfPathIgnoringTrailingSlash(const String& path)
+{
+#if OS(WINDOWS)
+    char pathSeparator = '\\';
+#else
+    char pathSeparator = '/';
+#endif
+
+    auto position = path.reverseFind(pathSeparator);
+    if (position == notFound)
+        return path;
+
+    size_t endOfSubstring = path.length() - 1;
+    if (position == endOfSubstring) {
+        --endOfSubstring;
+        position = path.reverseFind(pathSeparator, endOfSubstring);
+    }
+
+    return path.substring(position + 1, endOfSubstring - position);
+}
+
+bool appendFileContentsToFileHandle(const String& path, PlatformFileHandle& target)
+{
+    auto source = openFile(path, OpenForRead);
+
+    if (!isHandleValid(source))
+        return false;
+
+    static int bufferSize = 1 << 19;
+    Vector<char> buffer(bufferSize);
+
+    ScopeGuard fileCloser([source]() {
+        PlatformFileHandle handle = source;
+        closeFile(handle);
+    });
+
+    do {
+        int readBytes = readFromFile(source, buffer.data(), bufferSize);
+        
+        if (readBytes < 0)
+            return false;
+
+        if (writeToFile(target, buffer.data(), readBytes) != readBytes)
+            return false;
+
+        if (readBytes < bufferSize)
+            return true;
+    } while (true);
+
+    ASSERT_NOT_REACHED();
+}
+
+    
+bool filesHaveSameVolume(const String& fileA, const String& fileB)
+{
+    auto fsRepFileA = fileSystemRepresentation(fileA);
+    auto fsRepFileB = fileSystemRepresentation(fileB);
+    
+    if (fsRepFileA.isNull() || fsRepFileB.isNull())
+        return false;
+
+    bool result = false;
+
+    auto fileADev = getFileDeviceId(fsRepFileA);
+    auto fileBDev = getFileDeviceId(fsRepFileB);
+
+    if (fileADev && fileBDev)
+        result = (fileADev == fileBDev);
+    
+    return result;
 }
 
 #if !PLATFORM(MAC)
@@ -130,7 +279,7 @@ MappedFileData::~MappedFileData()
 {
 //+EAWebKitChange
 //9/23/2015 added && !PLATFORM(EA)
-#if !PLATFORM(WIN) && !PLATFORM(EA)
+#if !PLATFORM(WIN)
 //-EAWebKitChange
     if (!m_fileData)
         return;
@@ -142,7 +291,7 @@ MappedFileData::MappedFileData(const String& filePath, bool& success)
 {
 //+EAWebKitChange
 //9/23/2015 added || PLATFORM(EA)
-#if PLATFORM(WIN) || PLATFORM(EA)
+#if PLATFORM(WIN)
 //-EAWebKitChange
     // FIXME: Implement mapping
     success = false;

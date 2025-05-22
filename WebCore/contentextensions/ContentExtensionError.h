@@ -23,11 +23,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ContentExtensionError_h
-#define ContentExtensionError_h
+#pragma once
 
 #if ENABLE(CONTENT_EXTENSIONS)
 
+#include "PlatformExportMacros.h"
 #include <system_error>
 
 namespace WebCore {
@@ -60,6 +60,8 @@ enum class ContentExtensionError {
     JSONInvalidRegex,
 };
 
+extern const char* WebKitContentBlockerDomain;
+    
 WEBCORE_EXPORT const std::error_category& contentExtensionErrorCategory();
 
 inline std::error_code make_error_code(ContentExtensionError error)
@@ -75,4 +77,3 @@ namespace std {
 }
 
 #endif // ENABLE(CONTENT_EXTENSIONS)
-#endif // ContentExtensionError_h

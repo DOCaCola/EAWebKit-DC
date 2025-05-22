@@ -25,45 +25,30 @@
 #include "config.h"
 #include "MediaStreamEvent.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "EventNames.h"
 #include "MediaStream.h"
 
 namespace WebCore {
 
-MediaStreamEventInit::MediaStreamEventInit()
-    : stream(nullptr)
+Ref<MediaStreamEvent> MediaStreamEvent::create(const AtomicString& type, bool canBubble, bool cancelable, RefPtr<MediaStream>&& stream)
 {
+    return adoptRef(*new MediaStreamEvent(type, canBubble, cancelable, WTFMove(stream)));
 }
 
-Ref<MediaStreamEvent> MediaStreamEvent::create()
+Ref<MediaStreamEvent> MediaStreamEvent::create(const AtomicString& type, const Init& initializer, IsTrusted isTrusted)
 {
-    return adoptRef(*new MediaStreamEvent);
+    return adoptRef(*new MediaStreamEvent(type, initializer, isTrusted));
 }
 
-Ref<MediaStreamEvent> MediaStreamEvent::create(const AtomicString& type, bool canBubble, bool cancelable, PassRefPtr<MediaStream> stream)
-{
-    return adoptRef(*new MediaStreamEvent(type, canBubble, cancelable, stream));
-}
-
-Ref<MediaStreamEvent> MediaStreamEvent::create(const AtomicString& type, const MediaStreamEventInit& initializer)
-{
-    return adoptRef(*new MediaStreamEvent(type, initializer));
-}
-
-MediaStreamEvent::MediaStreamEvent()
-{
-}
-
-MediaStreamEvent::MediaStreamEvent(const AtomicString& type, bool canBubble, bool cancelable, PassRefPtr<MediaStream> stream)
+MediaStreamEvent::MediaStreamEvent(const AtomicString& type, bool canBubble, bool cancelable, RefPtr<MediaStream>&& stream)
     : Event(type, canBubble, cancelable)
-    , m_stream(stream)
+    , m_stream(WTFMove(stream))
 {
 }
 
-MediaStreamEvent::MediaStreamEvent(const AtomicString& type, const MediaStreamEventInit& initializer)
-    : Event(type, initializer)
+MediaStreamEvent::MediaStreamEvent(const AtomicString& type, const Init& initializer, IsTrusted isTrusted)
+    : Event(type, initializer, isTrusted)
     , m_stream(initializer.stream)
 {
 }
@@ -84,5 +69,5 @@ EventInterface MediaStreamEvent::eventInterface() const
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)
 

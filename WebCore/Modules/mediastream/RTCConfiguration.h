@@ -28,64 +28,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RTCConfiguration_h
-#define RTCConfiguration_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "RTCConfigurationPrivate.h"
+#include "PeerConnectionStates.h"
 #include "RTCIceServer.h"
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
-#include <wtf/Vector.h>
-#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
-class RTCConfiguration : public RefCounted<RTCConfiguration> {
-public:
-    static Ref<RTCConfiguration> create() { return adoptRef(*new RTCConfiguration()); }
-    virtual ~RTCConfiguration() { }
+using RTCIceTransportPolicy = PeerConnectionStates::IceTransportPolicy;
+using RTCBundlePolicy = PeerConnectionStates::BundlePolicy;
 
-    void appendServer(PassRefPtr<RTCIceServer> server) { m_private->appendServer(server->privateServer()); }
-    size_t numberOfServers() { return m_private->numberOfServers(); }
-    PassRefPtr<RTCIceServer> server(size_t index)
-    {
-        RTCIceServerPrivate* server = m_private->server(index);
-        if (!server)
-            return nullptr;
+struct RTCConfiguration {
+    using IceTransportPolicy = RTCIceTransportPolicy;
+    using BundlePolicy = RTCBundlePolicy;
 
-        return RTCIceServer::create(server);
-    }
-
-    const String& iceTransports() const { return m_private->iceTransports(); }
-    void setIceTransports(const String& iceTransports) { m_private->setIceTransports(iceTransports); }
-
-    const String& requestIdentity() const { return m_private->requestIdentity(); }
-    void setRequestIdentity(const String& requestIdentity) { m_private->setRequestIdentity(requestIdentity); }
-
-    Vector<RefPtr<RTCIceServer>> iceServers() const
-    {
-        Vector<RefPtr<RTCIceServer>> servers;
-        for (auto& server : m_private->iceServers())
-            servers.append(RTCIceServer::create(server));
-
-        return servers;
-    }
-
-    RTCConfigurationPrivate* privateConfiguration() { return m_private.get(); }
-
-private:
-    RTCConfiguration()
-        : m_private(RTCConfigurationPrivate::create())
-    {
-    }
-
-    RefPtr<RTCConfigurationPrivate> m_private;
+    std::optional<Vector<RTCIceServer>> iceServers;
+    IceTransportPolicy iceTransportPolicy;
+    BundlePolicy bundlePolicy;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif // RTCConfiguration_h
+#endif // ENABLE(WEB_RTC)

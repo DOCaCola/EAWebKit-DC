@@ -30,55 +30,62 @@
  *
  */
 
-#ifndef EventListenerMap_h
-#define EventListenerMap_h
+#pragma once
 
 #include "RegisteredEventListener.h"
 #include <atomic>
 #include <memory>
 #include <wtf/Forward.h>
+#include <wtf/Lock.h>
 #include <wtf/text/AtomicString.h>
 
 namespace WebCore {
 
 class EventTarget;
 
-typedef Vector<RegisteredEventListener, 1> EventListenerVector;
+using EventListenerVector = Vector<RefPtr<RegisteredEventListener>, 1>;
 
 class EventListenerMap {
 public:
     EventListenerMap();
 
     bool isEmpty() const { return m_entries.isEmpty(); }
-    WEBCORE_EXPORT bool contains(const AtomicString& eventType) const;
+    bool contains(const AtomicString& eventType) const { return find(eventType); }
     bool containsCapturing(const AtomicString& eventType) const;
+    bool containsActive(const AtomicString& eventType) const;
 
     void clear();
-    bool add(const AtomicString& eventType, PassRefPtr<EventListener>, bool useCapture);
-    bool remove(const AtomicString& eventType, EventListener*, bool useCapture, size_t& indexOfRemovedListener);
-    EventListenerVector* find(const AtomicString& eventType);
+
+    void replace(const AtomicString& eventType, EventListener& oldListener, Ref<EventListener>&& newListener, const RegisteredEventListener::Options&);
+    bool add(const AtomicString& eventType, Ref<EventListener>&&, const RegisteredEventListener::Options&);
+    bool remove(const AtomicString& eventType, EventListener&, bool useCapture);
+    WEBCORE_EXPORT EventListenerVector* find(const AtomicString& eventType) const;
     Vector<AtomicString> eventTypes() const;
 
     void removeFirstEventListenerCreatedFromMarkup(const AtomicString& eventType);
     void copyEventListenersNotCreatedFromMarkupToTarget(EventTarget*);
+    
+    Lock& lock() { return m_lock; }
 
 private:
     friend class EventListenerIterator;
 
-    void assertNoActiveIterators();
+    void assertNoActiveIterators() const;
 
     Vector<std::pair<AtomicString, std::unique_ptr<EventListenerVector>>, 2> m_entries;
 
 #ifndef NDEBUG
     std::atomic<int> m_activeIteratorCount { 0 };
 #endif
+
+    Lock m_lock;
 };
 
 class EventListenerIterator {
     WTF_MAKE_NONCOPYABLE(EventListenerIterator);
 public:
-    EventListenerIterator();
     explicit EventListenerIterator(EventTarget*);
+    explicit EventListenerIterator(EventListenerMap*);
 #ifndef NDEBUG
     ~EventListenerIterator();
 #endif
@@ -86,15 +93,13 @@ public:
     EventListener* nextListener();
 
 private:
-    EventListenerMap* m_map;
-    unsigned m_entryIndex;
-    unsigned m_index;
+    EventListenerMap* m_map { nullptr };
+    unsigned m_entryIndex { 0 };
+    unsigned m_index { 0 };
 };
 
 #ifdef NDEBUG
-inline void EventListenerMap::assertNoActiveIterators() { }
+inline void EventListenerMap::assertNoActiveIterators() const { }
 #endif
 
 } // namespace WebCore
-
-#endif // EventListenerMap_h

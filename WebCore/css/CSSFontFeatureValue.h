@@ -23,36 +23,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CSSFontFeatureValue_h
-#define CSSFontFeatureValue_h
+#pragma once
 
 #include "CSSValue.h"
-#include <wtf/text/WTFString.h>
+#include "FontTaggedSettings.h"
 
 namespace WebCore {
 
-class CSSFontFeatureValue : public CSSValue {
+class CSSFontFeatureValue final : public CSSValue {
 public:
-    static Ref<CSSFontFeatureValue> create(const String& tag, int value)
+    static Ref<CSSFontFeatureValue> create(FontTag&& tag, int value)
     {
-        return adoptRef(*new CSSFontFeatureValue(tag, value));
+        return adoptRef(*new CSSFontFeatureValue(WTFMove(tag), value));
     }
 
-    const String& tag() const { return m_tag; }
+    const FontTag& tag() const { return m_tag; }
     int value() const { return m_value; }
     String customCSSText() const;
 
     bool equals(const CSSFontFeatureValue&) const;
 
 private:
-    CSSFontFeatureValue(const String&, int);
+    CSSFontFeatureValue(FontTag&&, int);
 
-    String m_tag;
+    FontTag m_tag;
     const int m_value;
 };
 
 } // namespace WebCore
 
 SPECIALIZE_TYPE_TRAITS_CSS_VALUE(CSSFontFeatureValue, isFontFeatureValue())
-
-#endif

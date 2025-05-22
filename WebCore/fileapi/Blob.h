@@ -28,18 +28,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef Blob_h
-#define Blob_h
+#pragma once
 
-#include "BlobPart.h"
+#include "BlobPropertyBag.h"
 #include "ScriptWrappable.h"
+#include "URL.h"
 #include "URLRegistry.h"
-#include <wtf/RefCounted.h>
-#include <wtf/text/WTFString.h>
+#include <wtf/Variant.h>
+
+namespace JSC {
+class ArrayBufferView;
+class ArrayBuffer;
+}
 
 namespace WebCore {
 
+class Blob;
 class ScriptExecutionContext;
+
+using BlobPartVariant = Variant<RefPtr<JSC::ArrayBufferView>, RefPtr<JSC::ArrayBuffer>, RefPtr<Blob>, String>;
 
 class Blob : public ScriptWrappable, public URLRegistrable, public RefCounted<Blob> {
 public:
@@ -48,20 +55,20 @@ public:
         return adoptRef(*new Blob);
     }
 
-    static Ref<Blob> create(Vector<char> data, const String& contentType)
+    static Ref<Blob> create(Vector<BlobPartVariant>&& blobPartVariants, const BlobPropertyBag& propertyBag)
     {
-        return adoptRef(*new Blob(WTF::move(data), contentType));
+        return adoptRef(*new Blob(WTFMove(blobPartVariants), propertyBag));
     }
 
-    static Ref<Blob> create(Vector<BlobPart> blobParts, const String& contentType)
+    static Ref<Blob> create(Vector<uint8_t>&& data, const String& contentType)
     {
-        return adoptRef(*new Blob(WTF::move(blobParts), contentType));
+        return adoptRef(*new Blob(WTFMove(data), contentType));
     }
 
-    static Ref<Blob> deserialize(const URL& srcURL, const String& type, long long size)
+    static Ref<Blob> deserialize(const URL& srcURL, const String& type, long long size, const String& fileBackedPath)
     {
         ASSERT(Blob::isNormalizedContentType(type));
-        return adoptRef(*new Blob(deserializationContructor, srcURL, type, size));
+        return adoptRef(*new Blob(deserializationContructor, srcURL, type, size, fileBackedPath));
     }
 
     virtual ~Blob();
@@ -69,19 +76,20 @@ public:
     const URL& url() const { return m_internalURL; }
     const String& type() const { return m_type; }
 
-    unsigned long long size() const;
+    WEBCORE_EXPORT unsigned long long size() const;
     virtual bool isFile() const { return false; }
 
     // The checks described in the File API spec.
     static bool isValidContentType(const String&);
     // The normalization procedure described in the File API spec.
     static String normalizedContentType(const String&);
-    // Intended for use in ASSERT statements.
+#if !ASSERT_DISABLED
     static bool isNormalizedContentType(const String&);
     static bool isNormalizedContentType(const CString&);
+#endif
 
     // URLRegistrable
-    virtual URLRegistry& registry() const override;
+    URLRegistry& registry() const override;
 
     Ref<Blob> slice(long long start = 0, long long end = std::numeric_limits<long long>::max(), const String& contentType = String()) const
     {
@@ -90,14 +98,14 @@ public:
 
 protected:
     Blob();
-    Blob(Vector<char>, const String& contentType);
-    Blob(Vector<BlobPart>, const String& contentType);
+    Blob(Vector<BlobPartVariant>&&, const BlobPropertyBag&);
+    Blob(Vector<uint8_t>&&, const String& contentType);
 
     enum UninitializedContructor { uninitializedContructor };
     Blob(UninitializedContructor);
 
     enum DeserializationContructor { deserializationContructor };
-    Blob(DeserializationContructor, const URL& srcURL, const String& type, long long size);
+    Blob(DeserializationContructor, const URL& srcURL, const String& type, long long size, const String& fileBackedPath);
 
     // For slicing.
     Blob(const URL& srcURL, long long start, long long end, const String& contentType);
@@ -112,6 +120,3 @@ protected:
 };
 
 } // namespace WebCore
-
-#endif // Blob_h
-

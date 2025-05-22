@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,24 +23,33 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CryptoAlgorithmRsaKeyGenParams_h
-#define CryptoAlgorithmRsaKeyGenParams_h
+#pragma once
 
 #include "CryptoAlgorithmParameters.h"
+#include <runtime/Uint8Array.h>
 #include <wtf/Vector.h>
 
 #if ENABLE(SUBTLE_CRYPTO)
 
 namespace WebCore {
 
-class CryptoAlgorithmRsaKeyGenParams final : public CryptoAlgorithmParameters {
+class CryptoAlgorithmRsaKeyGenParams : public CryptoAlgorithmParameters {
 public:
-    // The length, in bits, of the RSA modulus.
-    unsigned modulusLength;
-    // The RSA public exponent, encoded as BigInteger.
-    Vector<uint8_t> publicExponent;
+    unsigned long modulusLength;
+    RefPtr<Uint8Array> publicExponent;
 
-    virtual Class parametersClass() const override { return Class::RsaKeyGenParams; }
+    Class parametersClass() const override { return Class::RsaKeyGenParams; }
+
+    const Vector<uint8_t>& publicExponentVector() const
+    {
+        if (!m_publicExponentVector.isEmpty() || !publicExponent->byteLength())
+            return m_publicExponentVector;
+
+        m_publicExponentVector.append(publicExponent->data(), publicExponent->byteLength());
+        return m_publicExponentVector;
+    }
+private:
+    mutable Vector<uint8_t> m_publicExponentVector;
 };
 
 } // namespace WebCore
@@ -48,4 +57,3 @@ public:
 SPECIALIZE_TYPE_TRAITS_CRYPTO_ALGORITHM_PARAMETERS(RsaKeyGenParams)
 
 #endif // ENABLE(SUBTLE_CRYPTO)
-#endif // CryptoAlgorithmRsaKeyGenParams_h

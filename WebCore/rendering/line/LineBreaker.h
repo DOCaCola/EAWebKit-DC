@@ -22,13 +22,11 @@
  *
  */
 
-#ifndef LineBreaker_h
-#define LineBreaker_h
+#pragma once
 
 #include "InlineIterator.h"
 #include "LineInfo.h"
 #include "LineInlineHeaders.h"
-#include "TextBreakIterator.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -52,7 +50,7 @@ public:
         reset();
     }
 
-    InlineIterator nextLineBreak(InlineBidiResolver&, LineInfo&, RenderTextInfo&, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements&);
+    InlineIterator nextLineBreak(InlineBidiResolver&, LineInfo&, LineLayoutState&, RenderTextInfo&, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements&);
 
     bool lineWasHyphenated() { return m_hyphenated; }
     const Vector<RenderBox*>& positionedObjects() { return m_positionedObjects; }
@@ -65,7 +63,7 @@ private:
     void skipLeadingWhitespace(InlineBidiResolver&, LineInfo&, FloatingObject* lastFloatFromPreviousLine, LineWidth&);
 
     FloatingObject* insertFloatingObject(RenderBox& floatBox) { return m_block.insertFloatingObject(floatBox); }
-    bool positionNewFloatOnLine(FloatingObject* newFloat, FloatingObject* lastFloatFromPreviousLine, LineInfo& lineInfo, LineWidth& width)
+    bool positionNewFloatOnLine(const FloatingObject& newFloat, FloatingObject* lastFloatFromPreviousLine, LineInfo& lineInfo, LineWidth& width)
     {
         return m_block.positionNewFloatOnLine(newFloat, lastFloatFromPreviousLine, lineInfo, width);
     }
@@ -76,6 +74,4 @@ private:
     Vector<RenderBox*> m_positionedObjects;
 };
 
-}
-
-#endif // LineBreaker_h
+} // namespace WebCore

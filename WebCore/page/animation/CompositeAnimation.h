@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CompositeAnimation_h
-#define CompositeAnimation_h
+#pragma once
 
 #include "ImplicitAnimation.h"
 #include "KeyframeAnimation.h"
@@ -56,8 +55,8 @@ public:
     
     void clearRenderer();
 
-    bool animate(RenderElement&, RenderStyle* currentStyle, RenderStyle& targetStyle, Ref<RenderStyle>& blendedStyle);
-    PassRefPtr<RenderStyle> getAnimatedStyle() const;
+    bool animate(RenderElement&, const RenderStyle* currentStyle, const RenderStyle& targetStyle, std::unique_ptr<RenderStyle>& blendedStyle);
+    std::unique_ptr<RenderStyle> getAnimatedStyle() const;
     bool computeExtentOfTransformAnimation(LayoutRect&) const;
 
     double timeToNextService() const;
@@ -72,7 +71,7 @@ public:
 
     bool isAnimatingProperty(CSSPropertyID, bool acceleratedOnly, AnimationBase::RunningState) const;
 
-    PassRefPtr<KeyframeAnimation> getAnimationForProperty(CSSPropertyID) const;
+    KeyframeAnimation* animationForProperty(CSSPropertyID) const;
 
     void overrideImplicitAnimations(CSSPropertyID);
     void resumeOverriddenImplicitAnimations(CSSPropertyID);
@@ -88,8 +87,8 @@ public:
 private:
     CompositeAnimation(AnimationControllerPrivate&);
 
-    void updateTransitions(RenderElement*, RenderStyle* currentStyle, RenderStyle* targetStyle);
-    void updateKeyframeAnimations(RenderElement*, RenderStyle* currentStyle, RenderStyle* targetStyle);
+    void updateTransitions(RenderElement*, const RenderStyle* currentStyle, const RenderStyle* targetStyle);
+    void updateKeyframeAnimations(RenderElement*, const RenderStyle* currentStyle, const RenderStyle* targetStyle);
     
     typedef HashMap<int, RefPtr<ImplicitAnimation>> CSSPropertyTransitionsMap;
     typedef HashMap<AtomicStringImpl*, RefPtr<KeyframeAnimation>> AnimationNameMap;
@@ -105,5 +104,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // CompositeAnimation_h

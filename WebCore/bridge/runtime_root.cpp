@@ -32,7 +32,6 @@
 #include <heap/Weak.h>
 #include <heap/WeakInlines.h>
 #include <runtime/JSGlobalObject.h>
-#include <wtf/HashCountedSet.h>
 #include <wtf/HashSet.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/Ref.h>
@@ -80,9 +79,9 @@ RootObject::InvalidationCallback::~InvalidationCallback()
 {
 }
 
-PassRefPtr<RootObject> RootObject::create(const void* nativeHandle, JSGlobalObject* globalObject)
+Ref<RootObject> RootObject::create(const void* nativeHandle, JSGlobalObject* globalObject)
 {
-    return adoptRef(new RootObject(nativeHandle, globalObject));
+    return adoptRef(*new RootObject(nativeHandle, globalObject));
 }
 
 RootObject::RootObject(const void* nativeHandle, JSGlobalObject* globalObject)
@@ -200,7 +199,7 @@ void RootObject::finalize(JSC::Handle<JSC::Unknown> handle, void*)
 {
     RuntimeObject* object = static_cast<RuntimeObject*>(handle.slot()->asCell());
 
-    Ref<RootObject> protect(*this);
+    Ref<RootObject> protectedThis(*this);
     object->invalidate();
     weakRemove(m_runtimeObjects, object, object);
 }

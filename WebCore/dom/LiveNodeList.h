@@ -21,8 +21,7 @@
  *
  */
 
-#ifndef LiveNodeList_h
-#define LiveNodeList_h
+#pragma once
 
 #include "CollectionIndexCache.h"
 #include "CollectionTraversal.h"
@@ -32,7 +31,6 @@
 #include "HTMLNames.h"
 #include "NodeList.h"
 #include <wtf/Forward.h>
-#include <wtf/RefPtr.h>
 
 namespace WebCore {
 
@@ -45,13 +43,11 @@ public:
     LiveNodeList(ContainerNode& ownerNode, NodeListInvalidationType);
     virtual ~LiveNodeList();
 
-    virtual Node* namedItem(const AtomicString&) const override final;
-
     virtual bool elementMatches(Element&) const = 0;
     virtual bool isRootedAtDocument() const = 0;
 
     ALWAYS_INLINE NodeListInvalidationType invalidationType() const { return static_cast<NodeListInvalidationType>(m_invalidationType); }
-    ContainerNode& ownerNode() const { return const_cast<ContainerNode&>(m_ownerNode.get()); }
+    ContainerNode& ownerNode() const { return m_ownerNode; }
     ALWAYS_INLINE void invalidateCacheForAttribute(const QualifiedName* attrName) const
     {
         if (!attrName || shouldInvalidateTypeOnAttributeChange(invalidationType(), *attrName))
@@ -66,7 +62,7 @@ protected:
     Document& document() const { return m_ownerNode->document(); }
 
 private:
-    virtual bool isLiveNodeList() const override final { return true; }
+    bool isLiveNodeList() const final { return true; }
 
     ContainerNode& rootNode() const;
 
@@ -81,8 +77,8 @@ class CachedLiveNodeList : public LiveNodeList {
 public:
     virtual ~CachedLiveNodeList();
 
-    unsigned length() const override final { return m_indexCache.nodeCount(nodeList()); }
-    Node* item(unsigned offset) const override final { return m_indexCache.nodeAt(nodeList(), offset); }
+    unsigned length() const final { return m_indexCache.nodeCount(nodeList()); }
+    Element* item(unsigned offset) const override { return m_indexCache.nodeAt(nodeList(), offset); }
 
     // For CollectionIndexCache
     ElementDescendantIterator collectionBegin() const { return CollectionTraversal<CollectionTraversalType::Descendants>::begin(nodeList(), rootNode()); }
@@ -93,8 +89,8 @@ public:
     bool collectionCanTraverseBackward() const { return true; }
     void willValidateIndexCache() const { document().registerNodeListForInvalidation(const_cast<CachedLiveNodeList<NodeListType>&>(*this)); }
 
-    virtual void invalidateCache(Document&) const override final;
-    virtual size_t memoryCost() const override final { return m_indexCache.memoryCost(); }
+    void invalidateCache(Document&) const final;
+    size_t memoryCost() const final { return m_indexCache.memoryCost(); }
 
 protected:
     CachedLiveNodeList(ContainerNode& rootNode, NodeListInvalidationType);
@@ -165,5 +161,3 @@ void CachedLiveNodeList<NodeListType>::invalidateCache(Document& document) const
 }
 
 } // namespace WebCore
-
-#endif // LiveNodeList_h

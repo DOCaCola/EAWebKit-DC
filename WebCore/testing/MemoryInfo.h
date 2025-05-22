@@ -28,26 +28,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MemoryInfo_h
-#define MemoryInfo_h
+#pragma once
 
+#include "CommonVM.h"
 #include "JSDOMWindow.h"
-#include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
 
 class MemoryInfo : public RefCounted<MemoryInfo> {
 public:
-    static PassRefPtr<MemoryInfo> create() { return adoptRef(new MemoryInfo); }
+    static Ref<MemoryInfo> create() { return adoptRef(*new MemoryInfo); }
 
     size_t usedJSHeapSize() const { return m_usedJSHeapSize; }
     size_t totalJSHeapSize() const { return m_totalJSHeapSize; }
 
 private:
     MemoryInfo()
-        : m_usedJSHeapSize(JSDOMWindow::commonVM().heap.size())
-        , m_totalJSHeapSize(JSDOMWindow::commonVM().heap.capacity())
+        : m_usedJSHeapSize(commonVM().heap.size())
+        , m_totalJSHeapSize(commonVM().heap.capacity())
     {
     }
 
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // MemoryInfo_h

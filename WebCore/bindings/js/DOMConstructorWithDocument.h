@@ -16,9 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
-#ifndef DOMConstructorWithDocument_h
-#define DOMConstructorWithDocument_h
+#pragma once
 
 #include "Document.h"
 #include "JSDOMBinding.h"
@@ -36,18 +34,16 @@ public:
     }
 
 protected:
-    DOMConstructorWithDocument(JSC::Structure* structure, JSDOMGlobalObject* globalObject)
+    DOMConstructorWithDocument(JSC::Structure* structure, JSDOMGlobalObject& globalObject)
         : DOMConstructorObject(structure, globalObject)
     {
     }
 
-    void finishCreation(JSDOMGlobalObject* globalObject)
+    void finishCreation(JSDOMGlobalObject& globalObject)
     {
-        Base::finishCreation(globalObject->vm());
-        ASSERT(globalObject->scriptExecutionContext()->isDocument());
+        Base::finishCreation(globalObject.vm());
+        ASSERT(globalObject.scriptExecutionContext()->isDocument());
     }
 };
 
 } // namespace WebCore
-
-#endif // DOMConstructorWithDocument_h
