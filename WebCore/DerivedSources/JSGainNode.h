@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSGainNode_h
-#define JSGainNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSGainNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = GainNode;
     static JSGainNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<GainNode>&& impl)
     {
-        JSGainNode* ptr = new (NotNull, JSC::allocateCell<JSGainNode>(globalObject->vm().heap)) JSGainNode(structure, globalObject, WTF::move(impl));
+        JSGainNode* ptr = new (NotNull, JSC::allocateCell<JSGainNode>(globalObject->vm().heap)) JSGainNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    GainNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    GainNode& wrapped() const
     {
-        return static_cast<GainNode&>(Base::impl());
+        return static_cast<GainNode&>(Base::wrapped());
     }
 protected:
-    JSGainNode(JSC::Structure*, JSDOMGlobalObject*, Ref<GainNode>&&);
+    JSGainNode(JSC::Structure*, JSDOMGlobalObject&, Ref<GainNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, GainNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, GainNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, GainNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, GainNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<GainNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<GainNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<GainNode> {
+    using WrapperClass = JSGainNode;
+    using ToWrappedReturnType = GainNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

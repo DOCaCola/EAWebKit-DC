@@ -25,7 +25,7 @@
 #include "JSSVGHKernElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGHKernElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGHKernElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGHKernElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGHKernElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGHKernElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGHKernElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGHKernElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGHKernElementPrototype>(vm.heap)) JSSVGHKernElementPrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGHKernElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGHKernElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGHKernElementConstructor = JSDOMConstructorNotConstructable<JSSVGHKernElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGHKernElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGHKernElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGHKernElementConstructor>(vm.heap)) JSSVGHKernElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGHKernElementConstructor::s_info = { "SVGHKernElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGHKernElementConstructor) };
-
-JSSVGHKernElementConstructor::JSSVGHKernElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGHKernElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGHKernElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGHKernElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGHKernElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGHKernElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGHKernElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGHKernElementConstructor::s_info = { "SVGHKernElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGHKernElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGHKernElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGHKernElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGHKernElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGHKernElementConstructor) } },
 };
 
 const ClassInfo JSSVGHKernElementPrototype::s_info = { "SVGHKernElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGHKernElementPrototype) };
@@ -115,32 +95,63 @@ void JSSVGHKernElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGHKernElement::s_info = { "SVGHKernElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGHKernElement) };
 
-JSSVGHKernElement::JSSVGHKernElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGHKernElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGHKernElement::JSSVGHKernElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGHKernElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGHKernElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGHKernElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGHKernElementPrototype::create(vm, globalObject, JSSVGHKernElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGHKernElementPrototype::create(vm, globalObject, JSSVGHKernElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGHKernElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGHKernElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGHKernElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGHKernElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGHKernElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGHKernElementPrototype* domObject = jsDynamicCast<JSSVGHKernElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGHKernElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGHKernElementPrototype* domObject = jsDynamicDowncast<JSSVGHKernElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGHKernElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGHKernElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGHKernElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGHKernElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGHKernElementPrototype* domObject = jsDynamicDowncast<JSSVGHKernElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGHKernElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGHKernElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGHKernElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGHKernElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

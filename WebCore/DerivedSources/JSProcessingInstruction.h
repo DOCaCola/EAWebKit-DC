@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSProcessingInstruction_h
-#define JSProcessingInstruction_h
+#pragma once
 
 #include "JSCharacterData.h"
 #include "ProcessingInstruction.h"
@@ -28,42 +27,46 @@ namespace WebCore {
 
 class JSProcessingInstruction : public JSCharacterData {
 public:
-    typedef JSCharacterData Base;
+    using Base = JSCharacterData;
+    using DOMWrapped = ProcessingInstruction;
     static JSProcessingInstruction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProcessingInstruction>&& impl)
     {
-        JSProcessingInstruction* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstruction>(globalObject->vm().heap)) JSProcessingInstruction(structure, globalObject, WTF::move(impl));
+        JSProcessingInstruction* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstruction>(globalObject->vm().heap)) JSProcessingInstruction(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSProcessingInstructionNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ProcessingInstruction& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    ProcessingInstruction& wrapped() const
     {
-        return static_cast<ProcessingInstruction&>(Base::impl());
+        return static_cast<ProcessingInstruction&>(Base::wrapped());
     }
 protected:
-    JSProcessingInstruction(JSC::Structure*, JSDOMGlobalObject*, Ref<ProcessingInstruction>&&);
+    JSProcessingInstruction(JSC::Structure*, JSDOMGlobalObject&, Ref<ProcessingInstruction>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ProcessingInstruction&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ProcessingInstruction* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ProcessingInstruction>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ProcessingInstruction>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<ProcessingInstruction> {
+    using WrapperClass = JSProcessingInstruction;
+    using ToWrappedReturnType = ProcessingInstruction*;
+};
 
 } // namespace WebCore
-
-#endif

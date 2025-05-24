@@ -22,10 +22,9 @@
 #include "JSHTMLOptGroupElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLOptGroupElement.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,15 +33,16 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLOptGroupElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLOptGroupElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLOptGroupElementLabel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLOptGroupElementLabel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLOptGroupElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOptGroupElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOptGroupElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOptGroupElementLabel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOptGroupElementLabel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOptGroupElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOptGroupElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLOptGroupElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLOptGroupElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLOptGroupElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElementPrototype>(vm.heap)) JSHTMLOptGroupElementPrototype(vm, globalObject, structure);
@@ -65,50 +65,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLOptGroupElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLOptGroupElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLOptGroupElementConstructor = JSDOMConstructorNotConstructable<JSHTMLOptGroupElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLOptGroupElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLOptGroupElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElementConstructor>(vm.heap)) JSHTMLOptGroupElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLOptGroupElementConstructor::s_info = { "HTMLOptGroupElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptGroupElementConstructor) };
-
-JSHTMLOptGroupElementConstructor::JSHTMLOptGroupElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLOptGroupElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLOptGroupElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLOptGroupElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLOptGroupElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLOptGroupElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLOptGroupElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLOptGroupElementConstructor::s_info = { "HTMLOptGroupElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptGroupElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLOptGroupElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptGroupElementDisabled) },
-    { "label", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptGroupElementLabel) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptGroupElementConstructor) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptGroupElementDisabled) } },
+    { "label", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptGroupElementLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptGroupElementLabel) } },
 };
 
 const ClassInfo JSHTMLOptGroupElementPrototype::s_info = { "HTMLOptGroupElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptGroupElementPrototype) };
@@ -121,107 +100,145 @@ void JSHTMLOptGroupElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLOptGroupElement::s_info = { "HTMLOptGroupElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptGroupElement) };
 
-JSHTMLOptGroupElement::JSHTMLOptGroupElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptGroupElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLOptGroupElement::JSHTMLOptGroupElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLOptGroupElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLOptGroupElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLOptGroupElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLOptGroupElementPrototype::create(vm, globalObject, JSHTMLOptGroupElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLOptGroupElementPrototype::create(vm, globalObject, JSHTMLOptGroupElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLOptGroupElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLOptGroupElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLOptGroupElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLOptGroupElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLOptGroupElement* BindingCaller<JSHTMLOptGroupElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOptGroupElement* castedThis = jsDynamicCast<JSHTMLOptGroupElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptGroupElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOptGroupElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLOptGroupElement", "disabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLOptGroupElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLOptGroupElementDisabledGetter(ExecState&, JSHTMLOptGroupElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOptGroupElementLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOptGroupElementDisabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOptGroupElement* castedThis = jsDynamicCast<JSHTMLOptGroupElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptGroupElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOptGroupElement", "label");
-        return throwGetterTypeError(*exec, "HTMLOptGroupElement", "label");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::labelAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLOptGroupElement>::attribute<jsHTMLOptGroupElementDisabledGetter>(state, thisValue, "disabled");
 }
 
-
-EncodedJSValue jsHTMLOptGroupElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLOptGroupElementDisabledGetter(ExecState& state, JSHTMLOptGroupElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLOptGroupElementPrototype* domObject = jsDynamicCast<JSHTMLOptGroupElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLOptGroupElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::disabledAttr));
+    return result;
 }
 
-void setJSHTMLOptGroupElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLOptGroupElementLabelGetter(ExecState&, JSHTMLOptGroupElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOptGroupElementLabel(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLOptGroupElement>::attribute<jsHTMLOptGroupElementLabelGetter>(state, thisValue, "label");
+}
+
+static inline JSValue jsHTMLOptGroupElementLabelGetter(ExecState& state, JSHTMLOptGroupElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::labelAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLOptGroupElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLOptGroupElementPrototype* domObject = jsDynamicDowncast<JSHTMLOptGroupElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLOptGroupElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLOptGroupElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOptGroupElement* castedThis = jsDynamicCast<JSHTMLOptGroupElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptGroupElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOptGroupElement", "disabled");
-        else
-            throwSetterTypeError(*exec, "HTMLOptGroupElement", "disabled");
-        return;
+    JSHTMLOptGroupElementPrototype* domObject = jsDynamicDowncast<JSHTMLOptGroupElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline bool setJSHTMLOptGroupElementDisabledFunction(ExecState&, JSHTMLOptGroupElement&, JSValue, ThrowScope&);
 
-void setJSHTMLOptGroupElementLabel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+bool setJSHTMLOptGroupElementDisabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOptGroupElement* castedThis = jsDynamicCast<JSHTMLOptGroupElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptGroupElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOptGroupElement", "label");
-        else
-            throwSetterTypeError(*exec, "HTMLOptGroupElement", "label");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::labelAttr, nativeValue);
+    return BindingCaller<JSHTMLOptGroupElement>::setAttribute<setJSHTMLOptGroupElementDisabledFunction>(state, thisValue, encodedValue, "disabled");
 }
 
-
-JSValue JSHTMLOptGroupElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSHTMLOptGroupElementDisabledFunction(ExecState& state, JSHTMLOptGroupElement& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSHTMLOptGroupElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, WTFMove(nativeValue));
+    return true;
 }
 
+
+static inline bool setJSHTMLOptGroupElementLabelFunction(ExecState&, JSHTMLOptGroupElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLOptGroupElementLabel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLOptGroupElement>::setAttribute<setJSHTMLOptGroupElementLabelFunction>(state, thisValue, encodedValue, "label");
+}
+
+static inline bool setJSHTMLOptGroupElementLabelFunction(ExecState& state, JSHTMLOptGroupElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::labelAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLOptGroupElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLOptGroupElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLOptGroupElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLOptGroupElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+}
+
+HTMLOptGroupElement* JSHTMLOptGroupElement::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSHTMLOptGroupElement*>(value))
+        return &wrapper->wrapped();
+    return nullptr;
+}
 
 }

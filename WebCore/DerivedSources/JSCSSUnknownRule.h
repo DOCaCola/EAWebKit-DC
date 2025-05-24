@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSUnknownRule_h
-#define JSCSSUnknownRule_h
+#pragma once
 
 #include "CSSUnknownRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSUnknownRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSUnknownRule;
     static JSCSSUnknownRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSUnknownRule>&& impl)
     {
-        JSCSSUnknownRule* ptr = new (NotNull, JSC::allocateCell<JSCSSUnknownRule>(globalObject->vm().heap)) JSCSSUnknownRule(structure, globalObject, WTF::move(impl));
+        JSCSSUnknownRule* ptr = new (NotNull, JSC::allocateCell<JSCSSUnknownRule>(globalObject->vm().heap)) JSCSSUnknownRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,23 +46,20 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    CSSUnknownRule& impl() const
+    CSSUnknownRule& wrapped() const
     {
-        return static_cast<CSSUnknownRule&>(Base::impl());
+        return static_cast<CSSUnknownRule&>(Base::wrapped());
     }
 protected:
-    JSCSSUnknownRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSUnknownRule>&&);
+    JSCSSUnknownRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSUnknownRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSUnknownRule> {
+    using WrapperClass = JSCSSUnknownRule;
+    using ToWrappedReturnType = CSSUnknownRule*;
+};
 
 } // namespace WebCore
-
-#endif

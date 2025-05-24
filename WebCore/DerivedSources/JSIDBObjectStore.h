@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBObjectStore_h
-#define JSIDBObjectStore_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
 #include "IDBObjectStore.h"
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSIDBObjectStore : public JSDOMWrapper {
+class JSIDBObjectStore : public JSDOMWrapper<IDBObjectStore> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<IDBObjectStore>;
     static JSIDBObjectStore* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBObjectStore>&& impl)
     {
-        JSIDBObjectStore* ptr = new (NotNull, JSC::allocateCell<JSIDBObjectStore>(globalObject->vm().heap)) JSIDBObjectStore(structure, globalObject, WTF::move(impl));
+        JSIDBObjectStore* ptr = new (NotNull, JSC::allocateCell<JSIDBObjectStore>(globalObject->vm().heap)) JSIDBObjectStore(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBObjectStore* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBObjectStore();
 
     DECLARE_INFO;
 
@@ -52,24 +51,16 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+    void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue createIndex(JSC::ExecState*);
-    IDBObjectStore& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBObjectStore* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSIDBObjectStore(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBObjectStore>&&);
+    JSIDBObjectStore(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBObjectStore>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBObjectStoreOwner : public JSC::WeakHandleOwner {
@@ -84,12 +75,23 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBObjectStore*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBObjectStore*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBObjectStore& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBObjectStore* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBObjectStore&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBObjectStore* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBObjectStore>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBObjectStore>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBObjectStore> {
+    using WrapperClass = JSIDBObjectStore;
+    using ToWrappedReturnType = IDBObjectStore*;
+};
+template<> IDBObjectStore::IndexParameters convertDictionary<IDBObjectStore::IndexParameters>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

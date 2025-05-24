@@ -25,7 +25,8 @@
 #include "JSWebGLTexture.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLTexture.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLTextureConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLTextureConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLTextureConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLTexturePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLTexturePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLTexturePrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLTexturePrototype>(vm.heap)) JSWebGLTexturePrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLTextureConstructor : public DOMConstructorObject {
-private:
-    JSWebGLTextureConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLTextureConstructor = JSDOMConstructorNotConstructable<JSWebGLTexture>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLTextureConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLTextureConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLTextureConstructor>(vm.heap)) JSWebGLTextureConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLTextureConstructor::s_info = { "WebGLTextureConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTextureConstructor) };
-
-JSWebGLTextureConstructor::JSWebGLTextureConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLTextureConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLTextureConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLTextureConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLTexture::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLTexture::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLTexture"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLTextureConstructor::s_info = { "WebGLTexture", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTextureConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLTexturePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLTextureConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLTextureConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLTextureConstructor) } },
 };
 
 const ClassInfo JSWebGLTexturePrototype::s_info = { "WebGLTexturePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTexturePrototype) };
@@ -115,10 +97,16 @@ void JSWebGLTexturePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLTexture::s_info = { "WebGLTexture", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTexture) };
 
-JSWebGLTexture::JSWebGLTexture(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLTexture>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLTexture::JSWebGLTexture(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLTexture>&& impl)
+    : JSDOMWrapper<WebGLTexture>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLTexture::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLTexture::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSWebGLTexture::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSWebGLTexturePrototype::create(vm, globalObject, JSWebGLTexturePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLTexture::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLTexture::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLTexture>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSWebGLTexture::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLTexture::~JSWebGLTexture();
 }
 
-JSWebGLTexture::~JSWebGLTexture()
+EncodedJSValue jsWebGLTextureConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLTexturePrototype* domObject = jsDynamicDowncast<JSWebGLTexturePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLTexture::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsWebGLTextureConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSWebGLTextureConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSWebGLTexturePrototype* domObject = jsDynamicCast<JSWebGLTexturePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLTexture::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLTexturePrototype* domObject = jsDynamicDowncast<JSWebGLTexturePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSWebGLTexture::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWebGLTexture::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLTextureConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLTextureConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLTextureOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSWebGLTextureOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSWebGLTextureOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLTexture = jsCast<JSWebGLTexture*>(handle.slot()->asCell());
+    auto* jsWebGLTexture = static_cast<JSWebGLTexture*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLTexture->impl(), jsWebGLTexture);
+    uncacheWrapper(world, &jsWebGLTexture->wrapped(), jsWebGLTexture);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLTexture@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12WebGLTextureE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTexture* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLTexture>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLTexture>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLTexture@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTexture
 #if COMPILER(CLANG)
     // If this fails WebGLTexture does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLTexture), WebGLTexture_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLTexture), "WebGLTexture is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTexture
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLTexture>(globalObject, impl);
+    return createWrapper<WebGLTexture>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLTexture& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLTexture* JSWebGLTexture::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLTexture*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLTexture*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

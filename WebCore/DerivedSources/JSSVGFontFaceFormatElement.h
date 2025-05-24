@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFontFaceFormatElement_h
-#define JSSVGFontFaceFormatElement_h
+#pragma once
 
 #if ENABLE(SVG_FONTS)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSSVGFontFaceFormatElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFontFaceFormatElement;
     static JSSVGFontFaceFormatElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFontFaceFormatElement>&& impl)
     {
-        JSSVGFontFaceFormatElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceFormatElement>(globalObject->vm().heap)) JSSVGFontFaceFormatElement(structure, globalObject, WTF::move(impl));
+        JSSVGFontFaceFormatElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceFormatElement>(globalObject->vm().heap)) JSSVGFontFaceFormatElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,26 +49,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFontFaceFormatElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFontFaceFormatElement& wrapped() const
     {
-        return static_cast<SVGFontFaceFormatElement&>(Base::impl());
+        return static_cast<SVGFontFaceFormatElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFontFaceFormatElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFontFaceFormatElement>&&);
+    JSSVGFontFaceFormatElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFontFaceFormatElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFontFaceFormatElement> {
+    using WrapperClass = JSSVGFontFaceFormatElement;
+    using ToWrappedReturnType = SVGFontFaceFormatElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SVG_FONTS)
-
-#endif

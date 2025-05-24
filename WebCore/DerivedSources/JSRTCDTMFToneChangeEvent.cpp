@@ -20,27 +20,70 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCDTMFToneChangeEvent.h"
 
 #include "JSDOMBinding.h"
-#include "RTCDTMFToneChangeEvent.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> RTCDTMFToneChangeEvent::Init convertDictionary<RTCDTMFToneChangeEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCDTMFToneChangeEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue toneValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "tone"));
+    if (!toneValue.isUndefined()) {
+        result.tone = convert<IDLDOMString>(state, toneValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.tone = emptyString();
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsRTCDTMFToneChangeEventTone(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCDTMFToneChangeEventTone(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCDTMFToneChangeEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCDTMFToneChangeEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSRTCDTMFToneChangeEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCDTMFToneChangeEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCDTMFToneChangeEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFToneChangeEventPrototype>(vm.heap)) JSRTCDTMFToneChangeEventPrototype(vm, globalObject, structure);
@@ -63,11 +106,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSRTCDTMFToneChangeEventConstructor = JSDOMConstructor<JSRTCDTMFToneChangeEvent>;
+
+template<> EncodedJSValue JSC_HOST_CALL JSRTCDTMFToneChangeEventConstructor::construct(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSRTCDTMFToneChangeEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<RTCDTMFToneChangeEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = RTCDTMFToneChangeEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<RTCDTMFToneChangeEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+template<> JSValue JSRTCDTMFToneChangeEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSEvent::getConstructor(vm, &globalObject);
+}
+
+template<> void JSRTCDTMFToneChangeEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSRTCDTMFToneChangeEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("RTCDTMFToneChangeEvent"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSRTCDTMFToneChangeEventConstructor::s_info = { "RTCDTMFToneChangeEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDTMFToneChangeEventConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSRTCDTMFToneChangeEventPrototypeTableValues[] =
 {
-    { "tone", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDTMFToneChangeEventTone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDTMFToneChangeEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCDTMFToneChangeEventConstructor) } },
+    { "tone", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDTMFToneChangeEventTone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCDTMFToneChangeEventPrototype::s_info = { "RTCDTMFToneChangeEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDTMFToneChangeEventPrototype) };
@@ -80,39 +157,117 @@ void JSRTCDTMFToneChangeEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCDTMFToneChangeEvent::s_info = { "RTCDTMFToneChangeEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDTMFToneChangeEvent) };
 
-JSRTCDTMFToneChangeEvent::JSRTCDTMFToneChangeEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSRTCDTMFToneChangeEvent::JSRTCDTMFToneChangeEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCDTMFToneChangeEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCDTMFToneChangeEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSRTCDTMFToneChangeEventPrototype::create(vm, globalObject, JSRTCDTMFToneChangeEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSRTCDTMFToneChangeEventPrototype::create(vm, globalObject, JSRTCDTMFToneChangeEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSRTCDTMFToneChangeEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCDTMFToneChangeEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCDTMFToneChangeEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsRTCDTMFToneChangeEventTone(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSRTCDTMFToneChangeEvent* BindingCaller<JSRTCDTMFToneChangeEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCDTMFToneChangeEvent* castedThis = jsDynamicCast<JSRTCDTMFToneChangeEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCDTMFToneChangeEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCDTMFToneChangeEvent", "tone");
-        return throwGetterTypeError(*exec, "RTCDTMFToneChangeEvent", "tone");
+    return jsDynamicDowncast<JSRTCDTMFToneChangeEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsRTCDTMFToneChangeEventToneGetter(ExecState&, JSRTCDTMFToneChangeEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCDTMFToneChangeEventTone(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCDTMFToneChangeEvent>::attribute<jsRTCDTMFToneChangeEventToneGetter>(state, thisValue, "tone");
+}
+
+static inline JSValue jsRTCDTMFToneChangeEventToneGetter(ExecState& state, JSRTCDTMFToneChangeEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.tone());
+    return result;
+}
+
+EncodedJSValue jsRTCDTMFToneChangeEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSRTCDTMFToneChangeEventPrototype* domObject = jsDynamicDowncast<JSRTCDTMFToneChangeEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSRTCDTMFToneChangeEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSRTCDTMFToneChangeEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSRTCDTMFToneChangeEventPrototype* domObject = jsDynamicDowncast<JSRTCDTMFToneChangeEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.tone());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSRTCDTMFToneChangeEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSRTCDTMFToneChangeEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7RTCDTMFToneChangeEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore22RTCDTMFToneChangeEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCDTMFToneChangeEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore22RTCDTMFToneChangeEventE[2];
+#if COMPILER(CLANG)
+    // If this fails RTCDTMFToneChangeEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(RTCDTMFToneChangeEvent), "RTCDTMFToneChangeEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // RTCDTMFToneChangeEvent has subclasses. If RTCDTMFToneChangeEvent has subclasses that get passed
+    // to toJS() we currently require RTCDTMFToneChangeEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<RTCDTMFToneChangeEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCDTMFToneChangeEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 
-
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

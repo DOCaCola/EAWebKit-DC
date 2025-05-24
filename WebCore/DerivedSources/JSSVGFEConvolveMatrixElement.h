@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEConvolveMatrixElement_h
-#define JSSVGFEConvolveMatrixElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEConvolveMatrixElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEConvolveMatrixElement;
     static JSSVGFEConvolveMatrixElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEConvolveMatrixElement>&& impl)
     {
-        JSSVGFEConvolveMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElement>(globalObject->vm().heap)) JSSVGFEConvolveMatrixElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEConvolveMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElement>(globalObject->vm().heap)) JSSVGFEConvolveMatrixElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEConvolveMatrixElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEConvolveMatrixElement& wrapped() const
     {
-        return static_cast<SVGFEConvolveMatrixElement&>(Base::impl());
+        return static_cast<SVGFEConvolveMatrixElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEConvolveMatrixElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEConvolveMatrixElement>&&);
+    JSSVGFEConvolveMatrixElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEConvolveMatrixElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEConvolveMatrixElement> {
+    using WrapperClass = JSSVGFEConvolveMatrixElement;
+    using ToWrappedReturnType = SVGFEConvolveMatrixElement*;
+};
 
 } // namespace WebCore
-
-#endif

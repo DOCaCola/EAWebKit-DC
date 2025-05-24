@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XMLHttpRequestProgressEvent_h
-#define XMLHttpRequestProgressEvent_h
+#pragma once
 
 #include "ProgressEvent.h"
 
@@ -33,23 +32,17 @@ namespace WebCore {
 
 class XMLHttpRequestProgressEvent : public ProgressEvent {
 public:
-    static Ref<XMLHttpRequestProgressEvent> create()
-    {
-        return adoptRef(*new XMLHttpRequestProgressEvent);
-    }
     static Ref<XMLHttpRequestProgressEvent> create(const AtomicString& type, bool lengthComputable = false, unsigned long long loaded = 0, unsigned long long total = 0)
     {
         return adoptRef(*new XMLHttpRequestProgressEvent(type, lengthComputable, loaded, total));
     }
-
     // Those 2 synonyms are included for compatibility with Firefox.
     unsigned long long position() const { return loaded(); }
     unsigned long long totalSize() const { return total(); }
 
-    virtual EventInterface eventInterface() const { return XMLHttpRequestProgressEventInterfaceType; }
+    EventInterface eventInterface() const override { return XMLHttpRequestProgressEventInterfaceType; }
 
 private:
-    XMLHttpRequestProgressEvent() { }
     XMLHttpRequestProgressEvent(const AtomicString& type, bool lengthComputable, unsigned long long loaded, unsigned long long total)
         : ProgressEvent(type, lengthComputable, loaded, total)
     {
@@ -57,5 +50,3 @@ private:
 };
 
 } // namespace WebCore
-
-#endif // XMLHttpRequestProgressEvent_h

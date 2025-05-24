@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDelayNode_h
-#define JSDelayNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSDelayNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = DelayNode;
     static JSDelayNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DelayNode>&& impl)
     {
-        JSDelayNode* ptr = new (NotNull, JSC::allocateCell<JSDelayNode>(globalObject->vm().heap)) JSDelayNode(structure, globalObject, WTF::move(impl));
+        JSDelayNode* ptr = new (NotNull, JSC::allocateCell<JSDelayNode>(globalObject->vm().heap)) JSDelayNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DelayNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    DelayNode& wrapped() const
     {
-        return static_cast<DelayNode&>(Base::impl());
+        return static_cast<DelayNode&>(Base::wrapped());
     }
 protected:
-    JSDelayNode(JSC::Structure*, JSDOMGlobalObject*, Ref<DelayNode>&&);
+    JSDelayNode(JSC::Structure*, JSDOMGlobalObject&, Ref<DelayNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DelayNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DelayNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DelayNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DelayNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DelayNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DelayNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<DelayNode> {
+    using WrapperClass = JSDelayNode;
+    using ToWrappedReturnType = DelayNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

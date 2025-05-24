@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPositionError_h
-#define JSPositionError_h
+#pragma once
 
 #if ENABLE(GEOLOCATION)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSPositionError : public JSDOMWrapper {
+class JSPositionError : public JSDOMWrapper<PositionError> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<PositionError>;
     static JSPositionError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PositionError>&& impl)
     {
-        JSPositionError* ptr = new (NotNull, JSC::allocateCell<JSPositionError>(globalObject->vm().heap)) JSPositionError(structure, globalObject, WTF::move(impl));
+        JSPositionError* ptr = new (NotNull, JSC::allocateCell<JSPositionError>(globalObject->vm().heap)) JSPositionError(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static PositionError* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSPositionError();
 
     DECLARE_INFO;
 
@@ -53,22 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    PositionError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PositionError* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPositionError(JSC::Structure*, JSDOMGlobalObject*, Ref<PositionError>&&);
+    JSPositionError(JSC::Structure*, JSDOMGlobalObject&, Ref<PositionError>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSPositionErrorOwner : public JSC::WeakHandleOwner {
@@ -83,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PositionError*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PositionError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PositionError& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(PositionError* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PositionError&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PositionError* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<PositionError>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<PositionError>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<PositionError> {
+    using WrapperClass = JSPositionError;
+    using ToWrappedReturnType = PositionError*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(GEOLOCATION)
-
-#endif

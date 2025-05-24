@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGRenderingIntent_h
-#define JSSVGRenderingIntent_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGElement.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGRenderingIntent : public JSDOMWrapper {
+class JSSVGRenderingIntent : public JSDOMWrapper<SVGRenderingIntent> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGRenderingIntent>;
     static JSSVGRenderingIntent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGRenderingIntent>&& impl)
     {
-        JSSVGRenderingIntent* ptr = new (NotNull, JSC::allocateCell<JSSVGRenderingIntent>(globalObject->vm().heap)) JSSVGRenderingIntent(structure, globalObject, WTF::move(impl));
+        JSSVGRenderingIntent* ptr = new (NotNull, JSC::allocateCell<JSSVGRenderingIntent>(globalObject->vm().heap)) JSSVGRenderingIntent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGRenderingIntent* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGRenderingIntent();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGRenderingIntent& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGRenderingIntent* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGRenderingIntent(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGRenderingIntent>&&);
+    JSSVGRenderingIntent(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGRenderingIntent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGRenderingIntentOwner : public JSC::WeakHandleOwner {
@@ -80,8 +68,15 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGRenderingIntent*)
     return &owner.get();
 }
 
+inline void* wrapperKey(SVGRenderingIntent* wrappableObject)
+{
+    return wrappableObject;
+}
 
+
+template<> struct JSDOMWrapperConverterTraits<SVGRenderingIntent> {
+    using WrapperClass = JSSVGRenderingIntent;
+    using ToWrappedReturnType = SVGRenderingIntent*;
+};
 
 } // namespace WebCore
-
-#endif

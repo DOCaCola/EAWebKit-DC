@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSEXTsRGB_h
-#define JSEXTsRGB_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSEXTsRGB : public JSDOMWrapper {
+class JSEXTsRGB : public JSDOMWrapper<EXTsRGB> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<EXTsRGB>;
     static JSEXTsRGB* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTsRGB>&& impl)
     {
-        JSEXTsRGB* ptr = new (NotNull, JSC::allocateCell<JSEXTsRGB>(globalObject->vm().heap)) JSEXTsRGB(structure, globalObject, WTF::move(impl));
+        JSEXTsRGB* ptr = new (NotNull, JSC::allocateCell<JSEXTsRGB>(globalObject->vm().heap)) JSEXTsRGB(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTsRGB* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTsRGB();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTsRGB& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTsRGB* m_impl;
 protected:
-    JSEXTsRGB(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTsRGB>&&);
+    JSEXTsRGB(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTsRGB>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSEXTsRGBOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTsRGB*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTsRGB*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTsRGB& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(EXTsRGB* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTsRGB&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTsRGB* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<EXTsRGB>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<EXTsRGB>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<EXTsRGB> {
+    using WrapperClass = JSEXTsRGB;
+    using ToWrappedReturnType = EXTsRGB*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

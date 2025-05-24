@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMMimeTypeArray_h
-#define JSDOMMimeTypeArray_h
+#pragma once
 
 #include "DOMMimeTypeArray.h"
 #include "JSDOMWrapper.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSDOMMimeTypeArray : public JSDOMWrapper {
+class JSDOMMimeTypeArray : public JSDOMWrapper<DOMMimeTypeArray> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMMimeTypeArray>;
     static JSDOMMimeTypeArray* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMMimeTypeArray>&& impl)
     {
-        JSDOMMimeTypeArray* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypeArray>(globalObject->vm().heap)) JSDOMMimeTypeArray(structure, globalObject, WTF::move(impl));
+        JSDOMMimeTypeArray* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypeArray>(globalObject->vm().heap)) JSDOMMimeTypeArray(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMMimeTypeArray* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMMimeTypeArray();
 
     DECLARE_INFO;
 
@@ -53,26 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMMimeTypeArray& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMMimeTypeArray* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMMimeTypeArray(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMMimeTypeArray>&&);
+    JSDOMMimeTypeArray(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMMimeTypeArray>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMMimeTypeArray*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMMimeTypeArrayOwner : public JSC::WeakHandleOwner {
@@ -87,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMMimeTypeArray*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeTypeArray*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMMimeTypeArray& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMMimeTypeArray* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeTypeArray&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMMimeTypeArray* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMMimeTypeArray>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMMimeTypeArray>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMMimeTypeArray> {
+    using WrapperClass = JSDOMMimeTypeArray;
+    using ToWrappedReturnType = DOMMimeTypeArray*;
+};
 
 } // namespace WebCore
-
-#endif

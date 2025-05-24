@@ -21,12 +21,11 @@
 #include "config.h"
 #include "JSSVGException.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "SVGException.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -39,14 +38,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGExceptionPrototypeFunctionToString(JSC::E
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGExceptionCode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGExceptionName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGExceptionMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGExceptionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGExceptionCode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGExceptionName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGExceptionMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGExceptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGExceptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGExceptionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGExceptionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGExceptionPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGExceptionPrototype>(vm.heap)) JSSVGExceptionPrototype(vm, globalObject, structure);
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGExceptionConstructor : public DOMConstructorObject {
-private:
-    JSSVGExceptionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGExceptionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGExceptionConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGExceptionConstructor>(vm.heap)) JSSVGExceptionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGExceptionConstructor = JSDOMConstructorNotConstructable<JSSVGException>;
 
 /* Hash table */
 
@@ -107,47 +88,46 @@ static const struct CompactHashIndex JSSVGExceptionTableIndex[9] = {
 
 static const HashTableValue JSSVGExceptionTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSSVGExceptionTable = { 3, 7, true, JSSVGExceptionTableValues, 0, JSSVGExceptionTableIndex };
+static const HashTable JSSVGExceptionTable = { 3, 7, true, JSSVGExceptionTableValues, JSSVGExceptionTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGExceptionConstructorTableValues[] =
 {
-    { "SVG_WRONG_TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_INVALID_VALUE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MATRIX_NOT_INVERTABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_WRONG_TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_INVALID_VALUE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MATRIX_NOT_INVERTABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
-const ClassInfo JSSVGExceptionConstructor::s_info = { "SVGExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGExceptionConstructor) };
-
-JSSVGExceptionConstructor::JSSVGExceptionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGExceptionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGExceptionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGExceptionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGException::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGException::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGException"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGExceptionConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGExceptionConstructor::s_info = { "SVGException", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGExceptionConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGExceptionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_WRONG_TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_INVALID_VALUE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MATRIX_NOT_INVERTABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGExceptionPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGExceptionConstructor) } },
+    { "toString", DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGExceptionPrototypeFunctionToString), (intptr_t) (0) } },
+    { "SVG_WRONG_TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_INVALID_VALUE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MATRIX_NOT_INVERTABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGExceptionPrototype::s_info = { "SVGExceptionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGExceptionPrototype) };
@@ -160,10 +140,16 @@ void JSSVGExceptionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGException::s_info = { "SVGException", &Base::s_info, &JSSVGExceptionTable, CREATE_METHOD_TABLE(JSSVGException) };
 
-JSSVGException::JSSVGException(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGException>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGException::JSSVGException(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGException>&& impl)
+    : JSDOMWrapper<SVGException>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGException::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGException::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -171,7 +157,7 @@ JSObject* JSSVGException::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSVGExceptionPrototype::create(vm, globalObject, JSSVGExceptionPrototype::createStructure(vm, globalObject, globalObject->errorPrototype()));
 }
 
-JSObject* JSSVGException::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGException::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGException>(vm, globalObject);
 }
@@ -182,77 +168,106 @@ void JSSVGException::destroy(JSC::JSCell* cell)
     thisObject->JSSVGException::~JSSVGException();
 }
 
-JSSVGException::~JSSVGException()
+template<> inline JSSVGException* BindingCaller<JSSVGException>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSVGException*>(JSValue::decode(thisValue));
 }
 
-bool JSSVGException::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSSVGException* BindingCaller<JSSVGException>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSSVGException*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSVGException, Base>(exec, JSSVGExceptionTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSSVGException*>(state.thisValue());
 }
 
-EncodedJSValue jsSVGExceptionCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGExceptionCodeGetter(ExecState&, JSSVGException&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGExceptionCode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.code());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGException>::attribute<jsSVGExceptionCodeGetter>(state, thisValue, "code");
 }
 
-
-EncodedJSValue jsSVGExceptionName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGExceptionCodeGetter(ExecState& state, JSSVGException& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.code());
+    return result;
 }
 
+static inline JSValue jsSVGExceptionNameGetter(ExecState&, JSSVGException&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGExceptionMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGExceptionName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGException>::attribute<jsSVGExceptionNameGetter>(state, thisValue, "name");
 }
 
-
-EncodedJSValue jsSVGExceptionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGExceptionNameGetter(ExecState& state, JSSVGException& thisObject, ThrowScope& throwScope)
 {
-    JSSVGExceptionPrototype* domObject = jsDynamicCast<JSSVGExceptionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGException::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
 }
 
-JSValue JSSVGException::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsSVGExceptionMessageGetter(ExecState&, JSSVGException&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGExceptionMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSSVGExceptionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSSVGException>::attribute<jsSVGExceptionMessageGetter>(state, thisValue, "message");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGExceptionPrototypeFunctionToString(ExecState* exec)
+static inline JSValue jsSVGExceptionMessageGetter(ExecState& state, JSSVGException& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGException* castedThis = jsDynamicCast<JSSVGException*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGException", "toString");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGException::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.message());
+    return result;
+}
+
+EncodedJSValue jsSVGExceptionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGExceptionPrototype* domObject = jsDynamicDowncast<JSSVGExceptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGException::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGExceptionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGExceptionPrototype* domObject = jsDynamicDowncast<JSSVGExceptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGException::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGExceptionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsSVGExceptionPrototypeFunctionToStringCaller(JSC::ExecState*, JSSVGException*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGExceptionPrototypeFunctionToString(ExecState* state)
+{
+    return BindingCaller<JSSVGException>::callOperation<jsSVGExceptionPrototypeFunctionToStringCaller>(state, "toString");
+}
+
+static inline JSC::EncodedJSValue jsSVGExceptionPrototypeFunctionToStringCaller(JSC::ExecState* state, JSSVGException* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.toString()));
 }
 
 bool JSSVGExceptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -264,31 +279,32 @@ bool JSSVGExceptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSSVGExceptionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGException = jsCast<JSSVGException*>(handle.slot()->asCell());
+    auto* jsSVGException = static_cast<JSSVGException*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGException->impl(), jsSVGException);
+    uncacheWrapper(world, &jsSVGException->wrapped(), jsSVGException);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGException* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SVGException>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSVGException>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to SVGException.
-    COMPILE_ASSERT(!__is_polymorphic(SVGException), SVGException_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(SVGException), "SVGException is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSSVGException>(globalObject, impl);
+    return createWrapper<SVGException>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGException& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SVGException* JSSVGException::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGException*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSVGException*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

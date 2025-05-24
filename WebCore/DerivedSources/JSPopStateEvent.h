@@ -18,65 +18,62 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPopStateEvent_h
-#define JSPopStateEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "PopStateEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSPopStateEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = PopStateEvent;
     static JSPopStateEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PopStateEvent>&& impl)
     {
-        JSPopStateEvent* ptr = new (NotNull, JSC::allocateCell<JSPopStateEvent>(globalObject->vm().heap)) JSPopStateEvent(structure, globalObject, WTF::move(impl));
+        JSPopStateEvent* ptr = new (NotNull, JSC::allocateCell<JSPopStateEvent>(globalObject->vm().heap)) JSPopStateEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_state;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    mutable JSC::WriteBarrier<JSC::Unknown> m_state;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue state(JSC::ExecState*) const;
-    PopStateEvent& impl() const
+    JSC::JSValue state(JSC::ExecState&) const;
+    PopStateEvent& wrapped() const
     {
-        return static_cast<PopStateEvent&>(Base::impl());
+        return static_cast<PopStateEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPopStateEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<PopStateEvent>&&);
+    JSPopStateEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<PopStateEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PopStateEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PopStateEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<PopStateEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<PopStateEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillPopStateEventInit(PopStateEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<PopStateEvent> {
+    using WrapperClass = JSPopStateEvent;
+    using ToWrappedReturnType = PopStateEvent*;
+};
+template<> PopStateEvent::Init convertDictionary<PopStateEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

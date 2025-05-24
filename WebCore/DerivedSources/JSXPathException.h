@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathException_h
-#define JSXPathException_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "XPathException.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSXPathException : public JSDOMWrapper {
+class JSXPathException : public JSDOMWrapper<XPathException> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<XPathException>;
     static JSXPathException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathException>&& impl)
     {
-        JSXPathException* ptr = new (NotNull, JSC::allocateCell<JSXPathException>(globalObject->vm().heap)) JSXPathException(structure, globalObject, WTF::move(impl));
+        JSXPathException* ptr = new (NotNull, JSC::allocateCell<JSXPathException>(globalObject->vm().heap)) JSXPathException(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static XPathException* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSXPathException();
 
     DECLARE_INFO;
 
@@ -52,23 +49,13 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathException* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSXPathException(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathException>&&);
+    JSXPathException(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathException>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSXPathExceptionOwner : public JSC::WeakHandleOwner {
@@ -83,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathException*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathException& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XPathException* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathException&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathException* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XPathException>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XPathException>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XPathException> {
+    using WrapperClass = JSXPathException;
+    using ToWrappedReturnType = XPathException*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFileReaderSync_h
-#define JSFileReaderSync_h
+#pragma once
 
 #include "FileReaderSync.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSFileReaderSync : public JSDOMWrapper {
+class JSFileReaderSync : public JSDOMWrapper<FileReaderSync> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<FileReaderSync>;
     static JSFileReaderSync* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileReaderSync>&& impl)
     {
-        JSFileReaderSync* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSync>(globalObject->vm().heap)) JSFileReaderSync(structure, globalObject, WTF::move(impl));
+        JSFileReaderSync* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSync>(globalObject->vm().heap)) JSFileReaderSync(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static FileReaderSync* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSFileReaderSync();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FileReaderSync& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileReaderSync* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSFileReaderSync(JSC::Structure*, JSDOMGlobalObject*, Ref<FileReaderSync>&&);
+    JSFileReaderSync(JSC::Structure*, JSDOMGlobalObject&, Ref<FileReaderSync>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSFileReaderSyncOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileReaderSync*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReaderSync*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileReaderSync& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(FileReaderSync* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReaderSync&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileReaderSync* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<FileReaderSync>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<FileReaderSync>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<FileReaderSync> {
+    using WrapperClass = JSFileReaderSync;
+    using ToWrappedReturnType = FileReaderSync*;
+};
 
 } // namespace WebCore
-
-#endif

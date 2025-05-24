@@ -19,11 +19,9 @@
 */
 
 #include "config.h"
-
-#if ENABLE(REQUEST_ANIMATION_FRAME)
-
 #include "JSRequestAnimationFrameCallback.h"
 
+#include "JSDOMConvert.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
 
@@ -34,7 +32,7 @@ namespace WebCore {
 JSRequestAnimationFrameCallback::JSRequestAnimationFrameCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : RequestAnimationFrameCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -48,13 +46,37 @@ JSRequestAnimationFrameCallback::~JSRequestAnimationFrameCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
+bool JSRequestAnimationFrameCallback::handleEvent(double highResTime)
+{
+    if (!canInvokeCallback())
+        return true;
 
-// Functions
+    Ref<JSRequestAnimationFrameCallback> protectedThis(*this);
+
+    JSLockHolder lock(m_data->globalObject()->vm());
+
+    ExecState* state = m_data->globalObject()->globalExec();
+    MarkedArgumentBuffer args;
+    args.append(toJS<IDLUnrestrictedDouble>(highResTime));
+
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(RequestAnimationFrameCallback& impl)
+{
+    if (!static_cast<JSRequestAnimationFrameCallback&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSRequestAnimationFrameCallback&>(impl).callbackData()->callback();
 
 }
 
-#endif // ENABLE(REQUEST_ANIMATION_FRAME)
+} // namespace WebCore

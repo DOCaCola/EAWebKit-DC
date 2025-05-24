@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEColorMatrixElement_h
-#define JSSVGFEColorMatrixElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEColorMatrixElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEColorMatrixElement;
     static JSSVGFEColorMatrixElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEColorMatrixElement>&& impl)
     {
-        JSSVGFEColorMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEColorMatrixElement>(globalObject->vm().heap)) JSSVGFEColorMatrixElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEColorMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEColorMatrixElement>(globalObject->vm().heap)) JSSVGFEColorMatrixElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEColorMatrixElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEColorMatrixElement& wrapped() const
     {
-        return static_cast<SVGFEColorMatrixElement&>(Base::impl());
+        return static_cast<SVGFEColorMatrixElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEColorMatrixElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEColorMatrixElement>&&);
+    JSSVGFEColorMatrixElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEColorMatrixElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEColorMatrixElement> {
+    using WrapperClass = JSSVGFEColorMatrixElement;
+    using ToWrappedReturnType = SVGFEColorMatrixElement*;
+};
 
 } // namespace WebCore
-
-#endif

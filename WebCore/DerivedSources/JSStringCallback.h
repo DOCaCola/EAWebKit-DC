@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStringCallback_h
-#define JSStringCallback_h
+#pragma once
 
 #include "ActiveDOMCallback.h"
 #include "JSCallbackData.h"
@@ -38,16 +37,18 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSStringCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(const String& data);
 
 private:
-    JSStringCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSStringCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
 
-} // namespace WebCore
+JSC::JSValue toJS(StringCallback&);
+inline JSC::JSValue toJS(StringCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
-#endif
+} // namespace WebCore

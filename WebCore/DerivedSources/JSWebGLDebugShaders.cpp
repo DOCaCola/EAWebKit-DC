@@ -24,11 +24,9 @@
 
 #include "JSWebGLDebugShaders.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSWebGLShader.h"
-#include "URL.h"
-#include "WebGLDebugShaders.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -42,7 +40,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsWebGLDebugShadersPrototypeFunctionGetTransla
 
 class JSWebGLDebugShadersPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLDebugShadersPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLDebugShadersPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugShadersPrototype>(vm.heap)) JSWebGLDebugShadersPrototype(vm, globalObject, structure);
@@ -69,7 +67,7 @@ private:
 
 static const HashTableValue JSWebGLDebugShadersPrototypeTableValues[] =
 {
-    { "getTranslatedShaderSource", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSource), (intptr_t) (1) },
+    { "getTranslatedShaderSource", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSource), (intptr_t) (1) } },
 };
 
 const ClassInfo JSWebGLDebugShadersPrototype::s_info = { "WebGLDebugShadersPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDebugShadersPrototype) };
@@ -82,10 +80,16 @@ void JSWebGLDebugShadersPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLDebugShaders::s_info = { "WebGLDebugShaders", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDebugShaders) };
 
-JSWebGLDebugShaders::JSWebGLDebugShaders(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDebugShaders>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLDebugShaders::JSWebGLDebugShaders(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLDebugShaders>&& impl)
+    : JSDOMWrapper<WebGLDebugShaders>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLDebugShaders::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLDebugShaders::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -93,7 +97,7 @@ JSObject* JSWebGLDebugShaders::createPrototype(VM& vm, JSGlobalObject* globalObj
     return JSWebGLDebugShadersPrototype::create(vm, globalObject, JSWebGLDebugShadersPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLDebugShaders::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLDebugShaders::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLDebugShaders>(vm, globalObject);
 }
@@ -104,45 +108,42 @@ void JSWebGLDebugShaders::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLDebugShaders::~JSWebGLDebugShaders();
 }
 
-JSWebGLDebugShaders::~JSWebGLDebugShaders()
+template<> inline JSWebGLDebugShaders* BindingCaller<JSWebGLDebugShaders>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSWebGLDebugShaders*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSource(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSWebGLDebugShaders* castedThis = jsDynamicCast<JSWebGLDebugShaders*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLDebugShaders", "getTranslatedShaderSource");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLDebugShaders::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLDebugShaders", "getTranslatedShaderSource", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getTranslatedShaderSource(shader, ec));
+static inline JSC::EncodedJSValue jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSourceCaller(JSC::ExecState*, JSWebGLDebugShaders*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSource(ExecState* state)
+{
+    return BindingCaller<JSWebGLDebugShaders>::callOperation<jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSourceCaller>(state, "getTranslatedShaderSource");
+}
+
+static inline JSC::EncodedJSValue jsWebGLDebugShadersPrototypeFunctionGetTranslatedShaderSourceCaller(JSC::ExecState* state, JSWebGLDebugShaders* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto shader = convert<IDLNullable<IDLInterface<WebGLShader>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "shader", "WebGLDebugShaders", "getTranslatedShaderSource", "WebGLShader"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.getTranslatedShaderSource(WTFMove(shader))));
 }
 
 bool JSWebGLDebugShadersOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLDebugShaders = jsCast<JSWebGLDebugShaders*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDebugShaders->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDebugShaders->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebGLDebugShadersOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLDebugShaders = jsCast<JSWebGLDebugShaders*>(handle.slot()->asCell());
+    auto* jsWebGLDebugShaders = static_cast<JSWebGLDebugShaders*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLDebugShaders->impl(), jsWebGLDebugShaders);
+    uncacheWrapper(world, &jsWebGLDebugShaders->wrapped(), jsWebGLDebugShaders);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -153,15 +154,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLDebugShaders@WebCore@@6B
 extern "C" { extern void* _ZTVN7WebCore17WebGLDebugShadersE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugShaders* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLDebugShaders>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLDebugShaders>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLDebugShaders@WebCore@@6B@"));
 #else
@@ -169,7 +167,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugSh
 #if COMPILER(CLANG)
     // If this fails WebGLDebugShaders does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLDebugShaders), WebGLDebugShaders_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLDebugShaders), "WebGLDebugShaders is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -178,13 +176,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugSh
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLDebugShaders>(globalObject, impl);
+    return createWrapper<WebGLDebugShaders>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDebugShaders& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLDebugShaders* JSWebGLDebugShaders::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLDebugShaders*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLDebugShaders*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

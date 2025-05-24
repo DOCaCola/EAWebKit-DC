@@ -25,7 +25,7 @@
 #include "JSSVGFontFaceUriElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGFontFaceUriElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFontFaceUriElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFontFaceUriElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFontFaceUriElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFontFaceUriElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFontFaceUriElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFontFaceUriElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceUriElementPrototype>(vm.heap)) JSSVGFontFaceUriElementPrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFontFaceUriElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFontFaceUriElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGFontFaceUriElementConstructor = JSDOMConstructorNotConstructable<JSSVGFontFaceUriElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFontFaceUriElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFontFaceUriElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceUriElementConstructor>(vm.heap)) JSSVGFontFaceUriElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFontFaceUriElementConstructor::s_info = { "SVGFontFaceUriElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceUriElementConstructor) };
-
-JSSVGFontFaceUriElementConstructor::JSSVGFontFaceUriElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFontFaceUriElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFontFaceUriElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFontFaceUriElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFontFaceUriElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFontFaceUriElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFontFaceUriElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFontFaceUriElementConstructor::s_info = { "SVGFontFaceUriElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceUriElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFontFaceUriElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontFaceUriElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontFaceUriElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFontFaceUriElementConstructor) } },
 };
 
 const ClassInfo JSSVGFontFaceUriElementPrototype::s_info = { "SVGFontFaceUriElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceUriElementPrototype) };
@@ -115,32 +95,63 @@ void JSSVGFontFaceUriElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFontFaceUriElement::s_info = { "SVGFontFaceUriElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceUriElement) };
 
-JSSVGFontFaceUriElement::JSSVGFontFaceUriElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFontFaceUriElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFontFaceUriElement::JSSVGFontFaceUriElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFontFaceUriElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFontFaceUriElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFontFaceUriElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFontFaceUriElementPrototype::create(vm, globalObject, JSSVGFontFaceUriElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFontFaceUriElementPrototype::create(vm, globalObject, JSSVGFontFaceUriElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFontFaceUriElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFontFaceUriElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFontFaceUriElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFontFaceUriElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFontFaceUriElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGFontFaceUriElementPrototype* domObject = jsDynamicCast<JSSVGFontFaceUriElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFontFaceUriElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFontFaceUriElementPrototype* domObject = jsDynamicDowncast<JSSVGFontFaceUriElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFontFaceUriElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGFontFaceUriElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGFontFaceUriElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGFontFaceUriElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFontFaceUriElementPrototype* domObject = jsDynamicDowncast<JSSVGFontFaceUriElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGFontFaceUriElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGFontFaceUriElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGFontFaceUriElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGFontFaceUriElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

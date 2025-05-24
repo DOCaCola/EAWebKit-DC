@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2004, 2005, 2006, 2013, 2014 Apple Inc. All rights reserved.
  * Copyright (C) 2009 Google Inc. All rights reserved.
- * Copyright (C) 2013, 2015 Electronic Arts, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,16 +24,6 @@
 #endif
 
 #include <wtf/Platform.h>
-
-//+EAWebKitChange
-//12/12/2013
-//4/2/2015
-#if PLATFORM(EA)
-#include <EABase/eabase.h>
-
-#include <EAWebKit/EAWebKitSystem.h>
-#endif
-//-EAWebKitChange
 
 #if PLATFORM(COCOA)
 #define USE_FILE_LOCK 1

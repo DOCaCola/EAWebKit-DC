@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLElement_h
-#define JSHTMLElement_h
+#pragma once
 
 #include "HTMLElement.h"
 #include "JSElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class WEBCORE_EXPORT JSHTMLElement : public JSElement {
 public:
-    typedef JSElement Base;
+    using Base = JSElement;
+    using DOMWrapped = HTMLElement;
     static JSHTMLElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLElement>&& impl)
     {
-        JSHTMLElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLElement>(globalObject->vm().heap)) JSHTMLElement(structure, globalObject, WTF::move(impl));
+        JSHTMLElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLElement>(globalObject->vm().heap)) JSHTMLElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -49,24 +49,26 @@ public:
 
     JSC::JSScope* pushEventHandlerScope(JSC::ExecState*, JSC::JSScope*) const;
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLElement& wrapped() const
     {
-        return static_cast<HTMLElement&>(Base::impl());
+        return static_cast<HTMLElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLElement>&&);
+    JSHTMLElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+// Custom constructor
+JSC::EncodedJSValue JSC_HOST_CALL constructJSHTMLElement(JSC::ExecState&);
+
+template<> struct JSDOMWrapperConverterTraits<HTMLElement> {
+    using WrapperClass = JSHTMLElement;
+    using ToWrappedReturnType = HTMLElement*;
+};
 
 } // namespace WebCore
-
-#endif

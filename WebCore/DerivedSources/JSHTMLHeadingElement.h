@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLHeadingElement_h
-#define JSHTMLHeadingElement_h
+#pragma once
 
 #include "HTMLHeadingElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLHeadingElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLHeadingElement;
     static JSHTMLHeadingElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLHeadingElement>&& impl)
     {
-        JSHTMLHeadingElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLHeadingElement>(globalObject->vm().heap)) JSHTMLHeadingElement(structure, globalObject, WTF::move(impl));
+        JSHTMLHeadingElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLHeadingElement>(globalObject->vm().heap)) JSHTMLHeadingElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLHeadingElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLHeadingElement& wrapped() const
     {
-        return static_cast<HTMLHeadingElement&>(Base::impl());
+        return static_cast<HTMLHeadingElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLHeadingElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLHeadingElement>&&);
+    JSHTMLHeadingElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLHeadingElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLHeadingElement> {
+    using WrapperClass = JSHTMLHeadingElement;
+    using ToWrappedReturnType = HTMLHeadingElement*;
+};
 
 } // namespace WebCore
-
-#endif

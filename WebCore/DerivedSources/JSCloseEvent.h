@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCloseEvent_h
-#define JSCloseEvent_h
+#pragma once
 
 #include "CloseEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSCloseEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = CloseEvent;
     static JSCloseEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CloseEvent>&& impl)
     {
-        JSCloseEvent* ptr = new (NotNull, JSC::allocateCell<JSCloseEvent>(globalObject->vm().heap)) JSCloseEvent(structure, globalObject, WTF::move(impl));
+        JSCloseEvent* ptr = new (NotNull, JSC::allocateCell<JSCloseEvent>(globalObject->vm().heap)) JSCloseEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CloseEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CloseEvent& wrapped() const
     {
-        return static_cast<CloseEvent&>(Base::impl());
+        return static_cast<CloseEvent&>(Base::wrapped());
     }
 protected:
-    JSCloseEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<CloseEvent>&&);
+    JSCloseEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<CloseEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CloseEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CloseEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CloseEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CloseEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillCloseEventInit(CloseEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<CloseEvent> {
+    using WrapperClass = JSCloseEvent;
+    using ToWrappedReturnType = CloseEvent*;
+};
+template<> CloseEvent::Init convertDictionary<CloseEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

@@ -24,13 +24,12 @@
 
 #include "JSAudioBufferSourceNode.h"
 
-#include "AudioBuffer.h"
-#include "AudioBufferSourceNode.h"
-#include "AudioParam.h"
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSAudioBuffer.h"
 #include "JSAudioParam.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -43,40 +42,28 @@ namespace WebCore {
 
 JSC::EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStart(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStop(JSC::ExecState*);
-#if ENABLE(LEGACY_WEB_AUDIO)
-JSC::EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteOn(JSC::ExecState*);
-#endif
-#if ENABLE(LEGACY_WEB_AUDIO)
-JSC::EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteGrainOn(JSC::ExecState*);
-#endif
-#if ENABLE(LEGACY_WEB_AUDIO)
-JSC::EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteOff(JSC::ExecState*);
-#endif
 
 // Attributes
 
-JSC::EncodedJSValue jsAudioBufferSourceNodeBuffer(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeBuffer(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioBufferSourceNodePlaybackState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioBufferSourceNodeGain(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioBufferSourceNodePlaybackRate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioBufferSourceNodeLoop(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeLoop(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioBufferSourceNodeLoopStart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeLoopStart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioBufferSourceNodeLoopEnd(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeLoopEnd(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#if ENABLE(LEGACY_WEB_AUDIO)
-JSC::EncodedJSValue jsAudioBufferSourceNodeLooping(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeLooping(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
-JSC::EncodedJSValue jsAudioBufferSourceNodeOnended(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioBufferSourceNodeOnended(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioBufferSourceNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioBufferSourceNodeBuffer(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeBuffer(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioBufferSourceNodePlaybackState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioBufferSourceNodeGain(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioBufferSourceNodePlaybackRate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioBufferSourceNodeLoop(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeLoop(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioBufferSourceNodeLoopStart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeLoopStart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioBufferSourceNodeLoopEnd(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeLoopEnd(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioBufferSourceNodeOnended(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeOnended(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioBufferSourceNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioBufferSourceNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAudioBufferSourceNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAudioBufferSourceNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAudioBufferSourceNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSAudioBufferSourceNodePrototype>(vm.heap)) JSAudioBufferSourceNodePrototype(vm, globalObject, structure);
@@ -99,112 +86,57 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAudioBufferSourceNodeConstructor : public DOMConstructorObject {
-private:
-    JSAudioBufferSourceNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSAudioBufferSourceNodeConstructor = JSDOMConstructorNotConstructable<JSAudioBufferSourceNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAudioBufferSourceNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAudioBufferSourceNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSAudioBufferSourceNodeConstructor>(vm.heap)) JSAudioBufferSourceNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSAudioBufferSourceNodeTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSAudioBufferSourceNodeTableValues[] =
-{
-    { "buffer", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeBuffer) },
-};
-
-static const HashTable JSAudioBufferSourceNodeTable = { 1, 1, true, JSAudioBufferSourceNodeTableValues, 0, JSAudioBufferSourceNodeTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSAudioBufferSourceNodeConstructorTableValues[] =
 {
-    { "UNSCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "PLAYING_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "FINISHED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "UNSCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "PLAYING_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "FINISHED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
+static_assert(AudioBufferSourceNode::UNSCHEDULED_STATE == 0, "UNSCHEDULED_STATE in AudioBufferSourceNode does not match value from IDL");
+static_assert(AudioBufferSourceNode::SCHEDULED_STATE == 1, "SCHEDULED_STATE in AudioBufferSourceNode does not match value from IDL");
+static_assert(AudioBufferSourceNode::PLAYING_STATE == 2, "PLAYING_STATE in AudioBufferSourceNode does not match value from IDL");
+static_assert(AudioBufferSourceNode::FINISHED_STATE == 3, "FINISHED_STATE in AudioBufferSourceNode does not match value from IDL");
 
-COMPILE_ASSERT(0 == AudioBufferSourceNode::UNSCHEDULED_STATE, AudioBufferSourceNodeEnumUNSCHEDULED_STATEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == AudioBufferSourceNode::SCHEDULED_STATE, AudioBufferSourceNodeEnumSCHEDULED_STATEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == AudioBufferSourceNode::PLAYING_STATE, AudioBufferSourceNodeEnumPLAYING_STATEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(3 == AudioBufferSourceNode::FINISHED_STATE, AudioBufferSourceNodeEnumFINISHED_STATEIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSAudioBufferSourceNodeConstructor::s_info = { "AudioBufferSourceNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioBufferSourceNodeConstructor) };
-
-JSAudioBufferSourceNodeConstructor::JSAudioBufferSourceNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSAudioBufferSourceNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSAudioBufferSourceNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSAudioBufferSourceNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAudioBufferSourceNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAudioBufferSourceNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioBufferSourceNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSAudioBufferSourceNodeConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSAudioBufferSourceNodeConstructor::s_info = { "AudioBufferSourceNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioBufferSourceNodeConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioBufferSourceNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "playbackState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodePlaybackState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "gain", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeGain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "playbackRate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodePlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "loop", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoop) },
-    { "loopStart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoopStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoopStart) },
-    { "loopEnd", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoopEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoopEnd) },
-#if ENABLE(LEGACY_WEB_AUDIO)
-    { "looping", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLooping), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLooping) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-    { "onended", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeOnended) },
-    { "UNSCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "PLAYING_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "FINISHED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "start", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionStart), (intptr_t) (0) },
-    { "stop", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionStop), (intptr_t) (0) },
-#if ENABLE(LEGACY_WEB_AUDIO)
-    { "noteOn", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionNoteOn), (intptr_t) (1) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(LEGACY_WEB_AUDIO)
-    { "noteGrainOn", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionNoteGrainOn), (intptr_t) (3) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(LEGACY_WEB_AUDIO)
-    { "noteOff", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionNoteOff), (intptr_t) (1) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeConstructor) } },
+    { "buffer", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeBuffer) } },
+    { "playbackState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodePlaybackState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "gain", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeGain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "playbackRate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodePlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "loop", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoop) } },
+    { "loopStart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoopStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoopStart) } },
+    { "loopEnd", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeLoopEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeLoopEnd) } },
+    { "onended", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioBufferSourceNodeOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioBufferSourceNodeOnended) } },
+    { "start", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionStart), (intptr_t) (0) } },
+    { "stop", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioBufferSourceNodePrototypeFunctionStop), (intptr_t) (0) } },
+    { "UNSCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SCHEDULED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "PLAYING_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "FINISHED_STATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSAudioBufferSourceNodePrototype::s_info = { "AudioBufferSourceNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioBufferSourceNodePrototype) };
@@ -215,441 +147,334 @@ void JSAudioBufferSourceNodePrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSAudioBufferSourceNodePrototypeTableValues, *this);
 }
 
-const ClassInfo JSAudioBufferSourceNode::s_info = { "AudioBufferSourceNode", &Base::s_info, &JSAudioBufferSourceNodeTable, CREATE_METHOD_TABLE(JSAudioBufferSourceNode) };
+const ClassInfo JSAudioBufferSourceNode::s_info = { "AudioBufferSourceNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioBufferSourceNode) };
 
-JSAudioBufferSourceNode::JSAudioBufferSourceNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioBufferSourceNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSAudioBufferSourceNode::JSAudioBufferSourceNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioBufferSourceNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAudioBufferSourceNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAudioBufferSourceNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSAudioBufferSourceNodePrototype::create(vm, globalObject, JSAudioBufferSourceNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSAudioBufferSourceNodePrototype::create(vm, globalObject, JSAudioBufferSourceNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSAudioBufferSourceNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAudioBufferSourceNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAudioBufferSourceNode>(vm, globalObject);
 }
 
-bool JSAudioBufferSourceNode::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSAudioBufferSourceNode* BindingCaller<JSAudioBufferSourceNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSAudioBufferSourceNode*>(object);
+    return jsDynamicDowncast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSAudioBufferSourceNode* BindingCaller<JSAudioBufferSourceNode>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSAudioBufferSourceNode*>(state.thisValue());
+}
+
+static inline JSValue jsAudioBufferSourceNodeBufferGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeBuffer(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeBufferGetter>(state, thisValue, "buffer");
+}
+
+static inline JSValue jsAudioBufferSourceNodeBufferGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<AudioBuffer>>>(state, *thisObject.globalObject(), impl.buffer());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodePlaybackStateGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodePlaybackState(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodePlaybackStateGetter>(state, thisValue, "playbackState");
+}
+
+static inline JSValue jsAudioBufferSourceNodePlaybackStateGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.playbackState());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodeGainGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeGain(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeGainGetter>(state, thisValue, "gain");
+}
+
+static inline JSValue jsAudioBufferSourceNodeGainGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.gain());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodePlaybackRateGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodePlaybackRate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodePlaybackRateGetter>(state, thisValue, "playbackRate");
+}
+
+static inline JSValue jsAudioBufferSourceNodePlaybackRateGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.playbackRate());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeLoop(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeLoopGetter>(state, thisValue, "loop");
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.loop());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopStartGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeLoopStart(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeLoopStartGetter>(state, thisValue, "loopStart");
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopStartGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.loopStart());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopEndGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeLoopEnd(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeLoopEndGetter>(state, thisValue, "loopEnd");
+}
+
+static inline JSValue jsAudioBufferSourceNodeLoopEndGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.loopEnd());
+    return result;
+}
+
+static inline JSValue jsAudioBufferSourceNodeOnendedGetter(ExecState&, JSAudioBufferSourceNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioBufferSourceNodeOnended(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::attribute<jsAudioBufferSourceNodeOnendedGetter>(state, thisValue, "onended");
+}
+
+static inline JSValue jsAudioBufferSourceNodeOnendedGetter(ExecState& state, JSAudioBufferSourceNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().endedEvent);
+}
+
+EncodedJSValue jsAudioBufferSourceNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAudioBufferSourceNodePrototype* domObject = jsDynamicDowncast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAudioBufferSourceNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAudioBufferSourceNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSAudioBufferSourceNodePrototype* domObject = jsDynamicDowncast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSAudioBufferSourceNodeBufferFunction(ExecState&, JSAudioBufferSourceNode&, JSValue, ThrowScope&);
+
+bool setJSAudioBufferSourceNodeBuffer(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::setAttribute<setJSAudioBufferSourceNodeBufferFunction>(state, thisValue, encodedValue, "buffer");
+}
+
+static inline bool setJSAudioBufferSourceNodeBufferFunction(ExecState& state, JSAudioBufferSourceNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLInterface<AudioBuffer>>>(state, value, [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwAttributeTypeError(state, scope, "AudioBufferSourceNode", "buffer", "AudioBuffer"); });
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBuffer(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSAudioBufferSourceNodeLoopFunction(ExecState&, JSAudioBufferSourceNode&, JSValue, ThrowScope&);
+
+bool setJSAudioBufferSourceNodeLoop(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::setAttribute<setJSAudioBufferSourceNodeLoopFunction>(state, thisValue, encodedValue, "loop");
+}
+
+static inline bool setJSAudioBufferSourceNodeLoopFunction(ExecState& state, JSAudioBufferSourceNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setLoop(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSAudioBufferSourceNodeLoopStartFunction(ExecState&, JSAudioBufferSourceNode&, JSValue, ThrowScope&);
+
+bool setJSAudioBufferSourceNodeLoopStart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::setAttribute<setJSAudioBufferSourceNodeLoopStartFunction>(state, thisValue, encodedValue, "loopStart");
+}
+
+static inline bool setJSAudioBufferSourceNodeLoopStartFunction(ExecState& state, JSAudioBufferSourceNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setLoopStart(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSAudioBufferSourceNodeLoopEndFunction(ExecState&, JSAudioBufferSourceNode&, JSValue, ThrowScope&);
+
+bool setJSAudioBufferSourceNodeLoopEnd(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::setAttribute<setJSAudioBufferSourceNodeLoopEndFunction>(state, thisValue, encodedValue, "loopEnd");
+}
+
+static inline bool setJSAudioBufferSourceNodeLoopEndFunction(ExecState& state, JSAudioBufferSourceNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setLoopEnd(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSAudioBufferSourceNodeOnendedFunction(ExecState&, JSAudioBufferSourceNode&, JSValue, ThrowScope&);
+
+bool setJSAudioBufferSourceNodeOnended(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::setAttribute<setJSAudioBufferSourceNodeOnendedFunction>(state, thisValue, encodedValue, "onended");
+}
+
+static inline bool setJSAudioBufferSourceNodeOnendedFunction(ExecState& state, JSAudioBufferSourceNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().endedEvent, value);
+    return true;
+}
+
+
+JSValue JSAudioBufferSourceNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSAudioBufferSourceNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsAudioBufferSourceNodePrototypeFunctionStartCaller(JSC::ExecState*, JSAudioBufferSourceNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStart(ExecState* state)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::callOperation<jsAudioBufferSourceNodePrototypeFunctionStartCaller>(state, "start");
+}
+
+static inline JSC::EncodedJSValue jsAudioBufferSourceNodePrototypeFunctionStartCaller(JSC::ExecState* state, JSAudioBufferSourceNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto when = state->argument(0).isUndefined() ? 0 : convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto grainOffset = state->argument(1).isUndefined() ? 0 : convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto grainDuration = state->argument(2).isUndefined() ? std::optional<double>() : convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.start(WTFMove(when), WTFMove(grainOffset), WTFMove(grainDuration)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsAudioBufferSourceNodePrototypeFunctionStopCaller(JSC::ExecState*, JSAudioBufferSourceNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStop(ExecState* state)
+{
+    return BindingCaller<JSAudioBufferSourceNode>::callOperation<jsAudioBufferSourceNodePrototypeFunctionStopCaller>(state, "stop");
+}
+
+static inline JSC::EncodedJSValue jsAudioBufferSourceNodePrototypeFunctionStopCaller(JSC::ExecState* state, JSAudioBufferSourceNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto when = state->argument(0).isUndefined() ? 0 : convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.stop(WTFMove(when)));
+    return JSValue::encode(jsUndefined());
+}
+
+void JSAudioBufferSourceNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSAudioBufferSourceNode*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSAudioBufferSourceNode, Base>(exec, JSAudioBufferSourceNodeTable, thisObject, propertyName, slot);
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
-
-EncodedJSValue jsAudioBufferSourceNodeBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioBufferSourceNode*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.buffer()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodePlaybackState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "playbackState");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "playbackState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.playbackState());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodeGain(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "gain");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "gain");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.gain()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodePlaybackRate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "playbackRate");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "playbackRate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.playbackRate()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodeLoop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "loop");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "loop");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.loop());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodeLoopStart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "loopStart");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "loopStart");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.loopStart());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodeLoopEnd(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "loopEnd");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "loopEnd");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.loopEnd());
-    return JSValue::encode(result);
-}
-
-
-#if ENABLE(LEGACY_WEB_AUDIO)
-EncodedJSValue jsAudioBufferSourceNodeLooping(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "looping");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "looping");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.looping());
-    return JSValue::encode(result);
-}
-
-#endif
-
-EncodedJSValue jsAudioBufferSourceNodeOnended(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioBufferSourceNode", "onended");
-        return throwGetterTypeError(*exec, "AudioBufferSourceNode", "onended");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().endedEvent));
-}
-
-
-EncodedJSValue jsAudioBufferSourceNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSAudioBufferSourceNodePrototype* domObject = jsDynamicCast<JSAudioBufferSourceNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAudioBufferSourceNode::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void setJSAudioBufferSourceNodeBuffer(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioBufferSourceNode*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setBuffer(exec, value);
-}
-
-
-void setJSAudioBufferSourceNodeLoop(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioBufferSourceNode", "loop");
-        else
-            throwSetterTypeError(*exec, "AudioBufferSourceNode", "loop");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLoop(nativeValue);
-}
-
-
-void setJSAudioBufferSourceNodeLoopStart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioBufferSourceNode", "loopStart");
-        else
-            throwSetterTypeError(*exec, "AudioBufferSourceNode", "loopStart");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLoopStart(nativeValue);
-}
-
-
-void setJSAudioBufferSourceNodeLoopEnd(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioBufferSourceNode", "loopEnd");
-        else
-            throwSetterTypeError(*exec, "AudioBufferSourceNode", "loopEnd");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLoopEnd(nativeValue);
-}
-
-
-#if ENABLE(LEGACY_WEB_AUDIO)
-void setJSAudioBufferSourceNodeLooping(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioBufferSourceNode", "looping");
-        else
-            throwSetterTypeError(*exec, "AudioBufferSourceNode", "looping");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLooping(nativeValue);
-}
-
-#endif
-
-void setJSAudioBufferSourceNodeOnended(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioBufferSourceNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioBufferSourceNode", "onended");
-        else
-            throwSetterTypeError(*exec, "AudioBufferSourceNode", "onended");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().endedEvent, value);
-}
-
-
-JSValue JSAudioBufferSourceNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSAudioBufferSourceNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStart(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioBufferSourceNode", "start");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioBufferSourceNode::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        impl.start(ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
-    }
-
-    double when = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 1) {
-        impl.start(when, ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
-    }
-
-    double grainOffset = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 2) {
-        impl.start(when, grainOffset, ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
-    }
-
-    double grainDuration = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.start(when, grainOffset, grainDuration, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionStop(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioBufferSourceNode", "stop");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioBufferSourceNode::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        impl.stop(ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
-    }
-
-    double when = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.stop(when, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-#if ENABLE(LEGACY_WEB_AUDIO)
-EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteOn(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioBufferSourceNode", "noteOn");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioBufferSourceNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    double when = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.noteOn(when, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-#endif
-
-#if ENABLE(LEGACY_WEB_AUDIO)
-EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteGrainOn(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioBufferSourceNode", "noteGrainOn");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioBufferSourceNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    double when = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    double grainOffset = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    double grainDuration = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.noteGrainOn(when, grainOffset, grainDuration, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-#endif
-
-#if ENABLE(LEGACY_WEB_AUDIO)
-EncodedJSValue JSC_HOST_CALL jsAudioBufferSourceNodePrototypeFunctionNoteOff(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSAudioBufferSourceNode* castedThis = jsDynamicCast<JSAudioBufferSourceNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioBufferSourceNode", "noteOff");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioBufferSourceNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    double when = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.noteOff(when, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-#endif
 
 #if ENABLE(BINDING_INTEGRITY)
 #if PLATFORM(WIN)
@@ -659,15 +484,12 @@ extern "C" { extern void (*const __identifier("??_7AudioBufferSourceNode@WebCore
 extern "C" { extern void* _ZTVN7WebCore21AudioBufferSourceNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioBufferSourceNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AudioBufferSourceNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSAudioBufferSourceNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7AudioBufferSourceNode@WebCore@@6B@"));
 #else
@@ -675,7 +497,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioBufferS
 #if COMPILER(CLANG)
     // If this fails AudioBufferSourceNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(AudioBufferSourceNode), AudioBufferSourceNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(AudioBufferSourceNode), "AudioBufferSourceNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -684,7 +506,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioBufferS
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSAudioBufferSourceNode>(globalObject, impl);
+    return createWrapper<AudioBufferSourceNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioBufferSourceNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

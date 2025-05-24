@@ -24,27 +24,67 @@
 
 #include "JSSourceBuffer.h"
 
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSEventListener.h"
 #include "JSTimeRanges.h"
-#include "SourceBuffer.h"
-#include "TimeRanges.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 #if ENABLE(VIDEO_TRACK)
-#include "AudioTrackList.h"
 #include "JSAudioTrackList.h"
 #include "JSTextTrackList.h"
 #include "JSVideoTrackList.h"
-#include "TextTrackList.h"
-#include "VideoTrackList.h"
 #endif
 
 using namespace JSC;
 
 namespace WebCore {
+
+#if ENABLE(MEDIA_SOURCE)
+
+template<> JSString* convertEnumerationToJS(ExecState& state, SourceBuffer::AppendMode enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("segments"),
+        ASCIILiteral("sequence"),
+    };
+    static_assert(static_cast<size_t>(SourceBuffer::AppendMode::Segments) == 0, "SourceBuffer::AppendMode::Segments is not 0 as expected");
+    static_assert(static_cast<size_t>(SourceBuffer::AppendMode::Sequence) == 1, "SourceBuffer::AppendMode::Sequence is not 1 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<SourceBuffer::AppendMode> parseEnumeration<SourceBuffer::AppendMode>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "segments")
+        return SourceBuffer::AppendMode::Segments;
+    if (stringValue == "sequence")
+        return SourceBuffer::AppendMode::Sequence;
+    return std::nullopt;
+}
+
+template<> SourceBuffer::AppendMode convertEnumeration<SourceBuffer::AppendMode>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<SourceBuffer::AppendMode>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<SourceBuffer::AppendMode>()
+{
+    return "\"segments\", \"sequence\"";
+}
+
+#endif
 
 // Functions
 
@@ -54,29 +94,41 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionRemove(JSC::Exe
 
 // Attributes
 
-JSC::EncodedJSValue jsSourceBufferMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSourceBufferMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSourceBufferUpdating(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSourceBufferBuffered(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSourceBufferTimestampOffset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSourceBufferTimestampOffset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferUpdating(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSourceBufferBuffered(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSourceBufferTimestampOffset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferTimestampOffset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(VIDEO_TRACK)
-JSC::EncodedJSValue jsSourceBufferAudioTracks(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSourceBufferAudioTracks(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
 #if ENABLE(VIDEO_TRACK)
-JSC::EncodedJSValue jsSourceBufferVideoTracks(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSourceBufferVideoTracks(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
 #if ENABLE(VIDEO_TRACK)
-JSC::EncodedJSValue jsSourceBufferTextTracks(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSourceBufferTextTracks(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
-JSC::EncodedJSValue jsSourceBufferAppendWindowStart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSourceBufferAppendWindowStart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSourceBufferAppendWindowEnd(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSourceBufferAppendWindowEnd(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferAppendWindowStart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferAppendWindowStart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferAppendWindowEnd(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferAppendWindowEnd(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferOnupdatestart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferOnupdatestart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferOnupdate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferOnupdate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferOnupdateend(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferOnupdateend(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSourceBufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSourceBufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSourceBufferPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSourceBufferPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSourceBufferPrototype* ptr = new (NotNull, JSC::allocateCell<JSSourceBufferPrototype>(vm.heap)) JSSourceBufferPrototype(vm, globalObject, structure);
@@ -99,34 +151,56 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSSourceBufferConstructor = JSDOMConstructorNotConstructable<JSSourceBuffer>;
+
+template<> JSValue JSSourceBufferConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSEventTarget::getConstructor(vm, &globalObject);
+}
+
+template<> void JSSourceBufferConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSSourceBuffer::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SourceBuffer"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSSourceBufferConstructor::s_info = { "SourceBuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSourceBufferConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSourceBufferPrototypeTableValues[] =
 {
-    { "mode", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferMode) },
-    { "updating", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferUpdating), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "buffered", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferBuffered), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "timestampOffset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferTimestampOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferTimestampOffset) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferConstructor) } },
+    { "mode", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferMode) } },
+    { "updating", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferUpdating), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "buffered", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferBuffered), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "timestampOffset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferTimestampOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferTimestampOffset) } },
 #if ENABLE(VIDEO_TRACK)
-    { "audioTracks", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAudioTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "audioTracks", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAudioTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_TRACK)
-    { "videoTracks", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferVideoTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "videoTracks", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferVideoTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_TRACK)
-    { "textTracks", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferTextTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "textTracks", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferTextTracks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "appendWindowStart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAppendWindowStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferAppendWindowStart) },
-    { "appendWindowEnd", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAppendWindowEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferAppendWindowEnd) },
-    { "appendBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionAppendBuffer), (intptr_t) (1) },
-    { "abort", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionAbort), (intptr_t) (0) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionRemove), (intptr_t) (2) },
+    { "appendWindowStart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAppendWindowStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferAppendWindowStart) } },
+    { "appendWindowEnd", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferAppendWindowEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferAppendWindowEnd) } },
+    { "onupdatestart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferOnupdatestart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferOnupdatestart) } },
+    { "onupdate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferOnupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferOnupdate) } },
+    { "onupdateend", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferOnupdateend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferOnupdateend) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferOnerror) } },
+    { "onabort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSourceBufferOnabort) } },
+    { "appendBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionAppendBuffer), (intptr_t) (1) } },
+    { "abort", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionAbort), (intptr_t) (0) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSourceBufferPrototypeFunctionRemove), (intptr_t) (2) } },
 };
 
 const ClassInfo JSSourceBufferPrototype::s_info = { "SourceBufferPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSourceBufferPrototype) };
@@ -139,356 +213,503 @@ void JSSourceBufferPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSourceBuffer::s_info = { "SourceBuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSourceBuffer) };
 
-JSSourceBuffer::JSSourceBuffer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBuffer>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSSourceBuffer::JSSourceBuffer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SourceBuffer>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSourceBuffer::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSourceBuffer::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSourceBufferPrototype::create(vm, globalObject, JSSourceBufferPrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSSourceBufferPrototype::create(vm, globalObject, JSSourceBufferPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSSourceBuffer::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSourceBuffer::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSourceBuffer>(vm, globalObject);
 }
 
-EncodedJSValue jsSourceBufferMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSourceBuffer* BindingCaller<JSSourceBuffer>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "mode");
-        return throwGetterTypeError(*exec, "SourceBuffer", "mode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.mode());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSourceBuffer*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsSourceBufferUpdating(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSourceBuffer* BindingCaller<JSSourceBuffer>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "updating");
-        return throwGetterTypeError(*exec, "SourceBuffer", "updating");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.updating());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSourceBuffer*>(state.thisValue());
 }
 
+static inline JSValue jsSourceBufferModeGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
 
-EncodedJSValue jsSourceBufferBuffered(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSourceBufferMode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "buffered");
-        return throwGetterTypeError(*exec, "SourceBuffer", "buffered");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.buffered(ec)));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferModeGetter>(state, thisValue, "mode");
 }
 
-
-EncodedJSValue jsSourceBufferTimestampOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferModeGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "timestampOffset");
-        return throwGetterTypeError(*exec, "SourceBuffer", "timestampOffset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.timestampOffset());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<SourceBuffer::AppendMode>>(state, impl.mode());
+    return result;
 }
 
+static inline JSValue jsSourceBufferUpdatingGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferUpdating(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferUpdatingGetter>(state, thisValue, "updating");
+}
+
+static inline JSValue jsSourceBufferUpdatingGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.updating());
+    return result;
+}
+
+static inline JSValue jsSourceBufferBufferedGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferBuffered(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferBufferedGetter>(state, thisValue, "buffered");
+}
+
+static inline JSValue jsSourceBufferBufferedGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TimeRanges>>(state, *thisObject.globalObject(), throwScope, impl.buffered());
+    return result;
+}
+
+static inline JSValue jsSourceBufferTimestampOffsetGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferTimestampOffset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferTimestampOffsetGetter>(state, thisValue, "timestampOffset");
+}
+
+static inline JSValue jsSourceBufferTimestampOffsetGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.timestampOffset());
+    return result;
+}
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue jsSourceBufferAudioTracks(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferAudioTracksGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferAudioTracks(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "audioTracks");
-        return throwGetterTypeError(*exec, "SourceBuffer", "audioTracks");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.audioTracks()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferAudioTracksGetter>(state, thisValue, "audioTracks");
+}
+
+static inline JSValue jsSourceBufferAudioTracksGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioTrackList>>(state, *thisObject.globalObject(), impl.audioTracks());
+    return result;
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue jsSourceBufferVideoTracks(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferVideoTracksGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferVideoTracks(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "videoTracks");
-        return throwGetterTypeError(*exec, "SourceBuffer", "videoTracks");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.videoTracks()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferVideoTracksGetter>(state, thisValue, "videoTracks");
+}
+
+static inline JSValue jsSourceBufferVideoTracksGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<VideoTrackList>>(state, *thisObject.globalObject(), impl.videoTracks());
+    return result;
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue jsSourceBufferTextTracks(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferTextTracksGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferTextTracks(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "textTracks");
-        return throwGetterTypeError(*exec, "SourceBuffer", "textTracks");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.textTracks()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferTextTracksGetter>(state, thisValue, "textTracks");
+}
+
+static inline JSValue jsSourceBufferTextTracksGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TextTrackList>>(state, *thisObject.globalObject(), impl.textTracks());
+    return result;
 }
 
 #endif
 
-EncodedJSValue jsSourceBufferAppendWindowStart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferAppendWindowStartGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferAppendWindowStart(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "appendWindowStart");
-        return throwGetterTypeError(*exec, "SourceBuffer", "appendWindowStart");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.appendWindowStart());
-    return JSValue::encode(result);
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferAppendWindowStartGetter>(state, thisValue, "appendWindowStart");
 }
 
-
-EncodedJSValue jsSourceBufferAppendWindowEnd(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSourceBufferAppendWindowStartGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SourceBuffer", "appendWindowEnd");
-        return throwGetterTypeError(*exec, "SourceBuffer", "appendWindowEnd");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.appendWindowEnd());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.appendWindowStart());
+    return result;
 }
 
+static inline JSValue jsSourceBufferAppendWindowEndGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
 
-void setJSSourceBufferMode(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+EncodedJSValue jsSourceBufferAppendWindowEnd(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferAppendWindowEndGetter>(state, thisValue, "appendWindowEnd");
+}
+
+static inline JSValue jsSourceBufferAppendWindowEndGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.appendWindowEnd());
+    return result;
+}
+
+static inline JSValue jsSourceBufferOnupdatestartGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferOnupdatestart(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferOnupdatestartGetter>(state, thisValue, "onupdatestart");
+}
+
+static inline JSValue jsSourceBufferOnupdatestartGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().updatestartEvent);
+}
+
+static inline JSValue jsSourceBufferOnupdateGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferOnupdate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferOnupdateGetter>(state, thisValue, "onupdate");
+}
+
+static inline JSValue jsSourceBufferOnupdateGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().updateEvent);
+}
+
+static inline JSValue jsSourceBufferOnupdateendGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferOnupdateend(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferOnupdateendGetter>(state, thisValue, "onupdateend");
+}
+
+static inline JSValue jsSourceBufferOnupdateendGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().updateendEvent);
+}
+
+static inline JSValue jsSourceBufferOnerrorGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsSourceBufferOnerrorGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+static inline JSValue jsSourceBufferOnabortGetter(ExecState&, JSSourceBuffer&, ThrowScope& throwScope);
+
+EncodedJSValue jsSourceBufferOnabort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSourceBuffer>::attribute<jsSourceBufferOnabortGetter>(state, thisValue, "onabort");
+}
+
+static inline JSValue jsSourceBufferOnabortGetter(ExecState& state, JSSourceBuffer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().abortEvent);
+}
+
+EncodedJSValue jsSourceBufferConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSourceBufferPrototype* domObject = jsDynamicDowncast<JSSourceBufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSourceBuffer::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSourceBufferConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SourceBuffer", "mode");
-        else
-            throwSetterTypeError(*exec, "SourceBuffer", "mode");
-        return;
+    JSSourceBufferPrototype* domObject = jsDynamicDowncast<JSSourceBufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    if (nativeValue != "segments" && nativeValue != "sequence")
-        return;
-    impl.setMode(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSourceBufferModeFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferMode(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferModeFunction>(state, thisValue, encodedValue, "mode");
+}
+
+static inline bool setJSSourceBufferModeFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = parseEnumeration<SourceBuffer::AppendMode>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    if (UNLIKELY(!nativeValue))
+        return false;
+    propagateException(state, throwScope, impl.setMode(nativeValue.value()));
+    return true;
 }
 
 
-void setJSSourceBufferTimestampOffset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSourceBufferTimestampOffsetFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferTimestampOffset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SourceBuffer", "timestampOffset");
-        else
-            throwSetterTypeError(*exec, "SourceBuffer", "timestampOffset");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTimestampOffset(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferTimestampOffsetFunction>(state, thisValue, encodedValue, "timestampOffset");
+}
+
+static inline bool setJSSourceBufferTimestampOffsetFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setTimestampOffset(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSSourceBufferAppendWindowStart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSourceBufferAppendWindowStartFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferAppendWindowStart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SourceBuffer", "appendWindowStart");
-        else
-            throwSetterTypeError(*exec, "SourceBuffer", "appendWindowStart");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAppendWindowStart(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferAppendWindowStartFunction>(state, thisValue, encodedValue, "appendWindowStart");
+}
+
+static inline bool setJSSourceBufferAppendWindowStartFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setAppendWindowStart(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSSourceBufferAppendWindowEnd(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSourceBufferAppendWindowEndFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferAppendWindowEnd(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSourceBufferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SourceBuffer", "appendWindowEnd");
-        else
-            throwSetterTypeError(*exec, "SourceBuffer", "appendWindowEnd");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAppendWindowEnd(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferAppendWindowEndFunction>(state, thisValue, encodedValue, "appendWindowEnd");
+}
+
+static inline bool setJSSourceBufferAppendWindowEndFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setAppendWindowEnd(WTFMove(nativeValue)));
+    return true;
 }
 
 
-static EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAppendBuffer1(ExecState* exec)
+static inline bool setJSSourceBufferOnupdatestartFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferOnupdatestart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SourceBuffer", "appendBuffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSourceBuffer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    ArrayBuffer* data = toArrayBuffer(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.appendBuffer(data, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferOnupdatestartFunction>(state, thisValue, encodedValue, "onupdatestart");
+}
+
+static inline bool setJSSourceBufferOnupdatestartFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().updatestartEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSourceBufferOnupdateFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferOnupdate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferOnupdateFunction>(state, thisValue, encodedValue, "onupdate");
+}
+
+static inline bool setJSSourceBufferOnupdateFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().updateEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSourceBufferOnupdateendFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferOnupdateend(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferOnupdateendFunction>(state, thisValue, encodedValue, "onupdateend");
+}
+
+static inline bool setJSSourceBufferOnupdateendFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().updateendEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSourceBufferOnerrorFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSSourceBufferOnerrorFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSourceBufferOnabortFunction(ExecState&, JSSourceBuffer&, JSValue, ThrowScope&);
+
+bool setJSSourceBufferOnabort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSourceBuffer>::setAttribute<setJSSourceBufferOnabortFunction>(state, thisValue, encodedValue, "onabort");
+}
+
+static inline bool setJSSourceBufferOnabortFunction(ExecState& state, JSSourceBuffer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().abortEvent, value);
+    return true;
+}
+
+
+JSValue JSSourceBuffer::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSourceBufferConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionAppendBufferCaller(JSC::ExecState*, JSSourceBuffer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAppendBuffer(ExecState* state)
+{
+    return BindingCaller<JSSourceBuffer>::callOperation<jsSourceBufferPrototypeFunctionAppendBufferCaller>(state, "appendBuffer");
+}
+
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionAppendBufferCaller(JSC::ExecState* state, JSSourceBuffer* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto data = convert<IDLBufferSource>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.appendBuffer(WTFMove(data)));
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAppendBuffer2(ExecState* exec)
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionAbortCaller(JSC::ExecState*, JSSourceBuffer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAbort(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SourceBuffer", "appendBuffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSourceBuffer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.appendBuffer(data.get(), ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSourceBuffer>::callOperation<jsSourceBufferPrototypeFunctionAbortCaller>(state, "abort");
+}
+
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionAbortCaller(JSC::ExecState* state, JSSourceBuffer* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    propagateException(*state, throwScope, impl.abort());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAppendBuffer(ExecState* exec)
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionRemoveCaller(JSC::ExecState*, JSSourceBuffer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionRemove(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSArrayBuffer::info())))))
-        return jsSourceBufferPrototypeFunctionAppendBuffer1(exec);
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSArrayBufferView::info())))))
-        return jsSourceBufferPrototypeFunctionAppendBuffer2(exec);
-    if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+    return BindingCaller<JSSourceBuffer>::callOperation<jsSourceBufferPrototypeFunctionRemoveCaller>(state, "remove");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionAbort(ExecState* exec)
+static inline JSC::EncodedJSValue jsSourceBufferPrototypeFunctionRemoveCaller(JSC::ExecState* state, JSSourceBuffer* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SourceBuffer", "abort");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSourceBuffer::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.abort(ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsSourceBufferPrototypeFunctionRemove(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSourceBuffer* castedThis = jsDynamicCast<JSSourceBuffer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SourceBuffer", "remove");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSourceBuffer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    double start = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    double end = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.remove(start, end, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto start = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto end = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.remove(WTFMove(start), WTFMove(end)));
     return JSValue::encode(jsUndefined());
 }
 
@@ -497,15 +718,15 @@ void JSSourceBuffer::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSSourceBuffer*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSSourceBufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsSourceBuffer = jsCast<JSSourceBuffer*>(handle.slot()->asCell());
-    if (jsSourceBuffer->impl().hasPendingActivity())
+    if (jsSourceBuffer->wrapped().hasPendingActivity())
         return true;
-    if (jsSourceBuffer->impl().isFiringEventListeners())
+    if (jsSourceBuffer->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -513,9 +734,9 @@ bool JSSourceBufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSSourceBufferOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSourceBuffer = jsCast<JSSourceBuffer*>(handle.slot()->asCell());
+    auto* jsSourceBuffer = static_cast<JSSourceBuffer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSourceBuffer->impl(), jsSourceBuffer);
+    uncacheWrapper(world, &jsSourceBuffer->wrapped(), jsSourceBuffer);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -526,15 +747,12 @@ extern "C" { extern void (*const __identifier("??_7SourceBuffer@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12SourceBufferE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBuffer* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SourceBuffer>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSourceBuffer>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SourceBuffer@WebCore@@6B@"));
 #else
@@ -542,7 +760,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBuffer
 #if COMPILER(CLANG)
     // If this fails SourceBuffer does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(SourceBuffer), SourceBuffer_is_not_polymorphic);
+    static_assert(__is_polymorphic(SourceBuffer), "SourceBuffer is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -551,13 +769,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBuffer
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSSourceBuffer>(globalObject, impl);
+    return createWrapper<SourceBuffer>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceBuffer& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SourceBuffer* JSSourceBuffer::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSourceBuffer*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSourceBuffer*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

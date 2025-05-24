@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTouch_h
-#define JSTouch_h
+#pragma once
 
 #if ENABLE(TOUCH_EVENTS)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSTouch : public JSDOMWrapper {
+class JSTouch : public JSDOMWrapper<Touch> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Touch>;
     static JSTouch* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Touch>&& impl)
     {
-        JSTouch* ptr = new (NotNull, JSC::allocateCell<JSTouch>(globalObject->vm().heap)) JSTouch(structure, globalObject, WTF::move(impl));
+        JSTouch* ptr = new (NotNull, JSC::allocateCell<JSTouch>(globalObject->vm().heap)) JSTouch(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Touch* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTouch();
 
     DECLARE_INFO;
 
@@ -53,23 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Touch& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Touch* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSTouch(JSC::Structure*, JSDOMGlobalObject*, Ref<Touch>&&);
+    JSTouch(JSC::Structure*, JSDOMGlobalObject&, Ref<Touch>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTouchOwner : public JSC::WeakHandleOwner {
@@ -84,13 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Touch*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Touch*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Touch& impl) { return toJS(exec, globalObject, &impl); }
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Touch*);
+inline void* wrapperKey(Touch* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Touch&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Touch* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Touch>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Touch>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Touch> {
+    using WrapperClass = JSTouch;
+    using ToWrappedReturnType = Touch*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(TOUCH_EVENTS)
-
-#endif

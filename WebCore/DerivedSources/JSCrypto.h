@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCrypto_h
-#define JSCrypto_h
+#pragma once
 
 #include "Crypto.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSCrypto : public JSDOMWrapper {
+class JSCrypto : public JSDOMWrapper<Crypto> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Crypto>;
     static JSCrypto* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Crypto>&& impl)
     {
-        JSCrypto* ptr = new (NotNull, JSC::allocateCell<JSCrypto>(globalObject->vm().heap)) JSCrypto(structure, globalObject, WTF::move(impl));
+        JSCrypto* ptr = new (NotNull, JSC::allocateCell<JSCrypto>(globalObject->vm().heap)) JSCrypto(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Crypto* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCrypto();
 
     DECLARE_INFO;
 
@@ -50,23 +48,14 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue getRandomValues(JSC::ExecState*);
-    Crypto& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Crypto* m_impl;
+    JSC::JSValue getRandomValues(JSC::ExecState&);
 protected:
-    JSCrypto(JSC::Structure*, JSDOMGlobalObject*, Ref<Crypto>&&);
+    JSCrypto(JSC::Structure*, JSDOMGlobalObject&, Ref<Crypto>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSCryptoOwner : public JSC::WeakHandleOwner {
@@ -81,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Crypto*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Crypto*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Crypto& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Crypto* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Crypto&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Crypto* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Crypto>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Crypto>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Crypto> {
+    using WrapperClass = JSCrypto;
+    using ToWrappedReturnType = Crypto*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -21,15 +21,14 @@
 #include "config.h"
 #include "JSDatabase.h"
 
-#include "Database.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSQLTransactionCallback.h"
 #include "JSSQLTransactionErrorCallback.h"
 #include "JSVoidCallback.h"
-#include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -44,11 +43,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionReadTransaction(JSC
 
 // Attributes
 
-JSC::EncodedJSValue jsDatabaseVersion(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDatabaseVersion(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDatabaseConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDatabaseConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDatabasePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDatabasePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDatabasePrototype* ptr = new (NotNull, JSC::allocateCell<JSDatabasePrototype>(vm.heap)) JSDatabasePrototype(vm, globalObject, structure);
@@ -71,14 +72,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSDatabaseConstructor = JSDOMConstructorNotConstructable<JSDatabase>;
+
+template<> JSValue JSDatabaseConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSDatabaseConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSDatabase::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Database"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSDatabaseConstructor::s_info = { "Database", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDatabaseConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSDatabasePrototypeTableValues[] =
 {
-    { "version", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDatabaseVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "changeVersion", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionChangeVersion), (intptr_t) (2) },
-    { "transaction", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionTransaction), (intptr_t) (1) },
-    { "readTransaction", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionReadTransaction), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDatabaseConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDatabaseConstructor) } },
+    { "version", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDatabaseVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "changeVersion", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionChangeVersion), (intptr_t) (2) } },
+    { "transaction", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionTransaction), (intptr_t) (1) } },
+    { "readTransaction", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDatabasePrototypeFunctionReadTransaction), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDatabasePrototype::s_info = { "DatabasePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDatabasePrototype) };
@@ -91,10 +110,16 @@ void JSDatabasePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDatabase::s_info = { "Database", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDatabase) };
 
-JSDatabase::JSDatabase(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Database>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDatabase::JSDatabase(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Database>&& impl)
+    : JSDOMWrapper<Database>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDatabase::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDatabase::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -102,7 +127,7 @@ JSObject* JSDatabase::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDatabasePrototype::create(vm, globalObject, JSDatabasePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDatabase::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDatabase::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDatabase>(vm, globalObject);
 }
@@ -113,121 +138,134 @@ void JSDatabase::destroy(JSC::JSCell* cell)
     thisObject->JSDatabase::~JSDatabase();
 }
 
-JSDatabase::~JSDatabase()
+template<> inline JSDatabase* BindingCaller<JSDatabase>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDatabase*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsDatabaseVersion(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSDatabase* BindingCaller<JSDatabase>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDatabase* castedThis = jsDynamicCast<JSDatabase*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDatabasePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Database", "version");
-        return throwGetterTypeError(*exec, "Database", "version");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.version());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSDatabase*>(state.thisValue());
 }
 
+static inline JSValue jsDatabaseVersionGetter(ExecState&, JSDatabase&, ThrowScope& throwScope);
 
-EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionChangeVersion(ExecState* exec)
+EncodedJSValue jsDatabaseVersion(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDatabase* castedThis = jsDynamicCast<JSDatabase*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Database", "changeVersion");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDatabase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String oldVersion = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String newVersion = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    RefPtr<SQLTransactionCallback> callback;
-    if (!exec->argument(2).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(2).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 2, "callback", "Database", "changeVersion");
-        callback = JSSQLTransactionCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
+    return BindingCaller<JSDatabase>::attribute<jsDatabaseVersionGetter>(state, thisValue, "version");
+}
+
+static inline JSValue jsDatabaseVersionGetter(ExecState& state, JSDatabase& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.version());
+    return result;
+}
+
+EncodedJSValue jsDatabaseConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDatabasePrototype* domObject = jsDynamicDowncast<JSDatabasePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDatabase::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDatabaseConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDatabasePrototype* domObject = jsDynamicDowncast<JSDatabasePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    RefPtr<SQLTransactionErrorCallback> errorCallback;
-    if (!exec->argument(3).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(3).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 3, "errorCallback", "Database", "changeVersion");
-        errorCallback = JSSQLTransactionErrorCallback::create(asObject(exec->uncheckedArgument(3)), castedThis->globalObject());
-    }
-    RefPtr<VoidCallback> successCallback;
-    if (!exec->argument(4).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(4).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 4, "successCallback", "Database", "changeVersion");
-        successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(4)), castedThis->globalObject());
-    }
-    impl.changeVersion(oldVersion, newVersion, callback, errorCallback, successCallback);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSDatabase::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDatabaseConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionChangeVersionCaller(JSC::ExecState*, JSDatabase*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionChangeVersion(ExecState* state)
+{
+    return BindingCaller<JSDatabase>::callOperation<jsDatabasePrototypeFunctionChangeVersionCaller>(state, "changeVersion");
+}
+
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionChangeVersionCaller(JSC::ExecState* state, JSDatabase* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto oldVersion = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto newVersion = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto callback = convert<IDLNullable<IDLCallbackFunction<JSSQLTransactionCallback>>>(*state, state->argument(2), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 2, "callback", "Database", "changeVersion"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSSQLTransactionErrorCallback>>>(*state, state->argument(3), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 3, "errorCallback", "Database", "changeVersion"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto successCallback = convert<IDLNullable<IDLCallbackFunction<JSVoidCallback>>>(*state, state->argument(4), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 4, "successCallback", "Database", "changeVersion"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.changeVersion(WTFMove(oldVersion), WTFMove(newVersion), WTFMove(callback), WTFMove(errorCallback), WTFMove(successCallback));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionTransaction(ExecState* exec)
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionTransactionCaller(JSC::ExecState*, JSDatabase*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionTransaction(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDatabase* castedThis = jsDynamicCast<JSDatabase*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Database", "transaction");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDatabase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "callback", "Database", "transaction");
-    RefPtr<SQLTransactionCallback> callback = JSSQLTransactionCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    RefPtr<SQLTransactionErrorCallback> errorCallback;
-    if (!exec->argument(1).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(1).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 1, "errorCallback", "Database", "transaction");
-        errorCallback = JSSQLTransactionErrorCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    }
-    RefPtr<VoidCallback> successCallback;
-    if (!exec->argument(2).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(2).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 2, "successCallback", "Database", "transaction");
-        successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
-    }
-    impl.transaction(callback, errorCallback, successCallback);
+    return BindingCaller<JSDatabase>::callOperation<jsDatabasePrototypeFunctionTransactionCaller>(state, "transaction");
+}
+
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionTransactionCaller(JSC::ExecState* state, JSDatabase* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto callback = convert<IDLCallbackFunction<JSSQLTransactionCallback>>(*state, state->uncheckedArgument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "callback", "Database", "transaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSSQLTransactionErrorCallback>>>(*state, state->argument(1), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 1, "errorCallback", "Database", "transaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto successCallback = convert<IDLNullable<IDLCallbackFunction<JSVoidCallback>>>(*state, state->argument(2), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 2, "successCallback", "Database", "transaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.transaction(callback.releaseNonNull(), WTFMove(errorCallback), WTFMove(successCallback));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionReadTransaction(ExecState* exec)
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionReadTransactionCaller(JSC::ExecState*, JSDatabase*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDatabasePrototypeFunctionReadTransaction(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDatabase* castedThis = jsDynamicCast<JSDatabase*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Database", "readTransaction");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDatabase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "callback", "Database", "readTransaction");
-    RefPtr<SQLTransactionCallback> callback = JSSQLTransactionCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    RefPtr<SQLTransactionErrorCallback> errorCallback;
-    if (!exec->argument(1).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(1).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 1, "errorCallback", "Database", "readTransaction");
-        errorCallback = JSSQLTransactionErrorCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    }
-    RefPtr<VoidCallback> successCallback;
-    if (!exec->argument(2).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(2).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 2, "successCallback", "Database", "readTransaction");
-        successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
-    }
-    impl.readTransaction(callback, errorCallback, successCallback);
+    return BindingCaller<JSDatabase>::callOperation<jsDatabasePrototypeFunctionReadTransactionCaller>(state, "readTransaction");
+}
+
+static inline JSC::EncodedJSValue jsDatabasePrototypeFunctionReadTransactionCaller(JSC::ExecState* state, JSDatabase* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto callback = convert<IDLCallbackFunction<JSSQLTransactionCallback>>(*state, state->uncheckedArgument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "callback", "Database", "readTransaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSSQLTransactionErrorCallback>>>(*state, state->argument(1), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 1, "errorCallback", "Database", "readTransaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto successCallback = convert<IDLNullable<IDLCallbackFunction<JSVoidCallback>>>(*state, state->argument(2), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 2, "successCallback", "Database", "readTransaction"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.readTransaction(callback.releaseNonNull(), WTFMove(errorCallback), WTFMove(successCallback));
     return JSValue::encode(jsUndefined());
 }
 
@@ -240,51 +278,32 @@ bool JSDatabaseOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handl
 
 void JSDatabaseOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDatabase = jsCast<JSDatabase*>(handle.slot()->asCell());
+    auto* jsDatabase = static_cast<JSDatabase*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDatabase->impl(), jsDatabase);
+    uncacheWrapper(world, &jsDatabase->wrapped(), jsDatabase);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7Database@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore8DatabaseE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Database* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Database>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDatabase>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Database@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore8DatabaseE[2];
 #if COMPILER(CLANG)
-    // If this fails Database does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Database), Database_is_not_polymorphic);
+    // If you hit this failure the interface definition has the ImplementationLacksVTable
+    // attribute. You should remove that attribute. If the class has subclasses
+    // that may be passed through this toJS() function you should use the SkipVTableValidation
+    // attribute to Database.
+    static_assert(!__is_polymorphic(Database), "Database is polymorphic but the IDL claims it is not");
 #endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // Database has subclasses. If Database has subclasses that get passed
-    // to toJS() we currently require Database you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSDatabase>(globalObject, impl);
+    return createWrapper<Database>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Database& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Database* JSDatabase::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDatabase*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDatabase*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -21,12 +21,12 @@
 #include "config.h"
 #include "JSSVGPathSegList.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGPathSeg.h"
-#include "SVGPathSeg.h"
-#include "SVGPathSegList.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -45,12 +45,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionAppendItem(JS
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGPathSegListNumberOfItems(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathSegListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathSegListNumberOfItems(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathSegListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGPathSegListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGPathSegListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGPathSegListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGPathSegListPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegListPrototype>(vm.heap)) JSSVGPathSegListPrototype(vm, globalObject, structure);
@@ -73,69 +74,36 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegListConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGPathSegListConstructor = JSDOMConstructorNotConstructable<JSSVGPathSegList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegListConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegListConstructor>(vm.heap)) JSSVGPathSegListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSSVGPathSegListTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSSVGPathSegListTableValues[] =
+template<> JSValue JSSVGPathSegListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "numberOfItems", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegListNumberOfItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSSVGPathSegListTable = { 1, 1, true, JSSVGPathSegListTableValues, 0, JSSVGPathSegListTableIndex };
-const ClassInfo JSSVGPathSegListConstructor::s_info = { "SVGPathSegListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegListConstructor) };
-
-JSSVGPathSegListConstructor::JSSVGPathSegListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGPathSegListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGPathSegListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegListConstructor::s_info = { "SVGPathSegList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegListPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clear", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionClear), (intptr_t) (0) },
-    { "initialize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionInitialize), (intptr_t) (1) },
-    { "getItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionGetItem), (intptr_t) (1) },
-    { "insertItemBefore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionInsertItemBefore), (intptr_t) (2) },
-    { "replaceItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionReplaceItem), (intptr_t) (2) },
-    { "removeItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionRemoveItem), (intptr_t) (1) },
-    { "appendItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionAppendItem), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegListConstructor) } },
+    { "numberOfItems", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegListNumberOfItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionClear), (intptr_t) (0) } },
+    { "initialize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionInitialize), (intptr_t) (1) } },
+    { "getItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionGetItem), (intptr_t) (1) } },
+    { "insertItemBefore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionInsertItemBefore), (intptr_t) (2) } },
+    { "replaceItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionReplaceItem), (intptr_t) (2) } },
+    { "removeItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionRemoveItem), (intptr_t) (1) } },
+    { "appendItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathSegListPrototypeFunctionAppendItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSVGPathSegListPrototype::s_info = { "SVGPathSegListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegListPrototype) };
@@ -146,12 +114,18 @@ void JSSVGPathSegListPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSSVGPathSegListPrototypeTableValues, *this);
 }
 
-const ClassInfo JSSVGPathSegList::s_info = { "SVGPathSegList", &Base::s_info, &JSSVGPathSegListTable, CREATE_METHOD_TABLE(JSSVGPathSegList) };
+const ClassInfo JSSVGPathSegList::s_info = { "SVGPathSegList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegList) };
 
-JSSVGPathSegList::JSSVGPathSegList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegListPropertyTearOff>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGPathSegList::JSSVGPathSegList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegList>&& impl)
+    : JSDOMWrapper<SVGPathSegList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGPathSegList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGPathSegList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -159,7 +133,7 @@ JSObject* JSSVGPathSegList::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSSVGPathSegListPrototype::create(vm, globalObject, JSSVGPathSegListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSVGPathSegList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGPathSegList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGPathSegList>(vm, globalObject);
 }
@@ -170,188 +144,193 @@ void JSSVGPathSegList::destroy(JSC::JSCell* cell)
     thisObject->JSSVGPathSegList::~JSSVGPathSegList();
 }
 
-JSSVGPathSegList::~JSSVGPathSegList()
+template<> inline JSSVGPathSegList* BindingCaller<JSSVGPathSegList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSVGPathSegList*>(JSValue::decode(thisValue));
 }
 
-bool JSSVGPathSegList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSSVGPathSegList* BindingCaller<JSSVGPathSegList>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSSVGPathSegList*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSVGPathSegList, Base>(exec, JSSVGPathSegListTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSSVGPathSegList*>(state.thisValue());
 }
 
-EncodedJSValue jsSVGPathSegListNumberOfItems(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGPathSegListNumberOfItemsGetter(ExecState&, JSSVGPathSegList&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathSegListNumberOfItems(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGPathSegList*>(slotBase);
-    JSValue result =  jsNumber(castedThis->impl().numberOfItems());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathSegList>::attribute<jsSVGPathSegListNumberOfItemsGetter>(state, thisValue, "numberOfItems");
 }
 
-
-EncodedJSValue jsSVGPathSegListConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGPathSegListNumberOfItemsGetter(ExecState& state, JSSVGPathSegList& thisObject, ThrowScope& throwScope)
 {
-    JSSVGPathSegListPrototype* domObject = jsDynamicCast<JSSVGPathSegListPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegList::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.numberOfItems());
+    return result;
 }
 
-JSValue JSSVGPathSegList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+EncodedJSValue jsSVGPathSegListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSSVGPathSegListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGPathSegListPrototype* domObject = jsDynamicDowncast<JSSVGPathSegListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGPathSegList::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionClear(ExecState* exec)
+bool setJSSVGPathSegListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "clear");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.clear(ec);
-    setDOMException(exec, ec);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGPathSegListPrototype* domObject = jsDynamicDowncast<JSSVGPathSegListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGPathSegList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGPathSegListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionClearCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionClear(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionClearCaller>(state, "clear");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionClearCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    propagateException(*state, throwScope, impl.clear());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionInitialize(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "initialize");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGPathSeg::info()))
-        return throwArgumentTypeError(*exec, 0, "newItem", "SVGPathSegList", "initialize", "SVGPathSeg");
-    SVGPathSeg* newItem = JSSVGPathSeg::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.initialize(newItem, ec)));
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionInitializeCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionInitialize(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionInitializeCaller>(state, "initialize");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionGetItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionInitializeCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "getItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getItem(index, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto newItem = convert<IDLNullable<IDLInterface<SVGPathSeg>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "newItem", "SVGPathSegList", "initialize", "SVGPathSeg"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.initialize(WTFMove(newItem))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionInsertItemBefore(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "insertItemBefore");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGPathSeg::info()))
-        return throwArgumentTypeError(*exec, 0, "newItem", "SVGPathSegList", "insertItemBefore", "SVGPathSeg");
-    SVGPathSeg* newItem = JSSVGPathSeg::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.insertItemBefore(newItem, index, ec)));
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionGetItemCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionGetItem(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionGetItemCaller>(state, "getItem");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionReplaceItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionGetItemCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "replaceItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGPathSeg::info()))
-        return throwArgumentTypeError(*exec, 0, "newItem", "SVGPathSegList", "replaceItem", "SVGPathSeg");
-    SVGPathSeg* newItem = JSSVGPathSeg::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.replaceItem(newItem, index, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.getItem(WTFMove(index))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionRemoveItem(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "removeItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.removeItem(index, ec)));
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionInsertItemBeforeCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionInsertItemBefore(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionInsertItemBeforeCaller>(state, "insertItemBefore");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionAppendItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionInsertItemBeforeCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathSegList* castedThis = jsDynamicCast<JSSVGPathSegList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathSegList", "appendItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathSegList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGPathSeg::info()))
-        return throwArgumentTypeError(*exec, 0, "newItem", "SVGPathSegList", "appendItem", "SVGPathSeg");
-    SVGPathSeg* newItem = JSSVGPathSeg::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.appendItem(newItem, ec)));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto newItem = convert<IDLNullable<IDLInterface<SVGPathSeg>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "newItem", "SVGPathSegList", "insertItemBefore", "SVGPathSeg"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.insertItemBefore(WTFMove(newItem), WTFMove(index))));
+}
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionReplaceItemCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionReplaceItem(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionReplaceItemCaller>(state, "replaceItem");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionReplaceItemCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto newItem = convert<IDLNullable<IDLInterface<SVGPathSeg>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "newItem", "SVGPathSegList", "replaceItem", "SVGPathSeg"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.replaceItem(WTFMove(newItem), WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionRemoveItemCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionRemoveItem(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionRemoveItemCaller>(state, "removeItem");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionRemoveItemCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.removeItem(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionAppendItemCaller(JSC::ExecState*, JSSVGPathSegList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathSegListPrototypeFunctionAppendItem(ExecState* state)
+{
+    return BindingCaller<JSSVGPathSegList>::callOperation<jsSVGPathSegListPrototypeFunctionAppendItemCaller>(state, "appendItem");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathSegListPrototypeFunctionAppendItemCaller(JSC::ExecState* state, JSSVGPathSegList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto newItem = convert<IDLNullable<IDLInterface<SVGPathSeg>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "newItem", "SVGPathSegList", "appendItem", "SVGPathSeg"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSeg>>(*state, *castedThis->globalObject(), throwScope, impl.appendItem(WTFMove(newItem))));
 }
 
 bool JSSVGPathSegListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -363,51 +342,53 @@ bool JSSVGPathSegListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSSVGPathSegListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGPathSegList = jsCast<JSSVGPathSegList*>(handle.slot()->asCell());
+    auto* jsSVGPathSegList = static_cast<JSSVGPathSegList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGPathSegList->impl(), jsSVGPathSegList);
+    uncacheWrapper(world, &jsSVGPathSegList->wrapped(), jsSVGPathSegList);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
 #if PLATFORM(WIN)
 #pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7SVGPathSegListPropertyTearOff@WebCore@@6B@")[])(); }
+extern "C" { extern void (*const __identifier("??_7SVGPathSegList@WebCore@@6B@")[])(); }
 #else
-extern "C" { extern void* _ZTVN7WebCore29SVGPathSegListPropertyTearOffE[]; }
+extern "C" { extern void* _ZTVN7WebCore14SVGPathSegListE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPathSegListPropertyTearOff* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SVGPathSegList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSVGPathSegList>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SVGPathSegListPropertyTearOff@WebCore@@6B@"));
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SVGPathSegList@WebCore@@6B@"));
 #else
-    void* expectedVTablePointer = &_ZTVN7WebCore29SVGPathSegListPropertyTearOffE[2];
+    void* expectedVTablePointer = &_ZTVN7WebCore14SVGPathSegListE[2];
 #if COMPILER(CLANG)
-    // If this fails SVGPathSegListPropertyTearOff does not have a vtable, so you need to add the
+    // If this fails SVGPathSegList does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(SVGPathSegListPropertyTearOff), SVGPathSegListPropertyTearOff_is_not_polymorphic);
+    static_assert(__is_polymorphic(SVGPathSegList), "SVGPathSegList is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
-    // SVGPathSegListPropertyTearOff has subclasses. If SVGPathSegListPropertyTearOff has subclasses that get passed
+    // SVGPathSegList has subclasses. If SVGPathSegList has subclasses that get passed
     // to toJS() we currently require SVGPathSegList you to opt out of binding hardening
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSSVGPathSegList>(globalObject, impl);
+    return createWrapper<SVGPathSegList>(globalObject, WTFMove(impl));
 }
 
-SVGPathSegListPropertyTearOff* JSSVGPathSegList::toWrapped(JSC::JSValue value)
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPathSegList& impl)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGPathSegList*>(value))
-        return &wrapper->impl();
+    return wrap(state, globalObject, impl);
+}
+
+SVGPathSegList* JSSVGPathSegList::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSSVGPathSegList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

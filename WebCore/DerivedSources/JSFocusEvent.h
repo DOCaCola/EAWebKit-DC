@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFocusEvent_h
-#define JSFocusEvent_h
+#pragma once
 
 #include "FocusEvent.h"
+#include "JSDOMConvert.h"
 #include "JSUIEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSFocusEvent : public JSUIEvent {
 public:
-    typedef JSUIEvent Base;
+    using Base = JSUIEvent;
+    using DOMWrapped = FocusEvent;
     static JSFocusEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FocusEvent>&& impl)
     {
-        JSFocusEvent* ptr = new (NotNull, JSC::allocateCell<JSFocusEvent>(globalObject->vm().heap)) JSFocusEvent(structure, globalObject, WTF::move(impl));
+        JSFocusEvent* ptr = new (NotNull, JSC::allocateCell<JSFocusEvent>(globalObject->vm().heap)) JSFocusEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FocusEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    FocusEvent& wrapped() const
     {
-        return static_cast<FocusEvent&>(Base::impl());
+        return static_cast<FocusEvent&>(Base::wrapped());
     }
 protected:
-    JSFocusEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<FocusEvent>&&);
+    JSFocusEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<FocusEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FocusEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FocusEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<FocusEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<FocusEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillFocusEventInit(FocusEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<FocusEvent> {
+    using WrapperClass = JSFocusEvent;
+    using ToWrappedReturnType = FocusEvent*;
+};
+template<> FocusEvent::Init convertDictionary<FocusEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

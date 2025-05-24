@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSEXTFragDepth_h
-#define JSEXTFragDepth_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSEXTFragDepth : public JSDOMWrapper {
+class JSEXTFragDepth : public JSDOMWrapper<EXTFragDepth> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<EXTFragDepth>;
     static JSEXTFragDepth* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTFragDepth>&& impl)
     {
-        JSEXTFragDepth* ptr = new (NotNull, JSC::allocateCell<JSEXTFragDepth>(globalObject->vm().heap)) JSEXTFragDepth(structure, globalObject, WTF::move(impl));
+        JSEXTFragDepth* ptr = new (NotNull, JSC::allocateCell<JSEXTFragDepth>(globalObject->vm().heap)) JSEXTFragDepth(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTFragDepth* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTFragDepth();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTFragDepth& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTFragDepth* m_impl;
 protected:
-    JSEXTFragDepth(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTFragDepth>&&);
+    JSEXTFragDepth(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTFragDepth>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSEXTFragDepthOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTFragDepth*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTFragDepth*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTFragDepth& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(EXTFragDepth* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTFragDepth&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTFragDepth* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<EXTFragDepth>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<EXTFragDepth>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<EXTFragDepth> {
+    using WrapperClass = JSEXTFragDepth;
+    using ToWrappedReturnType = EXTFragDepth*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

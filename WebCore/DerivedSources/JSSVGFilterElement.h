@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFilterElement_h
-#define JSSVGFilterElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFilterElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFilterElement;
     static JSSVGFilterElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFilterElement>&& impl)
     {
-        JSSVGFilterElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFilterElement>(globalObject->vm().heap)) JSSVGFilterElement(structure, globalObject, WTF::move(impl));
+        JSSVGFilterElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFilterElement>(globalObject->vm().heap)) JSSVGFilterElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFilterElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFilterElement& wrapped() const
     {
-        return static_cast<SVGFilterElement&>(Base::impl());
+        return static_cast<SVGFilterElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFilterElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFilterElement>&&);
+    JSSVGFilterElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFilterElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFilterElement> {
+    using WrapperClass = JSSVGFilterElement;
+    using ToWrappedReturnType = SVGFilterElement*;
+};
 
 } // namespace WebCore
-
-#endif

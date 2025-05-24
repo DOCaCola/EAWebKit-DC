@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGUnitTypes_h
-#define JSSVGUnitTypes_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGElement.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGUnitTypes : public JSDOMWrapper {
+class JSSVGUnitTypes : public JSDOMWrapper<SVGUnitTypes> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGUnitTypes>;
     static JSSVGUnitTypes* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGUnitTypes>&& impl)
     {
-        JSSVGUnitTypes* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypes>(globalObject->vm().heap)) JSSVGUnitTypes(structure, globalObject, WTF::move(impl));
+        JSSVGUnitTypes* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypes>(globalObject->vm().heap)) JSSVGUnitTypes(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGUnitTypes* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGUnitTypes();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGUnitTypes& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGUnitTypes* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGUnitTypes(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGUnitTypes>&&);
+    JSSVGUnitTypes(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGUnitTypes>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGUnitTypesOwner : public JSC::WeakHandleOwner {
@@ -80,8 +68,15 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGUnitTypes*)
     return &owner.get();
 }
 
+inline void* wrapperKey(SVGUnitTypes* wrappableObject)
+{
+    return wrappableObject;
+}
 
+
+template<> struct JSDOMWrapperConverterTraits<SVGUnitTypes> {
+    using WrapperClass = JSSVGUnitTypes;
+    using ToWrappedReturnType = SVGUnitTypes*;
+};
 
 } // namespace WebCore
-
-#endif

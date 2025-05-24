@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTextEvent_h
-#define JSTextEvent_h
+#pragma once
 
 #include "JSUIEvent.h"
 #include "TextEvent.h"
@@ -28,42 +27,40 @@ namespace WebCore {
 
 class JSTextEvent : public JSUIEvent {
 public:
-    typedef JSUIEvent Base;
+    using Base = JSUIEvent;
+    using DOMWrapped = TextEvent;
     static JSTextEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextEvent>&& impl)
     {
-        JSTextEvent* ptr = new (NotNull, JSC::allocateCell<JSTextEvent>(globalObject->vm().heap)) JSTextEvent(structure, globalObject, WTF::move(impl));
+        JSTextEvent* ptr = new (NotNull, JSC::allocateCell<JSTextEvent>(globalObject->vm().heap)) JSTextEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TextEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    TextEvent& wrapped() const
     {
-        return static_cast<TextEvent&>(Base::impl());
+        return static_cast<TextEvent&>(Base::wrapped());
     }
 protected:
-    JSTextEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TextEvent>&&);
+    JSTextEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TextEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<TextEvent> {
+    using WrapperClass = JSTextEvent;
+    using ToWrappedReturnType = TextEvent*;
+};
 
 } // namespace WebCore
-
-#endif

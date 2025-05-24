@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMetaElement_h
-#define JSHTMLMetaElement_h
+#pragma once
 
 #include "HTMLMetaElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLMetaElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMetaElement;
     static JSHTMLMetaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMetaElement>&& impl)
     {
-        JSHTMLMetaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMetaElement>(globalObject->vm().heap)) JSHTMLMetaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMetaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMetaElement>(globalObject->vm().heap)) JSHTMLMetaElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMetaElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLMetaElement& wrapped() const
     {
-        return static_cast<HTMLMetaElement&>(Base::impl());
+        return static_cast<HTMLMetaElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMetaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMetaElement>&&);
+    JSHTMLMetaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMetaElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLMetaElement> {
+    using WrapperClass = JSHTMLMetaElement;
+    using ToWrappedReturnType = HTMLMetaElement*;
+};
 
 } // namespace WebCore
-
-#endif

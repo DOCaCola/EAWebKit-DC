@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLLoseContext_h
-#define JSWebGLLoseContext_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLLoseContext : public JSDOMWrapper {
+class JSWebGLLoseContext : public JSDOMWrapper<WebGLLoseContext> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLLoseContext>;
     static JSWebGLLoseContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLLoseContext>&& impl)
     {
-        JSWebGLLoseContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLLoseContext>(globalObject->vm().heap)) JSWebGLLoseContext(structure, globalObject, WTF::move(impl));
+        JSWebGLLoseContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLLoseContext>(globalObject->vm().heap)) JSWebGLLoseContext(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLLoseContext* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLLoseContext();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLLoseContext& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLLoseContext* m_impl;
 protected:
-    JSWebGLLoseContext(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLLoseContext>&&);
+    JSWebGLLoseContext(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLLoseContext>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLLoseContextOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLLoseContext*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLLoseContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLLoseContext& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLLoseContext* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLLoseContext&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLLoseContext* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLLoseContext>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLLoseContext>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLLoseContext> {
+    using WrapperClass = JSWebGLLoseContext;
+    using ToWrappedReturnType = WebGLLoseContext*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

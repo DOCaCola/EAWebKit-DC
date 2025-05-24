@@ -24,8 +24,9 @@
 
 #include "JSCanvasProxy.h"
 
-#include "CanvasProxy.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsCanvasProxyConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCanvasProxyConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCanvasProxyConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCanvasProxyPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCanvasProxyPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCanvasProxyPrototype* ptr = new (NotNull, JSC::allocateCell<JSCanvasProxyPrototype>(vm.heap)) JSCanvasProxyPrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCanvasProxyConstructor : public DOMConstructorObject {
-private:
-    JSCanvasProxyConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCanvasProxyConstructor = JSDOMConstructorNotConstructable<JSCanvasProxy>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCanvasProxyConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCanvasProxyConstructor* ptr = new (NotNull, JSC::allocateCell<JSCanvasProxyConstructor>(vm.heap)) JSCanvasProxyConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCanvasProxyConstructor::s_info = { "CanvasProxyConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasProxyConstructor) };
-
-JSCanvasProxyConstructor::JSCanvasProxyConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCanvasProxyConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSCanvasProxyConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCanvasProxyConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCanvasProxy::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCanvasProxy::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CanvasProxy"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCanvasProxyConstructor::s_info = { "CanvasProxy", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasProxyConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCanvasProxyPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasProxyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasProxyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasProxyConstructor) } },
 };
 
 const ClassInfo JSCanvasProxyPrototype::s_info = { "CanvasProxyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasProxyPrototype) };
@@ -115,10 +97,16 @@ void JSCanvasProxyPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCanvasProxy::s_info = { "CanvasProxy", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasProxy) };
 
-JSCanvasProxy::JSCanvasProxy(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasProxy>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCanvasProxy::JSCanvasProxy(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CanvasProxy>&& impl)
+    : JSDOMWrapper<CanvasProxy>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCanvasProxy::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCanvasProxy::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSCanvasProxy::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSCanvasProxyPrototype::create(vm, globalObject, JSCanvasProxyPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSCanvasProxy::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCanvasProxy::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCanvasProxy>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSCanvasProxy::destroy(JSC::JSCell* cell)
     thisObject->JSCanvasProxy::~JSCanvasProxy();
 }
 
-JSCanvasProxy::~JSCanvasProxy()
+EncodedJSValue jsCanvasProxyConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCanvasProxyPrototype* domObject = jsDynamicDowncast<JSCanvasProxyPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCanvasProxy::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsCanvasProxyConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSCanvasProxyConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSCanvasProxyPrototype* domObject = jsDynamicCast<JSCanvasProxyPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCanvasProxy::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCanvasProxyPrototype* domObject = jsDynamicDowncast<JSCanvasProxyPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSCanvasProxy::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSCanvasProxy::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCanvasProxyConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCanvasProxyConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSCanvasProxyOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSCanvasProxyOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSCanvasProxyOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsCanvasProxy = jsCast<JSCanvasProxy*>(handle.slot()->asCell());
+    auto* jsCanvasProxy = static_cast<JSCanvasProxy*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCanvasProxy->impl(), jsCanvasProxy);
+    uncacheWrapper(world, &jsCanvasProxy->wrapped(), jsCanvasProxy);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7CanvasProxy@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11CanvasProxyE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasProxy* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CanvasProxy>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCanvasProxy>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CanvasProxy@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasProxy*
 #if COMPILER(CLANG)
     // If this fails CanvasProxy does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(CanvasProxy), CanvasProxy_is_not_polymorphic);
+    static_assert(__is_polymorphic(CanvasProxy), "CanvasProxy is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasProxy*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSCanvasProxy>(globalObject, impl);
+    return createWrapper<CanvasProxy>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasProxy& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 CanvasProxy* JSCanvasProxy::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSCanvasProxy*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSCanvasProxy*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

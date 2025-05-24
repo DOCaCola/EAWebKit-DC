@@ -21,13 +21,13 @@
 #include "config.h"
 #include "JSSVGFEMorphologyElement.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEMorphologyElement.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -41,20 +41,21 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGFEMorphologyElementPrototypeFunctionSetRa
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFEMorphologyElementIn1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementOperator(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementRadiusX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementRadiusY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEMorphologyElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementIn1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementOperator(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementRadiusX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementRadiusY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEMorphologyElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFEMorphologyElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFEMorphologyElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFEMorphologyElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFEMorphologyElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMorphologyElementPrototype>(vm.heap)) JSSVGFEMorphologyElementPrototype(vm, globalObject, structure);
@@ -77,71 +78,50 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEMorphologyElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEMorphologyElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEMorphologyElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEMorphologyElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMorphologyElementConstructor>(vm.heap)) JSSVGFEMorphologyElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGFEMorphologyElementConstructor = JSDOMConstructorNotConstructable<JSSVGFEMorphologyElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGFEMorphologyElementConstructorTableValues[] =
 {
-    { "SVG_MORPHOLOGY_OPERATOR_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MORPHOLOGY_OPERATOR_ERODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MORPHOLOGY_OPERATOR_DILATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_MORPHOLOGY_OPERATOR_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MORPHOLOGY_OPERATOR_ERODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MORPHOLOGY_OPERATOR_DILATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
-const ClassInfo JSSVGFEMorphologyElementConstructor::s_info = { "SVGFEMorphologyElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMorphologyElementConstructor) };
-
-JSSVGFEMorphologyElementConstructor::JSSVGFEMorphologyElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFEMorphologyElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFEMorphologyElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFEMorphologyElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEMorphologyElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEMorphologyElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEMorphologyElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGFEMorphologyElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGFEMorphologyElementConstructor::s_info = { "SVGFEMorphologyElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMorphologyElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEMorphologyElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "operator", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementOperator), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "radiusX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementRadiusX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "radiusY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementRadiusY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_MORPHOLOGY_OPERATOR_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MORPHOLOGY_OPERATOR_ERODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MORPHOLOGY_OPERATOR_DILATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "setRadius", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGFEMorphologyElementPrototypeFunctionSetRadius), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFEMorphologyElementConstructor) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "operator", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementOperator), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "radiusX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementRadiusX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "radiusY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementRadiusY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMorphologyElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setRadius", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGFEMorphologyElementPrototypeFunctionSetRadius), (intptr_t) (0) } },
+    { "SVG_MORPHOLOGY_OPERATOR_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MORPHOLOGY_OPERATOR_ERODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MORPHOLOGY_OPERATOR_DILATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGFEMorphologyElementPrototype::s_info = { "SVGFEMorphologyElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMorphologyElementPrototype) };
@@ -154,212 +134,237 @@ void JSSVGFEMorphologyElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEMorphologyElement::s_info = { "SVGFEMorphologyElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMorphologyElement) };
 
-JSSVGFEMorphologyElement::JSSVGFEMorphologyElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEMorphologyElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFEMorphologyElement::JSSVGFEMorphologyElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEMorphologyElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFEMorphologyElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFEMorphologyElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFEMorphologyElementPrototype::create(vm, globalObject, JSSVGFEMorphologyElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFEMorphologyElementPrototype::create(vm, globalObject, JSSVGFEMorphologyElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFEMorphologyElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFEMorphologyElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFEMorphologyElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEMorphologyElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGFEMorphologyElement* BindingCaller<JSSVGFEMorphologyElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "in1");
+    return jsDynamicDowncast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSSVGFEMorphologyElement* BindingCaller<JSSVGFEMorphologyElement>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSSVGFEMorphologyElement*>(state.thisValue());
+}
+
+static inline JSValue jsSVGFEMorphologyElementIn1Getter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementIn1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementIn1Getter>(state, thisValue, "in1");
+}
+
+static inline JSValue jsSVGFEMorphologyElementIn1Getter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.in1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementOperatorGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementOperator(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementOperatorGetter>(state, thisValue, "operator");
+}
+
+static inline JSValue jsSVGFEMorphologyElementOperatorGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.svgOperatorAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementRadiusXGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementRadiusX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementRadiusXGetter>(state, thisValue, "radiusX");
+}
+
+static inline JSValue jsSVGFEMorphologyElementRadiusXGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.radiusXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementRadiusYGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementRadiusY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementRadiusYGetter>(state, thisValue, "radiusY");
+}
+
+static inline JSValue jsSVGFEMorphologyElementRadiusYGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.radiusYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementXGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGFEMorphologyElementXGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementYGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGFEMorphologyElementYGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementWidthGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsSVGFEMorphologyElementWidthGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementHeightGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsSVGFEMorphologyElementHeightGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEMorphologyElementResultGetter(ExecState&, JSSVGFEMorphologyElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEMorphologyElementResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEMorphologyElement>::attribute<jsSVGFEMorphologyElementResultGetter>(state, thisValue, "result");
+}
+
+static inline JSValue jsSVGFEMorphologyElementResultGetter(ExecState& state, JSSVGFEMorphologyElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.resultAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGFEMorphologyElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFEMorphologyElementPrototype* domObject = jsDynamicDowncast<JSSVGFEMorphologyElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFEMorphologyElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGFEMorphologyElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFEMorphologyElementPrototype* domObject = jsDynamicDowncast<JSSVGFEMorphologyElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGFEMorphologyElementOperator(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGFEMorphologyElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "operator");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "operator");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.svgOperatorAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGFEMorphologyElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsSVGFEMorphologyElementPrototypeFunctionSetRadiusCaller(JSC::ExecState*, JSSVGFEMorphologyElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGFEMorphologyElementRadiusX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGFEMorphologyElementPrototypeFunctionSetRadius(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "radiusX");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "radiusX");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.radiusXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGFEMorphologyElement>::callOperation<jsSVGFEMorphologyElementPrototypeFunctionSetRadiusCaller>(state, "setRadius");
 }
 
-
-EncodedJSValue jsSVGFEMorphologyElementRadiusY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGFEMorphologyElementPrototypeFunctionSetRadiusCaller(JSC::ExecState* state, JSSVGFEMorphologyElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "radiusY");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "radiusY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.radiusYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMorphologyElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEMorphologyElement", "result");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEMorphologyElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGFEMorphologyElementPrototype* domObject = jsDynamicCast<JSSVGFEMorphologyElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEMorphologyElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGFEMorphologyElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGFEMorphologyElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsSVGFEMorphologyElementPrototypeFunctionSetRadius(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGFEMorphologyElement* castedThis = jsDynamicCast<JSSVGFEMorphologyElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGFEMorphologyElement", "setRadius");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGFEMorphologyElement::info());
-    auto& impl = castedThis->impl();
-    float radiusX = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float radiusY = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setRadius(radiusX, radiusY);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto radiusX = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto radiusY = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setRadius(WTFMove(radiusX), WTFMove(radiusY));
     return JSValue::encode(jsUndefined());
+}
+
+void JSSVGFEMorphologyElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGFEMorphologyElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

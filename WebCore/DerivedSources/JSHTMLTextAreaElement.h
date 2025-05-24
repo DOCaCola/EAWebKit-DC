@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTextAreaElement_h
-#define JSHTMLTextAreaElement_h
+#pragma once
 
 #include "HTMLTextAreaElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLTextAreaElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLTextAreaElement;
     static JSHTMLTextAreaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTextAreaElement>&& impl)
     {
-        JSHTMLTextAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTextAreaElement>(globalObject->vm().heap)) JSHTMLTextAreaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTextAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTextAreaElement>(globalObject->vm().heap)) JSHTMLTextAreaElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTextAreaElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLTextAreaElement& wrapped() const
     {
-        return static_cast<HTMLTextAreaElement&>(Base::impl());
+        return static_cast<HTMLTextAreaElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTextAreaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTextAreaElement>&&);
+    JSHTMLTextAreaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTextAreaElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLTextAreaElement> {
+    using WrapperClass = JSHTMLTextAreaElement;
+    using ToWrappedReturnType = HTMLTextAreaElement*;
+};
 
 } // namespace WebCore
-
-#endif

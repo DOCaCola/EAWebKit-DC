@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTreeWalker_h
-#define JSTreeWalker_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "TreeWalker.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSTreeWalker : public JSDOMWrapper {
+class JSTreeWalker : public JSDOMWrapper<TreeWalker> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<TreeWalker>;
     static JSTreeWalker* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TreeWalker>&& impl)
     {
-        JSTreeWalker* ptr = new (NotNull, JSC::allocateCell<JSTreeWalker>(globalObject->vm().heap)) JSTreeWalker(structure, globalObject, WTF::move(impl));
+        JSTreeWalker* ptr = new (NotNull, JSC::allocateCell<JSTreeWalker>(globalObject->vm().heap)) JSTreeWalker(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static TreeWalker* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT TreeWalker* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTreeWalker();
 
     DECLARE_INFO;
 
@@ -50,24 +48,16 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    TreeWalker& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TreeWalker* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSTreeWalker(JSC::Structure*, JSDOMGlobalObject*, Ref<TreeWalker>&&);
+    JSTreeWalker(JSC::Structure*, JSDOMGlobalObject&, Ref<TreeWalker>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTreeWalkerOwner : public JSC::WeakHandleOwner {
@@ -82,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TreeWalker*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TreeWalker*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TreeWalker& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(TreeWalker* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TreeWalker&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TreeWalker* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TreeWalker>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TreeWalker>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TreeWalker> {
+    using WrapperClass = JSTreeWalker;
+    using ToWrappedReturnType = TreeWalker*;
+};
 
 } // namespace WebCore
-
-#endif

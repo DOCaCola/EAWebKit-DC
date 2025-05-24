@@ -24,9 +24,9 @@
 
 #include "JSAnalyserNode.h"
 
-#include "AnalyserNode.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -42,20 +42,21 @@ JSC::EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetByteTimeDoma
 
 // Attributes
 
-JSC::EncodedJSValue jsAnalyserNodeFftSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAnalyserNodeFftSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAnalyserNodeFrequencyBinCount(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAnalyserNodeMinDecibels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAnalyserNodeMinDecibels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAnalyserNodeMaxDecibels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAnalyserNodeMaxDecibels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAnalyserNodeSmoothingTimeConstant(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAnalyserNodeSmoothingTimeConstant(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAnalyserNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAnalyserNodeFftSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnalyserNodeFftSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAnalyserNodeFrequencyBinCount(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAnalyserNodeMinDecibels(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnalyserNodeMinDecibels(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAnalyserNodeMaxDecibels(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnalyserNodeMaxDecibels(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAnalyserNodeSmoothingTimeConstant(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnalyserNodeSmoothingTimeConstant(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAnalyserNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnalyserNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAnalyserNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAnalyserNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAnalyserNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNodePrototype>(vm.heap)) JSAnalyserNodePrototype(vm, globalObject, structure);
@@ -78,56 +79,35 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAnalyserNodeConstructor : public DOMConstructorObject {
-private:
-    JSAnalyserNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSAnalyserNodeConstructor = JSDOMConstructorNotConstructable<JSAnalyserNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAnalyserNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAnalyserNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNodeConstructor>(vm.heap)) JSAnalyserNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSAnalyserNodeConstructor::s_info = { "AnalyserNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnalyserNodeConstructor) };
-
-JSAnalyserNodeConstructor::JSAnalyserNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSAnalyserNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSAnalyserNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSAnalyserNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAnalyserNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAnalyserNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AnalyserNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSAnalyserNodeConstructor::s_info = { "AnalyserNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnalyserNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAnalyserNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "fftSize", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeFftSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeFftSize) },
-    { "frequencyBinCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeFrequencyBinCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "minDecibels", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeMinDecibels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeMinDecibels) },
-    { "maxDecibels", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeMaxDecibels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeMaxDecibels) },
-    { "smoothingTimeConstant", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeSmoothingTimeConstant), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeSmoothingTimeConstant) },
-    { "getFloatFrequencyData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetFloatFrequencyData), (intptr_t) (1) },
-    { "getByteFrequencyData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetByteFrequencyData), (intptr_t) (1) },
-    { "getByteTimeDomainData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetByteTimeDomainData), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeConstructor) } },
+    { "fftSize", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeFftSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeFftSize) } },
+    { "frequencyBinCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeFrequencyBinCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "minDecibels", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeMinDecibels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeMinDecibels) } },
+    { "maxDecibels", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeMaxDecibels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeMaxDecibels) } },
+    { "smoothingTimeConstant", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnalyserNodeSmoothingTimeConstant), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnalyserNodeSmoothingTimeConstant) } },
+    { "getFloatFrequencyData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetFloatFrequencyData), (intptr_t) (1) } },
+    { "getByteFrequencyData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetByteFrequencyData), (intptr_t) (1) } },
+    { "getByteTimeDomainData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAnalyserNodePrototypeFunctionGetByteTimeDomainData), (intptr_t) (1) } },
 };
 
 const ClassInfo JSAnalyserNodePrototype::s_info = { "AnalyserNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnalyserNodePrototype) };
@@ -140,256 +120,289 @@ void JSAnalyserNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAnalyserNode::s_info = { "AnalyserNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnalyserNode) };
 
-JSAnalyserNode::JSAnalyserNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnalyserNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSAnalyserNode::JSAnalyserNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AnalyserNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAnalyserNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAnalyserNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSAnalyserNodePrototype::create(vm, globalObject, JSAnalyserNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSAnalyserNodePrototype::create(vm, globalObject, JSAnalyserNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSAnalyserNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAnalyserNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAnalyserNode>(vm, globalObject);
 }
 
-EncodedJSValue jsAnalyserNodeFftSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSAnalyserNode* BindingCaller<JSAnalyserNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnalyserNode", "fftSize");
-        return throwGetterTypeError(*exec, "AnalyserNode", "fftSize");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.fftSize());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSAnalyserNode*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsAnalyserNodeFrequencyBinCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSAnalyserNode* BindingCaller<JSAnalyserNode>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnalyserNode", "frequencyBinCount");
-        return throwGetterTypeError(*exec, "AnalyserNode", "frequencyBinCount");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.frequencyBinCount());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSAnalyserNode*>(state.thisValue());
 }
 
+static inline JSValue jsAnalyserNodeFftSizeGetter(ExecState&, JSAnalyserNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsAnalyserNodeMinDecibels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAnalyserNodeFftSize(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnalyserNode", "minDecibels");
-        return throwGetterTypeError(*exec, "AnalyserNode", "minDecibels");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.minDecibels());
-    return JSValue::encode(result);
+    return BindingCaller<JSAnalyserNode>::attribute<jsAnalyserNodeFftSizeGetter>(state, thisValue, "fftSize");
 }
 
-
-EncodedJSValue jsAnalyserNodeMaxDecibels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAnalyserNodeFftSizeGetter(ExecState& state, JSAnalyserNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnalyserNode", "maxDecibels");
-        return throwGetterTypeError(*exec, "AnalyserNode", "maxDecibels");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.maxDecibels());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.fftSize());
+    return result;
 }
 
+static inline JSValue jsAnalyserNodeFrequencyBinCountGetter(ExecState&, JSAnalyserNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsAnalyserNodeSmoothingTimeConstant(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAnalyserNodeFrequencyBinCount(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnalyserNode", "smoothingTimeConstant");
-        return throwGetterTypeError(*exec, "AnalyserNode", "smoothingTimeConstant");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.smoothingTimeConstant());
-    return JSValue::encode(result);
+    return BindingCaller<JSAnalyserNode>::attribute<jsAnalyserNodeFrequencyBinCountGetter>(state, thisValue, "frequencyBinCount");
 }
 
-
-EncodedJSValue jsAnalyserNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsAnalyserNodeFrequencyBinCountGetter(ExecState& state, JSAnalyserNode& thisObject, ThrowScope& throwScope)
 {
-    JSAnalyserNodePrototype* domObject = jsDynamicCast<JSAnalyserNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAnalyserNode::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.frequencyBinCount());
+    return result;
 }
 
-void setJSAnalyserNodeFftSize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsAnalyserNodeMinDecibelsGetter(ExecState&, JSAnalyserNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAnalyserNodeMinDecibels(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSAnalyserNode>::attribute<jsAnalyserNodeMinDecibelsGetter>(state, thisValue, "minDecibels");
+}
+
+static inline JSValue jsAnalyserNodeMinDecibelsGetter(ExecState& state, JSAnalyserNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.minDecibels());
+    return result;
+}
+
+static inline JSValue jsAnalyserNodeMaxDecibelsGetter(ExecState&, JSAnalyserNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAnalyserNodeMaxDecibels(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAnalyserNode>::attribute<jsAnalyserNodeMaxDecibelsGetter>(state, thisValue, "maxDecibels");
+}
+
+static inline JSValue jsAnalyserNodeMaxDecibelsGetter(ExecState& state, JSAnalyserNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.maxDecibels());
+    return result;
+}
+
+static inline JSValue jsAnalyserNodeSmoothingTimeConstantGetter(ExecState&, JSAnalyserNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsAnalyserNodeSmoothingTimeConstant(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAnalyserNode>::attribute<jsAnalyserNodeSmoothingTimeConstantGetter>(state, thisValue, "smoothingTimeConstant");
+}
+
+static inline JSValue jsAnalyserNodeSmoothingTimeConstantGetter(ExecState& state, JSAnalyserNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.smoothingTimeConstant());
+    return result;
+}
+
+EncodedJSValue jsAnalyserNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAnalyserNodePrototype* domObject = jsDynamicDowncast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAnalyserNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAnalyserNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AnalyserNode", "fftSize");
-        else
-            throwSetterTypeError(*exec, "AnalyserNode", "fftSize");
-        return;
+    JSAnalyserNodePrototype* domObject = jsDynamicDowncast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setFftSize(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSAnalyserNodeFftSizeFunction(ExecState&, JSAnalyserNode&, JSValue, ThrowScope&);
+
+bool setJSAnalyserNodeFftSize(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAnalyserNode>::setAttribute<setJSAnalyserNodeFftSizeFunction>(state, thisValue, encodedValue, "fftSize");
+}
+
+static inline bool setJSAnalyserNodeFftSizeFunction(ExecState& state, JSAnalyserNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setFftSize(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSAnalyserNodeMinDecibels(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSAnalyserNodeMinDecibelsFunction(ExecState&, JSAnalyserNode&, JSValue, ThrowScope&);
+
+bool setJSAnalyserNodeMinDecibels(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AnalyserNode", "minDecibels");
-        else
-            throwSetterTypeError(*exec, "AnalyserNode", "minDecibels");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMinDecibels(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSAnalyserNode>::setAttribute<setJSAnalyserNodeMinDecibelsFunction>(state, thisValue, encodedValue, "minDecibels");
+}
+
+static inline bool setJSAnalyserNodeMinDecibelsFunction(ExecState& state, JSAnalyserNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setMinDecibels(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSAnalyserNodeMaxDecibels(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSAnalyserNodeMaxDecibelsFunction(ExecState&, JSAnalyserNode&, JSValue, ThrowScope&);
+
+bool setJSAnalyserNodeMaxDecibels(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AnalyserNode", "maxDecibels");
-        else
-            throwSetterTypeError(*exec, "AnalyserNode", "maxDecibels");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMaxDecibels(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSAnalyserNode>::setAttribute<setJSAnalyserNodeMaxDecibelsFunction>(state, thisValue, encodedValue, "maxDecibels");
+}
+
+static inline bool setJSAnalyserNodeMaxDecibelsFunction(ExecState& state, JSAnalyserNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setMaxDecibels(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSAnalyserNodeSmoothingTimeConstant(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSAnalyserNodeSmoothingTimeConstantFunction(ExecState&, JSAnalyserNode&, JSValue, ThrowScope&);
+
+bool setJSAnalyserNodeSmoothingTimeConstant(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnalyserNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AnalyserNode", "smoothingTimeConstant");
-        else
-            throwSetterTypeError(*exec, "AnalyserNode", "smoothingTimeConstant");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSmoothingTimeConstant(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSAnalyserNode>::setAttribute<setJSAnalyserNodeSmoothingTimeConstantFunction>(state, thisValue, encodedValue, "smoothingTimeConstant");
+}
+
+static inline bool setJSAnalyserNodeSmoothingTimeConstantFunction(ExecState& state, JSAnalyserNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setSmoothingTimeConstant(WTFMove(nativeValue)));
+    return true;
 }
 
 
-JSValue JSAnalyserNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSAnalyserNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSAnalyserNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSAnalyserNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetFloatFrequencyData(ExecState* exec)
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetFloatFrequencyDataCaller(JSC::ExecState*, JSAnalyserNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetFloatFrequencyData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AnalyserNode", "getFloatFrequencyData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAnalyserNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<Float32Array> array = toFloat32Array(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.getFloatFrequencyData(array.get());
+    return BindingCaller<JSAnalyserNode>::callOperation<jsAnalyserNodePrototypeFunctionGetFloatFrequencyDataCaller>(state, "getFloatFrequencyData");
+}
+
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetFloatFrequencyDataCaller(JSC::ExecState* state, JSAnalyserNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto array = convert<IDLNullable<IDLInterface<Float32Array>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "array", "AnalyserNode", "getFloatFrequencyData", "Float32Array"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.getFloatFrequencyData(WTFMove(array));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetByteFrequencyData(ExecState* exec)
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetByteFrequencyDataCaller(JSC::ExecState*, JSAnalyserNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetByteFrequencyData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AnalyserNode", "getByteFrequencyData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAnalyserNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<Uint8Array> array = toUint8Array(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.getByteFrequencyData(array.get());
+    return BindingCaller<JSAnalyserNode>::callOperation<jsAnalyserNodePrototypeFunctionGetByteFrequencyDataCaller>(state, "getByteFrequencyData");
+}
+
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetByteFrequencyDataCaller(JSC::ExecState* state, JSAnalyserNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto array = convert<IDLNullable<IDLInterface<Uint8Array>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "array", "AnalyserNode", "getByteFrequencyData", "Uint8Array"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.getByteFrequencyData(WTFMove(array));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetByteTimeDomainData(ExecState* exec)
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetByteTimeDomainDataCaller(JSC::ExecState*, JSAnalyserNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAnalyserNodePrototypeFunctionGetByteTimeDomainData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAnalyserNode* castedThis = jsDynamicCast<JSAnalyserNode*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AnalyserNode", "getByteTimeDomainData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAnalyserNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<Uint8Array> array = toUint8Array(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.getByteTimeDomainData(array.get());
+    return BindingCaller<JSAnalyserNode>::callOperation<jsAnalyserNodePrototypeFunctionGetByteTimeDomainDataCaller>(state, "getByteTimeDomainData");
+}
+
+static inline JSC::EncodedJSValue jsAnalyserNodePrototypeFunctionGetByteTimeDomainDataCaller(JSC::ExecState* state, JSAnalyserNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto array = convert<IDLNullable<IDLInterface<Uint8Array>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "array", "AnalyserNode", "getByteTimeDomainData", "Uint8Array"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.getByteTimeDomainData(WTFMove(array));
     return JSValue::encode(jsUndefined());
+}
+
+void JSAnalyserNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSAnalyserNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -400,15 +413,12 @@ extern "C" { extern void (*const __identifier("??_7AnalyserNode@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12AnalyserNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AnalyserNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AnalyserNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSAnalyserNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7AnalyserNode@WebCore@@6B@"));
 #else
@@ -416,7 +426,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AnalyserNode
 #if COMPILER(CLANG)
     // If this fails AnalyserNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(AnalyserNode), AnalyserNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(AnalyserNode), "AnalyserNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -425,7 +435,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AnalyserNode
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSAnalyserNode>(globalObject, impl);
+    return createWrapper<AnalyserNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AnalyserNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

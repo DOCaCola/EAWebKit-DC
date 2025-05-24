@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSEXTShaderTextureLOD_h
-#define JSEXTShaderTextureLOD_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSEXTShaderTextureLOD : public JSDOMWrapper {
+class JSEXTShaderTextureLOD : public JSDOMWrapper<EXTShaderTextureLOD> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<EXTShaderTextureLOD>;
     static JSEXTShaderTextureLOD* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTShaderTextureLOD>&& impl)
     {
-        JSEXTShaderTextureLOD* ptr = new (NotNull, JSC::allocateCell<JSEXTShaderTextureLOD>(globalObject->vm().heap)) JSEXTShaderTextureLOD(structure, globalObject, WTF::move(impl));
+        JSEXTShaderTextureLOD* ptr = new (NotNull, JSC::allocateCell<JSEXTShaderTextureLOD>(globalObject->vm().heap)) JSEXTShaderTextureLOD(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTShaderTextureLOD* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTShaderTextureLOD();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTShaderTextureLOD& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTShaderTextureLOD* m_impl;
 protected:
-    JSEXTShaderTextureLOD(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTShaderTextureLOD>&&);
+    JSEXTShaderTextureLOD(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTShaderTextureLOD>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSEXTShaderTextureLODOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTShaderTextureLOD*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTShaderTextureLOD*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(EXTShaderTextureLOD* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTShaderTextureLOD&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<EXTShaderTextureLOD>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<EXTShaderTextureLOD>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<EXTShaderTextureLOD> {
+    using WrapperClass = JSEXTShaderTextureLOD;
+    using ToWrappedReturnType = EXTShaderTextureLOD*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

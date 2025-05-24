@@ -21,18 +21,19 @@
 #include "config.h"
 #include "JSHTMLFormElement.h"
 
-#include "ExceptionCode.h"
-#include "HTMLCollection.h"
-#include "HTMLFormElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "JSHTMLCollection.h"
-#include "URL.h"
-#include "wtf/text/AtomicString.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSElement.h"
+#include "JSHTMLFormControlsCollection.h"
+#include "JSRadioNodeList.h"
+#include "RuntimeEnabledFeatures.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -43,45 +44,39 @@ namespace WebCore {
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionSubmit(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionReset(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionCheckValidity(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionReportValidity(JSC::ExecState*);
 #if ENABLE(REQUEST_AUTOCOMPLETE)
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionRequestAutocomplete(JSC::ExecState*);
 #endif
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLFormElementAcceptCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementAcceptCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementAction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementAction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementEnctype(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementEnctype(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementEncoding(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementEncoding(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementMethod(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementMethod(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementNoValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementNoValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFormElementElements(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLFormElementLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-JSC::EncodedJSValue jsHTMLFormElementAutocorrect(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementAutocorrect(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-JSC::EncodedJSValue jsHTMLFormElementAutocapitalize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFormElementAutocapitalize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
-JSC::EncodedJSValue jsHTMLFormElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLFormElementAcceptCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementAcceptCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementAction(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementAction(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementAutocomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementAutocomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementEnctype(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementEnctype(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementEncoding(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementEncoding(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementMethod(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementMethod(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementNoValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementNoValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFormElementElements(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLFormElementLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLFormElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFormElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLFormElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLFormElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLFormElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElementPrototype>(vm.heap)) JSHTMLFormElementPrototype(vm, globalObject, structure);
@@ -104,123 +99,46 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLFormElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLFormElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLFormElementConstructor = JSDOMConstructorNotConstructable<JSHTMLFormElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLFormElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLFormElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElementConstructor>(vm.heap)) JSHTMLFormElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSHTMLFormElementTableIndex[36] = {
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 6, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 4, 34 },
-    { -1, -1 },
-    { -1, -1 },
-    { 3, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 12, -1 },
-    { -1, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { 11, -1 },
-    { 2, 33 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 9, 35 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, 32 },
-    { -1, -1 },
-    { 5, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 7, -1 },
-    { 8, -1 },
-    { 10, -1 },
-    { 13, -1 },
-};
-
-
-static const HashTableValue JSHTMLFormElementTableValues[] =
+template<> JSValue JSHTMLFormElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "acceptCharset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAcceptCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAcceptCharset) },
-    { "action", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAction) },
-    { "autocomplete", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAutocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAutocomplete) },
-    { "enctype", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementEnctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementEnctype) },
-    { "encoding", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementEncoding) },
-    { "method", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementMethod), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementMethod) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementName) },
-    { "noValidate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementNoValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementNoValidate) },
-    { "target", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementTarget) },
-    { "elements", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementElements), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-    { "autocorrect", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAutocorrect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAutocorrect) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-    { "autocapitalize", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAutocapitalize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAutocapitalize) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-};
-
-static const HashTable JSHTMLFormElementTable = { 14, 31, true, JSHTMLFormElementTableValues, 0, JSHTMLFormElementTableIndex };
-const ClassInfo JSHTMLFormElementConstructor::s_info = { "HTMLFormElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormElementConstructor) };
-
-JSHTMLFormElementConstructor::JSHTMLFormElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLFormElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLFormElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLFormElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLFormElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLFormElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLFormElementConstructor::s_info = { "HTMLFormElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLFormElementPrototypeTableValues[] =
 {
-    { "submit", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionSubmit), (intptr_t) (0) },
-    { "reset", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionReset), (intptr_t) (0) },
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementConstructor) } },
+    { "acceptCharset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAcceptCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAcceptCharset) } },
+    { "action", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAction) } },
+    { "autocomplete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementAutocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementAutocomplete) } },
+    { "enctype", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementEnctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementEnctype) } },
+    { "encoding", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementEncoding) } },
+    { "method", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementMethod), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementMethod) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementName) } },
+    { "noValidate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementNoValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementNoValidate) } },
+    { "target", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFormElementTarget) } },
+    { "elements", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementElements), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormElementLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "submit", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionSubmit), (intptr_t) (0) } },
+    { "reset", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionReset), (intptr_t) (0) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "reportValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionReportValidity), (intptr_t) (0) } },
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-    { "requestAutocomplete", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionRequestAutocomplete), (intptr_t) (0) },
+    { "requestAutocomplete", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormElementPrototypeFunctionRequestAutocomplete), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
@@ -230,477 +148,564 @@ void JSHTMLFormElementPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSHTMLFormElementPrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().interactiveFormValidationEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("reportValidity"), strlen("reportValidity"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSHTMLFormElement::s_info = { "HTMLFormElement", &Base::s_info, &JSHTMLFormElementTable, CREATE_METHOD_TABLE(JSHTMLFormElement) };
+const ClassInfo JSHTMLFormElement::s_info = { "HTMLFormElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormElement) };
 
-JSHTMLFormElement::JSHTMLFormElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFormElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLFormElement::JSHTMLFormElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLFormElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLFormElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLFormElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLFormElementPrototype::create(vm, globalObject, JSHTMLFormElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLFormElementPrototype::create(vm, globalObject, JSHTMLFormElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLFormElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLFormElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLFormElement>(vm, globalObject);
 }
 
-bool JSHTMLFormElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLFormElement::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFormElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Element>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
+    if (!optionalIndex && thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().namedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLUnion<IDLInterface<RadioNodeList>, IDLInterface<Element>>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly | DontEnum, toJS<IDLNullable<IDLUnion<IDLInterface<RadioNodeList>, IDLInterface<Element>>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSHTMLFormElement>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSHTMLFormElement, Base>(exec, JSHTMLFormElementTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSHTMLFormElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLFormElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFormElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Element>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLFormElementAcceptCharset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::accept_charsetAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementAction(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::actionAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementAutocomplete(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::autocompleteAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementEnctype(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.enctype());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementEncoding(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.encoding());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementMethod(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.method());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementNoValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::novalidateAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::targetAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementElements(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.elements()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLFormElementLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-EncodedJSValue jsHTMLFormElementAutocorrect(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.autocorrect());
-    return JSValue::encode(result);
-}
-
-#endif
-
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-EncodedJSValue jsHTMLFormElementAutocapitalize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.autocapitalize());
-    return JSValue::encode(result);
-}
-
-#endif
-
-EncodedJSValue jsHTMLFormElementConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSHTMLFormElement* domObject = jsDynamicCast<JSHTMLFormElement*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLFormElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void setJSHTMLFormElementAcceptCharset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::accept_charsetAttr, nativeValue);
-}
-
-
-void setJSHTMLFormElementAction(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::actionAttr, nativeValue);
-}
-
-
-void setJSHTMLFormElementAutocomplete(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::autocompleteAttr, nativeValue);
-}
-
-
-void setJSHTMLFormElementEnctype(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setEnctype(nativeValue);
-}
-
-
-void setJSHTMLFormElementEncoding(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setEncoding(nativeValue);
-}
-
-
-void setJSHTMLFormElementMethod(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMethod(nativeValue);
-}
-
-
-void setJSHTMLFormElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
-}
-
-
-void setJSHTMLFormElementNoValidate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::novalidateAttr, nativeValue);
-}
-
-
-void setJSHTMLFormElementTarget(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, nativeValue);
-}
-
-
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-void setJSHTMLFormElementAutocorrect(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAutocorrect(nativeValue);
-}
-
-#endif
-
-#if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-void setJSHTMLFormElementAutocapitalize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFormElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAutocapitalize(nativeValue);
-}
-
-#endif
-
-void JSHTMLFormElement::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSHTMLFormElement::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSHTMLFormElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSHTMLFormElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSHTMLFormElement* BindingCaller<JSHTMLFormElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSHTMLFormElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSHTMLFormElement*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionSubmit(ExecState* exec)
+template<> inline JSHTMLFormElement* BindingCaller<JSHTMLFormElement>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLFormElement* castedThis = jsDynamicCast<JSHTMLFormElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFormElement", "submit");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFormElement::info());
-    auto& impl = castedThis->impl();
+    return jsDynamicDowncast<JSHTMLFormElement*>(state.thisValue());
+}
+
+static inline JSValue jsHTMLFormElementAcceptCharsetGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementAcceptCharset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementAcceptCharsetGetter>(state, thisValue, "acceptCharset");
+}
+
+static inline JSValue jsHTMLFormElementAcceptCharsetGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::accept_charsetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementActionGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementAction(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementActionGetter>(state, thisValue, "action");
+}
+
+static inline JSValue jsHTMLFormElementActionGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::actionAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementAutocompleteGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementAutocomplete(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementAutocompleteGetter>(state, thisValue, "autocomplete");
+}
+
+static inline JSValue jsHTMLFormElementAutocompleteGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.autocomplete());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementEnctypeGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementEnctype(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementEnctypeGetter>(state, thisValue, "enctype");
+}
+
+static inline JSValue jsHTMLFormElementEnctypeGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.enctype());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementEncodingGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementEncoding(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementEncodingGetter>(state, thisValue, "encoding");
+}
+
+static inline JSValue jsHTMLFormElementEncodingGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.enctype());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementMethodGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementMethod(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementMethodGetter>(state, thisValue, "method");
+}
+
+static inline JSValue jsHTMLFormElementMethodGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.method());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementNameGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsHTMLFormElementNameGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getNameAttribute());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementNoValidateGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementNoValidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementNoValidateGetter>(state, thisValue, "noValidate");
+}
+
+static inline JSValue jsHTMLFormElementNoValidateGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::novalidateAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementTargetGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementTargetGetter>(state, thisValue, "target");
+}
+
+static inline JSValue jsHTMLFormElementTargetGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::targetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementElementsGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementElements(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementElementsGetter>(state, thisValue, "elements");
+}
+
+static inline JSValue jsHTMLFormElementElementsGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLFormControlsCollection>>(state, *thisObject.globalObject(), impl.elements());
+    return result;
+}
+
+static inline JSValue jsHTMLFormElementLengthGetter(ExecState&, JSHTMLFormElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFormElementLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFormElement>::attribute<jsHTMLFormElementLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsHTMLFormElementLengthGetter(ExecState& state, JSHTMLFormElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsHTMLFormElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLFormElementPrototype* domObject = jsDynamicDowncast<JSHTMLFormElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLFormElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLFormElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLFormElementPrototype* domObject = jsDynamicDowncast<JSHTMLFormElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLFormElementAcceptCharsetFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementAcceptCharset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementAcceptCharsetFunction>(state, thisValue, encodedValue, "acceptCharset");
+}
+
+static inline bool setJSHTMLFormElementAcceptCharsetFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::accept_charsetAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementActionFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementAction(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementActionFunction>(state, thisValue, encodedValue, "action");
+}
+
+static inline bool setJSHTMLFormElementActionFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::actionAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementAutocompleteFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementAutocomplete(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementAutocompleteFunction>(state, thisValue, encodedValue, "autocomplete");
+}
+
+static inline bool setJSHTMLFormElementAutocompleteFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAutocomplete(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementEnctypeFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementEnctype(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementEnctypeFunction>(state, thisValue, encodedValue, "enctype");
+}
+
+static inline bool setJSHTMLFormElementEnctypeFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setEnctype(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementEncodingFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementEncoding(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementEncodingFunction>(state, thisValue, encodedValue, "encoding");
+}
+
+static inline bool setJSHTMLFormElementEncodingFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setEnctype(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementMethodFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementMethod(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementMethodFunction>(state, thisValue, encodedValue, "method");
+}
+
+static inline bool setJSHTMLFormElementMethodFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setMethod(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementNameFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSHTMLFormElementNameFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementNoValidateFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementNoValidate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementNoValidateFunction>(state, thisValue, encodedValue, "noValidate");
+}
+
+static inline bool setJSHTMLFormElementNoValidateFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::novalidateAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLFormElementTargetFunction(ExecState&, JSHTMLFormElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFormElementTarget(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFormElement>::setAttribute<setJSHTMLFormElementTargetFunction>(state, thisValue, encodedValue, "target");
+}
+
+static inline bool setJSHTMLFormElementTargetFunction(ExecState& state, JSHTMLFormElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLFormElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLFormElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionSubmitCaller(JSC::ExecState*, JSHTMLFormElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionSubmit(ExecState* state)
+{
+    return BindingCaller<JSHTMLFormElement>::callOperation<jsHTMLFormElementPrototypeFunctionSubmitCaller>(state, "submit");
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionSubmitCaller(JSC::ExecState* state, JSHTMLFormElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.submitFromJavaScript();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionReset(ExecState* exec)
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionResetCaller(JSC::ExecState*, JSHTMLFormElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionReset(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLFormElement* castedThis = jsDynamicCast<JSHTMLFormElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFormElement", "reset");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFormElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSHTMLFormElement>::callOperation<jsHTMLFormElementPrototypeFunctionResetCaller>(state, "reset");
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionResetCaller(JSC::ExecState* state, JSHTMLFormElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.reset();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionCheckValidity(ExecState* exec)
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionCheckValidityCaller(JSC::ExecState*, JSHTMLFormElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionCheckValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLFormElement* castedThis = jsDynamicCast<JSHTMLFormElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFormElement", "checkValidity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFormElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.checkValidity());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLFormElement>::callOperation<jsHTMLFormElementPrototypeFunctionCheckValidityCaller>(state, "checkValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionCheckValidityCaller(JSC::ExecState* state, JSHTMLFormElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.checkValidity()));
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionReportValidityCaller(JSC::ExecState*, JSHTMLFormElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionReportValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLFormElement>::callOperation<jsHTMLFormElementPrototypeFunctionReportValidityCaller>(state, "reportValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionReportValidityCaller(JSC::ExecState* state, JSHTMLFormElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.reportValidity()));
 }
 
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionRequestAutocomplete(ExecState* exec)
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionRequestAutocompleteCaller(JSC::ExecState*, JSHTMLFormElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLFormElementPrototypeFunctionRequestAutocomplete(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLFormElement* castedThis = jsDynamicCast<JSHTMLFormElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFormElement", "requestAutocomplete");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFormElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSHTMLFormElement>::callOperation<jsHTMLFormElementPrototypeFunctionRequestAutocompleteCaller>(state, "requestAutocomplete");
+}
+
+static inline JSC::EncodedJSValue jsHTMLFormElementPrototypeFunctionRequestAutocompleteCaller(JSC::ExecState* state, JSHTMLFormElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.requestAutocomplete();
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
+void JSHTMLFormElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLFormElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+}
+
+HTMLFormElement* JSHTMLFormElement::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSHTMLFormElement*>(value))
+        return &wrapper->wrapped();
+    return nullptr;
+}
 
 }

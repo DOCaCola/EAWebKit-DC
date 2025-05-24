@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSHTMLBRElement.h"
 
-#include "HTMLBRElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLBRElementClear(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLBRElementClear(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLBRElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLBRElementClear(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLBRElementClear(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLBRElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLBRElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLBRElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLBRElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLBRElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLBRElementPrototype>(vm.heap)) JSHTMLBRElementPrototype(vm, globalObject, structure);
@@ -63,49 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLBRElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLBRElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLBRElementConstructor = JSDOMConstructorNotConstructable<JSHTMLBRElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLBRElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLBRElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLBRElementConstructor>(vm.heap)) JSHTMLBRElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLBRElementConstructor::s_info = { "HTMLBRElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBRElementConstructor) };
-
-JSHTMLBRElementConstructor::JSHTMLBRElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLBRElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLBRElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLBRElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLBRElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLBRElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLBRElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLBRElementConstructor::s_info = { "HTMLBRElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBRElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLBRElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clear", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBRElementClear), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBRElementClear) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBRElementConstructor) } },
+    { "clear", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBRElementClear), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBRElementClear) } },
 };
 
 const ClassInfo JSHTMLBRElementPrototype::s_info = { "HTMLBRElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBRElementPrototype) };
@@ -118,69 +97,103 @@ void JSHTMLBRElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLBRElement::s_info = { "HTMLBRElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBRElement) };
 
-JSHTMLBRElement::JSHTMLBRElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLBRElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLBRElement::JSHTMLBRElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLBRElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLBRElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLBRElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLBRElementPrototype::create(vm, globalObject, JSHTMLBRElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLBRElementPrototype::create(vm, globalObject, JSHTMLBRElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLBRElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLBRElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLBRElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLBRElementClear(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLBRElement* BindingCaller<JSHTMLBRElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLBRElement* castedThis = jsDynamicCast<JSHTMLBRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLBRElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLBRElement", "clear");
-        return throwGetterTypeError(*exec, "HTMLBRElement", "clear");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::clearAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLBRElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLBRElementClearGetter(ExecState&, JSHTMLBRElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLBRElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLBRElementClear(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLBRElementPrototype* domObject = jsDynamicCast<JSHTMLBRElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLBRElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLBRElement>::attribute<jsHTMLBRElementClearGetter>(state, thisValue, "clear");
 }
 
-void setJSHTMLBRElementClear(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLBRElementClearGetter(ExecState& state, JSHTMLBRElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::clearAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLBRElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLBRElementPrototype* domObject = jsDynamicDowncast<JSHTMLBRElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLBRElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLBRElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLBRElement* castedThis = jsDynamicCast<JSHTMLBRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLBRElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLBRElement", "clear");
-        else
-            throwSetterTypeError(*exec, "HTMLBRElement", "clear");
-        return;
+    JSHTMLBRElementPrototype* domObject = jsDynamicDowncast<JSHTMLBRElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::clearAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLBRElementClearFunction(ExecState&, JSHTMLBRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLBRElementClear(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLBRElement>::setAttribute<setJSHTMLBRElementClearFunction>(state, thisValue, encodedValue, "clear");
+}
+
+static inline bool setJSHTMLBRElementClearFunction(ExecState& state, JSHTMLBRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::clearAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLBRElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLBRElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLBRElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLBRElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLBRElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLBRElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

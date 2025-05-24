@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGCursorElement_h
-#define JSSVGCursorElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGCursorElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGCursorElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGCursorElement;
     static JSSVGCursorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGCursorElement>&& impl)
     {
-        JSSVGCursorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElement>(globalObject->vm().heap)) JSSVGCursorElement(structure, globalObject, WTF::move(impl));
+        JSSVGCursorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElement>(globalObject->vm().heap)) JSSVGCursorElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGCursorElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGCursorElement& wrapped() const
     {
-        return static_cast<SVGCursorElement&>(Base::impl());
+        return static_cast<SVGCursorElement&>(Base::wrapped());
     }
 protected:
-    JSSVGCursorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGCursorElement>&&);
+    JSSVGCursorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGCursorElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGCursorElement> {
+    using WrapperClass = JSSVGCursorElement;
+    using ToWrappedReturnType = SVGCursorElement*;
+};
 
 } // namespace WebCore
-
-#endif

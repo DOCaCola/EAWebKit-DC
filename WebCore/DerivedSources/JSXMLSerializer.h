@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXMLSerializer_h
-#define JSXMLSerializer_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "XMLSerializer.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSXMLSerializer : public JSDOMWrapper {
+class JSXMLSerializer : public JSDOMWrapper<XMLSerializer> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<XMLSerializer>;
     static JSXMLSerializer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLSerializer>&& impl)
     {
-        JSXMLSerializer* ptr = new (NotNull, JSC::allocateCell<JSXMLSerializer>(globalObject->vm().heap)) JSXMLSerializer(structure, globalObject, WTF::move(impl));
+        JSXMLSerializer* ptr = new (NotNull, JSC::allocateCell<JSXMLSerializer>(globalObject->vm().heap)) JSXMLSerializer(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static XMLSerializer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXMLSerializer();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XMLSerializer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLSerializer* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSXMLSerializer(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLSerializer>&&);
+    JSXMLSerializer(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLSerializer>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSXMLSerializerOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLSerializer*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLSerializer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLSerializer& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XMLSerializer* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLSerializer&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLSerializer* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XMLSerializer>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XMLSerializer>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XMLSerializer> {
+    using WrapperClass = JSXMLSerializer;
+    using ToWrappedReturnType = XMLSerializer*;
+};
 
 } // namespace WebCore
-
-#endif

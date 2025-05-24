@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDataTransfer_h
-#define JSDataTransfer_h
+#pragma once
 
 #include "DataTransfer.h"
 #include "JSDOMWrapper.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSDataTransfer : public JSDOMWrapper {
+class JSDataTransfer : public JSDOMWrapper<DataTransfer> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DataTransfer>;
     static JSDataTransfer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataTransfer>&& impl)
     {
-        JSDataTransfer* ptr = new (NotNull, JSC::allocateCell<JSDataTransfer>(globalObject->vm().heap)) JSDataTransfer(structure, globalObject, WTF::move(impl));
+        JSDataTransfer* ptr = new (NotNull, JSC::allocateCell<JSDataTransfer>(globalObject->vm().heap)) JSDataTransfer(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DataTransfer* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDataTransfer();
 
     DECLARE_INFO;
 
@@ -51,26 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    JSC::JSValue types(JSC::ExecState*) const;
-    DataTransfer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DataTransfer* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDataTransfer(JSC::Structure*, JSDOMGlobalObject*, Ref<DataTransfer>&&);
+    JSDataTransfer(JSC::Structure*, JSDOMGlobalObject&, Ref<DataTransfer>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDataTransferOwner : public JSC::WeakHandleOwner {
@@ -85,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DataTransfer*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DataTransfer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DataTransfer& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DataTransfer* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DataTransfer&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataTransfer* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DataTransfer>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DataTransfer>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DataTransfer> {
+    using WrapperClass = JSDataTransfer;
+    using ToWrappedReturnType = DataTransfer*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -24,8 +24,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XPathExpressionNode_h
-#define XPathExpressionNode_h
+#pragma once
 
 #include "XPathValue.h"
 
@@ -66,7 +65,7 @@ protected:
         m_isContextNodeSensitive |= expression->m_isContextNodeSensitive;
         m_isContextPositionSensitive |= expression->m_isContextPositionSensitive;
         m_isContextSizeSensitive |= expression->m_isContextSizeSensitive;
-        m_subexpressions.append(WTF::move(expression));
+        m_subexpressions.append(WTFMove(expression));
     }
 
     void setSubexpressions(Vector<std::unique_ptr<Expression>>);
@@ -86,5 +85,3 @@ private:
 
 } // namespace XPath
 } // namespace WebCore
-
-#endif // XPathExpressionNode_h

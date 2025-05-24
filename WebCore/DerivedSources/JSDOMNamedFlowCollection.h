@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMNamedFlowCollection_h
-#define JSDOMNamedFlowCollection_h
+#pragma once
 
 #if ENABLE(CSS_REGIONS)
 
@@ -29,23 +28,22 @@
 
 namespace WebCore {
 
-class JSDOMNamedFlowCollection : public JSDOMWrapper {
+class JSDOMNamedFlowCollection : public JSDOMWrapper<DOMNamedFlowCollection> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMNamedFlowCollection>;
     static JSDOMNamedFlowCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMNamedFlowCollection>&& impl)
     {
-        JSDOMNamedFlowCollection* ptr = new (NotNull, JSC::allocateCell<JSDOMNamedFlowCollection>(globalObject->vm().heap)) JSDOMNamedFlowCollection(structure, globalObject, WTF::move(impl));
+        JSDOMNamedFlowCollection* ptr = new (NotNull, JSC::allocateCell<JSDOMNamedFlowCollection>(globalObject->vm().heap)) JSDOMNamedFlowCollection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMNamedFlowCollection* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMNamedFlowCollection();
 
     DECLARE_INFO;
 
@@ -55,25 +53,12 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    DOMNamedFlowCollection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMNamedFlowCollection* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMNamedFlowCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMNamedFlowCollection>&&);
+    JSDOMNamedFlowCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMNamedFlowCollection>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMNamedFlowCollection*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMNamedFlowCollectionOwner : public JSC::WeakHandleOwner {
@@ -88,12 +73,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMNamedFlowCollecti
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMNamedFlowCollection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMNamedFlowCollection& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMNamedFlowCollection* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMNamedFlowCollection&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMNamedFlowCollection* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMNamedFlowCollection>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMNamedFlowCollection>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMNamedFlowCollection> {
+    using WrapperClass = JSDOMNamedFlowCollection;
+    using ToWrappedReturnType = DOMNamedFlowCollection*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CSS_REGIONS)
-
-#endif

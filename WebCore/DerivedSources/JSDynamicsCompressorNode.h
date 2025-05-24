@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDynamicsCompressorNode_h
-#define JSDynamicsCompressorNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSDynamicsCompressorNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = DynamicsCompressorNode;
     static JSDynamicsCompressorNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DynamicsCompressorNode>&& impl)
     {
-        JSDynamicsCompressorNode* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNode>(globalObject->vm().heap)) JSDynamicsCompressorNode(structure, globalObject, WTF::move(impl));
+        JSDynamicsCompressorNode* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNode>(globalObject->vm().heap)) JSDynamicsCompressorNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DynamicsCompressorNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    DynamicsCompressorNode& wrapped() const
     {
-        return static_cast<DynamicsCompressorNode&>(Base::impl());
+        return static_cast<DynamicsCompressorNode&>(Base::wrapped());
     }
 protected:
-    JSDynamicsCompressorNode(JSC::Structure*, JSDOMGlobalObject*, Ref<DynamicsCompressorNode>&&);
+    JSDynamicsCompressorNode(JSC::Structure*, JSDOMGlobalObject&, Ref<DynamicsCompressorNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DynamicsCompressorNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DynamicsCompressorNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DynamicsCompressorNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DynamicsCompressorNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DynamicsCompressorNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DynamicsCompressorNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<DynamicsCompressorNode> {
+    using WrapperClass = JSDynamicsCompressorNode;
+    using ToWrappedReturnType = DynamicsCompressorNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

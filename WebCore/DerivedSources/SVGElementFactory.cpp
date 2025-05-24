@@ -526,7 +526,23 @@ static Ref<SVGElement> vkernConstructor(const QualifiedName& tagName, Document& 
     return SVGVKernElement::create(tagName, document);
 }
 
-static NEVER_INLINE void populateSVGFactoryMap(HashMap<AtomicStringImpl*, SVGConstructorFunction>& map)
+
+struct ConstructorFunctionMapEntry {
+    ConstructorFunctionMapEntry(SVGConstructorFunction function, const QualifiedName& name)
+        : function(function)
+        , qualifiedName(&name)
+    { }
+
+    ConstructorFunctionMapEntry()
+        : function(nullptr)
+        , qualifiedName(nullptr)
+    { }
+
+    SVGConstructorFunction function;
+    const QualifiedName* qualifiedName; // Use pointer instead of reference so that emptyValue() in HashMap is cheap to create.
+};
+
+static NEVER_INLINE void populateSVGFactoryMap(HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>& map)
 {
     struct TableEntry {
         const QualifiedName& name;
@@ -617,16 +633,53 @@ static NEVER_INLINE void populateSVGFactoryMap(HashMap<AtomicStringImpl*, SVGCon
     };
 
     for (unsigned i = 0; i < WTF_ARRAY_LENGTH(table); ++i)
-        map.add(table[i].name.localName().impl(), table[i].function);
+        map.add(table[i].name.localName().impl(), ConstructorFunctionMapEntry(table[i].function, table[i].name));
+}
+
+
+static ConstructorFunctionMapEntry findSVGElementConstructorFunction(const AtomicString& localName)
+{
+    static NeverDestroyed<HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>> map;
+    if (map.get().isEmpty())
+        populateSVGFactoryMap(map);
+    return map.get().get(localName.impl());
+}
+
+RefPtr<SVGElement> SVGElementFactory::createKnownElement(const AtomicString& localName, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findSVGElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, createdByParser);
+    }
+    return nullptr;
+}
+
+RefPtr<SVGElement> SVGElementFactory::createKnownElement(const QualifiedName& name, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findSVGElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, createdByParser);
+    return nullptr;
+}
+
+Ref<SVGElement> SVGElementFactory::createElement(const AtomicString& localName, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findSVGElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, createdByParser);
+    }
+    return SVGUnknownElement::create(QualifiedName(nullAtom, localName, svgNamespaceURI), document);
 }
 
 Ref<SVGElement> SVGElementFactory::createElement(const QualifiedName& name, Document& document, bool createdByParser)
 {
-    static NeverDestroyed<HashMap<AtomicStringImpl*, SVGConstructorFunction>> functions;
-    if (functions.get().isEmpty())
-        populateSVGFactoryMap(functions);
-    if (SVGConstructorFunction function = functions.get().get(name.localName().impl()))
-        return function(name, document, createdByParser);
+    const ConstructorFunctionMapEntry& entry = findSVGElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, createdByParser);
     return SVGUnknownElement::create(name, document);
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEFuncBElement_h
-#define JSSVGFEFuncBElement_h
+#pragma once
 
 #include "JSSVGComponentTransferFunctionElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEFuncBElement : public JSSVGComponentTransferFunctionElement {
 public:
-    typedef JSSVGComponentTransferFunctionElement Base;
+    using Base = JSSVGComponentTransferFunctionElement;
+    using DOMWrapped = SVGFEFuncBElement;
     static JSSVGFEFuncBElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEFuncBElement>&& impl)
     {
-        JSSVGFEFuncBElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFuncBElement>(globalObject->vm().heap)) JSSVGFEFuncBElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEFuncBElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFuncBElement>(globalObject->vm().heap)) JSSVGFEFuncBElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEFuncBElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEFuncBElement& wrapped() const
     {
-        return static_cast<SVGFEFuncBElement&>(Base::impl());
+        return static_cast<SVGFEFuncBElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEFuncBElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEFuncBElement>&&);
+    JSSVGFEFuncBElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEFuncBElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEFuncBElement> {
+    using WrapperClass = JSSVGFEFuncBElement;
+    using ToWrappedReturnType = SVGFEFuncBElement*;
+};
 
 } // namespace WebCore
-
-#endif

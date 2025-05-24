@@ -21,27 +21,45 @@
 #include "config.h"
 #include "JSNode.h"
 
-#include "Document.h"
-#include "Element.h"
-#include "Event.h"
-#include "ExceptionCode.h"
+#include "CustomElementReactionQueue.h"
+#include "DOMJITIDLTypeFilter.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDocument.h"
 #include "JSElement.h"
-#include "JSEvent.h"
-#include "JSEventListener.h"
 #include "JSNode.h"
 #include "JSNodeList.h"
-#include "NameNodeList.h"
-#include "Node.h"
-#include "NodeList.h"
-#include "URL.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
+
+template<> Node::GetRootNodeOptions convertDictionary<Node::GetRootNodeOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    Node::GetRootNodeOptions result;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    return result;
+}
 
 // Functions
 
@@ -52,44 +70,39 @@ JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionAppendChild(JSC::ExecSt
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionHasChildNodes(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCloneNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionNormalize(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsSupported(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsSameNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsEqualNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupPrefix(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsDefaultNamespace(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupNamespaceURI(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsDefaultNamespace(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCompareDocumentPosition(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionContains(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionDispatchEvent(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionGetRootNode(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsNodeNodeName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeNodeValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNodeNodeValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNodeNodeType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeParentNode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeChildNodes(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeFirstChild(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeLastChild(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodePreviousSibling(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeNextSibling(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeOwnerDocument(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeNamespaceURI(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodePrefix(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNodePrefix(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNodeLocalName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeBaseURI(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeTextContent(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNodeTextContent(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNodeParentElement(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeNodeName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeNodeValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNodeNodeValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNodeNodeType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeParentNode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeChildNodes(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeFirstChild(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeLastChild(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodePreviousSibling(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeNextSibling(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeOwnerDocument(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeBaseURI(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeTextContent(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNodeTextContent(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNodeIsConnected(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeParentElement(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSNodePrototype>(vm.heap)) JSNodePrototype(vm, globalObject, structure);
@@ -112,145 +125,118 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSNodeConstructor : public DOMConstructorObject {
-private:
-    JSNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSNodeConstructor>(vm.heap)) JSNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSNodeConstructor = JSDOMConstructorNotConstructable<JSNode>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSNodeConstructorTableValues[] =
 {
-    { "ELEMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "ATTRIBUTE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TEXT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "CDATA_SECTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ENTITY_REFERENCE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "ENTITY_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "PROCESSING_INSTRUCTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "COMMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "DOCUMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "DOCUMENT_TYPE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "DOCUMENT_FRAGMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "NOTATION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x01), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_PRECEDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x02), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_FOLLOWING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x04), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_CONTAINS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x08), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x10), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x20), (intptr_t) (0) },
+    { "ELEMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "ATTRIBUTE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TEXT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "CDATA_SECTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ENTITY_REFERENCE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "ENTITY_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "PROCESSING_INSTRUCTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "COMMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "DOCUMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "DOCUMENT_TYPE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "DOCUMENT_FRAGMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "NOTATION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x01) } },
+    { "DOCUMENT_POSITION_PRECEDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x02) } },
+    { "DOCUMENT_POSITION_FOLLOWING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x04) } },
+    { "DOCUMENT_POSITION_CONTAINS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x08) } },
+    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x10) } },
+    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x20) } },
 };
 
+static_assert(Node::ELEMENT_NODE == 1, "ELEMENT_NODE in Node does not match value from IDL");
+static_assert(Node::ATTRIBUTE_NODE == 2, "ATTRIBUTE_NODE in Node does not match value from IDL");
+static_assert(Node::TEXT_NODE == 3, "TEXT_NODE in Node does not match value from IDL");
+static_assert(Node::CDATA_SECTION_NODE == 4, "CDATA_SECTION_NODE in Node does not match value from IDL");
+static_assert(Node::ENTITY_REFERENCE_NODE == 5, "ENTITY_REFERENCE_NODE in Node does not match value from IDL");
+static_assert(Node::ENTITY_NODE == 6, "ENTITY_NODE in Node does not match value from IDL");
+static_assert(Node::PROCESSING_INSTRUCTION_NODE == 7, "PROCESSING_INSTRUCTION_NODE in Node does not match value from IDL");
+static_assert(Node::COMMENT_NODE == 8, "COMMENT_NODE in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_NODE == 9, "DOCUMENT_NODE in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_TYPE_NODE == 10, "DOCUMENT_TYPE_NODE in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_FRAGMENT_NODE == 11, "DOCUMENT_FRAGMENT_NODE in Node does not match value from IDL");
+static_assert(Node::NOTATION_NODE == 12, "NOTATION_NODE in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_DISCONNECTED == 0x01, "DOCUMENT_POSITION_DISCONNECTED in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_PRECEDING == 0x02, "DOCUMENT_POSITION_PRECEDING in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_FOLLOWING == 0x04, "DOCUMENT_POSITION_FOLLOWING in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_CONTAINS == 0x08, "DOCUMENT_POSITION_CONTAINS in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_CONTAINED_BY == 0x10, "DOCUMENT_POSITION_CONTAINED_BY in Node does not match value from IDL");
+static_assert(Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC == 0x20, "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC in Node does not match value from IDL");
 
-COMPILE_ASSERT(1 == Node::ELEMENT_NODE, NodeEnumELEMENT_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == Node::ATTRIBUTE_NODE, NodeEnumATTRIBUTE_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(3 == Node::TEXT_NODE, NodeEnumTEXT_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(4 == Node::CDATA_SECTION_NODE, NodeEnumCDATA_SECTION_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(5 == Node::ENTITY_REFERENCE_NODE, NodeEnumENTITY_REFERENCE_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(6 == Node::ENTITY_NODE, NodeEnumENTITY_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(7 == Node::PROCESSING_INSTRUCTION_NODE, NodeEnumPROCESSING_INSTRUCTION_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(8 == Node::COMMENT_NODE, NodeEnumCOMMENT_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(9 == Node::DOCUMENT_NODE, NodeEnumDOCUMENT_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(10 == Node::DOCUMENT_TYPE_NODE, NodeEnumDOCUMENT_TYPE_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(11 == Node::DOCUMENT_FRAGMENT_NODE, NodeEnumDOCUMENT_FRAGMENT_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(12 == Node::NOTATION_NODE, NodeEnumNOTATION_NODEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x01 == Node::DOCUMENT_POSITION_DISCONNECTED, NodeEnumDOCUMENT_POSITION_DISCONNECTEDIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x02 == Node::DOCUMENT_POSITION_PRECEDING, NodeEnumDOCUMENT_POSITION_PRECEDINGIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x04 == Node::DOCUMENT_POSITION_FOLLOWING, NodeEnumDOCUMENT_POSITION_FOLLOWINGIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x08 == Node::DOCUMENT_POSITION_CONTAINS, NodeEnumDOCUMENT_POSITION_CONTAINSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x10 == Node::DOCUMENT_POSITION_CONTAINED_BY, NodeEnumDOCUMENT_POSITION_CONTAINED_BYIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x20 == Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC, NodeEnumDOCUMENT_POSITION_IMPLEMENTATION_SPECIFICIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSNodeConstructor::s_info = { "NodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeConstructor) };
-
-JSNodeConstructor::JSNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Node"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSNodeConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSNodeConstructor::s_info = { "Node", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "nodeName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNodeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "nodeValue", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNodeValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodeNodeValue) },
-    { "nodeType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNodeType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "parentNode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeParentNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "childNodes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeChildNodes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "firstChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeFirstChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeLastChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "previousSibling", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodePreviousSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "nextSibling", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNextSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ownerDocument", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeOwnerDocument), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "namespaceURI", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNamespaceURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "prefix", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodePrefix), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodePrefix) },
-    { "localName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeLocalName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "baseURI", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeBaseURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "textContent", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeTextContent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodeTextContent) },
-    { "parentElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeParentElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ELEMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "ATTRIBUTE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TEXT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "CDATA_SECTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ENTITY_REFERENCE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "ENTITY_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "PROCESSING_INSTRUCTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "COMMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "DOCUMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "DOCUMENT_TYPE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "DOCUMENT_FRAGMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "NOTATION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x01), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_PRECEDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x02), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_FOLLOWING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x04), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_CONTAINS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x08), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x10), (intptr_t) (0) },
-    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x20), (intptr_t) (0) },
-    { "insertBefore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionInsertBefore), (intptr_t) (2) },
-    { "replaceChild", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionReplaceChild), (intptr_t) (2) },
-    { "removeChild", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionRemoveChild), (intptr_t) (1) },
-    { "appendChild", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionAppendChild), (intptr_t) (1) },
-    { "hasChildNodes", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionHasChildNodes), (intptr_t) (0) },
-    { "cloneNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionCloneNode), (intptr_t) (0) },
-    { "normalize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionNormalize), (intptr_t) (0) },
-    { "isSupported", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsSupported), (intptr_t) (0) },
-    { "isSameNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsSameNode), (intptr_t) (0) },
-    { "isEqualNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsEqualNode), (intptr_t) (0) },
-    { "lookupPrefix", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionLookupPrefix), (intptr_t) (0) },
-    { "isDefaultNamespace", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsDefaultNamespace), (intptr_t) (0) },
-    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionLookupNamespaceURI), (intptr_t) (0) },
-    { "compareDocumentPosition", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionCompareDocumentPosition), (intptr_t) (0) },
-    { "contains", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionContains), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodeConstructor) } },
+    { "nodeName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNodeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "nodeValue", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeNodeValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodeNodeValue) } },
+    { "nodeType", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeNodeType), (intptr_t) (0) } },
+    { "parentNode", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeParentNode), (intptr_t) (0) } },
+    { "childNodes", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeChildNodes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "firstChild", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeFirstChild), (intptr_t) (0) } },
+    { "lastChild", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeLastChild), (intptr_t) (0) } },
+    { "previousSibling", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodePreviousSibling), (intptr_t) (0) } },
+    { "nextSibling", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeNextSibling), (intptr_t) (0) } },
+    { "ownerDocument", ReadOnly | CustomAccessor | DOMJITAttribute, NoIntrinsic, { (intptr_t)static_cast<DOMJITGetterSetterGenerator>(domJITGetterSetterForNodeOwnerDocument), (intptr_t) (0) } },
+    { "baseURI", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeBaseURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "textContent", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeTextContent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNodeTextContent) } },
+    { "isConnected", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeIsConnected), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "parentElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeParentElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertBefore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionInsertBefore), (intptr_t) (2) } },
+    { "replaceChild", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionReplaceChild), (intptr_t) (2) } },
+    { "removeChild", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionRemoveChild), (intptr_t) (1) } },
+    { "appendChild", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionAppendChild), (intptr_t) (1) } },
+    { "hasChildNodes", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionHasChildNodes), (intptr_t) (0) } },
+    { "cloneNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionCloneNode), (intptr_t) (0) } },
+    { "normalize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionNormalize), (intptr_t) (0) } },
+    { "isSameNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsSameNode), (intptr_t) (1) } },
+    { "isEqualNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsEqualNode), (intptr_t) (1) } },
+    { "lookupPrefix", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionLookupPrefix), (intptr_t) (1) } },
+    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionLookupNamespaceURI), (intptr_t) (1) } },
+    { "isDefaultNamespace", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionIsDefaultNamespace), (intptr_t) (1) } },
+    { "compareDocumentPosition", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionCompareDocumentPosition), (intptr_t) (1) } },
+    { "contains", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionContains), (intptr_t) (1) } },
+    { "getRootNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNodePrototypeFunctionGetRootNode), (intptr_t) (0) } },
+    { "ELEMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "ATTRIBUTE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TEXT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "CDATA_SECTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ENTITY_REFERENCE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "ENTITY_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "PROCESSING_INSTRUCTION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "COMMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "DOCUMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "DOCUMENT_TYPE_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "DOCUMENT_FRAGMENT_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "NOTATION_NODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x01) } },
+    { "DOCUMENT_POSITION_PRECEDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x02) } },
+    { "DOCUMENT_POSITION_FOLLOWING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x04) } },
+    { "DOCUMENT_POSITION_CONTAINS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x08) } },
+    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x10) } },
+    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x20) } },
 };
 
 const ClassInfo JSNodePrototype::s_info = { "NodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodePrototype) };
@@ -259,638 +245,677 @@ void JSNodePrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSNodePrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("getRootNode"), strlen("getRootNode"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("isConnected"), strlen("isConnected"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSNode::s_info = { "Node", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNode) };
 
-JSNode::JSNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Node>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSNode::JSNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Node>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSNodePrototype::create(vm, globalObject, JSNodePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSNodePrototype::create(vm, globalObject, JSNodePrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSNode>(vm, globalObject);
 }
 
-void JSNode::destroy(JSC::JSCell* cell)
+template<> inline JSNode* BindingCaller<JSNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSNode* thisObject = static_cast<JSNode*>(cell);
-    thisObject->JSNode::~JSNode();
+    return jsDynamicDowncast<JSNode*>(JSValue::decode(thisValue));
 }
 
-JSNode::~JSNode()
+template<> inline JSNode* BindingCaller<JSNode>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSNode*>(state.thisValue());
 }
 
-EncodedJSValue jsNodeNodeName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeNodeNameGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeNodeName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "nodeName");
-        return throwGetterTypeError(*exec, "Node", "nodeName");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.nodeName());
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeNodeNameGetter>(state, thisValue, "nodeName");
 }
 
-
-EncodedJSValue jsNodeNodeValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeNodeNameGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "nodeValue");
-        return throwGetterTypeError(*exec, "Node", "nodeValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.nodeValue());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.nodeName());
+    return result;
 }
 
+static inline JSValue jsNodeNodeValueGetter(ExecState&, JSNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsNodeNodeType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNodeNodeValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "nodeType");
-        return throwGetterTypeError(*exec, "Node", "nodeType");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.nodeType());
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeNodeValueGetter>(state, thisValue, "nodeValue");
 }
 
-
-EncodedJSValue jsNodeParentNode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeNodeValueGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "parentNode");
-        return throwGetterTypeError(*exec, "Node", "parentNode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentNode()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.nodeValue());
+    return result;
 }
 
+static inline JSValue jsNodeNodeTypeGetter(ExecState&, JSNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsNodeChildNodes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNodeNodeType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "childNodes");
-        return throwGetterTypeError(*exec, "Node", "childNodes");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.childNodes()));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeNodeTypeGetter>(state, thisValue, "nodeType");
 }
 
-
-EncodedJSValue jsNodeFirstChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeNodeTypeGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "firstChild");
-        return throwGetterTypeError(*exec, "Node", "firstChild");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.firstChild()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.nodeType(state);
 }
 
-
-EncodedJSValue jsNodeLastChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+NodeNodeTypeDOMJIT::NodeNodeTypeDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeNodeType, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLUnsignedShort>::value)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "lastChild");
-        return throwGetterTypeError(*exec, "Node", "lastChild");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.lastChild()));
-    return JSValue::encode(result);
 }
 
-
-EncodedJSValue jsNodePreviousSibling(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeNodeType()
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "previousSibling");
-        return throwGetterTypeError(*exec, "Node", "previousSibling");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.previousSibling()));
-    return JSValue::encode(result);
+    static NeverDestroyed<NodeNodeTypeDOMJIT> compiler;
+    return &compiler.get();
 }
 
+static inline JSValue jsNodeParentNodeGetter(ExecState&, JSNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsNodeNextSibling(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNodeParentNode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "nextSibling");
-        return throwGetterTypeError(*exec, "Node", "nextSibling");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nextSibling()));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeParentNodeGetter>(state, thisValue, "parentNode");
 }
 
-
-EncodedJSValue jsNodeOwnerDocument(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeParentNodeGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "ownerDocument");
-        return throwGetterTypeError(*exec, "Node", "ownerDocument");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ownerDocument()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Node>>>(state, *thisObject.globalObject(), impl.parentNode());
+    return result;
 }
 
-
-EncodedJSValue jsNodeNamespaceURI(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+NodeParentNodeDOMJIT::NodeParentNodeDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeParentNode, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Node>>>::value)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "namespaceURI");
-        return throwGetterTypeError(*exec, "Node", "namespaceURI");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.namespaceURI());
-    return JSValue::encode(result);
 }
 
-
-EncodedJSValue jsNodePrefix(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeParentNode()
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "prefix");
-        return throwGetterTypeError(*exec, "Node", "prefix");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.prefix());
-    return JSValue::encode(result);
+    static NeverDestroyed<NodeParentNodeDOMJIT> compiler;
+    return &compiler.get();
 }
 
+static inline JSValue jsNodeChildNodesGetter(ExecState&, JSNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsNodeLocalName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNodeChildNodes(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "localName");
-        return throwGetterTypeError(*exec, "Node", "localName");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.localName());
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeChildNodesGetter>(state, thisValue, "childNodes");
 }
 
-
-EncodedJSValue jsNodeBaseURI(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeChildNodesGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "baseURI");
-        return throwGetterTypeError(*exec, "Node", "baseURI");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.baseURI());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<NodeList>>(state, *thisObject.globalObject(), impl.childNodes());
+    return result;
 }
 
+static inline JSValue jsNodeFirstChildGetter(ExecState&, JSNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsNodeTextContent(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNodeFirstChild(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "textContent");
-        return throwGetterTypeError(*exec, "Node", "textContent");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.textContent());
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::attribute<jsNodeFirstChildGetter>(state, thisValue, "firstChild");
 }
 
-
-EncodedJSValue jsNodeParentElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNodeFirstChildGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Node", "parentElement");
-        return throwGetterTypeError(*exec, "Node", "parentElement");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentElement()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Node>>>(state, *thisObject.globalObject(), impl.firstChild());
+    return result;
 }
 
-
-EncodedJSValue jsNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+NodeFirstChildDOMJIT::NodeFirstChildDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeFirstChild, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Node>>>::value)
 {
-    JSNodePrototype* domObject = jsDynamicCast<JSNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSNode::getConstructor(exec->vm(), domObject->globalObject()));
 }
 
-void setJSNodeNodeValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeFirstChild()
 {
+    static NeverDestroyed<NodeFirstChildDOMJIT> compiler;
+    return &compiler.get();
+}
+
+static inline JSValue jsNodeLastChildGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeLastChild(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeLastChildGetter>(state, thisValue, "lastChild");
+}
+
+static inline JSValue jsNodeLastChildGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Node>>>(state, *thisObject.globalObject(), impl.lastChild());
+    return result;
+}
+
+NodeLastChildDOMJIT::NodeLastChildDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeLastChild, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Node>>>::value)
+{
+}
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeLastChild()
+{
+    static NeverDestroyed<NodeLastChildDOMJIT> compiler;
+    return &compiler.get();
+}
+
+static inline JSValue jsNodePreviousSiblingGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodePreviousSibling(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodePreviousSiblingGetter>(state, thisValue, "previousSibling");
+}
+
+static inline JSValue jsNodePreviousSiblingGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Node>>>(state, *thisObject.globalObject(), impl.previousSibling());
+    return result;
+}
+
+NodePreviousSiblingDOMJIT::NodePreviousSiblingDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodePreviousSibling, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Node>>>::value)
+{
+}
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodePreviousSibling()
+{
+    static NeverDestroyed<NodePreviousSiblingDOMJIT> compiler;
+    return &compiler.get();
+}
+
+static inline JSValue jsNodeNextSiblingGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeNextSibling(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeNextSiblingGetter>(state, thisValue, "nextSibling");
+}
+
+static inline JSValue jsNodeNextSiblingGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Node>>>(state, *thisObject.globalObject(), impl.nextSibling());
+    return result;
+}
+
+NodeNextSiblingDOMJIT::NodeNextSiblingDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeNextSibling, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Node>>>::value)
+{
+}
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeNextSibling()
+{
+    static NeverDestroyed<NodeNextSiblingDOMJIT> compiler;
+    return &compiler.get();
+}
+
+static inline JSValue jsNodeOwnerDocumentGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeOwnerDocument(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeOwnerDocumentGetter>(state, thisValue, "ownerDocument");
+}
+
+static inline JSValue jsNodeOwnerDocumentGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<Document>>>(state, *thisObject.globalObject(), impl.ownerDocument());
+    return result;
+}
+
+NodeOwnerDocumentDOMJIT::NodeOwnerDocumentDOMJIT()
+    : JSC::DOMJIT::GetterSetter(jsNodeOwnerDocument, nullptr, JSNode::info(), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Document>>>::value)
+{
+}
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeOwnerDocument()
+{
+    static NeverDestroyed<NodeOwnerDocumentDOMJIT> compiler;
+    return &compiler.get();
+}
+
+static inline JSValue jsNodeBaseURIGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeBaseURI(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeBaseURIGetter>(state, thisValue, "baseURI");
+}
+
+static inline JSValue jsNodeBaseURIGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.baseURI());
+    return result;
+}
+
+static inline JSValue jsNodeTextContentGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeTextContent(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeTextContentGetter>(state, thisValue, "textContent");
+}
+
+static inline JSValue jsNodeTextContentGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.textContent());
+    return result;
+}
+
+static inline JSValue jsNodeIsConnectedGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeIsConnected(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeIsConnectedGetter>(state, thisValue, "isConnected");
+}
+
+static inline JSValue jsNodeIsConnectedGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.inDocument());
+    return result;
+}
+
+static inline JSValue jsNodeParentElementGetter(ExecState&, JSNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsNodeParentElement(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNode>::attribute<jsNodeParentElementGetter>(state, thisValue, "parentElement");
+}
+
+static inline JSValue jsNodeParentElementGetter(ExecState& state, JSNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<Element>>(state, *thisObject.globalObject(), impl.parentElement());
+    return result;
+}
+
+EncodedJSValue jsNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSNodePrototype* domObject = jsDynamicDowncast<JSNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Node", "nodeValue");
-        else
-            throwSetterTypeError(*exec, "Node", "nodeValue");
-        return;
+    JSNodePrototype* domObject = jsDynamicDowncast<JSNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setNodeValue(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSNodeNodeValueFunction(ExecState&, JSNode&, JSValue, ThrowScope&);
+
+bool setJSNodeNodeValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSNode>::setAttribute<setJSNodeNodeValueFunction>(state, thisValue, encodedValue, "nodeValue");
+}
+
+static inline bool setJSNodeNodeValueFunction(ExecState& state, JSNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLDOMString>>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setNodeValue(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSNodePrefix(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNodeTextContentFunction(ExecState&, JSNode&, JSValue, ThrowScope&);
+
+bool setJSNodeTextContent(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Node", "prefix");
-        else
-            throwSetterTypeError(*exec, "Node", "prefix");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setPrefix(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSNode>::setAttribute<setJSNodeTextContentFunction>(state, thisValue, encodedValue, "textContent");
+}
+
+static inline bool setJSNodeTextContentFunction(ExecState& state, JSNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLDOMString>>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setTextContent(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSNodeTextContent(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+JSValue JSNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNode* castedThis = jsNodeCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Node", "textContent");
-        else
-            throwSetterTypeError(*exec, "Node", "textContent");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTextContent(nativeValue, ec);
-    setDOMException(exec, ec);
+    return getDOMConstructor<JSNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionInsertBeforeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
 
-JSValue JSNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionInsertBefore(ExecState* state)
 {
-    return getDOMConstructor<JSNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionInsertBeforeCaller>(state, "insertBefore");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionInsertBefore(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionInsertBeforeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "insertBefore");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    return JSValue::encode(castedThis->insertBefore(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->insertBefore(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionReplaceChild(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionReplaceChildCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionReplaceChild(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "replaceChild");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    return JSValue::encode(castedThis->replaceChild(exec));
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionReplaceChildCaller>(state, "replaceChild");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionRemoveChild(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionReplaceChildCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "removeChild");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    return JSValue::encode(castedThis->removeChild(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->replaceChild(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionAppendChild(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionRemoveChildCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionRemoveChild(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "appendChild");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    return JSValue::encode(castedThis->appendChild(exec));
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionRemoveChildCaller>(state, "removeChild");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionHasChildNodes(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionRemoveChildCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "hasChildNodes");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.hasChildNodes());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->removeChild(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCloneNode(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionAppendChildCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionAppendChild(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "cloneNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    bool deep = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cloneNode(deep)));
-    return JSValue::encode(result);
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionAppendChildCaller>(state, "appendChild");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionNormalize(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionAppendChildCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "normalize");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->appendChild(*state));
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionHasChildNodesCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionHasChildNodes(ExecState* state)
+{
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionHasChildNodesCaller>(state, "hasChildNodes");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionHasChildNodesCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.hasChildNodes()));
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionCloneNodeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCloneNode(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionCloneNodeCaller>(state, "cloneNode");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionCloneNodeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto deep = convert<IDLBoolean>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<Node>>(*state, *castedThis->globalObject(), throwScope, impl.cloneNodeForBindings(WTFMove(deep))));
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionNormalizeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionNormalize(ExecState* state)
+{
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionNormalizeCaller>(state, "normalize");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionNormalizeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.normalize();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsSupported(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsSameNodeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsSameNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "isSupported");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    String feature = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String version = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.isSupported(feature, version));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionIsSameNodeCaller>(state, "isSameNode");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsSameNode(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsSameNodeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "isSameNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    Node* other = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.isSameNode(other));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto other = convert<IDLNullable<IDLInterface<Node>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "other", "Node", "isSameNode", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.isSameNode(WTFMove(other))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsEqualNode(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsEqualNodeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsEqualNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "isEqualNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    Node* other = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.isEqualNode(other));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionIsEqualNodeCaller>(state, "isEqualNode");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupPrefix(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsEqualNodeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "lookupPrefix");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.lookupPrefix(namespaceURI));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto other = convert<IDLNullable<IDLInterface<Node>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "other", "Node", "isEqualNode", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.isEqualNode(WTFMove(other))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsDefaultNamespace(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionLookupPrefixCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupPrefix(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "isDefaultNamespace");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.isDefaultNamespace(namespaceURI));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionLookupPrefixCaller>(state, "lookupPrefix");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupNamespaceURI(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionLookupPrefixCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "lookupNamespaceURI");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    String prefix = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.lookupNamespaceURI(prefix));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto namespaceURI = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.lookupPrefix(WTFMove(namespaceURI))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCompareDocumentPosition(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionLookupNamespaceURICaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionLookupNamespaceURI(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "compareDocumentPosition");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    Node* other = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.compareDocumentPosition(other));
-    return JSValue::encode(result);
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionLookupNamespaceURICaller>(state, "lookupNamespaceURI");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionContains(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionLookupNamespaceURICaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "contains");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    Node* other = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.contains(other));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto prefix = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.lookupNamespaceURI(WTFMove(prefix))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionAddEventListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsDefaultNamespaceCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionIsDefaultNamespace(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionIsDefaultNamespaceCaller>(state, "isDefaultNamespace");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionRemoveEventListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionIsDefaultNamespaceCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto namespaceURI = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.isDefaultNamespace(WTFMove(namespaceURI))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNode* castedThis = jsNodeCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Node", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionCompareDocumentPositionCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionCompareDocumentPosition(ExecState* state)
+{
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionCompareDocumentPositionCaller>(state, "compareDocumentPosition");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionCompareDocumentPositionCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto other = convert<IDLInterface<Node>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "other", "Node", "compareDocumentPosition", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedShort>(impl.compareDocumentPosition(*other)));
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionContainsCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionContains(ExecState* state)
+{
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionContainsCaller>(state, "contains");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionContainsCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto other = convert<IDLNullable<IDLInterface<Node>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "other", "Node", "contains", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.contains(WTFMove(other))));
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionGetRootNodeCaller(JSC::ExecState*, JSNode*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNodePrototypeFunctionGetRootNode(ExecState* state)
+{
+    return BindingCaller<JSNode>::callOperation<jsNodePrototypeFunctionGetRootNodeCaller>(state, "getRootNode");
+}
+
+static inline JSC::EncodedJSValue jsNodePrototypeFunctionGetRootNodeCaller(JSC::ExecState* state, JSNode* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto options = convert<IDLDictionary<Node::GetRootNodeOptions>>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Node>>(*state, *castedThis->globalObject(), impl.getRootNode(WTFMove(options))));
 }
 
 void JSNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -898,21 +923,29 @@ void JSNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSNode*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
+void JSNode::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
     thisObject->visitAdditionalChildren(visitor);
 }
 
 void JSNodeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsNode = jsCast<JSNode*>(handle.slot()->asCell());
+    auto* jsNode = static_cast<JSNode*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNode->impl(), jsNode);
+    uncacheWrapper(world, &jsNode->wrapped(), jsNode);
 }
 
 Node* JSNode::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsNodeCast(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSNode*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

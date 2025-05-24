@@ -22,9 +22,10 @@
 #include "JSSVGFEFloodElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEFloodElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,16 +34,17 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFEFloodElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEFloodElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEFloodElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEFloodElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEFloodElementResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEFloodElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEFloodElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFEFloodElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFEFloodElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFEFloodElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFEFloodElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFloodElementPrototype>(vm.heap)) JSSVGFEFloodElementPrototype(vm, globalObject, structure);
@@ -65,53 +67,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEFloodElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEFloodElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGFEFloodElementConstructor = JSDOMConstructorNotConstructable<JSSVGFEFloodElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEFloodElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEFloodElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFloodElementConstructor>(vm.heap)) JSSVGFEFloodElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEFloodElementConstructor::s_info = { "SVGFEFloodElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFloodElementConstructor) };
-
-JSSVGFEFloodElementConstructor::JSSVGFEFloodElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFEFloodElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFEFloodElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFEFloodElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEFloodElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEFloodElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEFloodElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEFloodElementConstructor::s_info = { "SVGFEFloodElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFloodElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEFloodElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFEFloodElementConstructor) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFloodElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEFloodElementPrototype::s_info = { "SVGFEFloodElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFloodElementPrototype) };
@@ -124,122 +105,148 @@ void JSSVGFEFloodElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEFloodElement::s_info = { "SVGFEFloodElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFloodElement) };
 
-JSSVGFEFloodElement::JSSVGFEFloodElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEFloodElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFEFloodElement::JSSVGFEFloodElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEFloodElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFEFloodElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFEFloodElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFEFloodElementPrototype::create(vm, globalObject, JSSVGFEFloodElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFEFloodElementPrototype::create(vm, globalObject, JSSVGFEFloodElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFEFloodElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFEFloodElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFEFloodElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEFloodElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGFEFloodElement* BindingCaller<JSSVGFEFloodElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEFloodElement* castedThis = jsDynamicCast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEFloodElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEFloodElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEFloodElement", "x");
+    return jsDynamicDowncast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGFEFloodElementXGetter(ExecState&, JSSVGFEFloodElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEFloodElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEFloodElement>::attribute<jsSVGFEFloodElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGFEFloodElementXGetter(ExecState& state, JSSVGFEFloodElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEFloodElementYGetter(ExecState&, JSSVGFEFloodElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEFloodElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEFloodElement>::attribute<jsSVGFEFloodElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGFEFloodElementYGetter(ExecState& state, JSSVGFEFloodElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEFloodElementWidthGetter(ExecState&, JSSVGFEFloodElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEFloodElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEFloodElement>::attribute<jsSVGFEFloodElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsSVGFEFloodElementWidthGetter(ExecState& state, JSSVGFEFloodElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEFloodElementHeightGetter(ExecState&, JSSVGFEFloodElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEFloodElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEFloodElement>::attribute<jsSVGFEFloodElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsSVGFEFloodElementHeightGetter(ExecState& state, JSSVGFEFloodElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEFloodElementResultGetter(ExecState&, JSSVGFEFloodElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEFloodElementResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEFloodElement>::attribute<jsSVGFEFloodElementResultGetter>(state, thisValue, "result");
+}
+
+static inline JSValue jsSVGFEFloodElementResultGetter(ExecState& state, JSSVGFEFloodElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.resultAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGFEFloodElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFEFloodElementPrototype* domObject = jsDynamicDowncast<JSSVGFEFloodElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFEFloodElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGFEFloodElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFEFloodElementPrototype* domObject = jsDynamicDowncast<JSSVGFEFloodElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGFEFloodElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGFEFloodElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEFloodElement* castedThis = jsDynamicCast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEFloodElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEFloodElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEFloodElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGFEFloodElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsSVGFEFloodElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGFEFloodElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEFloodElement* castedThis = jsDynamicCast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEFloodElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEFloodElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEFloodElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEFloodElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEFloodElement* castedThis = jsDynamicCast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEFloodElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEFloodElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEFloodElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEFloodElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEFloodElement* castedThis = jsDynamicCast<JSSVGFEFloodElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEFloodElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEFloodElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEFloodElement", "result");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEFloodElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGFEFloodElementPrototype* domObject = jsDynamicCast<JSSVGFEFloodElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEFloodElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGFEFloodElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGFEFloodElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGFEFloodElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

@@ -18,74 +18,59 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaTrackConstraints_h
-#define JSMediaTrackConstraints_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
 #include "MediaTrackConstraints.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMediaTrackConstraints : public JSDOMWrapper {
-public:
-    typedef JSDOMWrapper Base;
-    static JSMediaTrackConstraints* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaTrackConstraints>&& impl)
-    {
-        JSMediaTrackConstraints* ptr = new (NotNull, JSC::allocateCell<JSMediaTrackConstraints>(globalObject->vm().heap)) JSMediaTrackConstraints(structure, globalObject, WTF::move(impl));
-        ptr->finishCreation(globalObject->vm());
-        return ptr;
-    }
+template<> MediaTrackConstraints convertDictionary<MediaTrackConstraints>(JSC::ExecState&, JSC::JSValue);
 
-    static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static MediaTrackConstraints* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSMediaTrackConstraints();
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const MediaTrackConstraints&);
 
-    DECLARE_INFO;
+#if ENABLE(MEDIA_STREAM)
 
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
+template<> MediaTrackConstraintSet convertDictionary<MediaTrackConstraintSet>(JSC::ExecState&, JSC::JSValue);
 
-    MediaTrackConstraints& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const MediaTrackConstraintSet&);
 
-private:
-    MediaTrackConstraints* m_impl;
-protected:
-    JSMediaTrackConstraints(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaTrackConstraints>&&);
+#endif
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
+#if ENABLE(MEDIA_STREAM)
 
-};
+template<> ConstrainBooleanParameters convertDictionary<ConstrainBooleanParameters>(JSC::ExecState&, JSC::JSValue);
 
-class JSMediaTrackConstraintsOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const ConstrainBooleanParameters&);
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaTrackConstraints*)
-{
-    static NeverDestroyed<JSMediaTrackConstraintsOwner> owner;
-    return &owner.get();
-}
+#endif
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaTrackConstraints*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaTrackConstraints& impl) { return toJS(exec, globalObject, &impl); }
+#if ENABLE(MEDIA_STREAM)
 
+template<> ConstrainDOMStringParameters convertDictionary<ConstrainDOMStringParameters>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const ConstrainDOMStringParameters&);
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainDoubleRange convertDictionary<ConstrainDoubleRange>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const ConstrainDoubleRange&);
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainLongRange convertDictionary<ConstrainLongRange>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const ConstrainLongRange&);
+
+#endif
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif

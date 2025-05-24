@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMSelection_h
-#define JSDOMSelection_h
+#pragma once
 
 #include "DOMSelection.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMSelection : public JSDOMWrapper {
+class JSDOMSelection : public JSDOMWrapper<DOMSelection> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMSelection>;
     static JSDOMSelection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMSelection>&& impl)
     {
-        JSDOMSelection* ptr = new (NotNull, JSC::allocateCell<JSDOMSelection>(globalObject->vm().heap)) JSDOMSelection(structure, globalObject, WTF::move(impl));
+        JSDOMSelection* ptr = new (NotNull, JSC::allocateCell<JSDOMSelection>(globalObject->vm().heap)) JSDOMSelection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMSelection* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMSelection();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMSelection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMSelection* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMSelection(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMSelection>&&);
+    JSDOMSelection(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMSelection>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMSelectionOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMSelection*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMSelection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMSelection& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMSelection* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMSelection&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMSelection* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMSelection>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMSelection>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMSelection> {
+    using WrapperClass = JSDOMSelection;
+    using ToWrappedReturnType = DOMSelection*;
+};
 
 } // namespace WebCore
-
-#endif

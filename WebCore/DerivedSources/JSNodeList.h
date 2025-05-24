@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNodeList_h
-#define JSNodeList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "NodeList.h"
@@ -27,24 +26,22 @@
 
 namespace WebCore {
 
-class JSNodeList : public JSDOMWrapper {
+class JSNodeList : public JSDOMWrapper<NodeList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<NodeList>;
     static JSNodeList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NodeList>&& impl)
     {
-        JSNodeList* ptr = new (NotNull, JSC::allocateCell<JSNodeList>(globalObject->vm().heap)) JSNodeList(structure, globalObject, WTF::move(impl));
+        JSNodeList* ptr = new (NotNull, JSC::allocateCell<JSNodeList>(globalObject->vm().heap)) JSNodeList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static NodeList* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT NodeList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSNodeList();
 
     DECLARE_INFO;
 
@@ -54,25 +51,16 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    NodeList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NodeList* m_impl;
+    static size_t estimatedSize(JSCell*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSNodeList(JSC::Structure*, JSDOMGlobalObject*, Ref<NodeList>&&);
+    JSNodeList(JSC::Structure*, JSDOMGlobalObject&, Ref<NodeList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSNodeListOwner : public JSC::WeakHandleOwner {
@@ -87,11 +75,20 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NodeList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NodeList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(NodeList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NodeList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<NodeList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<NodeList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<NodeList> {
+    using WrapperClass = JSNodeList;
+    using ToWrappedReturnType = NodeList*;
+};
 
 } // namespace WebCore
-
-#endif
 #include "JSNodeListCustom.h"

@@ -21,23 +21,19 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- *
  */
 
 #include "config.h"
 #include "WorkerEventQueue.h"
 
-#include "DOMWindow.h"
-#include "Document.h"
 #include "Event.h"
-#include "EventNames.h"
+#include "EventTarget.h"
 #include "ScriptExecutionContext.h"
 
 namespace WebCore {
 
 WorkerEventQueue::WorkerEventQueue(ScriptExecutionContext& context)
     : m_scriptExecutionContext(context)
-    , m_isClosed(false)
 {
 }
 
@@ -49,10 +45,9 @@ WorkerEventQueue::~WorkerEventQueue()
 class WorkerEventQueue::EventDispatcher
 {
 public:
-    EventDispatcher(PassRefPtr<Event> event, WorkerEventQueue& eventQueue)
-        : m_event(event)
+    EventDispatcher(RefPtr<Event>&& event, WorkerEventQueue& eventQueue)
+        : m_event(WTFMove(event))
         , m_eventQueue(eventQueue)
-        , m_isCancelled(false)
     {
     }
 
@@ -67,7 +62,7 @@ public:
         if (m_isCancelled)
             return;
         m_eventQueue.m_eventDispatcherMap.remove(m_event.get());
-        m_event->target()->dispatchEvent(m_event);
+        m_event->target()->dispatchEvent(*m_event);
         m_event = nullptr;
     }
 
@@ -80,18 +75,18 @@ public:
 private:
     RefPtr<Event> m_event;
     WorkerEventQueue& m_eventQueue;
-    bool m_isCancelled;
+    bool m_isCancelled { false };
 };
 
-bool WorkerEventQueue::enqueueEvent(PassRefPtr<Event> event)
+bool WorkerEventQueue::enqueueEvent(Ref<Event>&& event)
 {
     if (m_isClosed)
         return false;
 
-    EventDispatcher* eventDispatcherPtr = new EventDispatcher(event.get(), *this);
-    m_eventDispatcherMap.add(event, eventDispatcherPtr);
-    m_scriptExecutionContext.postTask([eventDispatcherPtr] (ScriptExecutionContext&) {
-        std::unique_ptr<EventDispatcher> eventDispatcher(eventDispatcherPtr);
+    auto* eventPtr = event.ptr();
+    auto eventDispatcher = std::make_unique<EventDispatcher>(WTFMove(event), *this);
+    m_eventDispatcherMap.add(eventPtr, eventDispatcher.get());
+    m_scriptExecutionContext.postTask([eventDispatcher = WTFMove(eventDispatcher)] (ScriptExecutionContext&) {
         eventDispatcher->dispatch();
     });
 
@@ -115,4 +110,4 @@ void WorkerEventQueue::close()
     m_eventDispatcherMap.clear();
 }
 
-}
+} // namespace WebCore

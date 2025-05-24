@@ -24,7 +24,6 @@
 
 #include "JSEXTFragDepth.h"
 
-#include "EXTFragDepth.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSEXTFragDepthPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSEXTFragDepthPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSEXTFragDepthPrototype* ptr = new (NotNull, JSC::allocateCell<JSEXTFragDepthPrototype>(vm.heap)) JSEXTFragDepthPrototype(vm, globalObject, structure);
@@ -53,31 +52,23 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
-
-    void finishCreation(JSC::VM&);
 };
 
 /* Hash table for prototype */
-
-static const HashTableValue JSEXTFragDepthPrototypeTableValues[] =
-{
-    { 0, 0, NoIntrinsic, 0, 0 }
-};
-
 const ClassInfo JSEXTFragDepthPrototype::s_info = { "EXTFragDepthPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTFragDepthPrototype) };
-
-void JSEXTFragDepthPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSEXTFragDepthPrototypeTableValues, *this);
-}
 
 const ClassInfo JSEXTFragDepth::s_info = { "EXTFragDepth", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTFragDepth) };
 
-JSEXTFragDepth::JSEXTFragDepth(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTFragDepth>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTFragDepth::JSEXTFragDepth(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTFragDepth>&& impl)
+    : JSDOMWrapper<EXTFragDepth>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSEXTFragDepth::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSEXTFragDepth::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -85,7 +76,7 @@ JSObject* JSEXTFragDepth::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSEXTFragDepthPrototype::create(vm, globalObject, JSEXTFragDepthPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSEXTFragDepth::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSEXTFragDepth::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSEXTFragDepth>(vm, globalObject);
 }
@@ -96,23 +87,18 @@ void JSEXTFragDepth::destroy(JSC::JSCell* cell)
     thisObject->JSEXTFragDepth::~JSEXTFragDepth();
 }
 
-JSEXTFragDepth::~JSEXTFragDepth()
-{
-    releaseImpl();
-}
-
 bool JSEXTFragDepthOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTFragDepth = jsCast<JSEXTFragDepth*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTFragDepth->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTFragDepth->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSEXTFragDepthOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsEXTFragDepth = jsCast<JSEXTFragDepth*>(handle.slot()->asCell());
+    auto* jsEXTFragDepth = static_cast<JSEXTFragDepth*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTFragDepth->impl(), jsEXTFragDepth);
+    uncacheWrapper(world, &jsEXTFragDepth->wrapped(), jsEXTFragDepth);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,15 +109,12 @@ extern "C" { extern void (*const __identifier("??_7EXTFragDepth@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12EXTFragDepthE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<EXTFragDepth>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSEXTFragDepth>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7EXTFragDepth@WebCore@@6B@"));
 #else
@@ -139,7 +122,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth
 #if COMPILER(CLANG)
     // If this fails EXTFragDepth does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(EXTFragDepth), EXTFragDepth_is_not_polymorphic);
+    static_assert(__is_polymorphic(EXTFragDepth), "EXTFragDepth is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -148,13 +131,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSEXTFragDepth>(globalObject, impl);
+    return createWrapper<EXTFragDepth>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTFragDepth& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 EXTFragDepth* JSEXTFragDepth::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSEXTFragDepth*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSEXTFragDepth*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

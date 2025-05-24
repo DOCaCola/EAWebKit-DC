@@ -67,6 +67,7 @@ static const struct HeaderNameString {
     { "Content-Encoding", 16 },
     { "Content-Language", 16 },
     { "Content-Length", 14 },
+    { "Content-Range", 13 },
     { "Content-Security-Policy", 23 },
     { "Content-Security-Policy-Report-Only", 35 },
     { "Content-Transfer-Encoding", 25 },
@@ -94,6 +95,7 @@ static const struct HeaderNameString {
     { "Keep-Alive", 10 },
     { "Last-Event-ID", 13 },
     { "Last-Modified", 13 },
+    { "Link", 4 },
     { "Location", 8 },
     { "Origin", 6 },
     { "Ping-From", 9 },
@@ -116,6 +118,7 @@ static const struct HeaderNameString {
     { "Trailer", 7 },
     { "Transfer-Encoding", 17 },
     { "Upgrade", 7 },
+    { "Upgrade-Insecure-Requests", 25 },
     { "User-Agent", 10 },
     { "Vary", 4 },
     { "Via", 3 },
@@ -170,6 +173,7 @@ Content-Disposition, HTTPHeaderName::ContentDisposition
 Content-Encoding, HTTPHeaderName::ContentEncoding
 Content-Language, HTTPHeaderName::ContentLanguage
 Content-Length, HTTPHeaderName::ContentLength
+Content-Range, HTTPHeaderName::ContentRange
 Content-Security-Policy, HTTPHeaderName::ContentSecurityPolicy
 Content-Security-Policy-Report-Only, HTTPHeaderName::ContentSecurityPolicyReportOnly
 Content-Transfer-Encoding, HTTPHeaderName::ContentTransferEncoding
@@ -197,6 +201,7 @@ If-Unmodified-Since, HTTPHeaderName::IfUnmodifiedSince
 Keep-Alive, HTTPHeaderName::KeepAlive
 Last-Event-ID, HTTPHeaderName::LastEventID
 Last-Modified, HTTPHeaderName::LastModified
+Link, HTTPHeaderName::Link
 Location, HTTPHeaderName::Location
 Origin, HTTPHeaderName::Origin
 Ping-From, HTTPHeaderName::PingFrom
@@ -219,6 +224,7 @@ Timing-Allow-Origin, HTTPHeaderName::TimingAllowOrigin
 Trailer, HTTPHeaderName::Trailer
 Transfer-Encoding, HTTPHeaderName::TransferEncoding
 Upgrade, HTTPHeaderName::Upgrade
+Upgrade-Insecure-Requests, HTTPHeaderName::UpgradeInsecureRequests
 User-Agent, HTTPHeaderName::UserAgent
 Vary, HTTPHeaderName::Vary
 Via, HTTPHeaderName::Via

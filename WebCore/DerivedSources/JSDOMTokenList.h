@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMTokenList_h
-#define JSDOMTokenList_h
+#pragma once
 
 #include "DOMTokenList.h"
 #include "JSDOMWrapper.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSDOMTokenList : public JSDOMWrapper {
+class JSDOMTokenList : public JSDOMWrapper<DOMTokenList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMTokenList>;
     static JSDOMTokenList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMTokenList>&& impl)
     {
-        JSDOMTokenList* ptr = new (NotNull, JSC::allocateCell<JSDOMTokenList>(globalObject->vm().heap)) JSDOMTokenList(structure, globalObject, WTF::move(impl));
+        JSDOMTokenList* ptr = new (NotNull, JSC::allocateCell<JSDOMTokenList>(globalObject->vm().heap)) JSDOMTokenList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMTokenList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMTokenList();
 
     DECLARE_INFO;
 
@@ -53,23 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMTokenList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMTokenList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMTokenList(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMTokenList>&&);
+    JSDOMTokenList(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMTokenList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMTokenListOwner : public JSC::WeakHandleOwner {
@@ -84,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMTokenList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMTokenList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMTokenList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMTokenList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMTokenList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMTokenList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMTokenList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMTokenList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMTokenList> {
+    using WrapperClass = JSDOMTokenList;
+    using ToWrappedReturnType = DOMTokenList*;
+};
 
 } // namespace WebCore
-
-#endif

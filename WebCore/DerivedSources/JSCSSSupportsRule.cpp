@@ -21,14 +21,11 @@
 #include "config.h"
 #include "JSCSSSupportsRule.h"
 
-#include "CSSRuleList.h"
-#include "CSSSupportsRule.h"
-#include "ExceptionCode.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -42,12 +39,14 @@ JSC::EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionDeleteRule(J
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSSupportsRuleCssRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSSupportsRuleConditionText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSSupportsRuleCssRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSSupportsRuleConditionText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSSupportsRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSSupportsRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSSupportsRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSSupportsRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSSupportsRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSSupportsRulePrototype>(vm.heap)) JSCSSSupportsRulePrototype(vm, globalObject, structure);
@@ -70,14 +69,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSCSSSupportsRuleConstructor = JSDOMConstructorNotConstructable<JSCSSSupportsRule>;
+
+template<> JSValue JSCSSSupportsRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSCSSRule::getConstructor(vm, &globalObject);
+}
+
+template<> void JSCSSSupportsRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSCSSSupportsRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSSupportsRule"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSCSSSupportsRuleConstructor::s_info = { "CSSSupportsRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSSupportsRuleConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSSupportsRulePrototypeTableValues[] =
 {
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "conditionText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleConditionText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionInsertRule), (intptr_t) (0) },
-    { "deleteRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionDeleteRule), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSSupportsRuleConstructor) } },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "conditionText", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleConditionText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionInsertRule), (intptr_t) (2) } },
+    { "deleteRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionDeleteRule), (intptr_t) (1) } },
 };
 
 const ClassInfo JSCSSSupportsRulePrototype::s_info = { "CSSSupportsRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSSupportsRulePrototype) };
@@ -90,90 +106,137 @@ void JSCSSSupportsRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSSupportsRule::s_info = { "CSSSupportsRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSSupportsRule) };
 
-JSCSSSupportsRule::JSCSSSupportsRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSSupportsRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSCSSSupportsRule::JSCSSSupportsRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSSupportsRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSSupportsRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSSupportsRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSSupportsRulePrototype::create(vm, globalObject, JSCSSSupportsRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSCSSSupportsRulePrototype::create(vm, globalObject, JSCSSSupportsRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSSupportsRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSSupportsRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSSupportsRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSSupportsRuleCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSSupportsRule* BindingCaller<JSCSSSupportsRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSSupportsRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSSupportsRule", "cssRules");
-        return throwGetterTypeError(*exec, "CSSSupportsRule", "cssRules");
+    return jsDynamicDowncast<JSCSSSupportsRule*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSCSSSupportsRule* BindingCaller<JSCSSSupportsRule>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSCSSSupportsRule*>(state.thisValue());
+}
+
+static inline JSValue jsCSSSupportsRuleCssRulesGetter(ExecState&, JSCSSSupportsRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSSupportsRuleCssRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSSupportsRule>::attribute<jsCSSSupportsRuleCssRulesGetter>(state, thisValue, "cssRules");
+}
+
+static inline JSValue jsCSSSupportsRuleCssRulesGetter(ExecState& state, JSCSSSupportsRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.cssRules());
+    return result;
+}
+
+static inline JSValue jsCSSSupportsRuleConditionTextGetter(ExecState&, JSCSSSupportsRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSSupportsRuleConditionText(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSSupportsRule>::attribute<jsCSSSupportsRuleConditionTextGetter>(state, thisValue, "conditionText");
+}
+
+static inline JSValue jsCSSSupportsRuleConditionTextGetter(ExecState& state, JSCSSSupportsRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.conditionText());
+    return result;
+}
+
+EncodedJSValue jsCSSSupportsRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSSupportsRulePrototype* domObject = jsDynamicDowncast<JSCSSSupportsRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSSupportsRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSSupportsRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCSSSupportsRulePrototype* domObject = jsDynamicDowncast<JSCSSSupportsRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsCSSSupportsRuleConditionText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSCSSSupportsRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSSupportsRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSSupportsRule", "conditionText");
-        return throwGetterTypeError(*exec, "CSSSupportsRule", "conditionText");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.conditionText());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSCSSSupportsRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsCSSSupportsRulePrototypeFunctionInsertRuleCaller(JSC::ExecState*, JSCSSSupportsRule*, JSC::ThrowScope&);
 
-EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionInsertRule(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionInsertRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSSupportsRule", "insertRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSSupportsRule::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.insertRule(rule, index, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSSupportsRule>::callOperation<jsCSSSupportsRulePrototypeFunctionInsertRuleCaller>(state, "insertRule");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionDeleteRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSSupportsRulePrototypeFunctionInsertRuleCaller(JSC::ExecState* state, JSCSSSupportsRule* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSSupportsRule", "deleteRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSSupportsRule::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.deleteRule(index, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rule = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(*state, throwScope, impl.insertRule(WTFMove(rule), WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsCSSSupportsRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState*, JSCSSSupportsRule*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionDeleteRule(ExecState* state)
+{
+    return BindingCaller<JSCSSSupportsRule>::callOperation<jsCSSSupportsRulePrototypeFunctionDeleteRuleCaller>(state, "deleteRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSSupportsRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState* state, JSCSSSupportsRule* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.deleteRule(WTFMove(index)));
     return JSValue::encode(jsUndefined());
 }
 

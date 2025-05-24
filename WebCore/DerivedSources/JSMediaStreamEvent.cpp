@@ -20,15 +20,13 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSMediaStreamEvent.h"
 
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
+#include "JSDOMConstructor.h"
 #include "JSMediaStream.h"
-#include "MediaStream.h"
-#include "MediaStreamEvent.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -36,14 +34,57 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> MediaStreamEvent::Init convertDictionary<MediaStreamEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    MediaStreamEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue streamValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "stream"));
+    if (!streamValue.isUndefined()) {
+        result.stream = convert<IDLNullable<IDLInterface<MediaStream>>>(state, streamValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.stream = nullptr;
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsMediaStreamEventStream(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaStreamEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaStreamEventStream(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaStreamEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaStreamEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaStreamEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaStreamEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamEventPrototype>(vm.heap)) JSMediaStreamEventPrototype(vm, globalObject, structure);
@@ -66,99 +107,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaStreamEventConstructor : public DOMConstructorObject {
-private:
-    JSMediaStreamEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSMediaStreamEventConstructor = JSDOMConstructor<JSMediaStreamEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaStreamEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaStreamEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamEventConstructor>(vm.heap)) JSMediaStreamEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaStreamEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSMediaStreamEventConstructor::constructJSMediaStreamEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMediaStreamEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSMediaStreamEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    MediaStreamEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillMediaStreamEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<MediaStreamEvent> event = MediaStreamEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaStreamEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<MediaStreamEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = MediaStreamEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaStreamEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillMediaStreamEventInit(MediaStreamEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSMediaStreamEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("stream", eventInit.stream))
-        return false;
-    return true;
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSMediaStreamEventConstructor::s_info = { "MediaStreamEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamEventConstructor) };
-
-JSMediaStreamEventConstructor::JSMediaStreamEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMediaStreamEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMediaStreamEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaStreamEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaStreamEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaStreamEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSMediaStreamEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaStreamEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaStreamEventConstructor::s_info = { "MediaStreamEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaStreamEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "stream", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamEventStream), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamEventConstructor) } },
+    { "stream", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamEventStream), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSMediaStreamEventPrototype::s_info = { "MediaStreamEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamEventPrototype) };
@@ -171,52 +158,117 @@ void JSMediaStreamEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaStreamEvent::s_info = { "MediaStreamEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamEvent) };
 
-JSMediaStreamEvent::JSMediaStreamEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSMediaStreamEvent::JSMediaStreamEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaStreamEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaStreamEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaStreamEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSMediaStreamEventPrototype::create(vm, globalObject, JSMediaStreamEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSMediaStreamEventPrototype::create(vm, globalObject, JSMediaStreamEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSMediaStreamEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaStreamEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaStreamEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsMediaStreamEventStream(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaStreamEvent* BindingCaller<JSMediaStreamEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStreamEvent* castedThis = jsDynamicCast<JSMediaStreamEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamEvent", "stream");
-        return throwGetterTypeError(*exec, "MediaStreamEvent", "stream");
+    return jsDynamicDowncast<JSMediaStreamEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsMediaStreamEventStreamGetter(ExecState&, JSMediaStreamEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaStreamEventStream(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaStreamEvent>::attribute<jsMediaStreamEventStreamGetter>(state, thisValue, "stream");
+}
+
+static inline JSValue jsMediaStreamEventStreamGetter(ExecState& state, JSMediaStreamEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<MediaStream>>>(state, *thisObject.globalObject(), impl.stream());
+    return result;
+}
+
+EncodedJSValue jsMediaStreamEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaStreamEventPrototype* domObject = jsDynamicDowncast<JSMediaStreamEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaStreamEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaStreamEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSMediaStreamEventPrototype* domObject = jsDynamicDowncast<JSMediaStreamEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.stream()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsMediaStreamEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSMediaStreamEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSMediaStreamEventPrototype* domObject = jsDynamicCast<JSMediaStreamEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaStreamEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSMediaStreamEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSMediaStreamEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7MediaStreamEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore16MediaStreamEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaStreamEvent>&& impl)
 {
-    return getDOMConstructor<JSMediaStreamEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaStreamEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore16MediaStreamEventE[2];
+#if COMPILER(CLANG)
+    // If this fails MediaStreamEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(MediaStreamEvent), "MediaStreamEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // MediaStreamEvent has subclasses. If MediaStreamEvent has subclasses that get passed
+    // to toJS() we currently require MediaStreamEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<MediaStreamEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStreamEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

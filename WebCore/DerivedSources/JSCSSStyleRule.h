@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSStyleRule_h
-#define JSCSSStyleRule_h
+#pragma once
 
 #include "CSSStyleRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSStyleRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSStyleRule;
     static JSCSSStyleRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleRule>&& impl)
     {
-        JSCSSStyleRule* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleRule>(globalObject->vm().heap)) JSCSSStyleRule(structure, globalObject, WTF::move(impl));
+        JSCSSStyleRule* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleRule>(globalObject->vm().heap)) JSCSSStyleRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSStyleRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSStyleRule& wrapped() const
     {
-        return static_cast<CSSStyleRule&>(Base::impl());
+        return static_cast<CSSStyleRule&>(Base::wrapped());
     }
 protected:
-    JSCSSStyleRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSStyleRule>&&);
+    JSCSSStyleRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSStyleRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSStyleRule> {
+    using WrapperClass = JSCSSStyleRule;
+    using ToWrappedReturnType = CSSStyleRule*;
+};
 
 } // namespace WebCore
-
-#endif

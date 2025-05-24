@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSMediaRule_h
-#define JSCSSMediaRule_h
+#pragma once
 
 #include "CSSMediaRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSMediaRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSMediaRule;
     static JSCSSMediaRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSMediaRule>&& impl)
     {
-        JSCSSMediaRule* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRule>(globalObject->vm().heap)) JSCSSMediaRule(structure, globalObject, WTF::move(impl));
+        JSCSSMediaRule* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRule>(globalObject->vm().heap)) JSCSSMediaRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSMediaRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSMediaRule& wrapped() const
     {
-        return static_cast<CSSMediaRule&>(Base::impl());
+        return static_cast<CSSMediaRule&>(Base::wrapped());
     }
 protected:
-    JSCSSMediaRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSMediaRule>&&);
+    JSCSSMediaRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSMediaRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSMediaRule> {
+    using WrapperClass = JSCSSMediaRule;
+    using ToWrappedReturnType = CSSMediaRule*;
+};
 
 } // namespace WebCore
-
-#endif

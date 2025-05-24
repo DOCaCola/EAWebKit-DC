@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioBuffer_h
-#define JSAudioBuffer_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSAudioBuffer : public JSDOMWrapper {
+class JSAudioBuffer : public JSDOMWrapper<AudioBuffer> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<AudioBuffer>;
     static JSAudioBuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioBuffer>&& impl)
     {
-        JSAudioBuffer* ptr = new (NotNull, JSC::allocateCell<JSAudioBuffer>(globalObject->vm().heap)) JSAudioBuffer(structure, globalObject, WTF::move(impl));
+        JSAudioBuffer* ptr = new (NotNull, JSC::allocateCell<JSAudioBuffer>(globalObject->vm().heap)) JSAudioBuffer(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioBuffer* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSAudioBuffer();
 
     DECLARE_INFO;
 
@@ -53,25 +50,14 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    AudioBuffer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioBuffer* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static size_t estimatedSize(JSCell*);
 protected:
-    JSAudioBuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioBuffer>&&);
+    JSAudioBuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioBuffer>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSAudioBufferOwner : public JSC::WeakHandleOwner {
@@ -86,12 +72,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioBuffer*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioBuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioBuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(AudioBuffer* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioBuffer&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioBuffer* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioBuffer>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioBuffer>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<AudioBuffer> {
+    using WrapperClass = JSAudioBuffer;
+    using ToWrappedReturnType = AudioBuffer*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

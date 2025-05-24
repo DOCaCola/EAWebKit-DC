@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSQLResultSetRowList_h
-#define JSSQLResultSetRowList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SQLResultSetRowList.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSSQLResultSetRowList : public JSDOMWrapper {
+class JSSQLResultSetRowList : public JSDOMWrapper<SQLResultSetRowList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SQLResultSetRowList>;
     static JSSQLResultSetRowList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSetRowList>&& impl)
     {
-        JSSQLResultSetRowList* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSetRowList>(globalObject->vm().heap)) JSSQLResultSetRowList(structure, globalObject, WTF::move(impl));
+        JSSQLResultSetRowList* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSetRowList>(globalObject->vm().heap)) JSSQLResultSetRowList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLResultSetRowList* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSQLResultSetRowList();
 
     DECLARE_INFO;
 
@@ -51,25 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-
-    // Custom functions
-    JSC::JSValue item(JSC::ExecState*);
-    SQLResultSetRowList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLResultSetRowList* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSQLResultSetRowList(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLResultSetRowList>&&);
+    JSSQLResultSetRowList(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLResultSetRowList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSQLResultSetRowListOwner : public JSC::WeakHandleOwner {
@@ -84,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLResultSetRowList*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSetRowList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLResultSetRowList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SQLResultSetRowList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSetRowList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLResultSetRowList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SQLResultSetRowList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SQLResultSetRowList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SQLResultSetRowList> {
+    using WrapperClass = JSSQLResultSetRowList;
+    using ToWrappedReturnType = SQLResultSetRowList*;
+};
 
 } // namespace WebCore
-
-#endif

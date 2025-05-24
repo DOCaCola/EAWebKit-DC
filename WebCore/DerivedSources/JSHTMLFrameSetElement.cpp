@@ -21,13 +21,12 @@
 #include "config.h"
 #include "JSHTMLFrameSetElement.h"
 
-#include "HTMLFrameSetElement.h"
+#include "EventNames.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
-#include "URL.h"
-#include "wtf/text/AtomicString.h"
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,71 +35,74 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLFrameSetElementCols(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementCols(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementRows(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementRows(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnblur(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnblur(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnfocus(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnfocus(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnfocusin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnfocusin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnfocusout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnfocusout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnresize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnresize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnscroll(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnscroll(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementCols(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementCols(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementRows(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementRows(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnblur(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnblur(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnfocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnfocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnfocusin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnfocusin(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnfocusout(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnfocusout(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnload(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnload(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnresize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnresize(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnscroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnscroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealright(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnwebkitwillrevealright(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealright(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnwebkitwillrevealright(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
-JSC::EncodedJSValue jsHTMLFrameSetElementOnbeforeunload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnbeforeunload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnhashchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnhashchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnmessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnmessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnoffline(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnoffline(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnonline(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnonline(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnpagehide(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnpagehide(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnpageshow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnpageshow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnpopstate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnpopstate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnstorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnstorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLFrameSetElementOnunload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnunload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnbeforeunload(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnbeforeunload(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnhashchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnhashchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnlanguagechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnlanguagechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnmessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnmessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnoffline(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnoffline(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnonline(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnonline(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnpagehide(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnpagehide(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnpageshow(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnpageshow(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnpopstate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnpopstate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnstorage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnstorage(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnunload(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnunload(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(ORIENTATION_EVENTS)
-JSC::EncodedJSValue jsHTMLFrameSetElementOnorientationchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLFrameSetElementOnorientationchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLFrameSetElementOnorientationchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementOnorientationchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
-JSC::EncodedJSValue jsHTMLFrameSetElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLFrameSetElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLFrameSetElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLFrameSetElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLFrameSetElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLFrameSetElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElementPrototype>(vm.heap)) JSHTMLFrameSetElementPrototype(vm, globalObject, structure);
@@ -119,828 +121,1001 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
+
+    void finishCreation(JSC::VM&);
 };
 
-class JSHTMLFrameSetElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLFrameSetElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLFrameSetElementConstructor = JSDOMConstructorNotConstructable<JSHTMLFrameSetElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLFrameSetElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLFrameSetElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElementConstructor>(vm.heap)) JSHTMLFrameSetElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSHTMLFrameSetElementTableIndex[67] = {
-    { -1, -1 },
-    { -1, -1 },
-    { 24, -1 },
-    { 15, -1 },
-    { 20, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 18, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 16, -1 },
-    { -1, -1 },
-    { 14, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 22, -1 },
-    { 5, -1 },
-    { -1, -1 },
-    { 2, -1 },
-    { 17, -1 },
-    { 9, -1 },
-    { -1, -1 },
-    { 3, -1 },
-    { -1, -1 },
-    { 0, 65 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 25, -1 },
-    { 7, -1 },
-    { -1, -1 },
-    { 12, 64 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 11, 66 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 6, -1 },
-    { 8, -1 },
-    { -1, -1 },
-    { 4, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 10, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 19, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 13, -1 },
-    { 21, -1 },
-    { 23, -1 },
-};
-
-
-static const HashTableValue JSHTMLFrameSetElementTableValues[] =
+template<> JSValue JSHTMLFrameSetElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cols", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementCols), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementCols) },
-    { "rows", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementRows) },
-    { "onblur", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnblur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnblur) },
-    { "onerror", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnerror) },
-    { "onfocus", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocus) },
-    { "onfocusin", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocusin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocusin) },
-    { "onfocusout", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocusout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocusout) },
-    { "onload", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnload) },
-    { "onresize", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnresize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnresize) },
-    { "onscroll", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnscroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnscroll) },
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealbottom", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealbottom), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealbottom) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealleft", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealleft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealleft) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealright", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealright), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealright) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealtop", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealtop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealtop) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-    { "onbeforeunload", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnbeforeunload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnbeforeunload) },
-    { "onhashchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnhashchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnhashchange) },
-    { "onmessage", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnmessage) },
-    { "onoffline", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnoffline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnoffline) },
-    { "ononline", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnonline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnonline) },
-    { "onpagehide", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpagehide), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpagehide) },
-    { "onpageshow", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpageshow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpageshow) },
-    { "onpopstate", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpopstate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpopstate) },
-    { "onstorage", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnstorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnstorage) },
-    { "onunload", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnunload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnunload) },
-#if ENABLE(ORIENTATION_EVENTS)
-    { "onorientationchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnorientationchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnorientationchange) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-};
-
-static const HashTable JSHTMLFrameSetElementTable = { 26, 63, true, JSHTMLFrameSetElementTableValues, 0, JSHTMLFrameSetElementTableIndex };
-const ClassInfo JSHTMLFrameSetElementConstructor::s_info = { "HTMLFrameSetElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFrameSetElementConstructor) };
-
-JSHTMLFrameSetElementConstructor::JSHTMLFrameSetElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLFrameSetElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLFrameSetElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLFrameSetElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLFrameSetElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLFrameSetElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
+template<> const ClassInfo JSHTMLFrameSetElementConstructor::s_info = { "HTMLFrameSetElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFrameSetElementConstructor) };
+
 /* Hash table for prototype */
+
+static const HashTableValue JSHTMLFrameSetElementPrototypeTableValues[] =
+{
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementConstructor) } },
+    { "cols", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementCols), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementCols) } },
+    { "rows", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementRows) } },
+    { "onblur", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnblur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnblur) } },
+    { "onerror", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnerror) } },
+    { "onfocus", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocus) } },
+    { "onfocusin", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocusin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocusin) } },
+    { "onfocusout", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnfocusout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnfocusout) } },
+    { "onload", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnload) } },
+    { "onresize", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnresize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnresize) } },
+    { "onscroll", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnscroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnscroll) } },
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealbottom", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealbottom), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealbottom) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealleft", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealleft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealleft) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealright", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealright), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealright) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealtop", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnwebkitwillrevealtop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnwebkitwillrevealtop) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+    { "onbeforeunload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnbeforeunload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnbeforeunload) } },
+    { "onhashchange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnhashchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnhashchange) } },
+    { "onlanguagechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnlanguagechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnlanguagechange) } },
+    { "onmessage", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnmessage) } },
+    { "onoffline", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnoffline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnoffline) } },
+    { "ononline", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnonline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnonline) } },
+    { "onpagehide", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpagehide), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpagehide) } },
+    { "onpageshow", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpageshow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpageshow) } },
+    { "onpopstate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnpopstate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnpopstate) } },
+    { "onstorage", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnstorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnstorage) } },
+    { "onunload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnunload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnunload) } },
+#if ENABLE(ORIENTATION_EVENTS)
+    { "onorientationchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFrameSetElementOnorientationchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFrameSetElementOnorientationchange) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+};
+
 const ClassInfo JSHTMLFrameSetElementPrototype::s_info = { "HTMLFrameSetElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFrameSetElementPrototype) };
 
-const ClassInfo JSHTMLFrameSetElement::s_info = { "HTMLFrameSetElement", &Base::s_info, &JSHTMLFrameSetElementTable, CREATE_METHOD_TABLE(JSHTMLFrameSetElement) };
-
-JSHTMLFrameSetElement::JSHTMLFrameSetElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFrameSetElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+void JSHTMLFrameSetElementPrototype::finishCreation(VM& vm)
 {
+    Base::finishCreation(vm);
+    reifyStaticProperties(vm, JSHTMLFrameSetElementPrototypeTableValues, *this);
+}
+
+const ClassInfo JSHTMLFrameSetElement::s_info = { "HTMLFrameSetElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFrameSetElement) };
+
+JSHTMLFrameSetElement::JSHTMLFrameSetElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLFrameSetElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
+{
+}
+
+void JSHTMLFrameSetElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLFrameSetElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLFrameSetElementPrototype::create(vm, globalObject, JSHTMLFrameSetElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLFrameSetElementPrototype::create(vm, globalObject, JSHTMLFrameSetElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLFrameSetElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLFrameSetElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLFrameSetElement>(vm, globalObject);
 }
 
-bool JSHTMLFrameSetElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLFrameSetElement::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFrameSetElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly, value);
+            return true;
+        }
     }
-    return getStaticValueSlot<JSHTMLFrameSetElement, Base>(exec, JSHTMLFrameSetElementTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSHTMLFrameSetElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLFrameSetElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFrameSetElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->classInfo() == info()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly, value);
+            return true;
+        }
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLFrameSetElementCols(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLFrameSetElement* BindingCaller<JSHTMLFrameSetElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::colsAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLFrameSetElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLFrameSetElementColsGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLFrameSetElementRows(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFrameSetElementCols(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::rowsAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementColsGetter>(state, thisValue, "cols");
 }
 
-
-EncodedJSValue jsHTMLFrameSetElementOnblur(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementColsGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().blurEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::colsAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLFrameSetElementRowsGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLFrameSetElementOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFrameSetElementRows(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementRowsGetter>(state, thisValue, "rows");
 }
 
-
-EncodedJSValue jsHTMLFrameSetElementOnfocus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementRowsGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().focusEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::rowsAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLFrameSetElementOnblurGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLFrameSetElementOnfocusin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFrameSetElementOnblur(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().focusinEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnblurGetter>(state, thisValue, "onblur");
 }
 
-
-EncodedJSValue jsHTMLFrameSetElementOnfocusout(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnblurGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().focusoutEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().blurEvent);
 }
 
+static inline JSValue jsHTMLFrameSetElementOnerrorGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLFrameSetElementOnload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFrameSetElementOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().loadEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnerrorGetter>(state, thisValue, "onerror");
 }
 
-
-EncodedJSValue jsHTMLFrameSetElementOnresize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnerrorGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().resizeEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
 }
 
+static inline JSValue jsHTMLFrameSetElementOnfocusGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLFrameSetElementOnscroll(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFrameSetElementOnfocus(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().scrollEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnfocusGetter>(state, thisValue, "onfocus");
 }
 
+static inline JSValue jsHTMLFrameSetElementOnfocusGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().focusEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnfocusinGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnfocusin(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnfocusinGetter>(state, thisValue, "onfocusin");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnfocusinGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().focusinEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnfocusoutGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnfocusout(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnfocusoutGetter>(state, thisValue, "onfocusout");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnfocusoutGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().focusoutEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnloadGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnload(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnloadGetter>(state, thisValue, "onload");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnloadGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().loadEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnresizeGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnresize(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnresizeGetter>(state, thisValue, "onresize");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnresizeGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().resizeEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnscrollGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnscroll(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnscrollGetter>(state, thisValue, "onscroll");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnscrollGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().scrollEvent);
+}
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealbottom(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealbottomGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealbottom(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealbottomEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnwebkitwillrevealbottomGetter>(state, thisValue, "onwebkitwillrevealbottom");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealbottomGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealbottomEvent);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealleft(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealleftGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealleft(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealleftEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnwebkitwillrevealleftGetter>(state, thisValue, "onwebkitwillrevealleft");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealleftGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealleftEvent);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealright(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealrightGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealright(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealrightEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnwebkitwillrevealrightGetter>(state, thisValue, "onwebkitwillrevealright");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealrightGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealrightEvent);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealtop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealtopGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnwebkitwillrevealtop(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealtopEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnwebkitwillrevealtopGetter>(state, thisValue, "onwebkitwillrevealtop");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnwebkitwillrevealtopGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealtopEvent);
 }
 
 #endif
 
-EncodedJSValue jsHTMLFrameSetElementOnbeforeunload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLFrameSetElementOnbeforeunloadGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnbeforeunload(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().beforeunloadEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnbeforeunloadGetter>(state, thisValue, "onbeforeunload");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnbeforeunloadGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().beforeunloadEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnhashchangeGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnhashchange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnhashchangeGetter>(state, thisValue, "onhashchange");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnhashchangeGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().hashchangeEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnlanguagechangeGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnlanguagechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnlanguagechangeGetter>(state, thisValue, "onlanguagechange");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnlanguagechangeGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().languagechangeEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnmessageGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnmessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnmessageGetter>(state, thisValue, "onmessage");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnmessageGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().messageEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnofflineGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnoffline(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnofflineGetter>(state, thisValue, "onoffline");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnofflineGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().offlineEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnonlineGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnonline(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnonlineGetter>(state, thisValue, "ononline");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnonlineGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().onlineEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpagehideGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnpagehide(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnpagehideGetter>(state, thisValue, "onpagehide");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpagehideGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().pagehideEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpageshowGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnpageshow(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnpageshowGetter>(state, thisValue, "onpageshow");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpageshowGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().pageshowEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpopstateGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnpopstate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnpopstateGetter>(state, thisValue, "onpopstate");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnpopstateGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().popstateEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnstorageGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnstorage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnstorageGetter>(state, thisValue, "onstorage");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnstorageGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().storageEvent);
+}
+
+static inline JSValue jsHTMLFrameSetElementOnunloadGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnunload(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnunloadGetter>(state, thisValue, "onunload");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnunloadGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().unloadEvent);
+}
+
+#if ENABLE(ORIENTATION_EVENTS)
+static inline JSValue jsHTMLFrameSetElementOnorientationchangeGetter(ExecState&, JSHTMLFrameSetElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLFrameSetElementOnorientationchange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::attribute<jsHTMLFrameSetElementOnorientationchangeGetter>(state, thisValue, "onorientationchange");
+}
+
+static inline JSValue jsHTMLFrameSetElementOnorientationchangeGetter(ExecState& state, JSHTMLFrameSetElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return windowEventHandlerAttribute(thisObject.wrapped(), eventNames().orientationchangeEvent);
+}
+
+#endif
+
+EncodedJSValue jsHTMLFrameSetElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLFrameSetElementPrototype* domObject = jsDynamicDowncast<JSHTMLFrameSetElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLFrameSetElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLFrameSetElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLFrameSetElementPrototype* domObject = jsDynamicDowncast<JSHTMLFrameSetElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLFrameSetElementColsFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementCols(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementColsFunction>(state, thisValue, encodedValue, "cols");
+}
+
+static inline bool setJSHTMLFrameSetElementColsFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::colsAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnhashchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementRowsFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementRows(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().hashchangeEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementRowsFunction>(state, thisValue, encodedValue, "rows");
+}
+
+static inline bool setJSHTMLFrameSetElementRowsFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::rowsAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnmessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnblurFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnblur(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().messageEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnblurFunction>(state, thisValue, encodedValue, "onblur");
+}
+
+static inline bool setJSHTMLFrameSetElementOnblurFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().blurEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnoffline(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnerrorFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().offlineEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSHTMLFrameSetElementOnerrorFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnonline(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnfocusFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnfocus(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().onlineEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnfocusFunction>(state, thisValue, encodedValue, "onfocus");
+}
+
+static inline bool setJSHTMLFrameSetElementOnfocusFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().focusEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnpagehide(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnfocusinFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnfocusin(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().pagehideEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnfocusinFunction>(state, thisValue, encodedValue, "onfocusin");
+}
+
+static inline bool setJSHTMLFrameSetElementOnfocusinFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().focusinEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnpageshow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnfocusoutFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnfocusout(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().pageshowEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnfocusoutFunction>(state, thisValue, encodedValue, "onfocusout");
+}
+
+static inline bool setJSHTMLFrameSetElementOnfocusoutFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().focusoutEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnpopstate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnloadFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnload(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().popstateEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnloadFunction>(state, thisValue, encodedValue, "onload");
+}
+
+static inline bool setJSHTMLFrameSetElementOnloadFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().loadEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnstorage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnresizeFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnresize(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().storageEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnresizeFunction>(state, thisValue, encodedValue, "onresize");
+}
+
+static inline bool setJSHTMLFrameSetElementOnresizeFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().resizeEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsHTMLFrameSetElementOnunload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnscrollFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnscroll(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().unloadEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnscrollFunction>(state, thisValue, encodedValue, "onscroll");
+}
+
+static inline bool setJSHTMLFrameSetElementOnscrollFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().scrollEvent, value);
+    return true;
+}
+
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealbottomFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnwebkitwillrevealbottom(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnwebkitwillrevealbottomFunction>(state, thisValue, encodedValue, "onwebkitwillrevealbottom");
+}
+
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealbottomFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealbottomEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealleftFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnwebkitwillrevealleft(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnwebkitwillrevealleftFunction>(state, thisValue, encodedValue, "onwebkitwillrevealleft");
+}
+
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealleftFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealleftEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealrightFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnwebkitwillrevealright(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnwebkitwillrevealrightFunction>(state, thisValue, encodedValue, "onwebkitwillrevealright");
+}
+
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealrightFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealrightEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealtopFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnwebkitwillrevealtop(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnwebkitwillrevealtopFunction>(state, thisValue, encodedValue, "onwebkitwillrevealtop");
+}
+
+static inline bool setJSHTMLFrameSetElementOnwebkitwillrevealtopFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealtopEvent, value);
+    return true;
+}
+
+#endif
+
+static inline bool setJSHTMLFrameSetElementOnbeforeunloadFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnbeforeunload(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnbeforeunloadFunction>(state, thisValue, encodedValue, "onbeforeunload");
+}
+
+static inline bool setJSHTMLFrameSetElementOnbeforeunloadFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().beforeunloadEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnhashchangeFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnhashchange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnhashchangeFunction>(state, thisValue, encodedValue, "onhashchange");
+}
+
+static inline bool setJSHTMLFrameSetElementOnhashchangeFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().hashchangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnlanguagechangeFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnlanguagechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnlanguagechangeFunction>(state, thisValue, encodedValue, "onlanguagechange");
+}
+
+static inline bool setJSHTMLFrameSetElementOnlanguagechangeFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().languagechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnmessageFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnmessage(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnmessageFunction>(state, thisValue, encodedValue, "onmessage");
+}
+
+static inline bool setJSHTMLFrameSetElementOnmessageFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().messageEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnofflineFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnoffline(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnofflineFunction>(state, thisValue, encodedValue, "onoffline");
+}
+
+static inline bool setJSHTMLFrameSetElementOnofflineFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().offlineEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnonlineFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnonline(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnonlineFunction>(state, thisValue, encodedValue, "ononline");
+}
+
+static inline bool setJSHTMLFrameSetElementOnonlineFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().onlineEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnpagehideFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnpagehide(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnpagehideFunction>(state, thisValue, encodedValue, "onpagehide");
+}
+
+static inline bool setJSHTMLFrameSetElementOnpagehideFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().pagehideEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnpageshowFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnpageshow(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnpageshowFunction>(state, thisValue, encodedValue, "onpageshow");
+}
+
+static inline bool setJSHTMLFrameSetElementOnpageshowFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().pageshowEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnpopstateFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnpopstate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnpopstateFunction>(state, thisValue, encodedValue, "onpopstate");
+}
+
+static inline bool setJSHTMLFrameSetElementOnpopstateFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().popstateEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnstorageFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnstorage(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnstorageFunction>(state, thisValue, encodedValue, "onstorage");
+}
+
+static inline bool setJSHTMLFrameSetElementOnstorageFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().storageEvent, value);
+    return true;
+}
+
+
+static inline bool setJSHTMLFrameSetElementOnunloadFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnunload(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnunloadFunction>(state, thisValue, encodedValue, "onunload");
+}
+
+static inline bool setJSHTMLFrameSetElementOnunloadFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().unloadEvent, value);
+    return true;
 }
 
 
 #if ENABLE(ORIENTATION_EVENTS)
-EncodedJSValue jsHTMLFrameSetElementOnorientationchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline bool setJSHTMLFrameSetElementOnorientationchangeFunction(ExecState&, JSHTMLFrameSetElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLFrameSetElementOnorientationchange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(windowEventHandlerAttribute(castedThis->impl(), eventNames().orientationchangeEvent));
+    return BindingCaller<JSHTMLFrameSetElement>::setAttribute<setJSHTMLFrameSetElementOnorientationchangeFunction>(state, thisValue, encodedValue, "onorientationchange");
+}
+
+static inline bool setJSHTMLFrameSetElementOnorientationchangeFunction(ExecState& state, JSHTMLFrameSetElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setWindowEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().orientationchangeEvent, value);
+    return true;
 }
 
 #endif
 
-EncodedJSValue jsHTMLFrameSetElementConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+JSValue JSHTMLFrameSetElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSHTMLFrameSetElement* domObject = jsDynamicCast<JSHTMLFrameSetElement*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLFrameSetElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSHTMLFrameSetElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-void setJSHTMLFrameSetElementCols(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void JSHTMLFrameSetElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::colsAttr, nativeValue);
-}
-
-
-void setJSHTMLFrameSetElementRows(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::rowsAttr, nativeValue);
-}
-
-
-void setJSHTMLFrameSetElementOnblur(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().blurEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnfocus(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().focusEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnfocusin(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().focusinEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnfocusout(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().focusoutEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnresize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().resizeEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnscroll(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().scrollEvent, value);
-}
-
-
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSHTMLFrameSetElementOnwebkitwillrevealbottom(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealbottomEvent, value);
-}
-
-#endif
-
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSHTMLFrameSetElementOnwebkitwillrevealleft(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealleftEvent, value);
-}
-
-#endif
-
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSHTMLFrameSetElementOnwebkitwillrevealright(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealrightEvent, value);
-}
-
-#endif
-
-#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSHTMLFrameSetElementOnwebkitwillrevealtop(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealtopEvent, value);
-}
-
-#endif
-
-void setJSHTMLFrameSetElementOnbeforeunload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().beforeunloadEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnhashchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().hashchangeEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnmessage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().messageEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnoffline(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().offlineEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnonline(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().onlineEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnpagehide(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pagehideEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnpageshow(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pageshowEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnpopstate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().popstateEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnstorage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().storageEvent, value);
-}
-
-
-void setJSHTMLFrameSetElementOnunload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().unloadEvent, value);
-}
-
-
-#if ENABLE(ORIENTATION_EVENTS)
-void setJSHTMLFrameSetElementOnorientationchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLFrameSetElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setWindowEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().orientationchangeEvent, value);
-}
-
-#endif
-
-JSValue JSHTMLFrameSetElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSHTMLFrameSetElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSHTMLFrameSetElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

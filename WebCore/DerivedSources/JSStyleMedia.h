@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStyleMedia_h
-#define JSStyleMedia_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "StyleMedia.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSStyleMedia : public JSDOMWrapper {
+class JSStyleMedia : public JSDOMWrapper<StyleMedia> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<StyleMedia>;
     static JSStyleMedia* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleMedia>&& impl)
     {
-        JSStyleMedia* ptr = new (NotNull, JSC::allocateCell<JSStyleMedia>(globalObject->vm().heap)) JSStyleMedia(structure, globalObject, WTF::move(impl));
+        JSStyleMedia* ptr = new (NotNull, JSC::allocateCell<JSStyleMedia>(globalObject->vm().heap)) JSStyleMedia(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static StyleMedia* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSStyleMedia();
 
     DECLARE_INFO;
 
@@ -50,20 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    StyleMedia& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    StyleMedia* m_impl;
 protected:
-    JSStyleMedia(JSC::Structure*, JSDOMGlobalObject*, Ref<StyleMedia>&&);
+    JSStyleMedia(JSC::Structure*, JSDOMGlobalObject&, Ref<StyleMedia>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSStyleMediaOwner : public JSC::WeakHandleOwner {
@@ -78,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, StyleMedia*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleMedia*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, StyleMedia& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(StyleMedia* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleMedia&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleMedia* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<StyleMedia>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<StyleMedia>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<StyleMedia> {
+    using WrapperClass = JSStyleMedia;
+    using ToWrappedReturnType = StyleMedia*;
+};
 
 } // namespace WebCore
-
-#endif

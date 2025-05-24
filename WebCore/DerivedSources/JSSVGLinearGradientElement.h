@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGLinearGradientElement_h
-#define JSSVGLinearGradientElement_h
+#pragma once
 
 #include "JSSVGGradientElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGLinearGradientElement : public JSSVGGradientElement {
 public:
-    typedef JSSVGGradientElement Base;
+    using Base = JSSVGGradientElement;
+    using DOMWrapped = SVGLinearGradientElement;
     static JSSVGLinearGradientElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLinearGradientElement>&& impl)
     {
-        JSSVGLinearGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLinearGradientElement>(globalObject->vm().heap)) JSSVGLinearGradientElement(structure, globalObject, WTF::move(impl));
+        JSSVGLinearGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLinearGradientElement>(globalObject->vm().heap)) JSSVGLinearGradientElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGLinearGradientElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGLinearGradientElement& wrapped() const
     {
-        return static_cast<SVGLinearGradientElement&>(Base::impl());
+        return static_cast<SVGLinearGradientElement&>(Base::wrapped());
     }
 protected:
-    JSSVGLinearGradientElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGLinearGradientElement>&&);
+    JSSVGLinearGradientElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGLinearGradientElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGLinearGradientElement> {
+    using WrapperClass = JSSVGLinearGradientElement;
+    using ToWrappedReturnType = SVGLinearGradientElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -45,7 +45,14 @@ struct SameSizeAsElementRareData : NodeRareData {
     RegionOversetState regionOversetState;
     LayoutSize sizeForResizing;
     IntPoint savedLayerScrollPosition;
-    void* pointers[8];
+    //+EAWebKitChange
+    //10/7/2015 : To match same sizes for all compilers
+    void* pointers[4];
+    std::unique_ptr<DatasetDOMStringMap> pointer2;
+    std::unique_ptr<DOMTokenList> pointer3;
+    std::unique_ptr<CustomElementReactionQueue> pointer4;
+    std::unique_ptr<NamedNodeMap> pointer4;
+    //-EAWebKitChange
 };
 
 static_assert(sizeof(ElementRareData) == sizeof(SameSizeAsElementRareData), "ElementRareData should stay small");

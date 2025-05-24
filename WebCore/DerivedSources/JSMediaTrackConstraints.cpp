@@ -24,191 +24,510 @@
 
 #include "JSMediaTrackConstraints.h"
 
-#include "JSDOMBinding.h"
-#include "JSMediaTrackConstraint.h"
-#include "JSMediaTrackConstraintSet.h"
-#include "MediaTrackConstraint.h"
-#include "MediaTrackConstraintSet.h"
-#include "MediaTrackConstraints.h"
 #include <runtime/JSArray.h>
-#include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-// Attributes
-
-JSC::EncodedJSValue jsMediaTrackConstraintsMandatory(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaTrackConstraintsOptional(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-
-class JSMediaTrackConstraintsPrototype : public JSC::JSNonFinalObject {
-public:
-    typedef JSC::JSNonFinalObject Base;
-    static JSMediaTrackConstraintsPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
-    {
-        JSMediaTrackConstraintsPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaTrackConstraintsPrototype>(vm.heap)) JSMediaTrackConstraintsPrototype(vm, globalObject, structure);
-        ptr->finishCreation(vm);
-        return ptr;
+template<> MediaTrackConstraints convertDictionary<MediaTrackConstraints>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-private:
-    JSMediaTrackConstraintsPrototype(JSC::VM& vm, JSC::JSGlobalObject*, JSC::Structure* structure)
-        : JSC::JSNonFinalObject(vm, structure)
-    {
+    MediaTrackConstraints result;
+    JSValue aspectRatioValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "aspectRatio"));
+    if (!aspectRatioValue.isUndefined()) {
+        result.aspectRatio = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, aspectRatioValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-
-    void finishCreation(JSC::VM&);
-};
-
-/* Hash table for prototype */
-
-static const HashTableValue JSMediaTrackConstraintsPrototypeTableValues[] =
-{
-    { "mandatory", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsMandatory), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "optional", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsOptional), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-const ClassInfo JSMediaTrackConstraintsPrototype::s_info = { "MediaTrackConstraintsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraintsPrototype) };
-
-void JSMediaTrackConstraintsPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSMediaTrackConstraintsPrototypeTableValues, *this);
-}
-
-const ClassInfo JSMediaTrackConstraints::s_info = { "MediaTrackConstraints", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraints) };
-
-JSMediaTrackConstraints::JSMediaTrackConstraints(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaTrackConstraints>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
-
-JSObject* JSMediaTrackConstraints::createPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return JSMediaTrackConstraintsPrototype::create(vm, globalObject, JSMediaTrackConstraintsPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
-}
-
-JSObject* JSMediaTrackConstraints::getPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMPrototype<JSMediaTrackConstraints>(vm, globalObject);
-}
-
-void JSMediaTrackConstraints::destroy(JSC::JSCell* cell)
-{
-    JSMediaTrackConstraints* thisObject = static_cast<JSMediaTrackConstraints*>(cell);
-    thisObject->JSMediaTrackConstraints::~JSMediaTrackConstraints();
-}
-
-JSMediaTrackConstraints::~JSMediaTrackConstraints()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsMediaTrackConstraintsMandatory(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaTrackConstraints* castedThis = jsDynamicCast<JSMediaTrackConstraints*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaTrackConstraintsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaTrackConstraints", "mandatory");
-        return throwGetterTypeError(*exec, "MediaTrackConstraints", "mandatory");
+    JSValue deviceIdValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deviceId"));
+    if (!deviceIdValue.isUndefined()) {
+        result.deviceId = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, deviceIdValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.mandatory(isNull)));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsMediaTrackConstraintsOptional(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaTrackConstraints* castedThis = jsDynamicCast<JSMediaTrackConstraints*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaTrackConstraintsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaTrackConstraints", "optional");
-        return throwGetterTypeError(*exec, "MediaTrackConstraints", "optional");
+    JSValue echoCancellationValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "echoCancellation"));
+    if (!echoCancellationValue.isUndefined()) {
+        result.echoCancellation = convert<IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>>(state, echoCancellationValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.optional(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
+    JSValue facingModeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "facingMode"));
+    if (!facingModeValue.isUndefined()) {
+        result.facingMode = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, facingModeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue frameRateValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "frameRate"));
+    if (!frameRateValue.isUndefined()) {
+        result.frameRate = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, frameRateValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue groupIdValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "groupId"));
+    if (!groupIdValue.isUndefined()) {
+        result.groupId = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, groupIdValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue heightValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "height"));
+    if (!heightValue.isUndefined()) {
+        result.height = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, heightValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue sampleRateValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sampleRate"));
+    if (!sampleRateValue.isUndefined()) {
+        result.sampleRate = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, sampleRateValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue sampleSizeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sampleSize"));
+    if (!sampleSizeValue.isUndefined()) {
+        result.sampleSize = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, sampleSizeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue volumeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "volume"));
+    if (!volumeValue.isUndefined()) {
+        result.volume = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, volumeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue widthValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "width"));
+    if (!widthValue.isUndefined()) {
+        result.width = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, widthValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue advancedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "advanced"));
+    if (!advancedValue.isUndefined()) {
+        result.advanced = convert<IDLSequence<IDLDictionary<MediaTrackConstraintSet>>>(state, advancedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
 }
 
-
-bool JSMediaTrackConstraintsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const MediaTrackConstraints& dictionary)
 {
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.aspectRatio)) {
+        auto aspectRatioValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.aspectRatio));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "aspectRatio"), aspectRatioValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.deviceId)) {
+        auto deviceIdValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.deviceId));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "deviceId"), deviceIdValue);
+    }
+    if (!IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>::isNullValue(dictionary.echoCancellation)) {
+        auto echoCancellationValue = toJS<IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>>(state, globalObject, IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>::extractValueFromNullable(dictionary.echoCancellation));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "echoCancellation"), echoCancellationValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.facingMode)) {
+        auto facingModeValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.facingMode));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "facingMode"), facingModeValue);
+    }
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.frameRate)) {
+        auto frameRateValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.frameRate));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "frameRate"), frameRateValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.groupId)) {
+        auto groupIdValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.groupId));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "groupId"), groupIdValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.height)) {
+        auto heightValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.height));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "height"), heightValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.sampleRate)) {
+        auto sampleRateValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.sampleRate));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "sampleRate"), sampleRateValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.sampleSize)) {
+        auto sampleSizeValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.sampleSize));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "sampleSize"), sampleSizeValue);
+    }
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.volume)) {
+        auto volumeValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.volume));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "volume"), volumeValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.width)) {
+        auto widthValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.width));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "width"), widthValue);
+    }
+    if (!IDLSequence<IDLDictionary<MediaTrackConstraintSet>>::isNullValue(dictionary.advanced)) {
+        auto advancedValue = toJS<IDLSequence<IDLDictionary<MediaTrackConstraintSet>>>(state, globalObject, IDLSequence<IDLDictionary<MediaTrackConstraintSet>>::extractValueFromNullable(dictionary.advanced));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "advanced"), advancedValue);
+    }
+    return result;
 }
 
-void JSMediaTrackConstraintsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
+#if ENABLE(MEDIA_STREAM)
+
+template<> MediaTrackConstraintSet convertDictionary<MediaTrackConstraintSet>(ExecState& state, JSValue value)
 {
-    auto* jsMediaTrackConstraints = jsCast<JSMediaTrackConstraints*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaTrackConstraints->impl(), jsMediaTrackConstraints);
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    MediaTrackConstraintSet result;
+    JSValue aspectRatioValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "aspectRatio"));
+    if (!aspectRatioValue.isUndefined()) {
+        result.aspectRatio = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, aspectRatioValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue deviceIdValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deviceId"));
+    if (!deviceIdValue.isUndefined()) {
+        result.deviceId = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, deviceIdValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue echoCancellationValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "echoCancellation"));
+    if (!echoCancellationValue.isUndefined()) {
+        result.echoCancellation = convert<IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>>(state, echoCancellationValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue facingModeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "facingMode"));
+    if (!facingModeValue.isUndefined()) {
+        result.facingMode = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, facingModeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue frameRateValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "frameRate"));
+    if (!frameRateValue.isUndefined()) {
+        result.frameRate = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, frameRateValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue groupIdValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "groupId"));
+    if (!groupIdValue.isUndefined()) {
+        result.groupId = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, groupIdValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue heightValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "height"));
+    if (!heightValue.isUndefined()) {
+        result.height = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, heightValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue sampleRateValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sampleRate"));
+    if (!sampleRateValue.isUndefined()) {
+        result.sampleRate = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, sampleRateValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue sampleSizeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sampleSize"));
+    if (!sampleSizeValue.isUndefined()) {
+        result.sampleSize = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, sampleSizeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue volumeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "volume"));
+    if (!volumeValue.isUndefined()) {
+        result.volume = convert<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, volumeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue widthValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "width"));
+    if (!widthValue.isUndefined()) {
+        result.width = convert<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, widthValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7MediaTrackConstraints@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore21MediaTrackConstraintsE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackConstraints* impl)
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const MediaTrackConstraintSet& dictionary)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaTrackConstraints>(globalObject, impl))
-        return result;
+    auto& vm = state.vm();
 
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaTrackConstraints@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore21MediaTrackConstraintsE[2];
-#if COMPILER(CLANG)
-    // If this fails MediaTrackConstraints does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(MediaTrackConstraints), MediaTrackConstraints_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // MediaTrackConstraints has subclasses. If MediaTrackConstraints has subclasses that get passed
-    // to toJS() we currently require MediaTrackConstraints you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSMediaTrackConstraints>(globalObject, impl);
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.aspectRatio)) {
+        auto aspectRatioValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.aspectRatio));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "aspectRatio"), aspectRatioValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.deviceId)) {
+        auto deviceIdValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.deviceId));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "deviceId"), deviceIdValue);
+    }
+    if (!IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>::isNullValue(dictionary.echoCancellation)) {
+        auto echoCancellationValue = toJS<IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>>(state, globalObject, IDLUnion<IDLBoolean, IDLDictionary<ConstrainBooleanParameters>>::extractValueFromNullable(dictionary.echoCancellation));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "echoCancellation"), echoCancellationValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.facingMode)) {
+        auto facingModeValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.facingMode));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "facingMode"), facingModeValue);
+    }
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.frameRate)) {
+        auto frameRateValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.frameRate));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "frameRate"), frameRateValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::isNullValue(dictionary.groupId)) {
+        auto groupIdValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>, IDLDictionary<ConstrainDOMStringParameters>>::extractValueFromNullable(dictionary.groupId));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "groupId"), groupIdValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.height)) {
+        auto heightValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.height));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "height"), heightValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.sampleRate)) {
+        auto sampleRateValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.sampleRate));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "sampleRate"), sampleRateValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.sampleSize)) {
+        auto sampleSizeValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.sampleSize));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "sampleSize"), sampleSizeValue);
+    }
+    if (!IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::isNullValue(dictionary.volume)) {
+        auto volumeValue = toJS<IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>>(state, globalObject, IDLUnion<IDLDouble, IDLDictionary<ConstrainDoubleRange>>::extractValueFromNullable(dictionary.volume));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "volume"), volumeValue);
+    }
+    if (!IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::isNullValue(dictionary.width)) {
+        auto widthValue = toJS<IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>>(state, globalObject, IDLUnion<IDLLong, IDLDictionary<ConstrainLongRange>>::extractValueFromNullable(dictionary.width));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "width"), widthValue);
+    }
+    return result;
 }
 
-MediaTrackConstraints* JSMediaTrackConstraints::toWrapped(JSC::JSValue value)
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainBooleanParameters convertDictionary<ConstrainBooleanParameters>(ExecState& state, JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaTrackConstraints*>(value))
-        return &wrapper->impl();
-    return nullptr;
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ConstrainBooleanParameters result;
+    JSValue exactValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "exact"));
+    if (!exactValue.isUndefined()) {
+        result.exact = convert<IDLBoolean>(state, exactValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue idealValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ideal"));
+    if (!idealValue.isUndefined()) {
+        result.ideal = convert<IDLBoolean>(state, idealValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
 }
 
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const ConstrainBooleanParameters& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLBoolean::isNullValue(dictionary.exact)) {
+        auto exactValue = toJS<IDLBoolean>(state, globalObject, IDLBoolean::extractValueFromNullable(dictionary.exact));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "exact"), exactValue);
+    }
+    if (!IDLBoolean::isNullValue(dictionary.ideal)) {
+        auto idealValue = toJS<IDLBoolean>(state, globalObject, IDLBoolean::extractValueFromNullable(dictionary.ideal));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "ideal"), idealValue);
+    }
+    return result;
 }
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainDOMStringParameters convertDictionary<ConstrainDOMStringParameters>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ConstrainDOMStringParameters result;
+    JSValue exactValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "exact"));
+    if (!exactValue.isUndefined()) {
+        result.exact = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, exactValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue idealValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ideal"));
+    if (!idealValue.isUndefined()) {
+        result.ideal = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, idealValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const ConstrainDOMStringParameters& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>::isNullValue(dictionary.exact)) {
+        auto exactValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>::extractValueFromNullable(dictionary.exact));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "exact"), exactValue);
+    }
+    if (!IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>::isNullValue(dictionary.ideal)) {
+        auto idealValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, globalObject, IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>::extractValueFromNullable(dictionary.ideal));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "ideal"), idealValue);
+    }
+    return result;
+}
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainDoubleRange convertDictionary<ConstrainDoubleRange>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ConstrainDoubleRange result;
+    JSValue maxValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "max"));
+    if (!maxValue.isUndefined()) {
+        result.max = convert<IDLDouble>(state, maxValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue minValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "min"));
+    if (!minValue.isUndefined()) {
+        result.min = convert<IDLDouble>(state, minValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue exactValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "exact"));
+    if (!exactValue.isUndefined()) {
+        result.exact = convert<IDLDouble>(state, exactValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue idealValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ideal"));
+    if (!idealValue.isUndefined()) {
+        result.ideal = convert<IDLDouble>(state, idealValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const ConstrainDoubleRange& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLDouble::isNullValue(dictionary.max)) {
+        auto maxValue = toJS<IDLDouble>(state, globalObject, IDLDouble::extractValueFromNullable(dictionary.max));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "max"), maxValue);
+    }
+    if (!IDLDouble::isNullValue(dictionary.min)) {
+        auto minValue = toJS<IDLDouble>(state, globalObject, IDLDouble::extractValueFromNullable(dictionary.min));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "min"), minValue);
+    }
+    if (!IDLDouble::isNullValue(dictionary.exact)) {
+        auto exactValue = toJS<IDLDouble>(state, globalObject, IDLDouble::extractValueFromNullable(dictionary.exact));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "exact"), exactValue);
+    }
+    if (!IDLDouble::isNullValue(dictionary.ideal)) {
+        auto idealValue = toJS<IDLDouble>(state, globalObject, IDLDouble::extractValueFromNullable(dictionary.ideal));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "ideal"), idealValue);
+    }
+    return result;
+}
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> ConstrainLongRange convertDictionary<ConstrainLongRange>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ConstrainLongRange result;
+    JSValue maxValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "max"));
+    if (!maxValue.isUndefined()) {
+        result.max = convert<IDLLong>(state, maxValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue minValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "min"));
+    if (!minValue.isUndefined()) {
+        result.min = convert<IDLLong>(state, minValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue exactValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "exact"));
+    if (!exactValue.isUndefined()) {
+        result.exact = convert<IDLLong>(state, exactValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue idealValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ideal"));
+    if (!idealValue.isUndefined()) {
+        result.ideal = convert<IDLLong>(state, idealValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const ConstrainLongRange& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLLong::isNullValue(dictionary.max)) {
+        auto maxValue = toJS<IDLLong>(state, globalObject, IDLLong::extractValueFromNullable(dictionary.max));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "max"), maxValue);
+    }
+    if (!IDLLong::isNullValue(dictionary.min)) {
+        auto minValue = toJS<IDLLong>(state, globalObject, IDLLong::extractValueFromNullable(dictionary.min));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "min"), minValue);
+    }
+    if (!IDLLong::isNullValue(dictionary.exact)) {
+        auto exactValue = toJS<IDLLong>(state, globalObject, IDLLong::extractValueFromNullable(dictionary.exact));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "exact"), exactValue);
+    }
+    if (!IDLLong::isNullValue(dictionary.ideal)) {
+        auto idealValue = toJS<IDLLong>(state, globalObject, IDLLong::extractValueFromNullable(dictionary.ideal));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "ideal"), idealValue);
+    }
+    return result;
+}
+
+#endif
+
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)

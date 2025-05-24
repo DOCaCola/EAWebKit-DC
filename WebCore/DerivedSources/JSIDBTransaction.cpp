@@ -24,19 +24,17 @@
 
 #include "JSIDBTransaction.h"
 
-#include "DOMError.h"
-#include "ExceptionCode.h"
-#include "IDBDatabase.h"
-#include "IDBObjectStore.h"
-#include "IDBTransaction.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDOMError.h"
+#include "JSDOMStringList.h"
 #include "JSEventListener.h"
 #include "JSIDBDatabase.h"
 #include "JSIDBObjectStore.h"
-#include "URL.h"
+#include "JSIDBTransactionMode.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -50,20 +48,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsIDBTransactionPrototypeFunctionAbort(JSC::Ex
 
 // Attributes
 
-JSC::EncodedJSValue jsIDBTransactionMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBTransactionDb(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBTransactionError(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBTransactionOnabort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBTransactionOnabort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBTransactionOncomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBTransactionOncomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBTransactionOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBTransactionOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBTransactionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBTransactionObjectStoreNames(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBTransactionMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBTransactionDb(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBTransactionError(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBTransactionOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBTransactionOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBTransactionOncomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBTransactionOncomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBTransactionOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBTransactionOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBTransactionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBTransactionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBTransactionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBTransactionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBTransactionPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBTransactionPrototype>(vm.heap)) JSIDBTransactionPrototype(vm, globalObject, structure);
@@ -86,56 +86,36 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBTransactionConstructor : public DOMConstructorObject {
-private:
-    JSIDBTransactionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBTransactionConstructor = JSDOMConstructorNotConstructable<JSIDBTransaction>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBTransactionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBTransactionConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBTransactionConstructor>(vm.heap)) JSIDBTransactionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBTransactionConstructor::s_info = { "IDBTransactionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBTransactionConstructor) };
-
-JSIDBTransactionConstructor::JSIDBTransactionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBTransactionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSIDBTransactionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBTransactionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBTransaction::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBTransaction::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBTransaction"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBTransactionConstructor::s_info = { "IDBTransaction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBTransactionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBTransactionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "mode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "db", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionDb), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "error", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onabort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOnabort) },
-    { "oncomplete", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOncomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOncomplete) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOnerror) },
-    { "objectStore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBTransactionPrototypeFunctionObjectStore), (intptr_t) (1) },
-    { "abort", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBTransactionPrototypeFunctionAbort), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionConstructor) } },
+    { "objectStoreNames", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionObjectStoreNames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "mode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "db", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionDb), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "error", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onabort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOnabort) } },
+    { "oncomplete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOncomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOncomplete) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBTransactionOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBTransactionOnerror) } },
+    { "objectStore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBTransactionPrototypeFunctionObjectStore), (intptr_t) (1) } },
+    { "abort", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBTransactionPrototypeFunctionAbort), (intptr_t) (0) } },
 };
 
 const ClassInfo JSIDBTransactionPrototype::s_info = { "IDBTransactionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBTransactionPrototype) };
@@ -148,212 +128,253 @@ void JSIDBTransactionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBTransaction::s_info = { "IDBTransaction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBTransaction) };
 
-JSIDBTransaction::JSIDBTransaction(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBTransaction>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSIDBTransaction::JSIDBTransaction(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBTransaction>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBTransaction::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBTransaction::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSIDBTransactionPrototype::create(vm, globalObject, JSIDBTransactionPrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSIDBTransactionPrototype::create(vm, globalObject, JSIDBTransactionPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSIDBTransaction::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBTransaction::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBTransaction>(vm, globalObject);
 }
 
-EncodedJSValue jsIDBTransactionMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBTransaction* BindingCaller<JSIDBTransaction>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "mode");
-        return throwGetterTypeError(*exec, "IDBTransaction", "mode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.mode());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSIDBTransaction*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsIDBTransactionDb(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBTransaction* BindingCaller<JSIDBTransaction>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "db");
-        return throwGetterTypeError(*exec, "IDBTransaction", "db");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.db()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSIDBTransaction*>(state.thisValue());
 }
 
+static inline JSValue jsIDBTransactionObjectStoreNamesGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBTransactionError(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBTransactionObjectStoreNames(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "error");
-        return throwGetterTypeError(*exec, "IDBTransaction", "error");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.error()));
-    return JSValue::encode(result);
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionObjectStoreNamesGetter>(state, thisValue, "objectStoreNames");
 }
 
-
-EncodedJSValue jsIDBTransactionOnabort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsIDBTransactionObjectStoreNamesGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "onabort");
-        return throwGetterTypeError(*exec, "IDBTransaction", "onabort");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().abortEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMStringList>>(state, *thisObject.globalObject(), impl.objectStoreNames());
+    return result;
 }
 
+static inline JSValue jsIDBTransactionModeGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBTransactionOncomplete(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBTransactionMode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "oncomplete");
-        return throwGetterTypeError(*exec, "IDBTransaction", "oncomplete");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().completeEvent));
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionModeGetter>(state, thisValue, "mode");
 }
 
-
-EncodedJSValue jsIDBTransactionOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsIDBTransactionModeGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBTransaction", "onerror");
-        return throwGetterTypeError(*exec, "IDBTransaction", "onerror");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<IDBTransactionMode>>(state, impl.mode());
+    return result;
 }
 
+static inline JSValue jsIDBTransactionDbGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBTransactionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBTransactionDb(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSIDBTransactionPrototype* domObject = jsDynamicCast<JSIDBTransactionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBTransaction::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionDbGetter>(state, thisValue, "db");
 }
 
-void setJSIDBTransactionOnabort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsIDBTransactionDbGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<IDBDatabase>>(state, *thisObject.globalObject(), impl.db());
+    return result;
+}
+
+static inline JSValue jsIDBTransactionErrorGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBTransactionError(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionErrorGetter>(state, thisValue, "error");
+}
+
+static inline JSValue jsIDBTransactionErrorGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMError>>(state, *thisObject.globalObject(), impl.error());
+    return result;
+}
+
+static inline JSValue jsIDBTransactionOnabortGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBTransactionOnabort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionOnabortGetter>(state, thisValue, "onabort");
+}
+
+static inline JSValue jsIDBTransactionOnabortGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().abortEvent);
+}
+
+static inline JSValue jsIDBTransactionOncompleteGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBTransactionOncomplete(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionOncompleteGetter>(state, thisValue, "oncomplete");
+}
+
+static inline JSValue jsIDBTransactionOncompleteGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().completeEvent);
+}
+
+static inline JSValue jsIDBTransactionOnerrorGetter(ExecState&, JSIDBTransaction&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBTransactionOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBTransaction>::attribute<jsIDBTransactionOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsIDBTransactionOnerrorGetter(ExecState& state, JSIDBTransaction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+EncodedJSValue jsIDBTransactionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBTransactionPrototype* domObject = jsDynamicDowncast<JSIDBTransactionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBTransaction::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSIDBTransactionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBTransaction", "onabort");
-        else
-            throwSetterTypeError(*exec, "IDBTransaction", "onabort");
-        return;
+    JSIDBTransactionPrototype* domObject = jsDynamicDowncast<JSIDBTransactionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().abortEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSIDBTransactionOnabortFunction(ExecState&, JSIDBTransaction&, JSValue, ThrowScope&);
+
+bool setJSIDBTransactionOnabort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSIDBTransaction>::setAttribute<setJSIDBTransactionOnabortFunction>(state, thisValue, encodedValue, "onabort");
+}
+
+static inline bool setJSIDBTransactionOnabortFunction(ExecState& state, JSIDBTransaction& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().abortEvent, value);
+    return true;
 }
 
 
-void setJSIDBTransactionOncomplete(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSIDBTransactionOncompleteFunction(ExecState&, JSIDBTransaction&, JSValue, ThrowScope&);
+
+bool setJSIDBTransactionOncomplete(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBTransaction", "oncomplete");
-        else
-            throwSetterTypeError(*exec, "IDBTransaction", "oncomplete");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().completeEvent, value);
+    return BindingCaller<JSIDBTransaction>::setAttribute<setJSIDBTransactionOncompleteFunction>(state, thisValue, encodedValue, "oncomplete");
+}
+
+static inline bool setJSIDBTransactionOncompleteFunction(ExecState& state, JSIDBTransaction& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().completeEvent, value);
+    return true;
 }
 
 
-void setJSIDBTransactionOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSIDBTransactionOnerrorFunction(ExecState&, JSIDBTransaction&, JSValue, ThrowScope&);
+
+bool setJSIDBTransactionOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBTransactionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBTransaction", "onerror");
-        else
-            throwSetterTypeError(*exec, "IDBTransaction", "onerror");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    return BindingCaller<JSIDBTransaction>::setAttribute<setJSIDBTransactionOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSIDBTransactionOnerrorFunction(ExecState& state, JSIDBTransaction& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
 }
 
 
-JSValue JSIDBTransaction::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSIDBTransaction::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBTransactionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBTransactionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBTransactionPrototypeFunctionObjectStore(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBTransaction", "objectStore");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBTransaction::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.objectStore(name, ec)));
+static inline JSC::EncodedJSValue jsIDBTransactionPrototypeFunctionObjectStoreCaller(JSC::ExecState*, JSIDBTransaction*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsIDBTransactionPrototypeFunctionObjectStore(ExecState* state)
+{
+    return BindingCaller<JSIDBTransaction>::callOperation<jsIDBTransactionPrototypeFunctionObjectStoreCaller>(state, "objectStore");
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBTransactionPrototypeFunctionAbort(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBTransactionPrototypeFunctionObjectStoreCaller(JSC::ExecState* state, JSIDBTransaction* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBTransaction* castedThis = jsDynamicCast<JSIDBTransaction*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBTransaction", "abort");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBTransaction::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.abort(ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBObjectStore>>(*state, *castedThis->globalObject(), throwScope, impl.objectStore(WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsIDBTransactionPrototypeFunctionAbortCaller(JSC::ExecState*, JSIDBTransaction*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsIDBTransactionPrototypeFunctionAbort(ExecState* state)
+{
+    return BindingCaller<JSIDBTransaction>::callOperation<jsIDBTransactionPrototypeFunctionAbortCaller>(state, "abort");
+}
+
+static inline JSC::EncodedJSValue jsIDBTransactionPrototypeFunctionAbortCaller(JSC::ExecState* state, JSIDBTransaction* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    propagateException(*state, throwScope, impl.abort());
     return JSValue::encode(jsUndefined());
 }
 
@@ -362,15 +383,24 @@ void JSIDBTransaction::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSIDBTransaction*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
+void JSIDBTransaction::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSIDBTransaction*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
 }
 
 bool JSIDBTransactionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsIDBTransaction = jsCast<JSIDBTransaction*>(handle.slot()->asCell());
-    if (jsIDBTransaction->impl().hasPendingActivity())
+    if (jsIDBTransaction->wrapped().hasPendingActivity())
         return true;
-    if (jsIDBTransaction->impl().isFiringEventListeners())
+    if (jsIDBTransaction->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -378,51 +408,25 @@ bool JSIDBTransactionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSIDBTransactionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBTransaction = jsCast<JSIDBTransaction*>(handle.slot()->asCell());
+    auto* jsIDBTransaction = static_cast<JSIDBTransaction*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBTransaction->impl(), jsIDBTransaction);
+    uncacheWrapper(world, &jsIDBTransaction->wrapped(), jsIDBTransaction);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7IDBTransaction@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore14IDBTransactionE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBTransaction* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<IDBTransaction>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBTransaction>(globalObject, impl))
-        return result;
+    return createWrapper<IDBTransaction>(globalObject, WTFMove(impl));
+}
 
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7IDBTransaction@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore14IDBTransactionE[2];
-#if COMPILER(CLANG)
-    // If this fails IDBTransaction does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(IDBTransaction), IDBTransaction_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // IDBTransaction has subclasses. If IDBTransaction has subclasses that get passed
-    // to toJS() we currently require IDBTransaction you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSIDBTransaction>(globalObject, impl);
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBTransaction& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 IDBTransaction* JSIDBTransaction::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBTransaction*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBTransaction*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

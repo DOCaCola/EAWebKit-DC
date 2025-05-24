@@ -22,14 +22,16 @@
 #include "JSHTMLCollection.h"
 
 #include "Element.h"
-#include "ExceptionCode.h"
-#include "HTMLCollection.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSElement.h"
 #include "JSNode.h"
 #include "JSNodeCustom.h"
 #include "Node.h"
-#include "wtf/text/AtomicString.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -44,12 +46,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsHTMLCollectionPrototypeFunctionNamedItem(JSC
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLCollectionLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLCollectionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLCollectionLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLCollectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLCollectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLCollectionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLCollectionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLCollectionPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLCollectionPrototype>(vm.heap)) JSHTMLCollectionPrototype(vm, globalObject, structure);
@@ -72,67 +75,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLCollectionConstructor : public DOMConstructorObject {
-private:
-    JSHTMLCollectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLCollectionConstructor = JSDOMConstructorNotConstructable<JSHTMLCollection>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLCollectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLCollectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLCollectionConstructor>(vm.heap)) JSHTMLCollectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSHTMLCollectionTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSHTMLCollectionTableValues[] =
+template<> JSValue JSHTMLCollectionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLCollectionLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSHTMLCollectionTable = { 2, 3, true, JSHTMLCollectionTableValues, 0, JSHTMLCollectionTableIndex };
-const ClassInfo JSHTMLCollectionConstructor::s_info = { "HTMLCollectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLCollectionConstructor) };
-
-JSHTMLCollectionConstructor::JSHTMLCollectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSHTMLCollectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLCollectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLCollection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLCollection::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLCollection"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLCollectionConstructor::s_info = { "HTMLCollection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLCollectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLCollectionPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLCollectionPrototypeFunctionItem), (intptr_t) (0) },
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLCollectionPrototypeFunctionNamedItem), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLCollectionConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLCollectionLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLCollectionPrototypeFunctionItem), (intptr_t) (1) } },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLCollectionPrototypeFunctionNamedItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSHTMLCollectionPrototype::s_info = { "HTMLCollectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLCollectionPrototype) };
@@ -141,14 +108,21 @@ void JSHTMLCollectionPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSHTMLCollectionPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSHTMLCollection::s_info = { "HTMLCollection", &Base::s_info, &JSHTMLCollectionTable, CREATE_METHOD_TABLE(JSHTMLCollection) };
+const ClassInfo JSHTMLCollection::s_info = { "HTMLCollection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLCollection) };
 
-JSHTMLCollection::JSHTMLCollection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLCollection>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSHTMLCollection::JSHTMLCollection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLCollection>&& impl)
+    : JSDOMWrapper<HTMLCollection>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLCollection::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLCollection::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -156,7 +130,7 @@ JSObject* JSHTMLCollection::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSHTMLCollectionPrototype::create(vm, globalObject, JSHTMLCollectionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSHTMLCollection::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLCollection::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLCollection>(vm, globalObject);
 }
@@ -167,117 +141,147 @@ void JSHTMLCollection::destroy(JSC::JSCell* cell)
     thisObject->JSHTMLCollection::~JSHTMLCollection();
 }
 
-JSHTMLCollection::~JSHTMLCollection()
-{
-    releaseImpl();
-}
-
-bool JSHTMLCollection::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLCollection::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    JSValue proto = thisObject->prototype();
-    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(exec, propertyName))
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Element>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
+        return true;
+    }
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
+        return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
         return false;
 
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSHTMLCollection>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
+    if (!optionalIndex && thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().namedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLInterface<Element>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly | DontEnum, toJS<IDLNullable<IDLInterface<Element>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
-        return true;
-    }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return getStaticValueSlot<JSHTMLCollection, Base>(exec, JSHTMLCollectionTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSHTMLCollection::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLCollection::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Element>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLCollectionLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLCollection*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLCollectionConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSHTMLCollection* domObject = jsDynamicCast<JSHTMLCollection*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLCollection::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSHTMLCollection::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSHTMLCollection::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSHTMLCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSHTMLCollection::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSHTMLCollection* BindingCaller<JSHTMLCollection>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSHTMLCollectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSHTMLCollection*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLCollectionPrototypeFunctionItem(ExecState* exec)
+template<> inline JSHTMLCollection* BindingCaller<JSHTMLCollection>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLCollection* castedThis = jsDynamicCast<JSHTMLCollection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLCollection", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLCollection::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLCollection*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLCollectionPrototypeFunctionNamedItem(ExecState* exec)
+static inline JSValue jsHTMLCollectionLengthGetter(ExecState&, JSHTMLCollection&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLCollectionLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLCollection* castedThis = jsDynamicCast<JSHTMLCollection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLCollection", "namedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLCollection::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLCollection>::attribute<jsHTMLCollectionLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsHTMLCollectionLengthGetter(ExecState& state, JSHTMLCollection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsHTMLCollectionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLCollectionPrototype* domObject = jsDynamicDowncast<JSHTMLCollectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLCollection::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLCollectionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLCollectionPrototype* domObject = jsDynamicDowncast<JSHTMLCollectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSHTMLCollection::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLCollectionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsHTMLCollectionPrototypeFunctionItemCaller(JSC::ExecState*, JSHTMLCollection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLCollectionPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSHTMLCollection>::callOperation<jsHTMLCollectionPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsHTMLCollectionPrototypeFunctionItemCaller(JSC::ExecState* state, JSHTMLCollection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Element>>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsHTMLCollectionPrototypeFunctionNamedItemCaller(JSC::ExecState*, JSHTMLCollection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLCollectionPrototypeFunctionNamedItem(ExecState* state)
+{
+    return BindingCaller<JSHTMLCollection>::callOperation<jsHTMLCollectionPrototypeFunctionNamedItemCaller>(state, "namedItem");
+}
+
+static inline JSC::EncodedJSValue jsHTMLCollectionPrototypeFunctionNamedItemCaller(JSC::ExecState* state, JSHTMLCollection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Element>>>(*state, *castedThis->globalObject(), impl.namedItem(WTFMove(name))));
 }
 
 void JSHTMLCollection::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -285,27 +289,33 @@ void JSHTMLCollection::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSHTMLCollection*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    visitor.reportExtraMemoryVisited(cell, thisObject->impl().memoryCost());
+    visitor.reportExtraMemoryVisited(thisObject->wrapped().memoryCost());
+}
+
+size_t JSHTMLCollection::estimatedSize(JSCell* cell)
+{
+    auto* thisObject = jsCast<JSHTMLCollection*>(cell);
+    return Base::estimatedSize(thisObject) + thisObject->wrapped().memoryCost();
 }
 
 bool JSHTMLCollectionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsHTMLCollection = jsCast<JSHTMLCollection*>(handle.slot()->asCell());
-    void* root = WebCore::root(jsHTMLCollection->impl().ownerNode());
+    void* root = WebCore::root(jsHTMLCollection->wrapped().ownerNode());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSHTMLCollectionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsHTMLCollection = jsCast<JSHTMLCollection*>(handle.slot()->asCell());
+    auto* jsHTMLCollection = static_cast<JSHTMLCollection*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsHTMLCollection->impl(), jsHTMLCollection);
+    uncacheWrapper(world, &jsHTMLCollection->wrapped(), jsHTMLCollection);
 }
 
 HTMLCollection* JSHTMLCollection::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSHTMLCollection*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSHTMLCollection*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

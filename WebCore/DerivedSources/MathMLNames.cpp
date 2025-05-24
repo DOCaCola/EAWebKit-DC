@@ -46,616 +46,107 @@ using namespace WebCore;
 
 WEBCORE_EXPORT DEFINE_GLOBAL(AtomicString, mathmlNamespaceURI)
 
-static const LChar accentString8[] = "accent";
-static const LChar actiontypeString8[] = "actiontype";
-static const LChar alttextString8[] = "alttext";
-static const LChar annotationString8[] = "annotation";
-static const LChar annotation_xmlString8[] = "annotation-xml";
-static const LChar backgroundString8[] = "background";
-static const LChar closeString8[] = "close";
-static const LChar colorString8[] = "color";
-static const LChar columnspanString8[] = "columnspan";
-static const LChar definitionURLString8[] = "definitionURL";
-static const LChar denomalignString8[] = "denomalign";
-static const LChar depthString8[] = "depth";
-static const LChar dirString8[] = "dir";
-static const LChar encodingString8[] = "encoding";
-static const LChar fenceString8[] = "fence";
-static const LChar fontfamilyString8[] = "fontfamily";
-static const LChar fontsizeString8[] = "fontsize";
-static const LChar fontstyleString8[] = "fontstyle";
-static const LChar fontweightString8[] = "fontweight";
-static const LChar formString8[] = "form";
-static const LChar heightString8[] = "height";
-static const LChar largeopString8[] = "largeop";
-static const LChar linethicknessString8[] = "linethickness";
-static const LChar lspaceString8[] = "lspace";
-static const LChar mactionString8[] = "maction";
-static const LChar maligngroupString8[] = "maligngroup";
-static const LChar malignmarkString8[] = "malignmark";
-static const LChar mathString8[] = "math";
-static const LChar mathbackgroundString8[] = "mathbackground";
-static const LChar mathcolorString8[] = "mathcolor";
-static const LChar mathsizeString8[] = "mathsize";
-static const LChar mathvariantString8[] = "mathvariant";
-static const LChar maxsizeString8[] = "maxsize";
-static const LChar mencloseString8[] = "menclose";
-static const LChar merrorString8[] = "merror";
-static const LChar mfencedString8[] = "mfenced";
-static const LChar mfracString8[] = "mfrac";
-static const LChar mglyphString8[] = "mglyph";
-static const LChar miString8[] = "mi";
-static const LChar minsizeString8[] = "minsize";
-static const LChar mlabeledtrString8[] = "mlabeledtr";
-static const LChar mlongdivString8[] = "mlongdiv";
-static const LChar mmultiscriptsString8[] = "mmultiscripts";
-static const LChar mnString8[] = "mn";
-static const LChar moString8[] = "mo";
-static const LChar movablelimitsString8[] = "movablelimits";
-static const LChar moverString8[] = "mover";
-static const LChar mpaddedString8[] = "mpadded";
-static const LChar mphantomString8[] = "mphantom";
-static const LChar mprescriptsString8[] = "mprescripts";
-static const LChar mrootString8[] = "mroot";
-static const LChar mrowString8[] = "mrow";
-static const LChar msString8[] = "ms";
-static const LChar mscarriesString8[] = "mscarries";
-static const LChar mscarryString8[] = "mscarry";
-static const LChar msgroupString8[] = "msgroup";
-static const LChar mslineString8[] = "msline";
-static const LChar mspaceString8[] = "mspace";
-static const LChar msqrtString8[] = "msqrt";
-static const LChar msrowString8[] = "msrow";
-static const LChar mstackString8[] = "mstack";
-static const LChar mstyleString8[] = "mstyle";
-static const LChar msubString8[] = "msub";
-static const LChar msubsupString8[] = "msubsup";
-static const LChar msupString8[] = "msup";
-static const LChar mtableString8[] = "mtable";
-static const LChar mtdString8[] = "mtd";
-static const LChar mtextString8[] = "mtext";
-static const LChar mtrString8[] = "mtr";
-static const LChar munderString8[] = "munder";
-static const LChar munderoverString8[] = "munderover";
-static const LChar noneString8[] = "none";
-static const LChar notationString8[] = "notation";
-static const LChar numalignString8[] = "numalign";
-static const LChar openString8[] = "open";
-static const LChar rowspanString8[] = "rowspan";
-static const LChar rspaceString8[] = "rspace";
-static const LChar selectionString8[] = "selection";
-static const LChar semanticsString8[] = "semantics";
-static const LChar separatorString8[] = "separator";
-static const LChar separatorsString8[] = "separators";
-static const LChar srcString8[] = "src";
-static const LChar stretchyString8[] = "stretchy";
-static const LChar subscriptshiftString8[] = "subscriptshift";
-static const LChar superscriptshiftString8[] = "superscriptshift";
-static const LChar symmetricString8[] = "symmetric";
-static const LChar widthString8[] = "width";
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4307)
+#endif
 
-static StringImpl::StaticASCIILiteral accentData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    accentString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12982903 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral actiontypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    actiontypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6004737 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral alttextData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    alttextString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14960494 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral annotationData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    annotationString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10691270 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral annotation_xmlData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    annotation_xmlString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3437210 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral backgroundData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    backgroundString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8107606 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral closeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    closeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3222970 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    colorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2734929 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral columnspanData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    columnspanString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6827651 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral definitionURLData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    definitionURLString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5781331 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral denomalignData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    denomalignString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9559630 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral depthData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    depthString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1069503 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dirData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    dirString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5122803 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral encodingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    encodingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (641915 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fenceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    fenceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8957251 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fontfamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    fontfamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6143894 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fontsizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    fontsizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15308314 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fontstyleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    fontstyleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2479154 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fontweightData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    fontweightString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4781093 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    formString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10060301 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral heightData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    heightString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6697833 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral largeopData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    largeopString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12078196 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral linethicknessData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    linethicknessString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7924943 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral lspaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    lspaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14574953 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mactionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    mactionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6240554 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral maligngroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    maligngroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11032863 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral malignmarkData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    malignmarkString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8634190 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mathData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    mathString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8182406 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mathbackgroundData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    mathbackgroundString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2374557 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mathcolorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    mathcolorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7904383 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mathsizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    mathsizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6623078 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mathvariantData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    mathvariantString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9126505 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral maxsizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    maxsizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14756777 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mencloseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    mencloseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5022529 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral merrorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    merrorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7632997 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mfencedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    mfencedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12259930 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mfracData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    mfracString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13987551 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mglyphData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mglyphString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3316076 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral miData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    miString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16514040 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral minsizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    minsizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12257779 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mlabeledtrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    mlabeledtrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6234436 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mlongdivData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    mlongdivString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6375969 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mmultiscriptsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    mmultiscriptsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6674650 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mnData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    mnString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3612898 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral moData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    moString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16096753 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral movablelimitsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    movablelimitsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3029911 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral moverData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    moverString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14480316 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mpaddedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    mpaddedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13014740 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mphantomData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    mphantomString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6126615 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mprescriptsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    mprescriptsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13554220 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mrootData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    mrootString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8188480 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mrowData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    mrowString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8502371 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    msString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5264856 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mscarriesData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    mscarriesString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9694235 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mscarryData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    mscarryString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6631743 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msgroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    msgroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6009572 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mslineData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mslineString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10387365 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mspaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mspaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10653811 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msqrtData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    msqrtString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10123915 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msrowData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    msrowString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14131536 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mstackData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mstackString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7213992 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mstyleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mstyleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6243427 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msubData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    msubString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10093770 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msubsupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    msubsupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5166195 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral msupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    msupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1894901 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mtableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    mtableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10007321 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mtdData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    mtdString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5470001 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mtextData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    mtextString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16756693 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mtrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    mtrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11260899 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral munderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    munderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9958019 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral munderoverData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    munderoverString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5849942 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noneData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    noneString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3454253 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral notationData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    notationString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (269672 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral numalignData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    numalignString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8165736 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral openData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    openString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13703631 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rowspanData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    rowspanString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13630419 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rspaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    rspaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9521175 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral selectionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    selectionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13833227 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral semanticsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    semanticsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (942856 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral separatorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    separatorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6216282 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral separatorsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    separatorsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11231386 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral srcData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    srcString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11517827 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral stretchyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    stretchyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9937605 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral subscriptshiftData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    subscriptshiftString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11231861 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral superscriptshiftData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    superscriptshiftString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4987505 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral symmetricData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    symmetricString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1620969 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral widthData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    widthString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12902275 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
+static StringImpl::StaticStringImpl accentData("accent");
+static StringImpl::StaticStringImpl accentunderData("accentunder");
+static StringImpl::StaticStringImpl actiontypeData("actiontype");
+static StringImpl::StaticStringImpl alttextData("alttext");
+static StringImpl::StaticStringImpl annotationData("annotation");
+static StringImpl::StaticStringImpl annotation_xmlData("annotation-xml");
+static StringImpl::StaticStringImpl backgroundData("background");
+static StringImpl::StaticStringImpl closeData("close");
+static StringImpl::StaticStringImpl colorData("color");
+static StringImpl::StaticStringImpl columnspanData("columnspan");
+static StringImpl::StaticStringImpl definitionURLData("definitionURL");
+static StringImpl::StaticStringImpl denomalignData("denomalign");
+static StringImpl::StaticStringImpl depthData("depth");
+static StringImpl::StaticStringImpl dirData("dir");
+static StringImpl::StaticStringImpl displayData("display");
+static StringImpl::StaticStringImpl displaystyleData("displaystyle");
+static StringImpl::StaticStringImpl encodingData("encoding");
+static StringImpl::StaticStringImpl fenceData("fence");
+static StringImpl::StaticStringImpl fontfamilyData("fontfamily");
+static StringImpl::StaticStringImpl fontsizeData("fontsize");
+static StringImpl::StaticStringImpl fontstyleData("fontstyle");
+static StringImpl::StaticStringImpl fontweightData("fontweight");
+static StringImpl::StaticStringImpl formData("form");
+static StringImpl::StaticStringImpl heightData("height");
+static StringImpl::StaticStringImpl hrefData("href");
+static StringImpl::StaticStringImpl largeopData("largeop");
+static StringImpl::StaticStringImpl linethicknessData("linethickness");
+static StringImpl::StaticStringImpl lspaceData("lspace");
+static StringImpl::StaticStringImpl mactionData("maction");
+static StringImpl::StaticStringImpl maligngroupData("maligngroup");
+static StringImpl::StaticStringImpl malignmarkData("malignmark");
+static StringImpl::StaticStringImpl mathData("math");
+static StringImpl::StaticStringImpl mathbackgroundData("mathbackground");
+static StringImpl::StaticStringImpl mathcolorData("mathcolor");
+static StringImpl::StaticStringImpl mathsizeData("mathsize");
+static StringImpl::StaticStringImpl mathvariantData("mathvariant");
+static StringImpl::StaticStringImpl maxsizeData("maxsize");
+static StringImpl::StaticStringImpl mencloseData("menclose");
+static StringImpl::StaticStringImpl merrorData("merror");
+static StringImpl::StaticStringImpl mfencedData("mfenced");
+static StringImpl::StaticStringImpl mfracData("mfrac");
+static StringImpl::StaticStringImpl mglyphData("mglyph");
+static StringImpl::StaticStringImpl miData("mi");
+static StringImpl::StaticStringImpl minsizeData("minsize");
+static StringImpl::StaticStringImpl mlabeledtrData("mlabeledtr");
+static StringImpl::StaticStringImpl mlongdivData("mlongdiv");
+static StringImpl::StaticStringImpl mmultiscriptsData("mmultiscripts");
+static StringImpl::StaticStringImpl mnData("mn");
+static StringImpl::StaticStringImpl moData("mo");
+static StringImpl::StaticStringImpl movablelimitsData("movablelimits");
+static StringImpl::StaticStringImpl moverData("mover");
+static StringImpl::StaticStringImpl mpaddedData("mpadded");
+static StringImpl::StaticStringImpl mphantomData("mphantom");
+static StringImpl::StaticStringImpl mprescriptsData("mprescripts");
+static StringImpl::StaticStringImpl mrootData("mroot");
+static StringImpl::StaticStringImpl mrowData("mrow");
+static StringImpl::StaticStringImpl msData("ms");
+static StringImpl::StaticStringImpl mscarriesData("mscarries");
+static StringImpl::StaticStringImpl mscarryData("mscarry");
+static StringImpl::StaticStringImpl msgroupData("msgroup");
+static StringImpl::StaticStringImpl mslineData("msline");
+static StringImpl::StaticStringImpl mspaceData("mspace");
+static StringImpl::StaticStringImpl msqrtData("msqrt");
+static StringImpl::StaticStringImpl msrowData("msrow");
+static StringImpl::StaticStringImpl mstackData("mstack");
+static StringImpl::StaticStringImpl mstyleData("mstyle");
+static StringImpl::StaticStringImpl msubData("msub");
+static StringImpl::StaticStringImpl msubsupData("msubsup");
+static StringImpl::StaticStringImpl msupData("msup");
+static StringImpl::StaticStringImpl mtableData("mtable");
+static StringImpl::StaticStringImpl mtdData("mtd");
+static StringImpl::StaticStringImpl mtextData("mtext");
+static StringImpl::StaticStringImpl mtrData("mtr");
+static StringImpl::StaticStringImpl munderData("munder");
+static StringImpl::StaticStringImpl munderoverData("munderover");
+static StringImpl::StaticStringImpl noneData("none");
+static StringImpl::StaticStringImpl notationData("notation");
+static StringImpl::StaticStringImpl numalignData("numalign");
+static StringImpl::StaticStringImpl openData("open");
+static StringImpl::StaticStringImpl rowspanData("rowspan");
+static StringImpl::StaticStringImpl rspaceData("rspace");
+static StringImpl::StaticStringImpl selectionData("selection");
+static StringImpl::StaticStringImpl semanticsData("semantics");
+static StringImpl::StaticStringImpl separatorData("separator");
+static StringImpl::StaticStringImpl separatorsData("separators");
+static StringImpl::StaticStringImpl srcData("src");
+static StringImpl::StaticStringImpl stretchyData("stretchy");
+static StringImpl::StaticStringImpl subscriptshiftData("subscriptshift");
+static StringImpl::StaticStringImpl superscriptshiftData("superscriptshift");
+static StringImpl::StaticStringImpl symmetricData("symmetric");
+static StringImpl::StaticStringImpl voffsetData("voffset");
+static StringImpl::StaticStringImpl widthData("width");
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 // Tags
 WEBCORE_EXPORT DEFINE_GLOBAL(MathMLQualifiedName, annotationTag)
@@ -757,6 +248,7 @@ const WebCore::MathMLQualifiedName* const* getMathMLTags()
 
 // Attributes
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, accentAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, accentunderAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, actiontypeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, alttextAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, backgroundAttr)
@@ -767,6 +259,8 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, definitionURLAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, denomalignAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, depthAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, dirAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, displayAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, displaystyleAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, encodingAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, fenceAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, fontfamilyAttr)
@@ -775,6 +269,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, fontstyleAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, fontweightAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, formAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, heightAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, hrefAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, largeopAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, linethicknessAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, lspaceAttr)
@@ -798,6 +293,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, stretchyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, subscriptshiftAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, superscriptshiftAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, symmetricAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, voffsetAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, widthAttr)
 
 
@@ -805,6 +301,7 @@ const WebCore::QualifiedName* const* getMathMLAttrs()
 {
     static const WebCore::QualifiedName* const MathMLAttrs[] = {
         reinterpret_cast<const WebCore::QualifiedName*>(&accentAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&accentunderAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&actiontypeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&alttextAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&backgroundAttr),
@@ -815,6 +312,8 @@ const WebCore::QualifiedName* const* getMathMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&denomalignAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&depthAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&dirAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&displayAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&displaystyleAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&encodingAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&fenceAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&fontfamilyAttr),
@@ -823,6 +322,7 @@ const WebCore::QualifiedName* const* getMathMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&fontweightAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&formAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&heightAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&hrefAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&largeopAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&linethicknessAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&lspaceAttr),
@@ -846,6 +346,7 @@ const WebCore::QualifiedName* const* getMathMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&subscriptshiftAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&superscriptshiftAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&symmetricAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&voffsetAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&widthAttr),
     };
     return MathMLAttrs;
@@ -868,6 +369,7 @@ void init()
 
 #ifndef NDEBUG
     reinterpret_cast<StringImpl*>(&accentData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&accentunderData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&actiontypeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&alttextData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&annotationData)->assertHashIsCorrect();
@@ -880,6 +382,8 @@ void init()
     reinterpret_cast<StringImpl*>(&denomalignData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&depthData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&dirData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&displayData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&displaystyleData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&encodingData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&fenceData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&fontfamilyData)->assertHashIsCorrect();
@@ -888,6 +392,7 @@ void init()
     reinterpret_cast<StringImpl*>(&fontweightData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&formData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&heightData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&hrefData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&largeopData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&linethicknessData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&lspaceData)->assertHashIsCorrect();
@@ -953,6 +458,7 @@ void init()
     reinterpret_cast<StringImpl*>(&subscriptshiftData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&superscriptshiftData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&symmetricData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&voffsetData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&widthData)->assertHashIsCorrect();
 #endif // NDEBUG
 
@@ -1019,6 +525,7 @@ void init()
 
     static const AttributesTableEntry attributesTable[] = {
         { (void*)&accentAttr, *reinterpret_cast<StringImpl*>(&accentData) },
+        { (void*)&accentunderAttr, *reinterpret_cast<StringImpl*>(&accentunderData) },
         { (void*)&actiontypeAttr, *reinterpret_cast<StringImpl*>(&actiontypeData) },
         { (void*)&alttextAttr, *reinterpret_cast<StringImpl*>(&alttextData) },
         { (void*)&backgroundAttr, *reinterpret_cast<StringImpl*>(&backgroundData) },
@@ -1029,6 +536,8 @@ void init()
         { (void*)&denomalignAttr, *reinterpret_cast<StringImpl*>(&denomalignData) },
         { (void*)&depthAttr, *reinterpret_cast<StringImpl*>(&depthData) },
         { (void*)&dirAttr, *reinterpret_cast<StringImpl*>(&dirData) },
+        { (void*)&displayAttr, *reinterpret_cast<StringImpl*>(&displayData) },
+        { (void*)&displaystyleAttr, *reinterpret_cast<StringImpl*>(&displaystyleData) },
         { (void*)&encodingAttr, *reinterpret_cast<StringImpl*>(&encodingData) },
         { (void*)&fenceAttr, *reinterpret_cast<StringImpl*>(&fenceData) },
         { (void*)&fontfamilyAttr, *reinterpret_cast<StringImpl*>(&fontfamilyData) },
@@ -1037,6 +546,7 @@ void init()
         { (void*)&fontweightAttr, *reinterpret_cast<StringImpl*>(&fontweightData) },
         { (void*)&formAttr, *reinterpret_cast<StringImpl*>(&formData) },
         { (void*)&heightAttr, *reinterpret_cast<StringImpl*>(&heightData) },
+        { (void*)&hrefAttr, *reinterpret_cast<StringImpl*>(&hrefData) },
         { (void*)&largeopAttr, *reinterpret_cast<StringImpl*>(&largeopData) },
         { (void*)&linethicknessAttr, *reinterpret_cast<StringImpl*>(&linethicknessData) },
         { (void*)&lspaceAttr, *reinterpret_cast<StringImpl*>(&lspaceData) },
@@ -1060,6 +570,7 @@ void init()
         { (void*)&subscriptshiftAttr, *reinterpret_cast<StringImpl*>(&subscriptshiftData) },
         { (void*)&superscriptshiftAttr, *reinterpret_cast<StringImpl*>(&superscriptshiftData) },
         { (void*)&symmetricAttr, *reinterpret_cast<StringImpl*>(&symmetricData) },
+        { (void*)&voffsetAttr, *reinterpret_cast<StringImpl*>(&voffsetData) },
         { (void*)&widthAttr, *reinterpret_cast<StringImpl*>(&widthData) },
     };
 

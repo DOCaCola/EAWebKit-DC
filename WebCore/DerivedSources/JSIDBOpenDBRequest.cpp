@@ -24,8 +24,9 @@
 
 #include "JSIDBOpenDBRequest.h"
 
-#include "IDBOpenDBRequest.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEventListener.h"
 #include <wtf/GetPtr.h>
 
@@ -35,15 +36,16 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsIDBOpenDBRequestOnblocked(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBOpenDBRequestOnblocked(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBOpenDBRequestOnupgradeneeded(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBOpenDBRequestOnupgradeneeded(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBOpenDBRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBOpenDBRequestOnblocked(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBOpenDBRequestOnblocked(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBOpenDBRequestOnupgradeneeded(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBOpenDBRequestOnupgradeneeded(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBOpenDBRequestConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBOpenDBRequestConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBOpenDBRequestPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBOpenDBRequestPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBOpenDBRequestPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequestPrototype>(vm.heap)) JSIDBOpenDBRequestPrototype(vm, globalObject, structure);
@@ -66,50 +68,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBOpenDBRequestConstructor : public DOMConstructorObject {
-private:
-    JSIDBOpenDBRequestConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBOpenDBRequestConstructor = JSDOMConstructorNotConstructable<JSIDBOpenDBRequest>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBOpenDBRequestConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBOpenDBRequestConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequestConstructor>(vm.heap)) JSIDBOpenDBRequestConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBOpenDBRequestConstructor::s_info = { "IDBOpenDBRequestConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBOpenDBRequestConstructor) };
-
-JSIDBOpenDBRequestConstructor::JSIDBOpenDBRequestConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBOpenDBRequestConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSIDBRequest::getConstructor(vm, &globalObject);
 }
 
-void JSIDBOpenDBRequestConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBOpenDBRequestConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBOpenDBRequest::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBOpenDBRequest::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBOpenDBRequest"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBOpenDBRequestConstructor::s_info = { "IDBOpenDBRequest", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBOpenDBRequestConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBOpenDBRequestPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onblocked", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestOnblocked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBOpenDBRequestOnblocked) },
-    { "onupgradeneeded", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestOnupgradeneeded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBOpenDBRequestOnupgradeneeded) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBOpenDBRequestConstructor) } },
+    { "onblocked", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestOnblocked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBOpenDBRequestOnblocked) } },
+    { "onupgradeneeded", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBOpenDBRequestOnupgradeneeded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBOpenDBRequestOnupgradeneeded) } },
 };
 
 const ClassInfo JSIDBOpenDBRequestPrototype::s_info = { "IDBOpenDBRequestPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBOpenDBRequestPrototype) };
@@ -122,96 +103,120 @@ void JSIDBOpenDBRequestPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBOpenDBRequest::s_info = { "IDBOpenDBRequest", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBOpenDBRequest) };
 
-JSIDBOpenDBRequest::JSIDBOpenDBRequest(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBOpenDBRequest>&& impl)
-    : JSIDBRequest(structure, globalObject, WTF::move(impl))
+JSIDBOpenDBRequest::JSIDBOpenDBRequest(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBOpenDBRequest>&& impl)
+    : JSIDBRequest(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBOpenDBRequest::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBOpenDBRequest::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSIDBOpenDBRequestPrototype::create(vm, globalObject, JSIDBOpenDBRequestPrototype::createStructure(vm, globalObject, JSIDBRequest::getPrototype(vm, globalObject)));
+    return JSIDBOpenDBRequestPrototype::create(vm, globalObject, JSIDBOpenDBRequestPrototype::createStructure(vm, globalObject, JSIDBRequest::prototype(vm, globalObject)));
 }
 
-JSObject* JSIDBOpenDBRequest::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBOpenDBRequest::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBOpenDBRequest>(vm, globalObject);
 }
 
-EncodedJSValue jsIDBOpenDBRequestOnblocked(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBOpenDBRequest* BindingCaller<JSIDBOpenDBRequest>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBOpenDBRequest* castedThis = jsDynamicCast<JSIDBOpenDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBOpenDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBOpenDBRequest", "onblocked");
-        return throwGetterTypeError(*exec, "IDBOpenDBRequest", "onblocked");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().blockedEvent));
+    return jsDynamicDowncast<JSIDBOpenDBRequest*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsIDBOpenDBRequestOnblockedGetter(ExecState&, JSIDBOpenDBRequest&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBOpenDBRequestOnupgradeneeded(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBOpenDBRequestOnblocked(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBOpenDBRequest* castedThis = jsDynamicCast<JSIDBOpenDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBOpenDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBOpenDBRequest", "onupgradeneeded");
-        return throwGetterTypeError(*exec, "IDBOpenDBRequest", "onupgradeneeded");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().upgradeneededEvent));
+    return BindingCaller<JSIDBOpenDBRequest>::attribute<jsIDBOpenDBRequestOnblockedGetter>(state, thisValue, "onblocked");
 }
 
-
-EncodedJSValue jsIDBOpenDBRequestConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsIDBOpenDBRequestOnblockedGetter(ExecState& state, JSIDBOpenDBRequest& thisObject, ThrowScope& throwScope)
 {
-    JSIDBOpenDBRequestPrototype* domObject = jsDynamicCast<JSIDBOpenDBRequestPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBOpenDBRequest::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().blockedEvent);
 }
 
-void setJSIDBOpenDBRequestOnblocked(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsIDBOpenDBRequestOnupgradeneededGetter(ExecState&, JSIDBOpenDBRequest&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBOpenDBRequestOnupgradeneeded(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSIDBOpenDBRequest>::attribute<jsIDBOpenDBRequestOnupgradeneededGetter>(state, thisValue, "onupgradeneeded");
+}
+
+static inline JSValue jsIDBOpenDBRequestOnupgradeneededGetter(ExecState& state, JSIDBOpenDBRequest& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().upgradeneededEvent);
+}
+
+EncodedJSValue jsIDBOpenDBRequestConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBOpenDBRequestPrototype* domObject = jsDynamicDowncast<JSIDBOpenDBRequestPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBOpenDBRequest::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSIDBOpenDBRequestConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBOpenDBRequest* castedThis = jsDynamicCast<JSIDBOpenDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBOpenDBRequestPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBOpenDBRequest", "onblocked");
-        else
-            throwSetterTypeError(*exec, "IDBOpenDBRequest", "onblocked");
-        return;
+    JSIDBOpenDBRequestPrototype* domObject = jsDynamicDowncast<JSIDBOpenDBRequestPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().blockedEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSIDBOpenDBRequestOnblockedFunction(ExecState&, JSIDBOpenDBRequest&, JSValue, ThrowScope&);
+
+bool setJSIDBOpenDBRequestOnblocked(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSIDBOpenDBRequest>::setAttribute<setJSIDBOpenDBRequestOnblockedFunction>(state, thisValue, encodedValue, "onblocked");
+}
+
+static inline bool setJSIDBOpenDBRequestOnblockedFunction(ExecState& state, JSIDBOpenDBRequest& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().blockedEvent, value);
+    return true;
 }
 
 
-void setJSIDBOpenDBRequestOnupgradeneeded(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSIDBOpenDBRequestOnupgradeneededFunction(ExecState&, JSIDBOpenDBRequest&, JSValue, ThrowScope&);
+
+bool setJSIDBOpenDBRequestOnupgradeneeded(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBOpenDBRequest* castedThis = jsDynamicCast<JSIDBOpenDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBOpenDBRequestPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBOpenDBRequest", "onupgradeneeded");
-        else
-            throwSetterTypeError(*exec, "IDBOpenDBRequest", "onupgradeneeded");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().upgradeneededEvent, value);
+    return BindingCaller<JSIDBOpenDBRequest>::setAttribute<setJSIDBOpenDBRequestOnupgradeneededFunction>(state, thisValue, encodedValue, "onupgradeneeded");
+}
+
+static inline bool setJSIDBOpenDBRequestOnupgradeneededFunction(ExecState& state, JSIDBOpenDBRequest& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().upgradeneededEvent, value);
+    return true;
 }
 
 
-JSValue JSIDBOpenDBRequest::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSIDBOpenDBRequest::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBOpenDBRequestConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBOpenDBRequestConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 void JSIDBOpenDBRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -219,15 +224,15 @@ void JSIDBOpenDBRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSIDBOpenDBRequest*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSIDBOpenDBRequestOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsIDBOpenDBRequest = jsCast<JSIDBOpenDBRequest*>(handle.slot()->asCell());
-    if (jsIDBOpenDBRequest->impl().hasPendingActivity())
+    if (jsIDBOpenDBRequest->wrapped().hasPendingActivity())
         return true;
-    if (jsIDBOpenDBRequest->impl().isFiringEventListeners())
+    if (jsIDBOpenDBRequest->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -235,51 +240,25 @@ bool JSIDBOpenDBRequestOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknow
 
 void JSIDBOpenDBRequestOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBOpenDBRequest = jsCast<JSIDBOpenDBRequest*>(handle.slot()->asCell());
+    auto* jsIDBOpenDBRequest = static_cast<JSIDBOpenDBRequest*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBOpenDBRequest->impl(), jsIDBOpenDBRequest);
+    uncacheWrapper(world, &jsIDBOpenDBRequest->wrapped(), jsIDBOpenDBRequest);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7IDBOpenDBRequest@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore16IDBOpenDBRequestE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBOpenDBRequest* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<IDBOpenDBRequest>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBOpenDBRequest>(globalObject, impl))
-        return result;
+    return createWrapper<IDBOpenDBRequest>(globalObject, WTFMove(impl));
+}
 
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7IDBOpenDBRequest@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore16IDBOpenDBRequestE[2];
-#if COMPILER(CLANG)
-    // If this fails IDBOpenDBRequest does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(IDBOpenDBRequest), IDBOpenDBRequest_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // IDBOpenDBRequest has subclasses. If IDBOpenDBRequest has subclasses that get passed
-    // to toJS() we currently require IDBOpenDBRequest you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSIDBOpenDBRequest>(globalObject, impl);
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBOpenDBRequest& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 IDBOpenDBRequest* JSIDBOpenDBRequest::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBOpenDBRequest*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBOpenDBRequest*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

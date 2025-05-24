@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBFactory_h
-#define JSIDBFactory_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSIDBFactory : public JSDOMWrapper {
+class JSIDBFactory : public JSDOMWrapper<IDBFactory> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<IDBFactory>;
     static JSIDBFactory* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBFactory>&& impl)
     {
-        JSIDBFactory* ptr = new (NotNull, JSC::allocateCell<JSIDBFactory>(globalObject->vm().heap)) JSIDBFactory(structure, globalObject, WTF::move(impl));
+        JSIDBFactory* ptr = new (NotNull, JSC::allocateCell<JSIDBFactory>(globalObject->vm().heap)) JSIDBFactory(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBFactory* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBFactory();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBFactory& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBFactory* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSIDBFactory(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBFactory>&&);
+    JSIDBFactory(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBFactory>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBFactoryOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBFactory*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBFactory*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBFactory& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBFactory* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBFactory&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBFactory* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBFactory>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBFactory>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBFactory> {
+    using WrapperClass = JSIDBFactory;
+    using ToWrappedReturnType = IDBFactory*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

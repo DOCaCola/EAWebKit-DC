@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLUnknownElement_h
-#define JSHTMLUnknownElement_h
+#pragma once
 
 #include "HTMLUnknownElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLUnknownElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLUnknownElement;
     static JSHTMLUnknownElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLUnknownElement>&& impl)
     {
-        JSHTMLUnknownElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElement>(globalObject->vm().heap)) JSHTMLUnknownElement(structure, globalObject, WTF::move(impl));
+        JSHTMLUnknownElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElement>(globalObject->vm().heap)) JSHTMLUnknownElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLUnknownElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLUnknownElement& wrapped() const
     {
-        return static_cast<HTMLUnknownElement&>(Base::impl());
+        return static_cast<HTMLUnknownElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLUnknownElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLUnknownElement>&&);
+    JSHTMLUnknownElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLUnknownElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLUnknownElement> {
+    using WrapperClass = JSHTMLUnknownElement;
+    using ToWrappedReturnType = HTMLUnknownElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTransform_h
-#define JSSVGTransform_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGTransform.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGTransform : public JSDOMWrapper {
+class JSSVGTransform : public JSDOMWrapper<SVGTransform> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGTransform* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGTransform>>&& impl)
+    using Base = JSDOMWrapper<SVGTransform>;
+    static JSSVGTransform* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTransform>&& impl)
     {
-        JSSVGTransform* ptr = new (NotNull, JSC::allocateCell<JSSVGTransform>(globalObject->vm().heap)) JSSVGTransform(structure, globalObject, WTF::move(impl));
+        JSSVGTransform* ptr = new (NotNull, JSC::allocateCell<JSSVGTransform>(globalObject->vm().heap)) JSSVGTransform(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<SVGTransform>* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGTransform* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGTransform();
 
     DECLARE_INFO;
 
@@ -52,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGTransform>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGTransform>* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGTransform(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGTransform>>&&);
+    JSSVGTransform(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTransform>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGTransformOwner : public JSC::WeakHandleOwner {
@@ -75,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<SVGTransform>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGTransform*)
 {
     static NeverDestroyed<JSSVGTransformOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGTransform>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGTransform>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGTransform* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGTransform&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGTransform* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGTransform>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGTransform>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGTransform> {
+    using WrapperClass = JSSVGTransform;
+    using ToWrappedReturnType = SVGTransform*;
+};
 
 } // namespace WebCore
-
-#endif

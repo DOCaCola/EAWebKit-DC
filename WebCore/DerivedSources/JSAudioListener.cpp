@@ -24,10 +24,11 @@
 
 #include "JSAudioListener.h"
 
-#include "AudioListener.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -42,15 +43,16 @@ JSC::EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetVelocity(JS
 
 // Attributes
 
-JSC::EncodedJSValue jsAudioListenerDopplerFactor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioListenerDopplerFactor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioListenerSpeedOfSound(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioListenerSpeedOfSound(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioListenerConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioListenerDopplerFactor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioListenerDopplerFactor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioListenerSpeedOfSound(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioListenerSpeedOfSound(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioListenerConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioListenerConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAudioListenerPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAudioListenerPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAudioListenerPrototype* ptr = new (NotNull, JSC::allocateCell<JSAudioListenerPrototype>(vm.heap)) JSAudioListenerPrototype(vm, globalObject, structure);
@@ -73,68 +75,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAudioListenerConstructor : public DOMConstructorObject {
-private:
-    JSAudioListenerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSAudioListenerConstructor = JSDOMConstructorNotConstructable<JSAudioListener>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAudioListenerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAudioListenerConstructor* ptr = new (NotNull, JSC::allocateCell<JSAudioListenerConstructor>(vm.heap)) JSAudioListenerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSAudioListenerTableIndex[4] = {
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSAudioListenerTableValues[] =
+template<> JSValue JSAudioListenerConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "dopplerFactor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerDopplerFactor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioListenerDopplerFactor) },
-    { "speedOfSound", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerSpeedOfSound), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioListenerSpeedOfSound) },
-};
-
-static const HashTable JSAudioListenerTable = { 2, 3, true, JSAudioListenerTableValues, 0, JSAudioListenerTableIndex };
-const ClassInfo JSAudioListenerConstructor::s_info = { "AudioListenerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioListenerConstructor) };
-
-JSAudioListenerConstructor::JSAudioListenerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSAudioListenerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSAudioListenerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAudioListener::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAudioListener::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioListener"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSAudioListenerConstructor::s_info = { "AudioListener", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioListenerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioListenerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "setPosition", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetPosition), (intptr_t) (3) },
-    { "setOrientation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetOrientation), (intptr_t) (6) },
-    { "setVelocity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetVelocity), (intptr_t) (3) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioListenerConstructor) } },
+    { "dopplerFactor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerDopplerFactor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioListenerDopplerFactor) } },
+    { "speedOfSound", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioListenerSpeedOfSound), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioListenerSpeedOfSound) } },
+    { "setPosition", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetPosition), (intptr_t) (3) } },
+    { "setOrientation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetOrientation), (intptr_t) (6) } },
+    { "setVelocity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioListenerPrototypeFunctionSetVelocity), (intptr_t) (3) } },
 };
 
 const ClassInfo JSAudioListenerPrototype::s_info = { "AudioListenerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioListenerPrototype) };
@@ -145,12 +112,18 @@ void JSAudioListenerPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSAudioListenerPrototypeTableValues, *this);
 }
 
-const ClassInfo JSAudioListener::s_info = { "AudioListener", &Base::s_info, &JSAudioListenerTable, CREATE_METHOD_TABLE(JSAudioListener) };
+const ClassInfo JSAudioListener::s_info = { "AudioListener", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioListener) };
 
-JSAudioListener::JSAudioListener(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioListener>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSAudioListener::JSAudioListener(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioListener>&& impl)
+    : JSDOMWrapper<AudioListener>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAudioListener::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAudioListener::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -158,7 +131,7 @@ JSObject* JSAudioListener::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSAudioListenerPrototype::create(vm, globalObject, JSAudioListenerPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSAudioListener::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAudioListener::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAudioListener>(vm, globalObject);
 }
@@ -169,162 +142,190 @@ void JSAudioListener::destroy(JSC::JSCell* cell)
     thisObject->JSAudioListener::~JSAudioListener();
 }
 
-JSAudioListener::~JSAudioListener()
+template<> inline JSAudioListener* BindingCaller<JSAudioListener>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSAudioListener*>(JSValue::decode(thisValue));
 }
 
-bool JSAudioListener::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSAudioListener* BindingCaller<JSAudioListener>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSAudioListener*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSAudioListener, Base>(exec, JSAudioListenerTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSAudioListener*>(state.thisValue());
 }
 
-EncodedJSValue jsAudioListenerDopplerFactor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioListenerDopplerFactorGetter(ExecState&, JSAudioListener&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioListenerDopplerFactor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioListener*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.dopplerFactor());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioListener>::attribute<jsAudioListenerDopplerFactorGetter>(state, thisValue, "dopplerFactor");
 }
 
-
-EncodedJSValue jsAudioListenerSpeedOfSound(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioListenerDopplerFactorGetter(ExecState& state, JSAudioListener& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioListener*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.speedOfSound());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.dopplerFactor());
+    return result;
 }
 
+static inline JSValue jsAudioListenerSpeedOfSoundGetter(ExecState&, JSAudioListener&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioListenerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsAudioListenerSpeedOfSound(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSAudioListenerPrototype* domObject = jsDynamicCast<JSAudioListenerPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAudioListener::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSAudioListener>::attribute<jsAudioListenerSpeedOfSoundGetter>(state, thisValue, "speedOfSound");
 }
 
-void setJSAudioListenerDopplerFactor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsAudioListenerSpeedOfSoundGetter(ExecState& state, JSAudioListener& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.speedOfSound());
+    return result;
+}
+
+EncodedJSValue jsAudioListenerConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAudioListenerPrototype* domObject = jsDynamicDowncast<JSAudioListenerPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAudioListener::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAudioListenerConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioListener*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDopplerFactor(nativeValue);
+    JSAudioListenerPrototype* domObject = jsDynamicDowncast<JSAudioListenerPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSAudioListenerDopplerFactorFunction(ExecState&, JSAudioListener&, JSValue, ThrowScope&);
+
+bool setJSAudioListenerDopplerFactor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioListener>::setAttribute<setJSAudioListenerDopplerFactorFunction>(state, thisValue, encodedValue, "dopplerFactor");
+}
+
+static inline bool setJSAudioListenerDopplerFactorFunction(ExecState& state, JSAudioListener& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDopplerFactor(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSAudioListenerSpeedOfSound(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSAudioListenerSpeedOfSoundFunction(ExecState&, JSAudioListener&, JSValue, ThrowScope&);
+
+bool setJSAudioListenerSpeedOfSound(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioListener*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSpeedOfSound(nativeValue);
+    return BindingCaller<JSAudioListener>::setAttribute<setJSAudioListenerSpeedOfSoundFunction>(state, thisValue, encodedValue, "speedOfSound");
+}
+
+static inline bool setJSAudioListenerSpeedOfSoundFunction(ExecState& state, JSAudioListener& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setSpeedOfSound(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSAudioListener::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSAudioListener::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSAudioListenerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSAudioListenerConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetPosition(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetPositionCaller(JSC::ExecState*, JSAudioListener*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetPosition(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioListener* castedThis = jsDynamicCast<JSAudioListener*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioListener", "setPosition");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioListener::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float z = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setPosition(x, y, z);
+    return BindingCaller<JSAudioListener>::callOperation<jsAudioListenerPrototypeFunctionSetPositionCaller>(state, "setPosition");
+}
+
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetPositionCaller(JSC::ExecState* state, JSAudioListener* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto z = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setPosition(WTFMove(x), WTFMove(y), WTFMove(z));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetOrientation(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetOrientationCaller(JSC::ExecState*, JSAudioListener*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetOrientation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioListener* castedThis = jsDynamicCast<JSAudioListener*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioListener", "setOrientation");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioListener::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float z = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float xUp = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float yUp = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float zUp = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setOrientation(x, y, z, xUp, yUp, zUp);
+    return BindingCaller<JSAudioListener>::callOperation<jsAudioListenerPrototypeFunctionSetOrientationCaller>(state, "setOrientation");
+}
+
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetOrientationCaller(JSC::ExecState* state, JSAudioListener* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto z = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto xUp = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto yUp = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto zUp = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setOrientation(WTFMove(x), WTFMove(y), WTFMove(z), WTFMove(xUp), WTFMove(yUp), WTFMove(zUp));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetVelocity(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetVelocityCaller(JSC::ExecState*, JSAudioListener*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioListenerPrototypeFunctionSetVelocity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioListener* castedThis = jsDynamicCast<JSAudioListener*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioListener", "setVelocity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioListener::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float z = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setVelocity(x, y, z);
+    return BindingCaller<JSAudioListener>::callOperation<jsAudioListenerPrototypeFunctionSetVelocityCaller>(state, "setVelocity");
+}
+
+static inline JSC::EncodedJSValue jsAudioListenerPrototypeFunctionSetVelocityCaller(JSC::ExecState* state, JSAudioListener* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto z = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setVelocity(WTFMove(x), WTFMove(y), WTFMove(z));
     return JSValue::encode(jsUndefined());
 }
 
@@ -337,31 +338,32 @@ bool JSAudioListenerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> 
 
 void JSAudioListenerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsAudioListener = jsCast<JSAudioListener*>(handle.slot()->asCell());
+    auto* jsAudioListener = static_cast<JSAudioListener*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsAudioListener->impl(), jsAudioListener);
+    uncacheWrapper(world, &jsAudioListener->wrapped(), jsAudioListener);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioListener* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AudioListener>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSAudioListener>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to AudioListener.
-    COMPILE_ASSERT(!__is_polymorphic(AudioListener), AudioListener_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(AudioListener), "AudioListener is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSAudioListener>(globalObject, impl);
+    return createWrapper<AudioListener>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioListener& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 AudioListener* JSAudioListener::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSAudioListener*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSAudioListener*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

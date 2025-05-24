@@ -18,10 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMWindow_h
-#define JSDOMWindow_h
+#pragma once
 
-#include "DOMWindow.h"
 #include "JSDOMWindowBase.h"
 
 namespace WebCore {
@@ -32,12 +30,12 @@ class JSDOMWindowShell;
 
 class WEBCORE_EXPORT JSDOMWindow : public JSDOMWindowBase {
 public:
-    typedef JSDOMWindowBase Base;
+    using Base = JSDOMWindowBase;
+    using DOMWrapped = DOMWindow;
     static JSDOMWindow* create(JSC::VM& vm, JSC::Structure* structure, Ref<DOMWindow>&& impl, JSDOMWindowShell* windowShell)
     {
-        JSDOMWindow* ptr = new (NotNull, JSC::allocateCell<JSDOMWindow>(vm.heap)) JSDOMWindow(vm, structure, WTF::move(impl), windowShell);
+        JSDOMWindow* ptr = new (NotNull, JSC::allocateCell<JSDOMWindow>(vm.heap)) JSDOMWindow(vm, structure, WTFMove(impl), windowShell);
         ptr->finishCreation(vm, windowShell);
-        vm.heap.addFinalizer(ptr, destroy);
         return ptr;
     }
 
@@ -46,8 +44,8 @@ public:
     static DOMWindow* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
 
     DECLARE_INFO;
 
@@ -64,44 +62,39 @@ public:
     static uint32_t getEnumerableLength(JSC::ExecState*, JSC::JSObject*);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static bool defineOwnProperty(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, const JSC::PropertyDescriptor&, bool shouldThrow);
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getPrototype(JSC::JSObject*, JSC::ExecState*);
+    static bool preventExtensions(JSC::JSObject*, JSC::ExecState*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return globalObjectOutputConstraintSubspaceFor(vm); }
 
     // Custom attributes
-    void setLocation(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue event(JSC::ExecState*) const;
-    JSC::JSValue image(JSC::ExecState*) const;
-#if ENABLE(IOS_TOUCH_EVENTS)
-    JSC::JSValue touch(JSC::ExecState*) const;
-#endif
-#if ENABLE(IOS_TOUCH_EVENTS)
-    JSC::JSValue touchList(JSC::ExecState*) const;
-#endif
+    void setLocation(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue event(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue showModalDialog(JSC::ExecState*);
-    JSC::JSValue postMessage(JSC::ExecState*);
-    JSC::JSValue addEventListener(JSC::ExecState*);
-    JSC::JSValue removeEventListener(JSC::ExecState*);
-    JSC::JSValue setTimeout(JSC::ExecState*);
-    JSC::JSValue setInterval(JSC::ExecState*);
-    DOMWindow& impl() const
+    JSC::JSValue open(JSC::ExecState&);
+    JSC::JSValue showModalDialog(JSC::ExecState&);
+    JSC::JSValue setTimeout(JSC::ExecState&);
+    JSC::JSValue setInterval(JSC::ExecState&);
+    DOMWindow& wrapped() const
     {
-        return static_cast<DOMWindow&>(Base::impl());
+        return static_cast<DOMWindow&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::ImplementsHasInstance | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | JSC::ImplementsHasInstance | JSC::ImplementsDefaultHasInstance | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::IsImmutablePrototypeExoticObject | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
     JSDOMWindow(JSC::VM&, JSC::Structure*, Ref<DOMWindow>&&, JSDOMWindowShell*);
+    void finishCreation(JSC::VM&, JSDOMWindowShell*);
 };
 
 
 class JSDOMWindowPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMWindowPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMWindowPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMWindowPrototype>(vm.heap)) JSDOMWindowPrototype(vm, globalObject, structure);
@@ -120,23 +113,23 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
-
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | JSC::IsImmutablePrototypeExoticObject | Base::StructureFlags;
 };
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowPrototypeFunctionFocus(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowPrototypeFunctionBlur(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowPrototypeFunctionClose(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowPrototypeFunctionPostMessage(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowInstanceFunctionFocus(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowInstanceFunctionBlur(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowInstanceFunctionClose(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMWindowInstanceFunctionPostMessage(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMWindowClosed(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMWindowClosed(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+template<> struct JSDOMWrapperConverterTraits<DOMWindow> {
+    using WrapperClass = JSDOMWindow;
+    using ToWrappedReturnType = DOMWindow*;
+};
 
 } // namespace WebCore
-
-#endif

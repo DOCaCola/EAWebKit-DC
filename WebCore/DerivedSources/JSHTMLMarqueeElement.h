@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMarqueeElement_h
-#define JSHTMLMarqueeElement_h
+#pragma once
 
 #include "HTMLMarqueeElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLMarqueeElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMarqueeElement;
     static JSHTMLMarqueeElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMarqueeElement>&& impl)
     {
-        JSHTMLMarqueeElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMarqueeElement>(globalObject->vm().heap)) JSHTMLMarqueeElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMarqueeElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMarqueeElement>(globalObject->vm().heap)) JSHTMLMarqueeElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMarqueeElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLMarqueeElement& wrapped() const
     {
-        return static_cast<HTMLMarqueeElement&>(Base::impl());
+        return static_cast<HTMLMarqueeElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMarqueeElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMarqueeElement>&&);
+    JSHTMLMarqueeElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMarqueeElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLMarqueeElement> {
+    using WrapperClass = JSHTMLMarqueeElement;
+    using ToWrappedReturnType = HTMLMarqueeElement*;
+};
 
 } // namespace WebCore
-
-#endif

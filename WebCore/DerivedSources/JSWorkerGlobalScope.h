@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWorkerGlobalScope_h
-#define JSWorkerGlobalScope_h
+#pragma once
 
 #include "JSWorkerGlobalScopeBase.h"
 
@@ -29,20 +28,20 @@ class WorkerGlobalScope;
 
 class JSWorkerGlobalScope : public JSWorkerGlobalScopeBase {
 public:
-    typedef JSWorkerGlobalScopeBase Base;
-    static JSWorkerGlobalScope* create(JSC::VM& vm, JSC::Structure* structure, Ref<WorkerGlobalScope>&& impl)
+    using Base = JSWorkerGlobalScopeBase;
+    using DOMWrapped = WorkerGlobalScope;
+    static JSWorkerGlobalScope* create(JSC::VM& vm, JSC::Structure* structure, Ref<WorkerGlobalScope>&& impl, JSC::JSProxy* proxy)
     {
-        JSWorkerGlobalScope* ptr = new (NotNull, JSC::allocateCell<JSWorkerGlobalScope>(vm.heap)) JSWorkerGlobalScope(vm, structure, WTF::move(impl));
-        ptr->finishCreation(vm);
-        vm.heap.addFinalizer(ptr, destroy);
+        JSWorkerGlobalScope* ptr = new (NotNull, JSC::allocateCell<JSWorkerGlobalScope>(vm.heap)) JSWorkerGlobalScope(vm, structure, WTFMove(impl));
+        ptr->finishCreation(vm, proxy);
         return ptr;
     }
 
     static const bool needsDestruction = false;
 
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
+    static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WorkerGlobalScope* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
 
@@ -51,29 +50,31 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::GlobalObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return globalObjectOutputConstraintSubspaceFor(vm); }
 
     // Custom functions
-    JSC::JSValue importScripts(JSC::ExecState*);
-    JSC::JSValue setTimeout(JSC::ExecState*);
-    JSC::JSValue setInterval(JSC::ExecState*);
-    WorkerGlobalScope& impl() const
+    JSC::JSValue setTimeout(JSC::ExecState&);
+    JSC::JSValue setInterval(JSC::ExecState&);
+    WorkerGlobalScope& wrapped() const
     {
-        return static_cast<WorkerGlobalScope&>(Base::impl());
+        return static_cast<WorkerGlobalScope&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
     JSWorkerGlobalScope(JSC::VM&, JSC::Structure*, Ref<WorkerGlobalScope>&&);
+    void finishCreation(JSC::VM&, JSC::JSProxy*);
 };
 
 
 class JSWorkerGlobalScopePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWorkerGlobalScopePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWorkerGlobalScopePrototype* ptr = new (NotNull, JSC::allocateCell<JSWorkerGlobalScopePrototype>(vm.heap)) JSWorkerGlobalScopePrototype(vm, globalObject, structure);
@@ -93,12 +94,12 @@ private:
     {
     }
 
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    void finishCreation(JSC::VM&);
 };
 
+template<> struct JSDOMWrapperConverterTraits<WorkerGlobalScope> {
+    using WrapperClass = JSWorkerGlobalScope;
+    using ToWrappedReturnType = WorkerGlobalScope*;
+};
 
 } // namespace WebCore
-
-#endif

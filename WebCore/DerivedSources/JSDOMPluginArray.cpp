@@ -21,13 +21,13 @@
 #include "config.h"
 #include "JSDOMPluginArray.h"
 
-#include "DOMPlugin.h"
-#include "DOMPluginArray.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDOMPlugin.h"
-#include "wtf/text/AtomicString.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -43,12 +43,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionRefresh(JSC::
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMPluginArrayLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMPluginArrayConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMPluginArrayLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMPluginArrayConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMPluginArrayConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMPluginArrayPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMPluginArrayPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMPluginArrayPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMPluginArrayPrototype>(vm.heap)) JSDOMPluginArrayPrototype(vm, globalObject, structure);
@@ -71,68 +72,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMPluginArrayConstructor : public DOMConstructorObject {
-private:
-    JSDOMPluginArrayConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMPluginArrayConstructor = JSDOMConstructorNotConstructable<JSDOMPluginArray>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMPluginArrayConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMPluginArrayConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMPluginArrayConstructor>(vm.heap)) JSDOMPluginArrayConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSDOMPluginArrayTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSDOMPluginArrayTableValues[] =
+template<> JSValue JSDOMPluginArrayConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMPluginArrayConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMPluginArrayLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDOMPluginArrayTable = { 2, 3, true, JSDOMPluginArrayTableValues, 0, JSDOMPluginArrayTableIndex };
-const ClassInfo JSDOMPluginArrayConstructor::s_info = { "PluginArrayConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMPluginArrayConstructor) };
-
-JSDOMPluginArrayConstructor::JSDOMPluginArrayConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDOMPluginArrayConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDOMPluginArrayConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMPluginArray::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMPluginArray::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("PluginArray"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMPluginArrayConstructor::s_info = { "PluginArray", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMPluginArrayConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMPluginArrayPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionItem), (intptr_t) (0) },
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionNamedItem), (intptr_t) (0) },
-    { "refresh", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionRefresh), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMPluginArrayConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMPluginArrayConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMPluginArrayLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionItem), (intptr_t) (1) } },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionNamedItem), (intptr_t) (1) } },
+    { "refresh", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMPluginArrayPrototypeFunctionRefresh), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDOMPluginArrayPrototype::s_info = { "PluginArrayPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMPluginArrayPrototype) };
@@ -141,14 +106,21 @@ void JSDOMPluginArrayPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSDOMPluginArrayPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSDOMPluginArray::s_info = { "PluginArray", &Base::s_info, &JSDOMPluginArrayTable, CREATE_METHOD_TABLE(JSDOMPluginArray) };
+const ClassInfo JSDOMPluginArray::s_info = { "PluginArray", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMPluginArray) };
 
-JSDOMPluginArray::JSDOMPluginArray(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMPluginArray>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMPluginArray::JSDOMPluginArray(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMPluginArray>&& impl)
+    : JSDOMWrapper<DOMPluginArray>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMPluginArray::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMPluginArray::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -156,7 +128,7 @@ JSObject* JSDOMPluginArray::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSDOMPluginArrayPrototype::create(vm, globalObject, JSDOMPluginArrayPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMPluginArray::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMPluginArray::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMPluginArray>(vm, globalObject);
 }
@@ -167,134 +139,171 @@ void JSDOMPluginArray::destroy(JSC::JSCell* cell)
     thisObject->JSDOMPluginArray::~JSDOMPluginArray();
 }
 
-JSDOMPluginArray::~JSDOMPluginArray()
-{
-    releaseImpl();
-}
-
-bool JSDOMPluginArray::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMPluginArray::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMPluginArray*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSDOMPluginArray>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<DOMPlugin>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (!optionalIndex && thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().namedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLInterface<DOMPlugin>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly | DontEnum, toJS<IDLNullable<IDLInterface<DOMPlugin>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return getStaticValueSlot<JSDOMPluginArray, Base>(exec, JSDOMPluginArrayTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSDOMPluginArray::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDOMPluginArray::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMPluginArray*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<DOMPlugin>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDOMPluginArrayLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDOMPluginArray*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMPluginArrayConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSDOMPluginArray* domObject = jsDynamicCast<JSDOMPluginArray*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMPluginArray::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSDOMPluginArray::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSDOMPluginArray::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSDOMPluginArray*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSDOMPluginArray::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSDOMPluginArray* BindingCaller<JSDOMPluginArray>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSDOMPluginArrayConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSDOMPluginArray*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionItem(ExecState* exec)
+template<> inline JSDOMPluginArray* BindingCaller<JSDOMPluginArray>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMPluginArray* castedThis = jsDynamicCast<JSDOMPluginArray*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMPluginArray", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMPluginArray::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSDOMPluginArray*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionNamedItem(ExecState* exec)
+static inline JSValue jsDOMPluginArrayLengthGetter(ExecState&, JSDOMPluginArray&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMPluginArrayLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMPluginArray* castedThis = jsDynamicCast<JSDOMPluginArray*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMPluginArray", "namedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMPluginArray::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
-    return JSValue::encode(result);
+    return BindingCaller<JSDOMPluginArray>::attribute<jsDOMPluginArrayLengthGetter>(state, thisValue, "length");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionRefresh(ExecState* exec)
+static inline JSValue jsDOMPluginArrayLengthGetter(ExecState& state, JSDOMPluginArray& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMPluginArray* castedThis = jsDynamicCast<JSDOMPluginArray*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMPluginArray", "refresh");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMPluginArray::info());
-    auto& impl = castedThis->impl();
-    bool reload = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.refresh(reload);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsDOMPluginArrayConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMPluginArrayPrototype* domObject = jsDynamicDowncast<JSDOMPluginArrayPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMPluginArray::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDOMPluginArrayConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMPluginArrayPrototype* domObject = jsDynamicDowncast<JSDOMPluginArrayPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSDOMPluginArray::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDOMPluginArrayConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionItemCaller(JSC::ExecState*, JSDOMPluginArray*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSDOMPluginArray>::callOperation<jsDOMPluginArrayPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionItemCaller(JSC::ExecState* state, JSDOMPluginArray* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<DOMPlugin>>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionNamedItemCaller(JSC::ExecState*, JSDOMPluginArray*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionNamedItem(ExecState* state)
+{
+    return BindingCaller<JSDOMPluginArray>::callOperation<jsDOMPluginArrayPrototypeFunctionNamedItemCaller>(state, "namedItem");
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionNamedItemCaller(JSC::ExecState* state, JSDOMPluginArray* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<DOMPlugin>>>(*state, *castedThis->globalObject(), impl.namedItem(WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionRefreshCaller(JSC::ExecState*, JSDOMPluginArray*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMPluginArrayPrototypeFunctionRefresh(ExecState* state)
+{
+    return BindingCaller<JSDOMPluginArray>::callOperation<jsDOMPluginArrayPrototypeFunctionRefreshCaller>(state, "refresh");
+}
+
+static inline JSC::EncodedJSValue jsDOMPluginArrayPrototypeFunctionRefreshCaller(JSC::ExecState* state, JSDOMPluginArray* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto reload = convert<IDLBoolean>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.refresh(WTFMove(reload));
     return JSValue::encode(jsUndefined());
 }
 
 bool JSDOMPluginArrayOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsDOMPluginArray = jsCast<JSDOMPluginArray*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsDOMPluginArray->impl().frame());
+    Frame* root = WTF::getPtr(jsDOMPluginArray->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -302,9 +311,9 @@ bool JSDOMPluginArrayOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSDOMPluginArrayOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMPluginArray = jsCast<JSDOMPluginArray*>(handle.slot()->asCell());
+    auto* jsDOMPluginArray = static_cast<JSDOMPluginArray*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMPluginArray->impl(), jsDOMPluginArray);
+    uncacheWrapper(world, &jsDOMPluginArray->wrapped(), jsDOMPluginArray);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -315,15 +324,12 @@ extern "C" { extern void (*const __identifier("??_7DOMPluginArray@WebCore@@6B@")
 extern "C" { extern void* _ZTVN7WebCore14DOMPluginArrayE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMPluginArray* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMPluginArray>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMPluginArray>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7DOMPluginArray@WebCore@@6B@"));
 #else
@@ -331,7 +337,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMPluginArr
 #if COMPILER(CLANG)
     // If this fails DOMPluginArray does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(DOMPluginArray), DOMPluginArray_is_not_polymorphic);
+    static_assert(__is_polymorphic(DOMPluginArray), "DOMPluginArray is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -340,13 +346,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMPluginArr
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSDOMPluginArray>(globalObject, impl);
+    return createWrapper<DOMPluginArray>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMPluginArray& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMPluginArray* JSDOMPluginArray::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMPluginArray*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMPluginArray*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

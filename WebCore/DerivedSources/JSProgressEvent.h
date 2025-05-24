@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSProgressEvent_h
-#define JSProgressEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "ProgressEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSProgressEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = ProgressEvent;
     static JSProgressEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProgressEvent>&& impl)
     {
-        JSProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSProgressEvent>(globalObject->vm().heap)) JSProgressEvent(structure, globalObject, WTF::move(impl));
+        JSProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSProgressEvent>(globalObject->vm().heap)) JSProgressEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ProgressEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    ProgressEvent& wrapped() const
     {
-        return static_cast<ProgressEvent&>(Base::impl());
+        return static_cast<ProgressEvent&>(Base::wrapped());
     }
 protected:
-    JSProgressEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<ProgressEvent>&&);
+    JSProgressEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<ProgressEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ProgressEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ProgressEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ProgressEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ProgressEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillProgressEventInit(ProgressEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<ProgressEvent> {
+    using WrapperClass = JSProgressEvent;
+    using ToWrappedReturnType = ProgressEvent*;
+};
+template<> ProgressEvent::Init convertDictionary<ProgressEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

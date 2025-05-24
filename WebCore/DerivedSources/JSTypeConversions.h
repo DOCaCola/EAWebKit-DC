@@ -18,30 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTypeConversions_h
-#define JSTypeConversions_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "TypeConversions.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSTypeConversions : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSTypeConversions : public JSDOMWrapper<TypeConversions> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<TypeConversions>;
     static JSTypeConversions* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TypeConversions>&& impl)
     {
-        JSTypeConversions* ptr = new (NotNull, JSC::allocateCell<JSTypeConversions>(globalObject->vm().heap)) JSTypeConversions(structure, globalObject, WTF::move(impl));
+        JSTypeConversions* ptr = new (NotNull, JSC::allocateCell<JSTypeConversions>(globalObject->vm().heap)) JSTypeConversions(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static TypeConversions* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTypeConversions();
 
     DECLARE_INFO;
 
@@ -50,20 +49,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    TypeConversions& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TypeConversions* m_impl;
 protected:
-    JSTypeConversions(JSC::Structure*, JSDOMGlobalObject*, Ref<TypeConversions>&&);
+    JSTypeConversions(JSC::Structure*, JSDOMGlobalObject&, Ref<TypeConversions>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTypeConversionsOwner : public JSC::WeakHandleOwner {
@@ -78,10 +67,29 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TypeConversions*)
     return &owner.get();
 }
 
-WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TypeConversions*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TypeConversions& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(TypeConversions* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TypeConversions&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TypeConversions* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TypeConversions>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TypeConversions>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TypeConversions> {
+    using WrapperClass = JSTypeConversions;
+    using ToWrappedReturnType = TypeConversions*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, TypeConversions::UnionType);
+
+template<> std::optional<TypeConversions::UnionType> parseEnumeration<TypeConversions::UnionType>(JSC::ExecState&, JSC::JSValue);
+template<> TypeConversions::UnionType convertEnumeration<TypeConversions::UnionType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<TypeConversions::UnionType>();
+
+template<> TypeConversions::OtherDictionary convertDictionary<TypeConversions::OtherDictionary>(JSC::ExecState&, JSC::JSValue);
+
+template<> TypeConversions::Dictionary convertDictionary<TypeConversions::Dictionary>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

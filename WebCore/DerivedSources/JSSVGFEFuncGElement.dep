@@ -1,0 +1,6 @@
+JSSVGFEFuncGElement.h : SVGComponentTransferFunctionElement.idl SVGElement.idl Element.idl Node.idl EventTarget.idl
+SVGComponentTransferFunctionElement.idl :
+SVGElement.idl :
+Element.idl :
+Node.idl :
+EventTarget.idl :

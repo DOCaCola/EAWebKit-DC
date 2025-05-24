@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,6 +32,7 @@
 #include "config.h"
 #include "DedicatedWorkerGlobalScope.h"
 
+#include "ContentSecurityPolicyResponseHeaders.h"
 #include "DOMWindow.h"
 #include "DedicatedWorkerThread.h"
 #include "MessageEvent.h"
@@ -39,15 +41,16 @@
 
 namespace WebCore {
 
-Ref<DedicatedWorkerGlobalScope> DedicatedWorkerGlobalScope::create(const URL& url, const String& userAgent, DedicatedWorkerThread& thread, const String& contentSecurityPolicy, ContentSecurityPolicy::HeaderType contentSecurityPolicyType, PassRefPtr<SecurityOrigin> topOrigin)
+Ref<DedicatedWorkerGlobalScope> DedicatedWorkerGlobalScope::create(const URL& url, const String& identifier, const String& userAgent, DedicatedWorkerThread& thread, const ContentSecurityPolicyResponseHeaders& contentSecurityPolicyResponseHeaders, bool shouldBypassMainWorldContentSecurityPolicy, Ref<SecurityOrigin>&& topOrigin, IDBClient::IDBConnectionProxy* connectionProxy, SocketProvider* socketProvider)
 {
-    Ref<DedicatedWorkerGlobalScope> context = adoptRef(*new DedicatedWorkerGlobalScope(url, userAgent, thread, topOrigin));
-    context->applyContentSecurityPolicyFromString(contentSecurityPolicy, contentSecurityPolicyType);
+    auto context = adoptRef(*new DedicatedWorkerGlobalScope(url, identifier, userAgent, thread, shouldBypassMainWorldContentSecurityPolicy, WTFMove(topOrigin), connectionProxy, socketProvider));
+    if (!shouldBypassMainWorldContentSecurityPolicy)
+        context->applyContentSecurityPolicyResponseHeaders(contentSecurityPolicyResponseHeaders);
     return context;
 }
 
-DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(const URL& url, const String& userAgent, DedicatedWorkerThread& thread, PassRefPtr<SecurityOrigin> topOrigin)
-    : WorkerGlobalScope(url, userAgent, thread, topOrigin)
+DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(const URL& url, const String& identifier, const String& userAgent, DedicatedWorkerThread& thread, bool shouldBypassMainWorldContentSecurityPolicy, Ref<SecurityOrigin>&& topOrigin, IDBClient::IDBConnectionProxy* connectionProxy, SocketProvider* socketProvider)
+    : WorkerGlobalScope(url, identifier, userAgent, thread, shouldBypassMainWorldContentSecurityPolicy, WTFMove(topOrigin), connectionProxy, socketProvider)
 {
 }
 
@@ -60,27 +63,26 @@ EventTargetInterface DedicatedWorkerGlobalScope::eventTargetInterface() const
     return DedicatedWorkerGlobalScopeEventTargetInterfaceType;
 }
 
-void DedicatedWorkerGlobalScope::postMessage(PassRefPtr<SerializedScriptValue> message, MessagePort* port, ExceptionCode& ec)
+ExceptionOr<void> DedicatedWorkerGlobalScope::postMessage(JSC::ExecState& state, JSC::JSValue messageValue, Vector<JSC::Strong<JSC::JSObject>>&& transfer)
 {
-    MessagePortArray ports;
-    if (port)
-        ports.append(port);
-    postMessage(message, &ports, ec);
-}
+    Vector<RefPtr<MessagePort>> ports;
+    auto message = SerializedScriptValue::create(state, messageValue, WTFMove(transfer), ports);
+    if (message.hasException())
+        return message.releaseException();
 
-void DedicatedWorkerGlobalScope::postMessage(PassRefPtr<SerializedScriptValue> message, const MessagePortArray* ports, ExceptionCode& ec)
-{
     // Disentangle the port in preparation for sending it to the remote context.
-    std::unique_ptr<MessagePortChannelArray> channels = MessagePort::disentanglePorts(ports, ec);
-    if (ec)
-        return;
-    thread().workerObjectProxy().postMessageToWorkerObject(message, WTF::move(channels));
+    auto channels = MessagePort::disentanglePorts(WTFMove(ports));
+    if (channels.hasException())
+        return channels.releaseException();
+    thread().workerObjectProxy().postMessageToWorkerObject(message.releaseReturnValue(), channels.releaseReturnValue());
+    return { };
 }
 
-void DedicatedWorkerGlobalScope::importScripts(const Vector<String>& urls, ExceptionCode& ec)
+ExceptionOr<void> DedicatedWorkerGlobalScope::importScripts(const Vector<String>& urls)
 {
-    Base::importScripts(urls, ec);
+    auto result = Base::importScripts(urls);
     thread().workerObjectProxy().reportPendingActivity(hasPendingActivity());
+    return result;
 }
 
 DedicatedWorkerThread& DedicatedWorkerGlobalScope::thread()

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLOptionElement_h
-#define JSHTMLOptionElement_h
+#pragma once
 
 #include "HTMLOptionElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLOptionElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLOptionElement;
     static JSHTMLOptionElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptionElement>&& impl)
     {
-        JSHTMLOptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionElement>(globalObject->vm().heap)) JSHTMLOptionElement(structure, globalObject, WTF::move(impl));
+        JSHTMLOptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionElement>(globalObject->vm().heap)) JSHTMLOptionElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLOptionElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,25 +47,28 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static JSC::JSValue getNamedConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLOptionElement& impl() const
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLOptionElement& wrapped() const
     {
-        return static_cast<HTMLOptionElement&>(Base::impl());
+        return static_cast<HTMLOptionElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLOptionElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptionElement>&&);
+    JSHTMLOptionElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptionElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HTMLOptionElement&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLOptionElement* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<HTMLOptionElement>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<HTMLOptionElement>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<HTMLOptionElement> {
+    using WrapperClass = JSHTMLOptionElement;
+    using ToWrappedReturnType = HTMLOptionElement*;
+};
 
 } // namespace WebCore
-
-#endif

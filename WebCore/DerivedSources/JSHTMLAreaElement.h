@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLAreaElement_h
-#define JSHTMLAreaElement_h
+#pragma once
 
 #include "HTMLAreaElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLAreaElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLAreaElement;
     static JSHTMLAreaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAreaElement>&& impl)
     {
-        JSHTMLAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAreaElement>(globalObject->vm().heap)) JSHTMLAreaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAreaElement>(globalObject->vm().heap)) JSHTMLAreaElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAreaElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLAreaElement& wrapped() const
     {
-        return static_cast<HTMLAreaElement&>(Base::impl());
+        return static_cast<HTMLAreaElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAreaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAreaElement>&&);
+    JSHTMLAreaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAreaElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLAreaElement> {
+    using WrapperClass = JSHTMLAreaElement;
+    using ToWrappedReturnType = HTMLAreaElement*;
+};
 
 } // namespace WebCore
-
-#endif

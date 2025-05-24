@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf --key-positions='*' -m 10 -s 2 --output-file=SelectorPseudoElementTypeMap.cpp SelectorPseudoElementTypeMap.gperf  */
+/* C++ code produced by gperf version 3.0.1 */
+/* Command-line: C:/GnuWin32/bin/gperf.exe --key-positions='*' -m 10 -s 2 --output-file=SelectorPseudoElementTypeMap.cpp SelectorPseudoElementTypeMap.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -76,7 +76,7 @@ struct SelectorPseudoTypeEntry {
 
 enum
   {
-    TOTAL_KEYWORDS = 13,
+    TOTAL_KEYWORDS = 15,
     MIN_WORD_LENGTH = 3,
     MAX_WORD_LENGTH = 29,
     MIN_HASH_VALUE = 4,
@@ -108,7 +108,7 @@ SelectorPseudoElementTypeMapHash::hash (register const char *str, register unsig
       30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
       30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
       30, 30, 30, 30, 30, 30, 30,  0,  0,  0,
-      30,  0,  0, 30,  1,  0, 30,  0,  0,  1,
+       0,  0,  0, 30,  0,  0, 30,  0,  0,  3,
        0,  0,  0, 30,  0,  0,  0,  1, 30,  0,
       30, 30,  0, 30, 30, 30, 30, 30, 30, 30,
       30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
@@ -227,43 +227,45 @@ static const struct SelectorPseudoTypeEntry wordlist[] =
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
 #line 63 "SelectorPseudoElementTypeMap.gperf"
-    {"cue", CSSSelector::PseudoElementWebKitCustom},
+    {"cue", CSSSelector::PseudoElementCue},
 #line 61 "SelectorPseudoElementTypeMap.gperf"
     {"after", CSSSelector::PseudoElementAfter},
 #line 62 "SelectorPseudoElementTypeMap.gperf"
     {"before", CSSSelector::PseudoElementBefore},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
-#line 73 "SelectorPseudoElementTypeMap.gperf"
+#line 75 "SelectorPseudoElementTypeMap.gperf"
     {"selection", CSSSelector::PseudoElementSelection},
 #line 65 "SelectorPseudoElementTypeMap.gperf"
     {"first-line", CSSSelector::PseudoElementFirstLine},
-    {"",CSSSelector::PseudoElementUnknown},
+#line 66 "SelectorPseudoElementTypeMap.gperf"
+    {"placeholder", CSSSelector::PseudoElementWebKitCustom},
 #line 64 "SelectorPseudoElementTypeMap.gperf"
     {"first-letter", CSSSelector::PseudoElementFirstLetter},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
-#line 66 "SelectorPseudoElementTypeMap.gperf"
+#line 68 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-resizer", CSSSelector::PseudoElementResizer},
     {"",CSSSelector::PseudoElementUnknown},
-#line 67 "SelectorPseudoElementTypeMap.gperf"
+#line 69 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-scrollbar", CSSSelector::PseudoElementScrollbar},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
     {"",CSSSelector::PseudoElementUnknown},
-#line 71 "SelectorPseudoElementTypeMap.gperf"
+#line 73 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-scrollbar-track", CSSSelector::PseudoElementScrollbarTrack},
-#line 69 "SelectorPseudoElementTypeMap.gperf"
+#line 71 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-scrollbar-corner", CSSSelector::PseudoElementScrollbarCorner},
-#line 68 "SelectorPseudoElementTypeMap.gperf"
-    {"-webkit-scrollbar-button", CSSSelector::PseudoElementScrollbarButton},
 #line 70 "SelectorPseudoElementTypeMap.gperf"
+    {"-webkit-scrollbar-button", CSSSelector::PseudoElementScrollbarButton},
+#line 67 "SelectorPseudoElementTypeMap.gperf"
+    {"-webkit-input-placeholder", CSSSelector::PseudoElementWebKitCustomLegacyPrefixed},
+#line 72 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-scrollbar-thumb", CSSSelector::PseudoElementScrollbarThumb},
     {"",CSSSelector::PseudoElementUnknown},
-    {"",CSSSelector::PseudoElementUnknown},
-#line 72 "SelectorPseudoElementTypeMap.gperf"
+#line 74 "SelectorPseudoElementTypeMap.gperf"
     {"-webkit-scrollbar-track-piece", CSSSelector::PseudoElementScrollbarTrackPiece}
   };
 
@@ -284,7 +286,7 @@ SelectorPseudoElementTypeMapHash::in_word_set (register const char *str, registe
     }
   return 0;
 }
-#line 74 "SelectorPseudoElementTypeMap.gperf"
+#line 76 "SelectorPseudoElementTypeMap.gperf"
 
 
 static inline CSSSelector::PseudoElementType parsePseudoElementString(const LChar* characters, unsigned length)

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegCurvetoCubicRel_h
-#define JSSVGPathSegCurvetoCubicRel_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegCurvetoCubicRel : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegCurvetoCubicRel;
     static JSSVGPathSegCurvetoCubicRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegCurvetoCubicRel>&& impl)
     {
-        JSSVGPathSegCurvetoCubicRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoCubicRel>(globalObject->vm().heap)) JSSVGPathSegCurvetoCubicRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegCurvetoCubicRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoCubicRel>(globalObject->vm().heap)) JSSVGPathSegCurvetoCubicRel(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegCurvetoCubicRel& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegCurvetoCubicRel& wrapped() const
     {
-        return static_cast<SVGPathSegCurvetoCubicRel&>(Base::impl());
+        return static_cast<SVGPathSegCurvetoCubicRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegCurvetoCubicRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegCurvetoCubicRel>&&);
+    JSSVGPathSegCurvetoCubicRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegCurvetoCubicRel>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegCurvetoCubicRel> {
+    using WrapperClass = JSSVGPathSegCurvetoCubicRel;
+    using ToWrappedReturnType = SVGPathSegCurvetoCubicRel*;
+};
 
 } // namespace WebCore
-
-#endif

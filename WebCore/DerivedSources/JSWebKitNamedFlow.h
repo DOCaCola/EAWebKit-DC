@@ -18,30 +18,28 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitNamedFlow_h
-#define JSWebKitNamedFlow_h
+#pragma once
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "WebKitNamedFlow.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSWebKitNamedFlow : public JSDOMWrapper {
+class JSWebKitNamedFlow : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = WebKitNamedFlow;
     static JSWebKitNamedFlow* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitNamedFlow>&& impl)
     {
-        JSWebKitNamedFlow* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamedFlow>(globalObject->vm().heap)) JSWebKitNamedFlow(structure, globalObject, WTF::move(impl));
+        JSWebKitNamedFlow* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamedFlow>(globalObject->vm().heap)) JSWebKitNamedFlow(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitNamedFlow* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSWebKitNamedFlow();
 
     DECLARE_INFO;
 
@@ -52,20 +50,14 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    WebKitNamedFlow& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitNamedFlow* m_impl;
-protected:
-    JSWebKitNamedFlow(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitNamedFlow>&&);
-
-    void finishCreation(JSC::VM& vm)
+    WebKitNamedFlow& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<WebKitNamedFlow&>(Base::wrapped());
     }
+protected:
+    JSWebKitNamedFlow(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitNamedFlow>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebKitNamedFlowOwner : public JSC::WeakHandleOwner {
@@ -80,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitNamedFlow*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamedFlow*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitNamedFlow& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebKitNamedFlow* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamedFlow&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitNamedFlow* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebKitNamedFlow>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebKitNamedFlow>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebKitNamedFlow> {
+    using WrapperClass = JSWebKitNamedFlow;
+    using ToWrappedReturnType = WebKitNamedFlow*;
+};
 
 } // namespace WebCore
-
-#endif

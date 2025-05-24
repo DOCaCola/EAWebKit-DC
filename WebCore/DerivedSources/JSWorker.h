@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWorker_h
-#define JSWorker_h
+#pragma once
 
 #include "JSEventTarget.h"
 #include "Worker.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSWorker : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = Worker;
     static JSWorker* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Worker>&& impl)
     {
-        JSWorker* ptr = new (NotNull, JSC::allocateCell<JSWorker>(globalObject->vm().heap)) JSWorker(structure, globalObject, WTF::move(impl));
+        JSWorker* ptr = new (NotNull, JSC::allocateCell<JSWorker>(globalObject->vm().heap)) JSWorker(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Worker* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -48,23 +48,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue postMessage(JSC::ExecState*);
-    Worker& impl() const
+    Worker& wrapped() const
     {
-        return static_cast<Worker&>(Base::impl());
+        return static_cast<Worker&>(Base::wrapped());
     }
 protected:
-    JSWorker(JSC::Structure*, JSDOMGlobalObject*, Ref<Worker>&&);
+    JSWorker(JSC::Structure*, JSDOMGlobalObject&, Ref<Worker>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWorkerOwner : public JSC::WeakHandleOwner {
@@ -79,13 +73,22 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Worker*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Worker*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Worker& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Worker* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Worker&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Worker* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Worker>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Worker>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
 // Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSWorker(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL constructJSWorker(JSC::ExecState&);
 
+template<> struct JSDOMWrapperConverterTraits<Worker> {
+    using WrapperClass = JSWorker;
+    using ToWrappedReturnType = Worker*;
+};
 
 } // namespace WebCore
-
-#endif

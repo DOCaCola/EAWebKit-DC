@@ -22,9 +22,15 @@
 #include "JSSQLTransaction.h"
 
 #include "JSDOMBinding.h"
-#include "SQLTransaction.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSSQLStatementCallback.h"
+#include "JSSQLStatementErrorCallback.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -34,9 +40,14 @@ namespace WebCore {
 
 JSC::EncodedJSValue JSC_HOST_CALL jsSQLTransactionPrototypeFunctionExecuteSql(JSC::ExecState*);
 
+// Attributes
+
+JSC::EncodedJSValue jsSQLTransactionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSQLTransactionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+
 class JSSQLTransactionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSQLTransactionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSQLTransactionPrototype* ptr = new (NotNull, JSC::allocateCell<JSSQLTransactionPrototype>(vm.heap)) JSSQLTransactionPrototype(vm, globalObject, structure);
@@ -59,11 +70,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSSQLTransactionConstructor = JSDOMConstructorNotConstructable<JSSQLTransaction>;
+
+template<> JSValue JSSQLTransactionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSSQLTransactionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSSQLTransaction::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SQLTransaction"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSSQLTransactionConstructor::s_info = { "SQLTransaction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLTransactionConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSQLTransactionPrototypeTableValues[] =
 {
-    { "executeSql", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSQLTransactionPrototypeFunctionExecuteSql), (intptr_t) (2) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSQLTransactionConstructor) } },
+    { "executeSql", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSQLTransactionPrototypeFunctionExecuteSql), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSQLTransactionPrototype::s_info = { "SQLTransactionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLTransactionPrototype) };
@@ -76,10 +105,16 @@ void JSSQLTransactionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSQLTransaction::s_info = { "SQLTransaction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLTransaction) };
 
-JSSQLTransaction::JSSQLTransaction(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLTransaction>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSQLTransaction::JSSQLTransaction(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SQLTransaction>&& impl)
+    : JSDOMWrapper<SQLTransaction>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSQLTransaction::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSQLTransaction::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -87,7 +122,7 @@ JSObject* JSSQLTransaction::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSSQLTransactionPrototype::create(vm, globalObject, JSSQLTransactionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSQLTransaction::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSQLTransaction::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSQLTransaction>(vm, globalObject);
 }
@@ -98,19 +133,64 @@ void JSSQLTransaction::destroy(JSC::JSCell* cell)
     thisObject->JSSQLTransaction::~JSSQLTransaction();
 }
 
-JSSQLTransaction::~JSSQLTransaction()
+template<> inline JSSQLTransaction* BindingCaller<JSSQLTransaction>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSQLTransaction*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSQLTransactionPrototypeFunctionExecuteSql(ExecState* exec)
+EncodedJSValue jsSQLTransactionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSQLTransaction* castedThis = jsDynamicCast<JSSQLTransaction*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SQLTransaction", "executeSql");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSQLTransaction::info());
-    return JSValue::encode(castedThis->executeSql(exec));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSQLTransactionPrototype* domObject = jsDynamicDowncast<JSSQLTransactionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSQLTransaction::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSQLTransactionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSQLTransactionPrototype* domObject = jsDynamicDowncast<JSSQLTransactionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSQLTransaction::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSQLTransactionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsSQLTransactionPrototypeFunctionExecuteSqlCaller(JSC::ExecState*, JSSQLTransaction*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSQLTransactionPrototypeFunctionExecuteSql(ExecState* state)
+{
+    return BindingCaller<JSSQLTransaction>::callOperation<jsSQLTransactionPrototypeFunctionExecuteSqlCaller>(state, "executeSql");
+}
+
+static inline JSC::EncodedJSValue jsSQLTransactionPrototypeFunctionExecuteSqlCaller(JSC::ExecState* state, JSSQLTransaction* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto sqlStatement = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto arguments = state->argument(1).isUndefined() ? Converter<IDLNullable<IDLSequence<IDLUnion<IDLNull, IDLDOMString, IDLUnrestrictedDouble>>>>::ReturnType{ } : convert<IDLNullable<IDLSequence<IDLUnion<IDLNull, IDLDOMString, IDLUnrestrictedDouble>>>>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto callback = convert<IDLNullable<IDLCallbackFunction<JSSQLStatementCallback>>>(*state, state->argument(2), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 2, "callback", "SQLTransaction", "executeSql"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSSQLStatementErrorCallback>>>(*state, state->argument(3), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 3, "errorCallback", "SQLTransaction", "executeSql"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.executeSql(WTFMove(sqlStatement), WTFMove(arguments), WTFMove(callback), WTFMove(errorCallback)));
+    return JSValue::encode(jsUndefined());
 }
 
 bool JSSQLTransactionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -122,24 +202,25 @@ bool JSSQLTransactionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSSQLTransactionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSQLTransaction = jsCast<JSSQLTransaction*>(handle.slot()->asCell());
+    auto* jsSQLTransaction = static_cast<JSSQLTransaction*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSQLTransaction->impl(), jsSQLTransaction);
+    uncacheWrapper(world, &jsSQLTransaction->wrapped(), jsSQLTransaction);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLTransaction* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SQLTransaction>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSQLTransaction>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSSQLTransaction>(globalObject, impl);
+    return createWrapper<SQLTransaction>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLTransaction& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SQLTransaction* JSSQLTransaction::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSQLTransaction*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSQLTransaction*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

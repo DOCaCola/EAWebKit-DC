@@ -18,34 +18,32 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioTrackList_h
-#define JSAudioTrackList_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
 #include "AudioTrackList.h"
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSAudioTrackList : public JSDOMWrapper {
+class JSAudioTrackList : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = AudioTrackList;
     static JSAudioTrackList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioTrackList>&& impl)
     {
-        JSAudioTrackList* ptr = new (NotNull, JSC::allocateCell<JSAudioTrackList>(globalObject->vm().heap)) JSAudioTrackList(structure, globalObject, WTF::move(impl));
+        JSAudioTrackList* ptr = new (NotNull, JSC::allocateCell<JSAudioTrackList>(globalObject->vm().heap)) JSAudioTrackList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioTrackList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSAudioTrackList();
 
     DECLARE_INFO;
 
@@ -55,25 +53,22 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    AudioTrackList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioTrackList* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    AudioTrackList& wrapped() const
+    {
+        return static_cast<AudioTrackList&>(Base::wrapped());
+    }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSAudioTrackList(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioTrackList>&&);
+    JSAudioTrackList(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioTrackList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSAudioTrackListOwner : public JSC::WeakHandleOwner {
@@ -88,12 +83,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioTrackList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioTrackList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioTrackList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(AudioTrackList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioTrackList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioTrackList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioTrackList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioTrackList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<AudioTrackList> {
+    using WrapperClass = JSAudioTrackList;
+    using ToWrappedReturnType = AudioTrackList*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedLengthList_h
-#define JSSVGAnimatedLengthList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedLengthList.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedLengthList : public JSDOMWrapper {
+class JSSVGAnimatedLengthList : public JSDOMWrapper<SVGAnimatedLengthList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedLengthList>;
     static JSSVGAnimatedLengthList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedLengthList>&& impl)
     {
-        JSSVGAnimatedLengthList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedLengthList>(globalObject->vm().heap)) JSSVGAnimatedLengthList(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedLengthList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedLengthList>(globalObject->vm().heap)) JSSVGAnimatedLengthList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedLengthList* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedLengthList();
 
     DECLARE_INFO;
 
@@ -52,23 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedLengthList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedLengthList* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedLengthList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedLengthList>&&);
+    JSSVGAnimatedLengthList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedLengthList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedLengthListOwner : public JSC::WeakHandleOwner {
@@ -83,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedLengthLis
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedLengthList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedLengthList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedLengthList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedLengthList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedLengthList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedLengthList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedLengthList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedLengthList> {
+    using WrapperClass = JSSVGAnimatedLengthList;
+    using ToWrappedReturnType = SVGAnimatedLengthList*;
+};
 
 } // namespace WebCore
-
-#endif

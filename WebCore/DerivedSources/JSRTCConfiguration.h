@@ -18,74 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCConfiguration_h
-#define JSRTCConfiguration_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
 #include "RTCConfiguration.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCConfiguration : public JSDOMWrapper {
-public:
-    typedef JSDOMWrapper Base;
-    static JSRTCConfiguration* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCConfiguration>&& impl)
-    {
-        JSRTCConfiguration* ptr = new (NotNull, JSC::allocateCell<JSRTCConfiguration>(globalObject->vm().heap)) JSRTCConfiguration(structure, globalObject, WTF::move(impl));
-        ptr->finishCreation(globalObject->vm());
-        return ptr;
-    }
+template<> RTCConfiguration convertDictionary<RTCConfiguration>(JSC::ExecState&, JSC::JSValue);
 
-    static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static RTCConfiguration* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSRTCConfiguration();
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const RTCConfiguration&);
 
-    DECLARE_INFO;
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, RTCConfiguration::IceTransportPolicy);
 
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
+template<> std::optional<RTCConfiguration::IceTransportPolicy> parseEnumeration<RTCConfiguration::IceTransportPolicy>(JSC::ExecState&, JSC::JSValue);
+template<> RTCConfiguration::IceTransportPolicy convertEnumeration<RTCConfiguration::IceTransportPolicy>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<RTCConfiguration::IceTransportPolicy>();
 
-    RTCConfiguration& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, RTCConfiguration::BundlePolicy);
 
-private:
-    RTCConfiguration* m_impl;
-protected:
-    JSRTCConfiguration(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCConfiguration>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-};
-
-class JSRTCConfigurationOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCConfiguration*)
-{
-    static NeverDestroyed<JSRTCConfigurationOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCConfiguration*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCConfiguration& impl) { return toJS(exec, globalObject, &impl); }
-
+template<> std::optional<RTCConfiguration::BundlePolicy> parseEnumeration<RTCConfiguration::BundlePolicy>(JSC::ExecState&, JSC::JSValue);
+template<> RTCConfiguration::BundlePolicy convertEnumeration<RTCConfiguration::BundlePolicy>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<RTCConfiguration::BundlePolicy>();
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

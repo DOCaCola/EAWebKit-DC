@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaError_h
-#define JSMediaError_h
+#pragma once
 
 #if ENABLE(VIDEO)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSMediaError : public JSDOMWrapper {
+class JSMediaError : public JSDOMWrapper<MediaError> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaError>;
     static JSMediaError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaError>&& impl)
     {
-        JSMediaError* ptr = new (NotNull, JSC::allocateCell<JSMediaError>(globalObject->vm().heap)) JSMediaError(structure, globalObject, WTF::move(impl));
+        JSMediaError* ptr = new (NotNull, JSC::allocateCell<JSMediaError>(globalObject->vm().heap)) JSMediaError(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaError* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMediaError();
 
     DECLARE_INFO;
 
@@ -53,23 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaError* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSMediaError(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaError>&&);
+    JSMediaError(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaError>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaErrorOwner : public JSC::WeakHandleOwner {
@@ -84,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaError*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaError& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaError* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaError&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaError* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaError>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaError>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaError> {
+    using WrapperClass = JSMediaError;
+    using ToWrappedReturnType = MediaError*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO)
-
-#endif

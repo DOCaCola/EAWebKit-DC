@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSClientRect_h
-#define JSClientRect_h
+#pragma once
 
 #include "ClientRect.h"
 #include "JSDOMWrapper.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSClientRect : public JSDOMWrapper {
+class WEBCORE_EXPORT JSClientRect : public JSDOMWrapper<ClientRect> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<ClientRect>;
     static JSClientRect* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ClientRect>&& impl)
     {
-        JSClientRect* ptr = new (NotNull, JSC::allocateCell<JSClientRect>(globalObject->vm().heap)) JSClientRect(structure, globalObject, WTF::move(impl));
+        JSClientRect* ptr = new (NotNull, JSC::allocateCell<JSClientRect>(globalObject->vm().heap)) JSClientRect(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static ClientRect* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSClientRect();
 
     DECLARE_INFO;
 
@@ -51,23 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ClientRect& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ClientRect* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSClientRect(JSC::Structure*, JSDOMGlobalObject*, Ref<ClientRect>&&);
+    JSClientRect(JSC::Structure*, JSDOMGlobalObject&, Ref<ClientRect>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSClientRectOwner : public JSC::WeakHandleOwner {
@@ -82,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ClientRect*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRect*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ClientRect& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(ClientRect* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRect&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ClientRect* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ClientRect>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ClientRect>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<ClientRect> {
+    using WrapperClass = JSClientRect;
+    using ToWrappedReturnType = ClientRect*;
+};
 
 } // namespace WebCore
-
-#endif

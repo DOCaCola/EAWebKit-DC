@@ -54,6 +54,7 @@ struct SameSizeAsScrollableArea {
     unsigned currentIndices[2];
 #else
 	std::unique_ptr<ScrollAnimator> pointer;
+    WeakPtrFactory<ScrollableArea> pointer2;
 #endif
     IntPoint origin;
     unsigned bitfields : 16;

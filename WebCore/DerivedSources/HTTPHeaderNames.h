@@ -56,6 +56,7 @@ enum class HTTPHeaderName {
     ContentEncoding,
     ContentLanguage,
     ContentLength,
+    ContentRange,
     ContentSecurityPolicy,
     ContentSecurityPolicyReportOnly,
     ContentTransferEncoding,
@@ -83,6 +84,7 @@ enum class HTTPHeaderName {
     KeepAlive,
     LastEventID,
     LastModified,
+    Link,
     Location,
     Origin,
     PingFrom,
@@ -105,6 +107,7 @@ enum class HTTPHeaderName {
     Trailer,
     TransferEncoding,
     Upgrade,
+    UpgradeInsecureRequests,
     UserAgent,
     Vary,
     Via,
@@ -118,7 +121,7 @@ enum class HTTPHeaderName {
     XXSSProtection,
 };
 
-const unsigned numHTTPHeaderNames = 82;
+const unsigned numHTTPHeaderNames = 85;
 const size_t minHTTPHeaderNameLength = 2;
 const size_t maxHTTPHeaderNameLength = 35;
 

@@ -25,7 +25,8 @@
 #include "JSWebGLProgram.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLProgram.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLProgramConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLProgramConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLProgramConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLProgramPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLProgramPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLProgramPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLProgramPrototype>(vm.heap)) JSWebGLProgramPrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLProgramConstructor : public DOMConstructorObject {
-private:
-    JSWebGLProgramConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLProgramConstructor = JSDOMConstructorNotConstructable<JSWebGLProgram>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLProgramConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLProgramConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLProgramConstructor>(vm.heap)) JSWebGLProgramConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLProgramConstructor::s_info = { "WebGLProgramConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramConstructor) };
-
-JSWebGLProgramConstructor::JSWebGLProgramConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLProgramConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLProgramConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLProgramConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLProgram::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLProgram::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLProgram"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLProgramConstructor::s_info = { "WebGLProgram", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLProgramPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLProgramConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLProgramConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLProgramConstructor) } },
 };
 
 const ClassInfo JSWebGLProgramPrototype::s_info = { "WebGLProgramPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramPrototype) };
@@ -115,10 +97,16 @@ void JSWebGLProgramPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLProgram::s_info = { "WebGLProgram", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgram) };
 
-JSWebGLProgram::JSWebGLProgram(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLProgram>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLProgram::JSWebGLProgram(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLProgram>&& impl)
+    : JSDOMWrapper<WebGLProgram>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLProgram::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLProgram::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSWebGLProgram::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSWebGLProgramPrototype::create(vm, globalObject, JSWebGLProgramPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLProgram::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLProgram::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLProgram>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSWebGLProgram::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLProgram::~JSWebGLProgram();
 }
 
-JSWebGLProgram::~JSWebGLProgram()
+EncodedJSValue jsWebGLProgramConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLProgramPrototype* domObject = jsDynamicDowncast<JSWebGLProgramPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLProgram::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsWebGLProgramConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSWebGLProgramConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSWebGLProgramPrototype* domObject = jsDynamicCast<JSWebGLProgramPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLProgram::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLProgramPrototype* domObject = jsDynamicDowncast<JSWebGLProgramPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSWebGLProgram::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWebGLProgram::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLProgramConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLProgramConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLProgramOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSWebGLProgramOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSWebGLProgramOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLProgram = jsCast<JSWebGLProgram*>(handle.slot()->asCell());
+    auto* jsWebGLProgram = static_cast<JSWebGLProgram*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLProgram->impl(), jsWebGLProgram);
+    uncacheWrapper(world, &jsWebGLProgram->wrapped(), jsWebGLProgram);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLProgram@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12WebGLProgramE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLProgram>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLProgram>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLProgram@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram
 #if COMPILER(CLANG)
     // If this fails WebGLProgram does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLProgram), WebGLProgram_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLProgram), "WebGLProgram is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLProgram>(globalObject, impl);
+    return createWrapper<WebGLProgram>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLProgram& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLProgram* JSWebGLProgram::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLProgram*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLProgram*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

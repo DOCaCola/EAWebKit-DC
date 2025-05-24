@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedNumber_h
-#define JSSVGAnimatedNumber_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedNumber.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedNumber : public JSDOMWrapper {
+class JSSVGAnimatedNumber : public JSDOMWrapper<SVGAnimatedNumber> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedNumber>;
     static JSSVGAnimatedNumber* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedNumber>&& impl)
     {
-        JSSVGAnimatedNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedNumber>(globalObject->vm().heap)) JSSVGAnimatedNumber(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedNumber>(globalObject->vm().heap)) JSSVGAnimatedNumber(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedNumber* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedNumber();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedNumber& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedNumber* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedNumber(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedNumber>&&);
+    JSSVGAnimatedNumber(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedNumber>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedNumberOwner : public JSC::WeakHandleOwner {
@@ -80,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedNumber*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedNumber*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedNumber& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedNumber* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedNumber&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedNumber* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedNumber>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedNumber>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedNumber> {
+    using WrapperClass = JSSVGAnimatedNumber;
+    using ToWrappedReturnType = SVGAnimatedNumber*;
+};
 
 } // namespace WebCore
-
-#endif

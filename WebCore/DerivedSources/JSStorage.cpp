@@ -21,12 +21,11 @@
 #include "config.h"
 #include "JSStorage.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "Storage.h"
-#include "URL.h"
-#include "wtf/text/AtomicString.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -43,12 +42,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionClear(JSC::ExecState
 
 // Attributes
 
-JSC::EncodedJSValue jsStorageLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsStorageConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsStorageLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsStorageConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSStorageConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSStoragePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSStoragePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSStoragePrototype* ptr = new (NotNull, JSC::allocateCell<JSStoragePrototype>(vm.heap)) JSStoragePrototype(vm, globalObject, structure);
@@ -71,70 +71,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSStorageConstructor : public DOMConstructorObject {
-private:
-    JSStorageConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSStorageConstructor = JSDOMConstructorNotConstructable<JSStorage>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSStorageConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSStorageConstructor* ptr = new (NotNull, JSC::allocateCell<JSStorageConstructor>(vm.heap)) JSStorageConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSStorageTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSStorageTableValues[] =
+template<> JSValue JSStorageConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | DontEnum | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSStorageTable = { 2, 3, true, JSStorageTableValues, 0, JSStorageTableIndex };
-const ClassInfo JSStorageConstructor::s_info = { "StorageConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageConstructor) };
-
-JSStorageConstructor::JSStorageConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSStorageConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSStorageConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSStorage::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSStorage::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Storage"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSStorageConstructor::s_info = { "Storage", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSStoragePrototypeTableValues[] =
 {
-    { "key", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionKey), (intptr_t) (1) },
-    { "getItem", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionGetItem), (intptr_t) (1) },
-    { "setItem", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionSetItem), (intptr_t) (2) },
-    { "removeItem", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionRemoveItem), (intptr_t) (1) },
-    { "clear", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionClear), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSStorageConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "key", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionKey), (intptr_t) (1) } },
+    { "getItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionGetItem), (intptr_t) (1) } },
+    { "setItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionSetItem), (intptr_t) (2) } },
+    { "removeItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionRemoveItem), (intptr_t) (1) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStoragePrototypeFunctionClear), (intptr_t) (0) } },
 };
 
 const ClassInfo JSStoragePrototype::s_info = { "StoragePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStoragePrototype) };
@@ -145,12 +109,18 @@ void JSStoragePrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSStoragePrototypeTableValues, *this);
 }
 
-const ClassInfo JSStorage::s_info = { "Storage", &Base::s_info, &JSStorageTable, CREATE_METHOD_TABLE(JSStorage) };
+const ClassInfo JSStorage::s_info = { "Storage", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorage) };
 
-JSStorage::JSStorage(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Storage>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSStorage::JSStorage(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Storage>&& impl)
+    : JSDOMWrapper<Storage>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSStorage::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSStorage::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -158,7 +128,7 @@ JSObject* JSStorage::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSStoragePrototype::create(vm, globalObject, JSStoragePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSStorage::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSStorage::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSStorage>(vm, globalObject);
 }
@@ -169,185 +139,232 @@ void JSStorage::destroy(JSC::JSCell* cell)
     thisObject->JSStorage::~JSStorage();
 }
 
-JSStorage::~JSStorage()
-{
-    releaseImpl();
-}
-
-bool JSStorage::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSStorage::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSStorage*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSStorage>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().getItem(propertyNameToAtomicString(propertyName));
+        if (item.hasException()) {
+            auto throwScope = DECLARE_THROW_SCOPE(state->vm());
+            propagateException(*state, throwScope, item.releaseException());
+            return true;
+        }
+
+        auto itemValue = item.releaseReturnValue();
+        if (!IDLNullable<IDLDOMString>::isNullValue(itemValue)) {
+            slot.setValue(thisObject, 0, toJS<IDLNullable<IDLDOMString>>(*state, itemValue));
+            return true;
+        }
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return getStaticValueSlot<JSStorage, Base>(exec, JSStorageTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSStorage::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSStorage::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSStorage*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->classInfo() == info()) {
+        auto item = thisObject->wrapped().getItem(propertyNameToAtomicString(propertyName));
+        if (item.hasException()) {
+            auto throwScope = DECLARE_THROW_SCOPE(state->vm());
+            propagateException(*state, throwScope, item.releaseException());
+            return true;
+        }
+
+        auto itemValue = item.releaseReturnValue();
+        if (!IDLNullable<IDLDOMString>::isNullValue(itemValue)) {
+            slot.setValue(thisObject, 0, toJS<IDLNullable<IDLDOMString>>(*state, itemValue));
+            return true;
+        }
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsStorageLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSStorage*>(slotBase);
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length(ec));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsStorageConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSStorage* domObject = jsDynamicCast<JSStorage*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSStorage::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSStorage::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+bool JSStorage::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSStorage*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
-        return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    bool putResult = false;
+    if (thisObject->putDelegate(state, propertyName, value, slot, putResult))
+        return putResult;
+    return Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSStorage::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+bool JSStorage::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSStorage*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
-        return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    bool putResult = false;
+    if (thisObject->putDelegate(state, propertyName, value, slot, putResult))
+        return putResult;
+    return Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-JSValue JSStorage::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSStorage* BindingCaller<JSStorage>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSStorageConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSStorage*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionKey(ExecState* exec)
+template<> inline JSStorage* BindingCaller<JSStorage>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSStorage* castedThis = jsDynamicCast<JSStorage*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Storage", "key");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorage::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.key(index, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSStorage*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionGetItem(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSStorage* castedThis = jsDynamicCast<JSStorage*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Storage", "getItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorage::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String key = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getItem(key, ec));
+static inline JSValue jsStorageLengthGetter(ExecState&, JSStorage&, ThrowScope& throwScope);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue jsStorageLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSStorage>::attribute<jsStorageLengthGetter>(state, thisValue, "length");
 }
 
-EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionSetItem(ExecState* exec)
+static inline JSValue jsStorageLengthGetter(ExecState& state, JSStorage& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSStorage* castedThis = jsDynamicCast<JSStorage*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Storage", "setItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorage::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String key = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String data = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setItem(key, data, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(state, throwScope, impl.length());
+    return result;
+}
+
+EncodedJSValue jsStorageConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSStoragePrototype* domObject = jsDynamicDowncast<JSStoragePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSStorage::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSStorageConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSStoragePrototype* domObject = jsDynamicDowncast<JSStoragePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSStorage::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSStorageConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionKeyCaller(JSC::ExecState*, JSStorage*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionKey(ExecState* state)
+{
+    return BindingCaller<JSStorage>::callOperation<jsStoragePrototypeFunctionKeyCaller>(state, "key");
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionKeyCaller(JSC::ExecState* state, JSStorage* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, throwScope, impl.key(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionGetItemCaller(JSC::ExecState*, JSStorage*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionGetItem(ExecState* state)
+{
+    return BindingCaller<JSStorage>::callOperation<jsStoragePrototypeFunctionGetItemCaller>(state, "getItem");
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionGetItemCaller(JSC::ExecState* state, JSStorage* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, throwScope, impl.getItem(WTFMove(key))));
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionSetItemCaller(JSC::ExecState*, JSStorage*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionSetItem(ExecState* state)
+{
+    return BindingCaller<JSStorage>::callOperation<jsStoragePrototypeFunctionSetItemCaller>(state, "setItem");
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionSetItemCaller(JSC::ExecState* state, JSStorage* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto data = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.setItem(WTFMove(key), WTFMove(data)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionRemoveItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionRemoveItemCaller(JSC::ExecState*, JSStorage*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionRemoveItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSStorage* castedThis = jsDynamicCast<JSStorage*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Storage", "removeItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorage::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String key = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.removeItem(key, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSStorage>::callOperation<jsStoragePrototypeFunctionRemoveItemCaller>(state, "removeItem");
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionRemoveItemCaller(JSC::ExecState* state, JSStorage* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.removeItem(WTFMove(key)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionClear(ExecState* exec)
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionClearCaller(JSC::ExecState*, JSStorage*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsStoragePrototypeFunctionClear(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSStorage* castedThis = jsDynamicCast<JSStorage*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Storage", "clear");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorage::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.clear(ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSStorage>::callOperation<jsStoragePrototypeFunctionClearCaller>(state, "clear");
+}
+
+static inline JSC::EncodedJSValue jsStoragePrototypeFunctionClearCaller(JSC::ExecState* state, JSStorage* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    propagateException(*state, throwScope, impl.clear());
     return JSValue::encode(jsUndefined());
 }
 
 bool JSStorageOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsStorage = jsCast<JSStorage*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsStorage->impl().frame());
+    Frame* root = WTF::getPtr(jsStorage->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -355,24 +372,25 @@ bool JSStorageOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle
 
 void JSStorageOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsStorage = jsCast<JSStorage*>(handle.slot()->asCell());
+    auto* jsStorage = static_cast<JSStorage*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsStorage->impl(), jsStorage);
+    uncacheWrapper(world, &jsStorage->wrapped(), jsStorage);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Storage* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Storage>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSStorage>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSStorage>(globalObject, impl);
+    return createWrapper<Storage>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Storage& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Storage* JSStorage::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSStorage*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSStorage*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

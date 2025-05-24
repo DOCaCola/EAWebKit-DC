@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMockContentFilterSettings_h
-#define JSMockContentFilterSettings_h
+#pragma once
 
 #if ENABLE(CONTENT_FILTERING)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSMockContentFilterSettings : public JSDOMWrapper {
+class JSMockContentFilterSettings : public JSDOMWrapper<MockContentFilterSettings> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MockContentFilterSettings>;
     static JSMockContentFilterSettings* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MockContentFilterSettings>&& impl)
     {
-        JSMockContentFilterSettings* ptr = new (NotNull, JSC::allocateCell<JSMockContentFilterSettings>(globalObject->vm().heap)) JSMockContentFilterSettings(structure, globalObject, WTF::move(impl));
+        JSMockContentFilterSettings* ptr = new (NotNull, JSC::allocateCell<JSMockContentFilterSettings>(globalObject->vm().heap)) JSMockContentFilterSettings(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MockContentFilterSettings* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMockContentFilterSettings();
 
     DECLARE_INFO;
 
@@ -55,28 +52,16 @@ public:
 
 
     // Custom attributes
-    JSC::JSValue decisionPoint(JSC::ExecState*) const;
-    void setDecisionPoint(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue decision(JSC::ExecState*) const;
-    void setDecision(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue unblockRequestDecision(JSC::ExecState*) const;
-    void setUnblockRequestDecision(JSC::ExecState*, JSC::JSValue);
-    MockContentFilterSettings& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MockContentFilterSettings* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    JSC::JSValue decisionPoint(JSC::ExecState&) const;
+    void setDecisionPoint(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue decision(JSC::ExecState&) const;
+    void setDecision(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue unblockRequestDecision(JSC::ExecState&) const;
+    void setUnblockRequestDecision(JSC::ExecState&, JSC::JSValue);
 protected:
-    JSMockContentFilterSettings(JSC::Structure*, JSDOMGlobalObject*, Ref<MockContentFilterSettings>&&);
+    JSMockContentFilterSettings(JSC::Structure*, JSDOMGlobalObject&, Ref<MockContentFilterSettings>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMockContentFilterSettingsOwner : public JSC::WeakHandleOwner {
@@ -91,12 +76,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MockContentFilterSet
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MockContentFilterSettings*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MockContentFilterSettings& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MockContentFilterSettings* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MockContentFilterSettings&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MockContentFilterSettings* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MockContentFilterSettings>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MockContentFilterSettings>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MockContentFilterSettings> {
+    using WrapperClass = JSMockContentFilterSettings;
+    using ToWrappedReturnType = MockContentFilterSettings*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CONTENT_FILTERING)
-
-#endif

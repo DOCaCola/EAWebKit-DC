@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGMatrix_h
-#define JSSVGMatrix_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGMatrix.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGMatrix : public JSDOMWrapper {
+class JSSVGMatrix : public JSDOMWrapper<SVGMatrix> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGMatrix* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGMatrix>>&& impl)
+    using Base = JSDOMWrapper<SVGMatrix>;
+    static JSSVGMatrix* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMatrix>&& impl)
     {
-        JSSVGMatrix* ptr = new (NotNull, JSC::allocateCell<JSSVGMatrix>(globalObject->vm().heap)) JSSVGMatrix(structure, globalObject, WTF::move(impl));
+        JSSVGMatrix* ptr = new (NotNull, JSC::allocateCell<JSSVGMatrix>(globalObject->vm().heap)) JSSVGMatrix(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<SVGMatrix>* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGMatrix* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGMatrix();
 
     DECLARE_INFO;
 
@@ -52,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGMatrix>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGMatrix>* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGMatrix(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGMatrix>>&&);
+    JSSVGMatrix(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMatrix>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGMatrixOwner : public JSC::WeakHandleOwner {
@@ -75,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<SVGMatrix>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGMatrix*)
 {
     static NeverDestroyed<JSSVGMatrixOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGMatrix>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGMatrix>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGMatrix* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGMatrix&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGMatrix* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGMatrix>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGMatrix>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGMatrix> {
+    using WrapperClass = JSSVGMatrix;
+    using ToWrappedReturnType = SVGMatrix*;
+};
 
 } // namespace WebCore
-
-#endif

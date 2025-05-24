@@ -190,6 +190,8 @@ file(GLOB EAWEBKIT_SOURCES
 	"WebCore/page/*.h"
 	"WebCore/page/animation/*.cpp"
 	"WebCore/page/animation/*.h"
+	"WebCore/page/csp/*.cpp"
+	"WebCore/page/csp/*.h"
 	"WebCore/page/ea/*.cpp"
 	"WebCore/page/ea/*.h"
 	"WebCore/page/scrolling/*.cpp"
@@ -403,7 +405,6 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/xml/parser/XMLDocumentParserLibxml2.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/ColorData.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSGrammar.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSPropertyNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSValueKeywords.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/EventFactory.cpp
@@ -411,11 +412,6 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTTPHeaderNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSNotificationPermissionCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageErrorCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageInfo.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageQuota.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageQuotaCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageUsageCallback.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSSVGElementWrapperFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/MathMLElementFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/MathMLNames.cpp
@@ -429,7 +425,6 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XLinkNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNSNames.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XPathGrammar.cpp
 	)
 
 
@@ -517,6 +512,7 @@ set_target_properties(EAWebKit PROPERTIES OUTPUT_NAME "EAWebKit$<$<CONFIG:Debug>
 
 target_include_directories(EAWebKit PRIVATE
 	"WebCore/bridge/ea"
+	"WebCore/page/csp"
 	"WebCore/page/ea"
 	"WebCore/platform/graphics/ea"
 	"WebCore/platform/network/ea"

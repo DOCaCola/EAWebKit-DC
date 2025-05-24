@@ -28,6 +28,8 @@ struct Value;
 %%
 inherit, CSSValueInherit
 initial, CSSValueInitial
+unset, CSSValueUnset
+revert, CSSValueRevert
 none, CSSValueNone
 hidden, CSSValueHidden
 inset, CSSValueInset
@@ -57,6 +59,31 @@ discretionary-ligatures, CSSValueDiscretionaryLigatures
 no-discretionary-ligatures, CSSValueNoDiscretionaryLigatures
 historical-ligatures, CSSValueHistoricalLigatures
 no-historical-ligatures, CSSValueNoHistoricalLigatures
+contextual, CSSValueContextual
+no-contextual, CSSValueNoContextual
+all-small-caps, CSSValueAllSmallCaps
+petite-caps, CSSValuePetiteCaps
+all-petite-caps, CSSValueAllPetiteCaps
+unicase, CSSValueUnicase
+titling-caps, CSSValueTitlingCaps
+lining-nums, CSSValueLiningNums
+oldstyle-nums, CSSValueOldstyleNums
+proportional-nums, CSSValueProportionalNums
+tabular-nums, CSSValueTabularNums
+diagonal-fractions, CSSValueDiagonalFractions
+stacked-fractions, CSSValueStackedFractions
+ordinal, CSSValueOrdinal
+slashed-zero, CSSValueSlashedZero
+historical-forms, CSSValueHistoricalForms
+jis78, CSSValueJis78
+jis83, CSSValueJis83
+jis90, CSSValueJis90
+jis04, CSSValueJis04
+simplified, CSSValueSimplified
+traditional, CSSValueTraditional
+full-width, CSSValueFullWidth
+proportional-width, CSSValueProportionalWidth
+ruby, CSSValueRuby
 normal, CSSValueNormal
 bold, CSSValueBold
 bolder, CSSValueBolder
@@ -302,8 +329,9 @@ flex, CSSValueFlex
 -webkit-flex, CSSValueWebkitFlex
 inline-flex, CSSValueInlineFlex
 -webkit-inline-flex, CSSValueWebkitInlineFlex
--webkit-grid, CSSValueWebkitGrid
--webkit-inline-grid, CSSValueWebkitInlineGrid
+contents, CSSValueContents
+grid, CSSValueGrid
+inline-grid, CSSValueInlineGrid
 auto, CSSValueAuto
 crosshair, CSSValueCrosshair
 default, CSSValueDefault
@@ -383,7 +411,6 @@ line-through, CSSValueLineThrough
 local, CSSValueLocal
 loud, CSSValueLoud
 lower, CSSValueLower
--webkit-marquee, CSSValueWebkitMarquee
 mix, CSSValueMix
 no-close-quote, CSSValueNoCloseQuote
 no-open-quote, CSSValueNoOpenQuote
@@ -427,7 +454,7 @@ space-evenly, CSSValueSpaceEvenly
 last-baseline, CSSValueLastBaseline
 self-start, CSSValueSelfStart
 self-end, CSSValueSelfEnd
-true, CSSValueTrue
+unsafe, CSSValueUnsafe
 safe, CSSValueSafe
 legacy, CSSValueLegacy
 row, CSSValueRow
@@ -538,6 +565,15 @@ content, CSSValueContent
 content-box, CSSValueContentBox
 padding, CSSValuePadding
 padding-box, CSSValuePaddingBox
+var, CSSValueVar
+-internal-variable-value, CSSValueInternalVariableValue
+avoid-column, CSSValueAvoidColumn
+avoid-page, CSSValueAvoidPage
+avoid-region, CSSValueAvoidRegion
+page, CSSValuePage
+recto, CSSValueRecto
+region, CSSValueRegion
+verso, CSSValueVerso
 margin-box, CSSValueMarginBox
 view-box, CSSValueViewBox
 contain, CSSValueContain
@@ -613,6 +649,7 @@ sideways, CSSValueSideways
 sideways-right, CSSValueSidewaysRight
 upright, CSSValueUpright
 vertical-right, CSSValueVerticalRight
+mixed, CSSValueMixed
 font, CSSValueFont
 glyphs, CSSValueGlyphs
 inline-box, CSSValueInlineBox
@@ -620,7 +657,9 @@ initial-letter, CSSValueInitialLetter
 replaced, CSSValueReplaced
 on, CSSValueOn
 off, CSSValueOff
-optimizequality, CSSValueOptimizequality
+optimizequality , CSSValueOptimizequality 
+crisp-edges, CSSValueCrispEdges
+pixelated, CSSValuePixelated
 -webkit-crisp-edges, CSSValueWebkitCrispEdges
 -webkit-optimize-contrast, CSSValueWebkitOptimizeContrast
 nonzero, CSSValueNonzero
@@ -651,10 +690,83 @@ color, CSSValueColor
 luminosity, CSSValueLuminosity
 isolate, CSSValueIsolate
 scale-down, CSSValueScaleDown
+container-scroll, CSSValueContainerScroll
+cross-fade, CSSValueCrossFade
+image-set, CSSValueImageSet
+linear-gradient, CSSValueLinearGradient
+radial-gradient, CSSValueRadialGradient
+repeating-linear-gradient, CSSValueRepeatingLinearGradient
+repeating-radial-gradient, CSSValueRepeatingRadialGradient
+-webkit-canvas, CSSValueWebkitCanvas
+-webkit-cross-fade, CSSValueWebkitCrossFade
+-webkit-gradient, CSSValueWebkitGradient
+-webkit-linear-gradient, CSSValueWebkitLinearGradient
+-webkit-radial-gradient, CSSValueWebkitRadialGradient
+-webkit-repeating-linear-gradient, CSSValueWebkitRepeatingLinearGradient
+-webkit-repeating-radial-gradient, CSSValueWebkitRepeatingRadialGradient
+-webkit-image-set, CSSValueWebkitImageSet
+-webkit-named-image, CSSValueWebkitNamedImage
+filter, CSSValueFilter
+-webkit-filter, CSSValueWebkitFilter
+dashboard-region, CSSValueDashboardRegion
+from, CSSValueFrom
+to, CSSValueTo
+color-stop, CSSValueColorStop
+radial, CSSValueRadial
+attr, CSSValueAttr
+counter, CSSValueCounter
+counters, CSSValueCounters
+rect, CSSValueRect
+polygon, CSSValuePolygon
+format, CSSValueFormat
+grayscale, CSSValueGrayscale
+sepia, CSSValueSepia
+saturate, CSSValueSaturate
+hue-rotate, CSSValueHueRotate
+opacity, CSSValueOpacity
+brightness, CSSValueBrightness
+contrast, CSSValueContrast
+blur, CSSValueBlur
+drop-shadow, CSSValueDropShadow
+url, CSSValueUrl
+cubic-bezier, CSSValueCubicBezier
+spring, CSSValueSpring
+steps, CSSValueSteps
+rgb, CSSValueRgb
+rgba, CSSValueRgba
+hsl, CSSValueHsl
+hsla, CSSValueHsla
+matrix, CSSValueMatrix
+matrix3d, CSSValueMatrix3d
+perspective, CSSValuePerspective
+rotate, CSSValueRotate
+rotatex, CSSValueRotatex
+rotatey, CSSValueRotatey
+rotatez, CSSValueRotatez
+rotate3d, CSSValueRotate3d
+scale, CSSValueScale
+scalex, CSSValueScalex
+scaley, CSSValueScaley
+scalez, CSSValueScalez
+scale3d, CSSValueScale3d
+skew, CSSValueSkew
+skewx, CSSValueSkewx
+skewy, CSSValueSkewy
+translate, CSSValueTranslate
+translatex, CSSValueTranslatex
+translatey, CSSValueTranslatey
+translatez, CSSValueTranslatez
+translate3d, CSSValueTranslate3d
+path, CSSValuePath
+calc, CSSValueCalc
+-webkit-calc, CSSValueWebkitCalc
 -webkit-paged-x, CSSValueWebkitPagedX
 -webkit-paged-y, CSSValueWebkitPagedY
 markers, CSSValueMarkers
 span, CSSValueSpan
+minmax, CSSValueMinmax
+fit-content, CSSValueFitContent
+auto-flow, CSSValueAutoFlow
 dense, CSSValueDense
 balance, CSSValueBalance
 from-dimensions, CSSValueFromDimensions
@@ -662,7 +774,18 @@ from-intrinsic, CSSValueFromIntrinsic
 weight, CSSValueWeight
 style, CSSValueStyle
 scroll-position, CSSValueScrollPosition
-contents, CSSValueContents
+allow-end, CSSValueAllowEnd
+first, CSSValueFirst
+force-end, CSSValueForceEnd
+last, CSSValueLast
+p3, CSSValueP3
+rec2020, CSSValueRec2020
+srgb, CSSValueSrgb
+display-p3, CSSValueDisplayP3
+reduce, CSSValueReduce
+no-preference, CSSValueNoPreference
+auto-fill, CSSValueAutoFill
+auto-fit, CSSValueAutoFit
 aliceblue, CSSValueAliceblue
 antiquewhite, CSSValueAntiquewhite
 aquamarine, CSSValueAquamarine
@@ -795,7 +918,6 @@ whitesmoke, CSSValueWhitesmoke
 yellowgreen, CSSValueYellowgreen
 accumulate, CSSValueAccumulate
 new, CSSValueNew
-srgb, CSSValueSrgb
 linearrgb, CSSValueLinearrgb
 crispedges, CSSValueCrispedges
 butt, CSSValueButt
@@ -819,6 +941,8 @@ static const char* const valueList[] = {
     "",
     "inherit",
     "initial",
+    "unset",
+    "revert",
     "none",
     "hidden",
     "inset",
@@ -848,6 +972,31 @@ static const char* const valueList[] = {
     "no-discretionary-ligatures",
     "historical-ligatures",
     "no-historical-ligatures",
+    "contextual",
+    "no-contextual",
+    "all-small-caps",
+    "petite-caps",
+    "all-petite-caps",
+    "unicase",
+    "titling-caps",
+    "lining-nums",
+    "oldstyle-nums",
+    "proportional-nums",
+    "tabular-nums",
+    "diagonal-fractions",
+    "stacked-fractions",
+    "ordinal",
+    "slashed-zero",
+    "historical-forms",
+    "jis78",
+    "jis83",
+    "jis90",
+    "jis04",
+    "simplified",
+    "traditional",
+    "full-width",
+    "proportional-width",
+    "ruby",
     "normal",
     "bold",
     "bolder",
@@ -1093,8 +1242,9 @@ static const char* const valueList[] = {
     "-webkit-flex",
     "inline-flex",
     "-webkit-inline-flex",
-    "-webkit-grid",
-    "-webkit-inline-grid",
+    "contents",
+    "grid",
+    "inline-grid",
     "auto",
     "crosshair",
     "default",
@@ -1174,7 +1324,6 @@ static const char* const valueList[] = {
     "local",
     "loud",
     "lower",
-    "-webkit-marquee",
     "mix",
     "no-close-quote",
     "no-open-quote",
@@ -1218,7 +1367,7 @@ static const char* const valueList[] = {
     "last-baseline",
     "self-start",
     "self-end",
-    "true",
+    "unsafe",
     "safe",
     "legacy",
     "row",
@@ -1329,6 +1478,15 @@ static const char* const valueList[] = {
     "content-box",
     "padding",
     "padding-box",
+    "var",
+    "-internal-variable-value",
+    "avoid-column",
+    "avoid-page",
+    "avoid-region",
+    "page",
+    "recto",
+    "region",
+    "verso",
     "margin-box",
     "view-box",
     "contain",
@@ -1404,6 +1562,7 @@ static const char* const valueList[] = {
     "sideways-right",
     "upright",
     "vertical-right",
+    "mixed",
     "font",
     "glyphs",
     "inline-box",
@@ -1411,7 +1570,9 @@ static const char* const valueList[] = {
     "replaced",
     "on",
     "off",
-    "optimizequality",
+    "optimizequality ",
+    "crisp-edges",
+    "pixelated",
     "-webkit-crisp-edges",
     "-webkit-optimize-contrast",
     "nonzero",
@@ -1442,10 +1603,83 @@ static const char* const valueList[] = {
     "luminosity",
     "isolate",
     "scale-down",
+    "container-scroll",
+    "cross-fade",
+    "image-set",
+    "linear-gradient",
+    "radial-gradient",
+    "repeating-linear-gradient",
+    "repeating-radial-gradient",
+    "-webkit-canvas",
+    "-webkit-cross-fade",
+    "-webkit-gradient",
+    "-webkit-linear-gradient",
+    "-webkit-radial-gradient",
+    "-webkit-repeating-linear-gradient",
+    "-webkit-repeating-radial-gradient",
+    "-webkit-image-set",
+    "-webkit-named-image",
+    "filter",
+    "-webkit-filter",
+    "dashboard-region",
+    "from",
+    "to",
+    "color-stop",
+    "radial",
+    "attr",
+    "counter",
+    "counters",
+    "rect",
+    "polygon",
+    "format",
+    "grayscale",
+    "sepia",
+    "saturate",
+    "hue-rotate",
+    "opacity",
+    "brightness",
+    "contrast",
+    "blur",
+    "drop-shadow",
+    "url",
+    "cubic-bezier",
+    "spring",
+    "steps",
+    "rgb",
+    "rgba",
+    "hsl",
+    "hsla",
+    "matrix",
+    "matrix3d",
+    "perspective",
+    "rotate",
+    "rotatex",
+    "rotatey",
+    "rotatez",
+    "rotate3d",
+    "scale",
+    "scalex",
+    "scaley",
+    "scalez",
+    "scale3d",
+    "skew",
+    "skewx",
+    "skewy",
+    "translate",
+    "translatex",
+    "translatey",
+    "translatez",
+    "translate3d",
+    "path",
+    "calc",
+    "-webkit-calc",
     "-webkit-paged-x",
     "-webkit-paged-y",
     "markers",
     "span",
+    "minmax",
+    "fit-content",
+    "auto-flow",
     "dense",
     "balance",
     "from-dimensions",
@@ -1453,7 +1687,18 @@ static const char* const valueList[] = {
     "weight",
     "style",
     "scroll-position",
-    "contents",
+    "allow-end",
+    "first",
+    "force-end",
+    "last",
+    "p3",
+    "rec2020",
+    "srgb",
+    "display-p3",
+    "reduce",
+    "no-preference",
+    "auto-fill",
+    "auto-fit",
     "aliceblue",
     "antiquewhite",
     "aquamarine",
@@ -1586,7 +1831,6 @@ static const char* const valueList[] = {
     "yellowgreen",
     "accumulate",
     "new",
-    "srgb",
     "linearrgb",
     "crispedges",
     "butt",

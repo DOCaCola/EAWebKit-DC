@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioProcessingEvent_h
-#define JSAudioProcessingEvent_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,46 +29,46 @@ namespace WebCore {
 
 class JSAudioProcessingEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = AudioProcessingEvent;
     static JSAudioProcessingEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioProcessingEvent>&& impl)
     {
-        JSAudioProcessingEvent* ptr = new (NotNull, JSC::allocateCell<JSAudioProcessingEvent>(globalObject->vm().heap)) JSAudioProcessingEvent(structure, globalObject, WTF::move(impl));
+        JSAudioProcessingEvent* ptr = new (NotNull, JSC::allocateCell<JSAudioProcessingEvent>(globalObject->vm().heap)) JSAudioProcessingEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioProcessingEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    AudioProcessingEvent& wrapped() const
     {
-        return static_cast<AudioProcessingEvent&>(Base::impl());
+        return static_cast<AudioProcessingEvent&>(Base::wrapped());
     }
 protected:
-    JSAudioProcessingEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioProcessingEvent>&&);
+    JSAudioProcessingEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioProcessingEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioProcessingEvent*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioProcessingEvent& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioProcessingEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioProcessingEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioProcessingEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioProcessingEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<AudioProcessingEvent> {
+    using WrapperClass = JSAudioProcessingEvent;
+    using ToWrappedReturnType = AudioProcessingEvent*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

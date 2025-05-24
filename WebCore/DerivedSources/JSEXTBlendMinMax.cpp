@@ -24,7 +24,6 @@
 
 #include "JSEXTBlendMinMax.h"
 
-#include "EXTBlendMinMax.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSEXTBlendMinMaxPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSEXTBlendMinMaxPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSEXTBlendMinMaxPrototype* ptr = new (NotNull, JSC::allocateCell<JSEXTBlendMinMaxPrototype>(vm.heap)) JSEXTBlendMinMaxPrototype(vm, globalObject, structure);
@@ -61,8 +60,8 @@ private:
 
 static const HashTableValue JSEXTBlendMinMaxPrototypeTableValues[] =
 {
-    { "MIN_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8007), (intptr_t) (0) },
-    { "MAX_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8008), (intptr_t) (0) },
+    { "MIN_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8007) } },
+    { "MAX_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8008) } },
 };
 
 const ClassInfo JSEXTBlendMinMaxPrototype::s_info = { "EXTBlendMinMaxPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTBlendMinMaxPrototype) };
@@ -75,10 +74,16 @@ void JSEXTBlendMinMaxPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEXTBlendMinMax::s_info = { "EXTBlendMinMax", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTBlendMinMax) };
 
-JSEXTBlendMinMax::JSEXTBlendMinMax(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTBlendMinMax>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTBlendMinMax::JSEXTBlendMinMax(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTBlendMinMax>&& impl)
+    : JSDOMWrapper<EXTBlendMinMax>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSEXTBlendMinMax::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSEXTBlendMinMax::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -86,7 +91,7 @@ JSObject* JSEXTBlendMinMax::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSEXTBlendMinMaxPrototype::create(vm, globalObject, JSEXTBlendMinMaxPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSEXTBlendMinMax::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSEXTBlendMinMax::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSEXTBlendMinMax>(vm, globalObject);
 }
@@ -97,23 +102,18 @@ void JSEXTBlendMinMax::destroy(JSC::JSCell* cell)
     thisObject->JSEXTBlendMinMax::~JSEXTBlendMinMax();
 }
 
-JSEXTBlendMinMax::~JSEXTBlendMinMax()
-{
-    releaseImpl();
-}
-
 bool JSEXTBlendMinMaxOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTBlendMinMax = jsCast<JSEXTBlendMinMax*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTBlendMinMax->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTBlendMinMax->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSEXTBlendMinMaxOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsEXTBlendMinMax = jsCast<JSEXTBlendMinMax*>(handle.slot()->asCell());
+    auto* jsEXTBlendMinMax = static_cast<JSEXTBlendMinMax*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTBlendMinMax->impl(), jsEXTBlendMinMax);
+    uncacheWrapper(world, &jsEXTBlendMinMax->wrapped(), jsEXTBlendMinMax);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -124,15 +124,12 @@ extern "C" { extern void (*const __identifier("??_7EXTBlendMinMax@WebCore@@6B@")
 extern "C" { extern void* _ZTVN7WebCore14EXTBlendMinMaxE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinMax* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<EXTBlendMinMax>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSEXTBlendMinMax>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7EXTBlendMinMax@WebCore@@6B@"));
 #else
@@ -140,7 +137,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinM
 #if COMPILER(CLANG)
     // If this fails EXTBlendMinMax does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(EXTBlendMinMax), EXTBlendMinMax_is_not_polymorphic);
+    static_assert(__is_polymorphic(EXTBlendMinMax), "EXTBlendMinMax is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -149,13 +146,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinM
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSEXTBlendMinMax>(globalObject, impl);
+    return createWrapper<EXTBlendMinMax>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTBlendMinMax& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 EXTBlendMinMax* JSEXTBlendMinMax::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSEXTBlendMinMax*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSEXTBlendMinMax*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

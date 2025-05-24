@@ -22,51 +22,194 @@
 #include "JSTypeConversions.h"
 
 #include "JSDOMBinding.h"
-#include "TypeConversions.h"
+#include "JSNode.h"
+#include <runtime/Error.h>
+#include <runtime/JSArray.h>
+#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
+#include <wtf/Vector.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, TypeConversions::UnionType enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("node"),
+        ASCIILiteral("sequence"),
+        ASCIILiteral("dictionary"),
+    };
+    static_assert(static_cast<size_t>(TypeConversions::UnionType::Node) == 0, "TypeConversions::UnionType::Node is not 0 as expected");
+    static_assert(static_cast<size_t>(TypeConversions::UnionType::Sequence) == 1, "TypeConversions::UnionType::Sequence is not 1 as expected");
+    static_assert(static_cast<size_t>(TypeConversions::UnionType::Dictionary) == 2, "TypeConversions::UnionType::Dictionary is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<TypeConversions::UnionType> parseEnumeration<TypeConversions::UnionType>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "node")
+        return TypeConversions::UnionType::Node;
+    if (stringValue == "sequence")
+        return TypeConversions::UnionType::Sequence;
+    if (stringValue == "dictionary")
+        return TypeConversions::UnionType::Dictionary;
+    return std::nullopt;
+}
+
+template<> TypeConversions::UnionType convertEnumeration<TypeConversions::UnionType>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<TypeConversions::UnionType>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<TypeConversions::UnionType>()
+{
+    return "\"node\", \"sequence\", \"dictionary\"";
+}
+
+template<> TypeConversions::OtherDictionary convertDictionary<TypeConversions::OtherDictionary>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    TypeConversions::OtherDictionary result;
+    JSValue longValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "longValue"));
+    if (!longValueValue.isUndefined()) {
+        result.longValue = convert<IDLLong>(state, longValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.longValue = 0;
+    JSValue stringValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "stringValue"));
+    if (!stringValueValue.isUndefined()) {
+        result.stringValue = convert<IDLDOMString>(state, stringValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.stringValue = emptyString();
+    return result;
+}
+
+template<> TypeConversions::Dictionary convertDictionary<TypeConversions::Dictionary>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    TypeConversions::Dictionary result;
+    JSValue longValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "longValue"));
+    if (!longValueValue.isUndefined()) {
+        result.longValue = convert<IDLLong>(state, longValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.longValue = 0;
+    JSValue sequenceValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sequenceValue"));
+    if (!sequenceValueValue.isUndefined()) {
+        result.sequenceValue = convert<IDLSequence<IDLDOMString>>(state, sequenceValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.sequenceValue = Converter<IDLSequence<IDLDOMString>>::ReturnType{ };
+    JSValue stringValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "stringValue"));
+    if (!stringValueValue.isUndefined()) {
+        result.stringValue = convert<IDLDOMString>(state, stringValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.stringValue = emptyString();
+    JSValue unionValueValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "unionValue"));
+    if (!unionValueValue.isUndefined()) {
+        result.unionValue = convert<IDLUnion<IDLInterface<Node>, IDLSequence<IDLDOMString>, IDLDictionary<TypeConversions::OtherDictionary>>>(state, unionValueValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.unionValue = convert<IDLUnion<IDLInterface<Node>, IDLSequence<IDLDOMString>, IDLDictionary<TypeConversions::OtherDictionary>>>(state, jsNull());;
+    return result;
+}
+
+// Functions
+
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestLongRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestLongRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestNodeRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestNodeRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestSequenceRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestSequenceRecord(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionary(JSC::ExecState*);
+
 // Attributes
 
-JSC::EncodedJSValue jsTypeConversionsTestLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestUnsignedLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestUnsignedLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeUnsignedLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestUnsignedLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestUnsignedLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeUnsignedLongLong(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestByte(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestByte(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeByte(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeByte(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestOctet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestOctet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeOctet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeOctet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestUnsignedShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestUnsignedShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTypeConversionsTestEnforceRangeUnsignedShort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestUnsignedLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestUnsignedLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeUnsignedLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestUnsignedLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestUnsignedLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeUnsignedLongLong(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestByte(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestByte(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeByte(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeByte(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestOctet(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestOctet(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeOctet(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeOctet(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestUnsignedShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestUnsignedShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestEnforceRangeUnsignedShort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestString(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestString(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestByteString(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestByteString(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestUSVString(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestUSVString(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTestUnion(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsTestUnion(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTypeConversionsTypeConversionsDictionaryLongValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTypeConversionsTypeConversionsDictionaryStringValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTypeConversionsTypeConversionsDictionarySequenceValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTypeConversionsTypeConversionsDictionaryUnionType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTypeConversionsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSTypeConversionsPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSTypeConversionsPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSTypeConversionsPrototype* ptr = new (NotNull, JSC::allocateCell<JSTypeConversionsPrototype>(vm.heap)) JSTypeConversionsPrototype(vm, globalObject, structure);
@@ -93,22 +236,37 @@ private:
 
 static const HashTableValue JSTypeConversionsPrototypeTableValues[] =
 {
-    { "testLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestLong) },
-    { "testEnforceRangeLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeLong) },
-    { "testUnsignedLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedLong) },
-    { "testEnforceRangeUnsignedLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedLong) },
-    { "testLongLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestLongLong) },
-    { "testEnforceRangeLongLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeLongLong) },
-    { "testUnsignedLongLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedLongLong) },
-    { "testEnforceRangeUnsignedLongLong", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedLongLong) },
-    { "testByte", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestByte), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestByte) },
-    { "testEnforceRangeByte", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeByte), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeByte) },
-    { "testOctet", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestOctet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestOctet) },
-    { "testEnforceRangeOctet", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeOctet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeOctet) },
-    { "testShort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestShort) },
-    { "testEnforceRangeShort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeShort) },
-    { "testUnsignedShort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedShort) },
-    { "testEnforceRangeUnsignedShort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedShort) },
+    { "testLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestLong) } },
+    { "testEnforceRangeLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeLong) } },
+    { "testUnsignedLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedLong) } },
+    { "testEnforceRangeUnsignedLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedLong) } },
+    { "testLongLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestLongLong) } },
+    { "testEnforceRangeLongLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeLongLong) } },
+    { "testUnsignedLongLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedLongLong) } },
+    { "testEnforceRangeUnsignedLongLong", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedLongLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedLongLong) } },
+    { "testByte", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestByte), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestByte) } },
+    { "testEnforceRangeByte", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeByte), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeByte) } },
+    { "testOctet", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestOctet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestOctet) } },
+    { "testEnforceRangeOctet", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeOctet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeOctet) } },
+    { "testShort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestShort) } },
+    { "testEnforceRangeShort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeShort) } },
+    { "testUnsignedShort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnsignedShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnsignedShort) } },
+    { "testEnforceRangeUnsignedShort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestEnforceRangeUnsignedShort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestEnforceRangeUnsignedShort) } },
+    { "testString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestString) } },
+    { "testByteString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestByteString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestByteString) } },
+    { "testUSVString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUSVString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUSVString) } },
+    { "testUnion", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTestUnion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTypeConversionsTestUnion) } },
+    { "typeConversionsDictionaryLongValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTypeConversionsDictionaryLongValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "typeConversionsDictionaryStringValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTypeConversionsDictionaryStringValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "typeConversionsDictionarySequenceValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTypeConversionsDictionarySequenceValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "typeConversionsDictionaryUnionType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTypeConversionsTypeConversionsDictionaryUnionType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setTestLongRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionSetTestLongRecord), (intptr_t) (1) } },
+    { "testLongRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionTestLongRecord), (intptr_t) (0) } },
+    { "setTestNodeRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionSetTestNodeRecord), (intptr_t) (1) } },
+    { "testNodeRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionTestNodeRecord), (intptr_t) (0) } },
+    { "setTestSequenceRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionSetTestSequenceRecord), (intptr_t) (1) } },
+    { "testSequenceRecord", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionTestSequenceRecord), (intptr_t) (0) } },
+    { "setTypeConversionsDictionary", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionary), (intptr_t) (1) } },
 };
 
 const ClassInfo JSTypeConversionsPrototype::s_info = { "TypeConversionsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTypeConversionsPrototype) };
@@ -121,10 +279,16 @@ void JSTypeConversionsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTypeConversions::s_info = { "TypeConversions", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTypeConversions) };
 
-JSTypeConversions::JSTypeConversions(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TypeConversions>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTypeConversions::JSTypeConversions(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TypeConversions>&& impl)
+    : JSDOMWrapper<TypeConversions>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSTypeConversions::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSTypeConversions::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -132,7 +296,7 @@ JSObject* JSTypeConversions::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSTypeConversionsPrototype::create(vm, globalObject, JSTypeConversionsPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSTypeConversions::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSTypeConversions::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTypeConversions>(vm, globalObject);
 }
@@ -143,602 +307,918 @@ void JSTypeConversions::destroy(JSC::JSCell* cell)
     thisObject->JSTypeConversions::~JSTypeConversions();
 }
 
-JSTypeConversions::~JSTypeConversions()
+template<> inline JSTypeConversions* BindingCaller<JSTypeConversions>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSTypeConversions*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsTypeConversionsTestLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSTypeConversions* BindingCaller<JSTypeConversions>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testLong());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSTypeConversions*>(state.thisValue());
 }
 
+static inline JSValue jsTypeConversionsTestLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeLong());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestLongGetter>(state, thisValue, "testLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestUnsignedLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testUnsignedLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testUnsignedLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testUnsignedLong());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.testLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestEnforceRangeLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestEnforceRangeLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeUnsignedLong());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeLongGetter>(state, thisValue, "testEnforceRangeLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestLongLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestEnforceRangeLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testLongLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testLongLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testLongLong());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.testEnforceRangeLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestUnsignedLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeLongLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestUnsignedLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeLongLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeLongLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeLongLong());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestUnsignedLongGetter>(state, thisValue, "testUnsignedLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestUnsignedLongLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestUnsignedLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testUnsignedLongLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testUnsignedLongLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testUnsignedLongLong());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.testUnsignedLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLongLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedLongLong");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedLongLong");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeUnsignedLongLong());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeUnsignedLongGetter>(state, thisValue, "testEnforceRangeUnsignedLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestByte(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testByte");
-        return throwGetterTypeError(*exec, "TypeConversions", "testByte");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testByte());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.testEnforceRangeUnsignedLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestLongLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeByte(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestLongLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeByte");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeByte");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeByte());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestLongLongGetter>(state, thisValue, "testLongLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestOctet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestLongLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testOctet");
-        return throwGetterTypeError(*exec, "TypeConversions", "testOctet");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testOctet());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLongLong>(impl.testLongLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestEnforceRangeLongLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeOctet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestEnforceRangeLongLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeOctet");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeOctet");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeOctet());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeLongLongGetter>(state, thisValue, "testEnforceRangeLongLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestShort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestEnforceRangeLongLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testShort");
-        return throwGetterTypeError(*exec, "TypeConversions", "testShort");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testShort());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLongLong>(impl.testEnforceRangeLongLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestUnsignedLongLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeShort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestUnsignedLongLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeShort");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeShort");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeShort());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestUnsignedLongLongGetter>(state, thisValue, "testUnsignedLongLong");
 }
 
-
-EncodedJSValue jsTypeConversionsTestUnsignedShort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTypeConversionsTestUnsignedLongLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testUnsignedShort");
-        return throwGetterTypeError(*exec, "TypeConversions", "testUnsignedShort");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testUnsignedShort());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.testUnsignedLongLong());
+    return result;
 }
 
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedLongLongGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
 
-EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedShort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedLongLong(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedShort");
-        return throwGetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedShort");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.testEnforceRangeUnsignedShort());
-    return JSValue::encode(result);
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeUnsignedLongLongGetter>(state, thisValue, "testEnforceRangeUnsignedLongLong");
 }
 
-
-void setJSTypeConversionsTestLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedLongLongGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.testEnforceRangeUnsignedLongLong());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestByteGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestByte(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestByteGetter>(state, thisValue, "testByte");
+}
+
+static inline JSValue jsTypeConversionsTestByteGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLByte>(impl.testByte());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeByteGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestEnforceRangeByte(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeByteGetter>(state, thisValue, "testEnforceRangeByte");
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeByteGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLByte>(impl.testEnforceRangeByte());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestOctetGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestOctet(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestOctetGetter>(state, thisValue, "testOctet");
+}
+
+static inline JSValue jsTypeConversionsTestOctetGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLOctet>(impl.testOctet());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeOctetGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestEnforceRangeOctet(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeOctetGetter>(state, thisValue, "testEnforceRangeOctet");
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeOctetGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLOctet>(impl.testEnforceRangeOctet());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestShortGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestShort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestShortGetter>(state, thisValue, "testShort");
+}
+
+static inline JSValue jsTypeConversionsTestShortGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLShort>(impl.testShort());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeShortGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestEnforceRangeShort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeShortGetter>(state, thisValue, "testEnforceRangeShort");
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeShortGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLShort>(impl.testEnforceRangeShort());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestUnsignedShortGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestUnsignedShort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestUnsignedShortGetter>(state, thisValue, "testUnsignedShort");
+}
+
+static inline JSValue jsTypeConversionsTestUnsignedShortGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.testUnsignedShort());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedShortGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestEnforceRangeUnsignedShort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestEnforceRangeUnsignedShortGetter>(state, thisValue, "testEnforceRangeUnsignedShort");
+}
+
+static inline JSValue jsTypeConversionsTestEnforceRangeUnsignedShortGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.testEnforceRangeUnsignedShort());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestStringGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestString(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestStringGetter>(state, thisValue, "testString");
+}
+
+static inline JSValue jsTypeConversionsTestStringGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.testString());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestByteStringGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestByteString(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestByteStringGetter>(state, thisValue, "testByteString");
+}
+
+static inline JSValue jsTypeConversionsTestByteStringGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLByteString>(state, impl.testByteString());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestUSVStringGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestUSVString(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestUSVStringGetter>(state, thisValue, "testUSVString");
+}
+
+static inline JSValue jsTypeConversionsTestUSVStringGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.testUSVString());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTestUnionGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTestUnion(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTestUnionGetter>(state, thisValue, "testUnion");
+}
+
+static inline JSValue jsTypeConversionsTestUnionGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnion<IDLDOMString, IDLLong, IDLBoolean, IDLInterface<Node>, IDLSequence<IDLLong>>>(state, *thisObject.globalObject(), impl.testUnion());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryLongValueGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTypeConversionsDictionaryLongValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTypeConversionsDictionaryLongValueGetter>(state, thisValue, "typeConversionsDictionaryLongValue");
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryLongValueGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.typeConversionsDictionaryLongValue());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryStringValueGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTypeConversionsDictionaryStringValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTypeConversionsDictionaryStringValueGetter>(state, thisValue, "typeConversionsDictionaryStringValue");
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryStringValueGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.typeConversionsDictionaryStringValue());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionarySequenceValueGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTypeConversionsDictionarySequenceValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTypeConversionsDictionarySequenceValueGetter>(state, thisValue, "typeConversionsDictionarySequenceValue");
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionarySequenceValueGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLSequence<IDLDOMString>>(state, *thisObject.globalObject(), impl.typeConversionsDictionarySequenceValue());
+    return result;
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryUnionTypeGetter(ExecState&, JSTypeConversions&, ThrowScope& throwScope);
+
+EncodedJSValue jsTypeConversionsTypeConversionsDictionaryUnionType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTypeConversions>::attribute<jsTypeConversionsTypeConversionsDictionaryUnionTypeGetter>(state, thisValue, "typeConversionsDictionaryUnionType");
+}
+
+static inline JSValue jsTypeConversionsTypeConversionsDictionaryUnionTypeGetter(ExecState& state, JSTypeConversions& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<TypeConversions::UnionType>>(state, impl.typeConversionsDictionaryUnionType());
+    return result;
+}
+
+bool setJSTypeConversionsConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testLong");
-        return;
+    JSTypeConversionsPrototype* domObject = jsDynamicDowncast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestLong(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline bool setJSTypeConversionsTestLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
 
-void setJSTypeConversionsTestEnforceRangeLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+bool setJSTypeConversionsTestLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeLong(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestLongFunction>(state, thisValue, encodedValue, "testLong");
 }
 
-
-void setJSTypeConversionsTestUnsignedLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testUnsignedLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testUnsignedLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestUnsignedLong(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeUnsignedLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeUnsignedLong(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeLongFunction>(state, thisValue, encodedValue, "testEnforceRangeLong");
 }
 
-
-void setJSTypeConversionsTestLongLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testLongLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testLongLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    long long nativeValue = toInt64(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestLongLong(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLong>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeLongLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestUnsignedLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestUnsignedLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeLongLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeLongLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    long long nativeValue = toInt64(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeLongLong(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestUnsignedLongFunction>(state, thisValue, encodedValue, "testUnsignedLong");
 }
 
-
-void setJSTypeConversionsTestUnsignedLongLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestUnsignedLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testUnsignedLongLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testUnsignedLongLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    unsigned long long nativeValue = toUInt64(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestUnsignedLongLong(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestUnsignedLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeUnsignedLongLong(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeUnsignedLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedLongLong");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedLongLong");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    unsigned long long nativeValue = toUInt64(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeUnsignedLongLong(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeUnsignedLongFunction>(state, thisValue, encodedValue, "testEnforceRangeUnsignedLong");
 }
 
-
-void setJSTypeConversionsTestByte(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testByte");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testByte");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int8_t nativeValue = toInt8(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestByte(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeUnsignedLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeByte(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestLongLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestLongLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeByte");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeByte");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int8_t nativeValue = toInt8(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeByte(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestLongLongFunction>(state, thisValue, encodedValue, "testLongLong");
 }
 
-
-void setJSTypeConversionsTestOctet(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestLongLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testOctet");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testOctet");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    uint8_t nativeValue = toUInt8(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestOctet(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLongLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestLongLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeOctet(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeLongLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeLongLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeOctet");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeOctet");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    uint8_t nativeValue = toUInt8(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeOctet(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeLongLongFunction>(state, thisValue, encodedValue, "testEnforceRangeLongLong");
 }
 
-
-void setJSTypeConversionsTestShort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeLongLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testShort");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testShort");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int16_t nativeValue = toInt16(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestShort(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLongLong>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeLongLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeShort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestUnsignedLongLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestUnsignedLongLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeShort");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeShort");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int16_t nativeValue = toInt16(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeShort(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestUnsignedLongLongFunction>(state, thisValue, encodedValue, "testUnsignedLongLong");
 }
 
-
-void setJSTypeConversionsTestUnsignedShort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestUnsignedLongLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testUnsignedShort");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testUnsignedShort");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    uint16_t nativeValue = toUInt16(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestUnsignedShort(nativeValue);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLongLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestUnsignedLongLong(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSTypeConversionsTestEnforceRangeUnsignedShort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedLongLongFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeUnsignedLongLong(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSTypeConversions* castedThis = jsDynamicCast<JSTypeConversions*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTypeConversionsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TypeConversions", "testEnforceRangeUnsignedShort");
-        else
-            throwSetterTypeError(*exec, "TypeConversions", "testEnforceRangeUnsignedShort");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    uint16_t nativeValue = toUInt16(exec, value, EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTestEnforceRangeUnsignedShort(nativeValue);
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeUnsignedLongLongFunction>(state, thisValue, encodedValue, "testEnforceRangeUnsignedLongLong");
 }
 
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedLongLongFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLongLong>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeUnsignedLongLong(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestByteFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestByte(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestByteFunction>(state, thisValue, encodedValue, "testByte");
+}
+
+static inline bool setJSTypeConversionsTestByteFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLByte>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestByte(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestEnforceRangeByteFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeByte(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeByteFunction>(state, thisValue, encodedValue, "testEnforceRangeByte");
+}
+
+static inline bool setJSTypeConversionsTestEnforceRangeByteFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLByte>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeByte(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestOctetFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestOctet(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestOctetFunction>(state, thisValue, encodedValue, "testOctet");
+}
+
+static inline bool setJSTypeConversionsTestOctetFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLOctet>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestOctet(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestEnforceRangeOctetFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeOctet(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeOctetFunction>(state, thisValue, encodedValue, "testEnforceRangeOctet");
+}
+
+static inline bool setJSTypeConversionsTestEnforceRangeOctetFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLOctet>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeOctet(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestShortFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestShort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestShortFunction>(state, thisValue, encodedValue, "testShort");
+}
+
+static inline bool setJSTypeConversionsTestShortFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLShort>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestShort(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestEnforceRangeShortFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeShort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeShortFunction>(state, thisValue, encodedValue, "testEnforceRangeShort");
+}
+
+static inline bool setJSTypeConversionsTestEnforceRangeShortFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLShort>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeShort(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestUnsignedShortFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestUnsignedShort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestUnsignedShortFunction>(state, thisValue, encodedValue, "testUnsignedShort");
+}
+
+static inline bool setJSTypeConversionsTestUnsignedShortFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedShort>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestUnsignedShort(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedShortFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestEnforceRangeUnsignedShort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestEnforceRangeUnsignedShortFunction>(state, thisValue, encodedValue, "testEnforceRangeUnsignedShort");
+}
+
+static inline bool setJSTypeConversionsTestEnforceRangeUnsignedShortFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedShort>(state, value, IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestEnforceRangeUnsignedShort(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestStringFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestString(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestStringFunction>(state, thisValue, encodedValue, "testString");
+}
+
+static inline bool setJSTypeConversionsTestStringFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestString(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestByteStringFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestByteString(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestByteStringFunction>(state, thisValue, encodedValue, "testByteString");
+}
+
+static inline bool setJSTypeConversionsTestByteStringFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLByteString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestByteString(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestUSVStringFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestUSVString(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestUSVStringFunction>(state, thisValue, encodedValue, "testUSVString");
+}
+
+static inline bool setJSTypeConversionsTestUSVStringFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestUSVString(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSTypeConversionsTestUnionFunction(ExecState&, JSTypeConversions&, JSValue, ThrowScope&);
+
+bool setJSTypeConversionsTestUnion(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTypeConversions>::setAttribute<setJSTypeConversionsTestUnionFunction>(state, thisValue, encodedValue, "testUnion");
+}
+
+static inline bool setJSTypeConversionsTestUnionFunction(ExecState& state, JSTypeConversions& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnion<IDLDOMString, IDLLong, IDLBoolean, IDLInterface<Node>, IDLSequence<IDLLong>>>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTestUnion(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestLongRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestLongRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionSetTestLongRecordCaller>(state, "setTestLongRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestLongRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto record = convert<IDLRecord<IDLDOMString, IDLLong>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setTestLongRecord(WTFMove(record));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestLongRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestLongRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionTestLongRecordCaller>(state, "testLongRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestLongRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLRecord<IDLDOMString, IDLLong>>(*state, *castedThis->globalObject(), impl.testLongRecord()));
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestNodeRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestNodeRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionSetTestNodeRecordCaller>(state, "setTestNodeRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestNodeRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto record = convert<IDLRecord<IDLUSVString, IDLInterface<Node>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setTestNodeRecord(WTFMove(record));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestNodeRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestNodeRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionTestNodeRecordCaller>(state, "testNodeRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestNodeRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLRecord<IDLUSVString, IDLInterface<Node>>>(*state, *castedThis->globalObject(), impl.testNodeRecord()));
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestSequenceRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTestSequenceRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionSetTestSequenceRecordCaller>(state, "setTestSequenceRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTestSequenceRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto record = convert<IDLRecord<IDLByteString, IDLSequence<IDLDOMString>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setTestSequenceRecord(WTFMove(record));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestSequenceRecordCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionTestSequenceRecord(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionTestSequenceRecordCaller>(state, "testSequenceRecord");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionTestSequenceRecordCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLRecord<IDLByteString, IDLSequence<IDLDOMString>>>(*state, *castedThis->globalObject(), impl.testSequenceRecord()));
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionaryCaller(JSC::ExecState*, JSTypeConversions*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionary(ExecState* state)
+{
+    return BindingCaller<JSTypeConversions>::callOperation<jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionaryCaller>(state, "setTypeConversionsDictionary");
+}
+
+static inline JSC::EncodedJSValue jsTypeConversionsPrototypeFunctionSetTypeConversionsDictionaryCaller(JSC::ExecState* state, JSTypeConversions* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto d = convert<IDLDictionary<TypeConversions::Dictionary>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setTypeConversionsDictionary(WTFMove(d));
+    return JSValue::encode(jsUndefined());
+}
 
 bool JSTypeConversionsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -749,31 +1229,32 @@ bool JSTypeConversionsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSTypeConversionsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsTypeConversions = jsCast<JSTypeConversions*>(handle.slot()->asCell());
+    auto* jsTypeConversions = static_cast<JSTypeConversions*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTypeConversions->impl(), jsTypeConversions);
+    uncacheWrapper(world, &jsTypeConversions->wrapped(), jsTypeConversions);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TypeConversions* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<TypeConversions>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSTypeConversions>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to TypeConversions.
-    COMPILE_ASSERT(!__is_polymorphic(TypeConversions), TypeConversions_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(TypeConversions), "TypeConversions is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSTypeConversions>(globalObject, impl);
+    return createWrapper<TypeConversions>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TypeConversions& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 TypeConversions* JSTypeConversions::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSTypeConversions*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSTypeConversions*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGLineElement_h
-#define JSSVGLineElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGLineElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGLineElement;
     static JSSVGLineElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLineElement>&& impl)
     {
-        JSSVGLineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElement>(globalObject->vm().heap)) JSSVGLineElement(structure, globalObject, WTF::move(impl));
+        JSSVGLineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElement>(globalObject->vm().heap)) JSSVGLineElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGLineElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGLineElement& wrapped() const
     {
-        return static_cast<SVGLineElement&>(Base::impl());
+        return static_cast<SVGLineElement&>(Base::wrapped());
     }
 protected:
-    JSSVGLineElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGLineElement>&&);
+    JSSVGLineElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGLineElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGLineElement> {
+    using WrapperClass = JSSVGLineElement;
+    using ToWrappedReturnType = SVGLineElement*;
+};
 
 } // namespace WebCore
-
-#endif

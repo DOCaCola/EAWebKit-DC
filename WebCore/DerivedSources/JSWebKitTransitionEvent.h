@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitTransitionEvent_h
-#define JSWebKitTransitionEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "WebKitTransitionEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSWebKitTransitionEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = WebKitTransitionEvent;
     static JSWebKitTransitionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitTransitionEvent>&& impl)
     {
-        JSWebKitTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitTransitionEvent>(globalObject->vm().heap)) JSWebKitTransitionEvent(structure, globalObject, WTF::move(impl));
+        JSWebKitTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitTransitionEvent>(globalObject->vm().heap)) JSWebKitTransitionEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitTransitionEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WebKitTransitionEvent& wrapped() const
     {
-        return static_cast<WebKitTransitionEvent&>(Base::impl());
+        return static_cast<WebKitTransitionEvent&>(Base::wrapped());
     }
 protected:
-    JSWebKitTransitionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitTransitionEvent>&&);
+    JSWebKitTransitionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitTransitionEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitTransitionEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitTransitionEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebKitTransitionEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebKitTransitionEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillWebKitTransitionEventInit(WebKitTransitionEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<WebKitTransitionEvent> {
+    using WrapperClass = JSWebKitTransitionEvent;
+    using ToWrappedReturnType = WebKitTransitionEvent*;
+};
+template<> WebKitTransitionEvent::Init convertDictionary<WebKitTransitionEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

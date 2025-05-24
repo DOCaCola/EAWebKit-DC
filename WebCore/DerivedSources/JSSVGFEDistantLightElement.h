@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEDistantLightElement_h
-#define JSSVGFEDistantLightElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEDistantLightElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEDistantLightElement;
     static JSSVGFEDistantLightElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDistantLightElement>&& impl)
     {
-        JSSVGFEDistantLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDistantLightElement>(globalObject->vm().heap)) JSSVGFEDistantLightElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDistantLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDistantLightElement>(globalObject->vm().heap)) JSSVGFEDistantLightElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDistantLightElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEDistantLightElement& wrapped() const
     {
-        return static_cast<SVGFEDistantLightElement&>(Base::impl());
+        return static_cast<SVGFEDistantLightElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDistantLightElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDistantLightElement>&&);
+    JSSVGFEDistantLightElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDistantLightElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEDistantLightElement> {
+    using WrapperClass = JSSVGFEDistantLightElement;
+    using ToWrappedReturnType = SVGFEDistantLightElement*;
+};
 
 } // namespace WebCore
-
-#endif

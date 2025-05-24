@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXMLHttpRequestProgressEvent_h
-#define JSXMLHttpRequestProgressEvent_h
+#pragma once
 
 #include "JSProgressEvent.h"
 #include "XMLHttpRequestProgressEvent.h"
@@ -28,45 +27,40 @@ namespace WebCore {
 
 class JSXMLHttpRequestProgressEvent : public JSProgressEvent {
 public:
-    typedef JSProgressEvent Base;
+    using Base = JSProgressEvent;
+    using DOMWrapped = XMLHttpRequestProgressEvent;
     static JSXMLHttpRequestProgressEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestProgressEvent>&& impl)
     {
-        JSXMLHttpRequestProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestProgressEvent>(globalObject->vm().heap)) JSXMLHttpRequestProgressEvent(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequestProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestProgressEvent>(globalObject->vm().heap)) JSXMLHttpRequestProgressEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XMLHttpRequestProgressEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    XMLHttpRequestProgressEvent& wrapped() const
     {
-        return static_cast<XMLHttpRequestProgressEvent&>(Base::impl());
+        return static_cast<XMLHttpRequestProgressEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXMLHttpRequestProgressEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequestProgressEvent>&&);
+    JSXMLHttpRequestProgressEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequestProgressEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<XMLHttpRequestProgressEvent> {
+    using WrapperClass = JSXMLHttpRequestProgressEvent;
+    using ToWrappedReturnType = XMLHttpRequestProgressEvent*;
+};
 
 } // namespace WebCore
-
-#endif

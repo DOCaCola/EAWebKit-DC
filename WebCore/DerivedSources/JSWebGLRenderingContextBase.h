@@ -18,28 +18,30 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLRenderingContextBase_h
-#define JSWebGLRenderingContextBase_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
-#include "JSCanvasRenderingContext.h"
+#include "JSDOMWrapper.h"
 #include "WebGLRenderingContextBase.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSWebGLRenderingContextBase : public JSCanvasRenderingContext {
+class JSWebGLRenderingContextBase : public JSDOMWrapper<WebGLRenderingContextBase> {
 public:
-    typedef JSCanvasRenderingContext Base;
+    using Base = JSDOMWrapper<WebGLRenderingContextBase>;
     static JSWebGLRenderingContextBase* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderingContextBase>&& impl)
     {
-        JSWebGLRenderingContextBase* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContextBase>(globalObject->vm().heap)) JSWebGLRenderingContextBase(structure, globalObject, WTF::move(impl));
+        JSWebGLRenderingContextBase* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContextBase>(globalObject->vm().heap)) JSWebGLRenderingContextBase(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WebGLRenderingContextBase* toWrapped(JSC::JSValue);
+    static void destroy(JSC::JSCell*);
 
     DECLARE_INFO;
 
@@ -51,54 +53,44 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 
     // Custom functions
-    JSC::JSValue getAttachedShaders(JSC::ExecState*);
-    JSC::JSValue getBufferParameter(JSC::ExecState*);
-    JSC::JSValue getExtension(JSC::ExecState*);
-    JSC::JSValue getFramebufferAttachmentParameter(JSC::ExecState*);
-    JSC::JSValue getParameter(JSC::ExecState*);
-    JSC::JSValue getProgramParameter(JSC::ExecState*);
-    JSC::JSValue getRenderbufferParameter(JSC::ExecState*);
-    JSC::JSValue getShaderParameter(JSC::ExecState*);
-    JSC::JSValue getSupportedExtensions(JSC::ExecState*);
-    JSC::JSValue getTexParameter(JSC::ExecState*);
-    JSC::JSValue getUniform(JSC::ExecState*);
-    JSC::JSValue getVertexAttrib(JSC::ExecState*);
-    JSC::JSValue uniform1fv(JSC::ExecState*);
-    JSC::JSValue uniform1iv(JSC::ExecState*);
-    JSC::JSValue uniform2fv(JSC::ExecState*);
-    JSC::JSValue uniform2iv(JSC::ExecState*);
-    JSC::JSValue uniform3fv(JSC::ExecState*);
-    JSC::JSValue uniform3iv(JSC::ExecState*);
-    JSC::JSValue uniform4fv(JSC::ExecState*);
-    JSC::JSValue uniform4iv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix2fv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix3fv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix4fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib1fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib2fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib3fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib4fv(JSC::ExecState*);
-    WebGLRenderingContextBase& impl() const
-    {
-        return static_cast<WebGLRenderingContextBase&>(Base::impl());
-    }
+    JSC::JSValue getExtension(JSC::ExecState&);
 protected:
-    JSWebGLRenderingContextBase(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLRenderingContextBase>&&);
+    JSWebGLRenderingContextBase(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLRenderingContextBase>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+class JSWebGLRenderingContextBaseOwner : public JSC::WeakHandleOwner {
+public:
+    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
+    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+};
 
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLRenderingContextBase*)
+{
+    static NeverDestroyed<JSWebGLRenderingContextBaseOwner> owner;
+    return &owner.get();
+}
+
+inline void* wrapperKey(WebGLRenderingContextBase* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLRenderingContextBase&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLRenderingContextBase* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLRenderingContextBase>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLRenderingContextBase>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLRenderingContextBase> {
+    using WrapperClass = JSWebGLRenderingContextBase;
+    using ToWrappedReturnType = WebGLRenderingContextBase*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

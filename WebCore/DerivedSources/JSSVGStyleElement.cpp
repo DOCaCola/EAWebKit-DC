@@ -22,9 +22,9 @@
 #include "JSSVGStyleElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGStyleElement.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "SVGNames.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,19 +33,20 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGStyleElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGStyleElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGStyleElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGStyleElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGStyleElementMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGStyleElementMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGStyleElementTitle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGStyleElementTitle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGStyleElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGStyleElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGStyleElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGStyleElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGStyleElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGStyleElementMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGStyleElementMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGStyleElementTitle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGStyleElementTitle(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGStyleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGStyleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGStyleElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGStyleElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGStyleElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGStyleElementPrototype>(vm.heap)) JSSVGStyleElementPrototype(vm, globalObject, structure);
@@ -68,52 +69,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGStyleElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGStyleElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGStyleElementConstructor = JSDOMConstructorNotConstructable<JSSVGStyleElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGStyleElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGStyleElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGStyleElementConstructor>(vm.heap)) JSSVGStyleElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGStyleElementConstructor::s_info = { "SVGStyleElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGStyleElementConstructor) };
-
-JSSVGStyleElementConstructor::JSSVGStyleElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGStyleElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGStyleElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGStyleElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGStyleElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGStyleElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGStyleElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGStyleElementConstructor::s_info = { "SVGStyleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGStyleElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGStyleElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementDisabled) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementType) },
-    { "media", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementMedia) },
-    { "title", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementTitle) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementConstructor) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementDisabled) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementType) } },
+    { "media", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementMedia) } },
+    { "title", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGStyleElementTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGStyleElementTitle) } },
 };
 
 const ClassInfo JSSVGStyleElementPrototype::s_info = { "SVGStyleElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGStyleElementPrototype) };
@@ -126,186 +106,208 @@ void JSSVGStyleElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGStyleElement::s_info = { "SVGStyleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGStyleElement) };
 
-JSSVGStyleElement::JSSVGStyleElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGStyleElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGStyleElement::JSSVGStyleElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGStyleElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGStyleElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGStyleElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGStyleElementPrototype::create(vm, globalObject, JSSVGStyleElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGStyleElementPrototype::create(vm, globalObject, JSSVGStyleElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGStyleElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGStyleElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGStyleElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGStyleElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGStyleElement* BindingCaller<JSSVGStyleElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGStyleElement", "disabled");
-        return throwGetterTypeError(*exec, "SVGStyleElement", "disabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.disabled());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGStyleElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsSVGStyleElementDisabledGetter(ExecState&, JSSVGStyleElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGStyleElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGStyleElementDisabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGStyleElement", "type");
-        return throwGetterTypeError(*exec, "SVGStyleElement", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGStyleElement>::attribute<jsSVGStyleElementDisabledGetter>(state, thisValue, "disabled");
 }
 
-
-EncodedJSValue jsSVGStyleElementMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGStyleElementDisabledGetter(ExecState& state, JSSVGStyleElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGStyleElement", "media");
-        return throwGetterTypeError(*exec, "SVGStyleElement", "media");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.media());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.disabled());
+    return result;
 }
 
+static inline JSValue jsSVGStyleElementTypeGetter(ExecState&, JSSVGStyleElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGStyleElementTitle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGStyleElementType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGStyleElement", "title");
-        return throwGetterTypeError(*exec, "SVGStyleElement", "title");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.title());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGStyleElement>::attribute<jsSVGStyleElementTypeGetter>(state, thisValue, "type");
 }
 
-
-EncodedJSValue jsSVGStyleElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGStyleElementTypeGetter(ExecState& state, JSSVGStyleElement& thisObject, ThrowScope& throwScope)
 {
-    JSSVGStyleElementPrototype* domObject = jsDynamicCast<JSSVGStyleElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGStyleElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
 }
 
-void setJSSVGStyleElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsSVGStyleElementMediaGetter(ExecState&, JSSVGStyleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGStyleElementMedia(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSSVGStyleElement>::attribute<jsSVGStyleElementMediaGetter>(state, thisValue, "media");
+}
+
+static inline JSValue jsSVGStyleElementMediaGetter(ExecState& state, JSSVGStyleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.media());
+    return result;
+}
+
+static inline JSValue jsSVGStyleElementTitleGetter(ExecState&, JSSVGStyleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGStyleElementTitle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGStyleElement>::attribute<jsSVGStyleElementTitleGetter>(state, thisValue, "title");
+}
+
+static inline JSValue jsSVGStyleElementTitleGetter(ExecState& state, JSSVGStyleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::SVGNames::titleAttr));
+    return result;
+}
+
+EncodedJSValue jsSVGStyleElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGStyleElementPrototype* domObject = jsDynamicDowncast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGStyleElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGStyleElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGStyleElement", "disabled");
-        else
-            throwSetterTypeError(*exec, "SVGStyleElement", "disabled");
-        return;
+    JSSVGStyleElementPrototype* domObject = jsDynamicDowncast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDisabled(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGStyleElementDisabledFunction(ExecState&, JSSVGStyleElement&, JSValue, ThrowScope&);
+
+bool setJSSVGStyleElementDisabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGStyleElement>::setAttribute<setJSSVGStyleElementDisabledFunction>(state, thisValue, encodedValue, "disabled");
+}
+
+static inline bool setJSSVGStyleElementDisabledFunction(ExecState& state, JSSVGStyleElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDisabled(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGStyleElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGStyleElementTypeFunction(ExecState&, JSSVGStyleElement&, JSValue, ThrowScope&);
+
+bool setJSSVGStyleElementType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGStyleElement", "type");
-        else
-            throwSetterTypeError(*exec, "SVGStyleElement", "type");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setType(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGStyleElement>::setAttribute<setJSSVGStyleElementTypeFunction>(state, thisValue, encodedValue, "type");
+}
+
+static inline bool setJSSVGStyleElementTypeFunction(ExecState& state, JSSVGStyleElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setType(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGStyleElementMedia(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGStyleElementMediaFunction(ExecState&, JSSVGStyleElement&, JSValue, ThrowScope&);
+
+bool setJSSVGStyleElementMedia(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGStyleElement", "media");
-        else
-            throwSetterTypeError(*exec, "SVGStyleElement", "media");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMedia(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGStyleElement>::setAttribute<setJSSVGStyleElementMediaFunction>(state, thisValue, encodedValue, "media");
+}
+
+static inline bool setJSSVGStyleElementMediaFunction(ExecState& state, JSSVGStyleElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setMedia(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGStyleElementTitle(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGStyleElementTitleFunction(ExecState&, JSSVGStyleElement&, JSValue, ThrowScope&);
+
+bool setJSSVGStyleElementTitle(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGStyleElement* castedThis = jsDynamicCast<JSSVGStyleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGStyleElement", "title");
-        else
-            throwSetterTypeError(*exec, "SVGStyleElement", "title");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTitle(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGStyleElement>::setAttribute<setJSSVGStyleElementTitleFunction>(state, thisValue, encodedValue, "title");
+}
+
+static inline bool setJSSVGStyleElementTitleFunction(ExecState& state, JSSVGStyleElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::SVGNames::titleAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSSVGStyleElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGStyleElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGStyleElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGStyleElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGStyleElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGStyleElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

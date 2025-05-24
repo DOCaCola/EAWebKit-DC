@@ -91,6 +91,7 @@ WEBCORE_EXPORT extern const WebCore::MathMLQualifiedName noneTag;
 WEBCORE_EXPORT extern const WebCore::MathMLQualifiedName semanticsTag;
 // Attributes
 WEBCORE_EXPORT extern const WebCore::QualifiedName accentAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName accentunderAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName actiontypeAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName alttextAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName backgroundAttr;
@@ -101,6 +102,8 @@ WEBCORE_EXPORT extern const WebCore::QualifiedName definitionURLAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName denomalignAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName depthAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName dirAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName displayAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName displaystyleAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName encodingAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName fenceAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName fontfamilyAttr;
@@ -109,6 +112,7 @@ WEBCORE_EXPORT extern const WebCore::QualifiedName fontstyleAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName fontweightAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName formAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName heightAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName hrefAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName largeopAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName linethicknessAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName lspaceAttr;
@@ -132,12 +136,13 @@ WEBCORE_EXPORT extern const WebCore::QualifiedName stretchyAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName subscriptshiftAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName superscriptshiftAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName symmetricAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName voffsetAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName widthAttr;
 #endif
 
 const unsigned MathMLTagsCount = 44;
 const WebCore::MathMLQualifiedName* const* getMathMLTags();
-const unsigned MathMLAttrsCount = 43;
+const unsigned MathMLAttrsCount = 48;
 const WebCore::QualifiedName* const* getMathMLAttrs();
 
 WEBCORE_EXPORT void init();

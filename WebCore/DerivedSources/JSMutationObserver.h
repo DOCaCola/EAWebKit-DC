@@ -18,30 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMutationObserver_h
-#define JSMutationObserver_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "MutationObserver.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMutationObserver : public JSDOMWrapper {
+class JSMutationObserver : public JSDOMWrapper<MutationObserver> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MutationObserver>;
     static JSMutationObserver* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationObserver>&& impl)
     {
-        JSMutationObserver* ptr = new (NotNull, JSC::allocateCell<JSMutationObserver>(globalObject->vm().heap)) JSMutationObserver(structure, globalObject, WTF::move(impl));
+        JSMutationObserver* ptr = new (NotNull, JSC::allocateCell<JSMutationObserver>(globalObject->vm().heap)) JSMutationObserver(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MutationObserver* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMutationObserver();
 
     DECLARE_INFO;
 
@@ -50,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MutationObserver& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MutationObserver* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSMutationObserver(JSC::Structure*, JSDOMGlobalObject*, Ref<MutationObserver>&&);
+    JSMutationObserver(JSC::Structure*, JSDOMGlobalObject&, Ref<MutationObserver>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMutationObserverOwner : public JSC::WeakHandleOwner {
@@ -79,13 +68,24 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MutationObserver*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MutationObserver*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MutationObserver& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MutationObserver* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MutationObserver&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MutationObserver* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MutationObserver>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MutationObserver>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
 // Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSMutationObserver(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL constructJSMutationObserver(JSC::ExecState&);
+
+template<> struct JSDOMWrapperConverterTraits<MutationObserver> {
+    using WrapperClass = JSMutationObserver;
+    using ToWrappedReturnType = MutationObserver*;
+};
+template<> MutationObserver::Init convertDictionary<MutationObserver::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

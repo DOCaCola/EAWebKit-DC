@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMallocStatistics_h
-#define JSMallocStatistics_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "MallocStatistics.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSMallocStatistics : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSMallocStatistics : public JSDOMWrapper<MallocStatistics> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MallocStatistics>;
     static JSMallocStatistics* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MallocStatistics>&& impl)
     {
-        JSMallocStatistics* ptr = new (NotNull, JSC::allocateCell<JSMallocStatistics>(globalObject->vm().heap)) JSMallocStatistics(structure, globalObject, WTF::move(impl));
+        JSMallocStatistics* ptr = new (NotNull, JSC::allocateCell<JSMallocStatistics>(globalObject->vm().heap)) JSMallocStatistics(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MallocStatistics* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMallocStatistics();
 
     DECLARE_INFO;
 
@@ -50,20 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MallocStatistics& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MallocStatistics* m_impl;
 protected:
-    JSMallocStatistics(JSC::Structure*, JSDOMGlobalObject*, Ref<MallocStatistics>&&);
+    JSMallocStatistics(JSC::Structure*, JSDOMGlobalObject&, Ref<MallocStatistics>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMallocStatisticsOwner : public JSC::WeakHandleOwner {
@@ -78,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MallocStatistics*)
     return &owner.get();
 }
 
-WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MallocStatistics*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MallocStatistics& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MallocStatistics* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MallocStatistics&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MallocStatistics* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MallocStatistics>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MallocStatistics>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MallocStatistics> {
+    using WrapperClass = JSMallocStatistics;
+    using ToWrappedReturnType = MallocStatistics*;
+};
 
 } // namespace WebCore
-
-#endif

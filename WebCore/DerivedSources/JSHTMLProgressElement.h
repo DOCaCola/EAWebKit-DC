@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLProgressElement_h
-#define JSHTMLProgressElement_h
+#pragma once
 
 #include "HTMLProgressElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLProgressElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLProgressElement;
     static JSHTMLProgressElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLProgressElement>&& impl)
     {
-        JSHTMLProgressElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLProgressElement>(globalObject->vm().heap)) JSHTMLProgressElement(structure, globalObject, WTF::move(impl));
+        JSHTMLProgressElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLProgressElement>(globalObject->vm().heap)) JSHTMLProgressElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLProgressElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLProgressElement& wrapped() const
     {
-        return static_cast<HTMLProgressElement&>(Base::impl());
+        return static_cast<HTMLProgressElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLProgressElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLProgressElement>&&);
+    JSHTMLProgressElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLProgressElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLProgressElement> {
+    using WrapperClass = JSHTMLProgressElement;
+    using ToWrappedReturnType = HTMLProgressElement*;
+};
 
 } // namespace WebCore
-
-#endif

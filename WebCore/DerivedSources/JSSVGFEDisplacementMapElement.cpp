@@ -22,11 +22,12 @@
 #include "JSSVGFEDisplacementMapElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEDisplacementMapElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -35,21 +36,22 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementIn1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementIn2(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementScale(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementXChannelSelector(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementYChannelSelector(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDisplacementMapElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementIn1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementIn2(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementScale(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementXChannelSelector(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementYChannelSelector(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDisplacementMapElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFEDisplacementMapElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFEDisplacementMapElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFEDisplacementMapElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFEDisplacementMapElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElementPrototype>(vm.heap)) JSSVGFEDisplacementMapElementPrototype(vm, globalObject, structure);
@@ -72,75 +74,54 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEDisplacementMapElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEDisplacementMapElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEDisplacementMapElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEDisplacementMapElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElementConstructor>(vm.heap)) JSSVGFEDisplacementMapElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGFEDisplacementMapElementConstructor = JSDOMConstructorNotConstructable<JSSVGFEDisplacementMapElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGFEDisplacementMapElementConstructorTableValues[] =
 {
-    { "SVG_CHANNEL_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_CHANNEL_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_CHANNEL_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_CHANNEL_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_CHANNEL_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "SVG_CHANNEL_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_CHANNEL_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_CHANNEL_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_CHANNEL_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_CHANNEL_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
-const ClassInfo JSSVGFEDisplacementMapElementConstructor::s_info = { "SVGFEDisplacementMapElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDisplacementMapElementConstructor) };
-
-JSSVGFEDisplacementMapElementConstructor::JSSVGFEDisplacementMapElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFEDisplacementMapElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFEDisplacementMapElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFEDisplacementMapElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDisplacementMapElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDisplacementMapElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEDisplacementMapElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGFEDisplacementMapElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGFEDisplacementMapElementConstructor::s_info = { "SVGFEDisplacementMapElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDisplacementMapElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEDisplacementMapElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementIn2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "scale", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "xChannelSelector", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementXChannelSelector), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "yChannelSelector", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementYChannelSelector), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_CHANNEL_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_CHANNEL_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_CHANNEL_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_CHANNEL_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_CHANNEL_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFEDisplacementMapElementConstructor) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "in2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementIn2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "scale", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "xChannelSelector", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementXChannelSelector), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "yChannelSelector", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementYChannelSelector), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDisplacementMapElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_CHANNEL_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_CHANNEL_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_CHANNEL_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_CHANNEL_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_CHANNEL_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
 const ClassInfo JSSVGFEDisplacementMapElementPrototype::s_info = { "SVGFEDisplacementMapElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDisplacementMapElementPrototype) };
@@ -153,212 +134,228 @@ void JSSVGFEDisplacementMapElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEDisplacementMapElement::s_info = { "SVGFEDisplacementMapElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDisplacementMapElement) };
 
-JSSVGFEDisplacementMapElement::JSSVGFEDisplacementMapElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDisplacementMapElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFEDisplacementMapElement::JSSVGFEDisplacementMapElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEDisplacementMapElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFEDisplacementMapElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFEDisplacementMapElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFEDisplacementMapElementPrototype::create(vm, globalObject, JSSVGFEDisplacementMapElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFEDisplacementMapElementPrototype::create(vm, globalObject, JSSVGFEDisplacementMapElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFEDisplacementMapElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFEDisplacementMapElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFEDisplacementMapElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEDisplacementMapElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGFEDisplacementMapElement* BindingCaller<JSSVGFEDisplacementMapElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "in1");
+    return jsDynamicDowncast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementIn1Getter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementIn1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementIn1Getter>(state, thisValue, "in1");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementIn1Getter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.in1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementIn2Getter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementIn2(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementIn2Getter>(state, thisValue, "in2");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementIn2Getter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.in2Animated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementScaleGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementScale(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementScaleGetter>(state, thisValue, "scale");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementScaleGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.scaleAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementXChannelSelectorGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementXChannelSelector(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementXChannelSelectorGetter>(state, thisValue, "xChannelSelector");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementXChannelSelectorGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.xChannelSelectorAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementYChannelSelectorGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementYChannelSelector(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementYChannelSelectorGetter>(state, thisValue, "yChannelSelector");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementYChannelSelectorGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.yChannelSelectorAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementXGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementXGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementYGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementYGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementWidthGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementWidthGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementHeightGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementHeightGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementResultGetter(ExecState&, JSSVGFEDisplacementMapElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDisplacementMapElementResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDisplacementMapElement>::attribute<jsSVGFEDisplacementMapElementResultGetter>(state, thisValue, "result");
+}
+
+static inline JSValue jsSVGFEDisplacementMapElementResultGetter(ExecState& state, JSSVGFEDisplacementMapElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.resultAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGFEDisplacementMapElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFEDisplacementMapElementPrototype* domObject = jsDynamicDowncast<JSSVGFEDisplacementMapElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFEDisplacementMapElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGFEDisplacementMapElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFEDisplacementMapElementPrototype* domObject = jsDynamicDowncast<JSSVGFEDisplacementMapElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGFEDisplacementMapElementIn2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGFEDisplacementMapElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "in2");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "in2");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.in2Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGFEDisplacementMapElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsSVGFEDisplacementMapElementScale(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGFEDisplacementMapElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "scale");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "scale");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.scaleAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementXChannelSelector(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "xChannelSelector");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "xChannelSelector");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.xChannelSelectorAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementYChannelSelector(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "yChannelSelector");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "yChannelSelector");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.yChannelSelectorAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDisplacementMapElement* castedThis = jsDynamicCast<JSSVGFEDisplacementMapElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDisplacementMapElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEDisplacementMapElement", "result");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDisplacementMapElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGFEDisplacementMapElementPrototype* domObject = jsDynamicCast<JSSVGFEDisplacementMapElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEDisplacementMapElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGFEDisplacementMapElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGFEDisplacementMapElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGFEDisplacementMapElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

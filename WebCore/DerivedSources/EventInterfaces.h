@@ -28,12 +28,16 @@
 #ifndef EventInterfaces_h
 #define EventInterfaces_h
 
-#if ENABLE(CSP_NEXT)
-#define DOM_EVENT_INTERFACES_FOR_EACH_CSP_NEXT(macro) \
-    macro(SecurityPolicyViolationEvent) \
-// End of DOM_EVENT_INTERFACES_FOR_EACH_CSP_NEXT
+#if ENABLE(APPLE_PAY)
+#define DOM_EVENT_INTERFACES_FOR_EACH_APPLE_PAY(macro) \
+    macro(ApplePayPaymentAuthorizedEvent) \
+    macro(ApplePayPaymentMethodSelectedEvent) \
+    macro(ApplePayShippingContactSelectedEvent) \
+    macro(ApplePayShippingMethodSelectedEvent) \
+    macro(ApplePayValidateMerchantEvent) \
+// End of DOM_EVENT_INTERFACES_FOR_EACH_APPLE_PAY
 #else
-#define DOM_EVENT_INTERFACES_FOR_EACH_CSP_NEXT(macro)
+#define DOM_EVENT_INTERFACES_FOR_EACH_APPLE_PAY(macro)
 #endif
 
 #if ENABLE(DEVICE_ORIENTATION)
@@ -47,19 +51,11 @@
 
 #if ENABLE(ENCRYPTED_MEDIA)
 #define DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA(macro) \
-    macro(MediaKeyEvent) \
+    macro(MediaEncryptedEvent) \
+    macro(MediaKeyMessageEvent) \
 // End of DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA
 #else
 #define DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA(macro)
-#endif
-
-#if ENABLE(ENCRYPTED_MEDIA_V2)
-#define DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA_V2(macro) \
-    macro(MediaKeyMessageEvent) \
-    macro(MediaKeyNeededEvent) \
-// End of DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA_V2
-#else
-#define DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA_V2(macro)
 #endif
 
 #if ENABLE(FONT_LOAD_EVENTS)
@@ -86,15 +82,7 @@
 #define DOM_EVENT_INTERFACES_FOR_EACH_INDEXED_DATABASE(macro)
 #endif
 
-#if ENABLE(INDIE_UI)
-#define DOM_EVENT_INTERFACES_FOR_EACH_INDIE_UI(macro) \
-    macro(UIRequestEvent) \
-// End of DOM_EVENT_INTERFACES_FOR_EACH_INDIE_UI
-#else
-#define DOM_EVENT_INTERFACES_FOR_EACH_INDIE_UI(macro)
-#endif
-
-#if ENABLE(IOS_GESTURE_EVENTS)
+#if ENABLE(IOS_GESTURE_EVENTS) || ENABLE(MAC_GESTURE_EVENTS)
 #define DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS(macro) \
     macro(GestureEvent) \
 // End of DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS
@@ -102,13 +90,19 @@
 #define DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS(macro)
 #endif
 
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+#define DOM_EVENT_INTERFACES_FOR_EACH_LEGACY_ENCRYPTED_MEDIA(macro) \
+    macro(WebKitMediaKeyMessageEvent) \
+    macro(WebKitMediaKeyNeededEvent) \
+// End of DOM_EVENT_INTERFACES_FOR_EACH_LEGACY_ENCRYPTED_MEDIA
+#else
+#define DOM_EVENT_INTERFACES_FOR_EACH_LEGACY_ENCRYPTED_MEDIA(macro)
+#endif
+
 #if ENABLE(MEDIA_STREAM)
 #define DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM(macro) \
-    macro(MediaStreamEvent) \
     macro(MediaStreamTrackEvent) \
-    macro(RTCDTMFToneChangeEvent) \
-    macro(RTCDataChannelEvent) \
-    macro(RTCIceCandidateEvent) \
+    macro(OverconstrainedErrorEvent) \
 // End of DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM
 #else
 #define DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM(macro)
@@ -178,6 +172,18 @@
 #define DOM_EVENT_INTERFACES_FOR_EACH_WEB_AUDIO(macro)
 #endif
 
+#if ENABLE(WEB_RTC)
+#define DOM_EVENT_INTERFACES_FOR_EACH_WEB_RTC(macro) \
+    macro(MediaStreamEvent) \
+    macro(RTCDTMFToneChangeEvent) \
+    macro(RTCDataChannelEvent) \
+    macro(RTCIceCandidateEvent) \
+    macro(RTCTrackEvent) \
+// End of DOM_EVENT_INTERFACES_FOR_EACH_WEB_RTC
+#else
+#define DOM_EVENT_INTERFACES_FOR_EACH_WEB_RTC(macro)
+#endif
+
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
 #define DOM_EVENT_INTERFACES_FOR_EACH_WIRELESS_PLAYBACK_TARGET(macro) \
     macro(WebKitPlaybackTargetAvailabilityEvent) \
@@ -191,6 +197,7 @@
     macro(AnimationEvent) \
     macro(BeforeLoadEvent) \
     macro(BeforeUnloadEvent) \
+    macro(ClipboardEvent) \
     macro(CloseEvent) \
     macro(CompositionEvent) \
     macro(CustomEvent) \
@@ -198,6 +205,7 @@
     macro(Event) \
     macro(FocusEvent) \
     macro(HashChangeEvent) \
+    macro(InputEvent) \
     macro(KeyboardEvent) \
     macro(MessageEvent) \
     macro(MouseEvent) \
@@ -207,6 +215,7 @@
     macro(PopStateEvent) \
     macro(ProgressEvent) \
     macro(SVGZoomEvent) \
+    macro(SecurityPolicyViolationEvent) \
     macro(StorageEvent) \
     macro(TextEvent) \
     macro(TransitionEvent) \
@@ -216,15 +225,14 @@
     macro(WheelEvent) \
     macro(XMLHttpRequestProgressEvent) \
     \
-    DOM_EVENT_INTERFACES_FOR_EACH_CSP_NEXT(macro) \
+    DOM_EVENT_INTERFACES_FOR_EACH_APPLE_PAY(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_DEVICE_ORIENTATION(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA(macro) \
-    DOM_EVENT_INTERFACES_FOR_EACH_ENCRYPTED_MEDIA_V2(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_FONT_LOAD_EVENTS(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_GAMEPAD(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_INDEXED_DATABASE(macro) \
-    DOM_EVENT_INTERFACES_FOR_EACH_INDIE_UI(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS(macro) \
+    DOM_EVENT_INTERFACES_FOR_EACH_LEGACY_ENCRYPTED_MEDIA(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_ORIENTATION_EVENTS(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_PROXIMITY_EVENTS(macro) \
@@ -234,6 +242,7 @@
     DOM_EVENT_INTERFACES_FOR_EACH_VIDEO_TRACK(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_WEBGL(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_WEB_AUDIO(macro) \
+    DOM_EVENT_INTERFACES_FOR_EACH_WEB_RTC(macro) \
     DOM_EVENT_INTERFACES_FOR_EACH_WIRELESS_PLAYBACK_TARGET(macro) \
 
 #endif // EventInterfaces_h

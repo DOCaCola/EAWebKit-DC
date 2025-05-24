@@ -21,21 +21,18 @@
 #include "config.h"
 #include "JSSVGElement.h"
 
-#include "CSSStyleDeclaration.h"
-#include "CSSValue.h"
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSCSSStyleDeclaration.h"
-#include "JSCSSValue.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSDOMStringMap.h"
+#include "JSDeprecatedCSSOMValue.h"
+#include "JSEventListener.h"
 #include "JSSVGAnimatedString.h"
 #include "JSSVGElement.h"
 #include "JSSVGSVGElement.h"
-#include "SVGElement.h"
-#include "SVGSVGElement.h"
-#include "StyleProperties.h"
-#include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -45,26 +42,204 @@ namespace WebCore {
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionGetPresentationAttribute(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionFocus(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionBlur(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGElementXmlbase(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGElementXmlbase(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGElementOwnerSVGElement(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGElementViewportElement(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGElementClassName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGElementStyle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGElementTabIndex(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGElementTabIndex(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementOwnerSVGElement(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementViewportElement(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementXmllang(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementXmllang(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementXmlspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementXmlspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementClassName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementStyle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementTabIndex(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementTabIndex(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementDataset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGElementOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnabort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+JSC::EncodedJSValue jsSVGElementOnautocomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnautocomplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+JSC::EncodedJSValue jsSVGElementOnautocompleteerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnautocompleteerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+JSC::EncodedJSValue jsSVGElementOnblur(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnblur(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOncanplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOncanplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOncanplaythrough(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOncanplaythrough(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOncontextmenu(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOncontextmenu(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOncuechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOncuechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndblclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndblclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndrag(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndrag(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndragend(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndragend(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndragenter(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndragenter(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndragleave(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndragleave(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndragover(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndragover(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndragstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndragstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndrop(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndrop(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOndurationchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOndurationchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnemptied(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnemptied(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnended(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnended(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnfocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnfocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOninput(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOninput(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOninvalid(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOninvalid(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnkeydown(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnkeydown(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnkeypress(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnkeypress(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnkeyup(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnkeyup(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnload(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnload(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnloadeddata(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnloadeddata(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnloadedmetadata(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnloadedmetadata(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnloadstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnloadstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmousedown(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmousedown(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmouseenter(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmouseenter(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmouseleave(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmouseleave(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmousemove(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmousemove(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmouseout(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmouseout(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmouseover(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmouseover(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmouseup(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmouseup(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnmousewheel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnmousewheel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnpause(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnpause(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnplaying(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnplaying(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnprogress(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnprogress(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnratechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnratechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnreset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnreset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnresize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnresize(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnscroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnscroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnseeked(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnseeked(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnseeking(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnseeking(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnselect(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnselect(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnstalled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnstalled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnsubmit(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnsubmit(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnsuspend(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnsuspend(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOntimeupdate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntimeupdate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOntoggle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntoggle(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnvolumechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnvolumechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnwaiting(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwaiting(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnsearch(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnsearch(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGElementOnwheel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwheel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#if ENABLE(TOUCH_EVENTS)
+JSC::EncodedJSValue jsSVGElementOntouchcancel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntouchcancel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(TOUCH_EVENTS)
+JSC::EncodedJSValue jsSVGElementOntouchend(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntouchend(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(TOUCH_EVENTS)
+JSC::EncodedJSValue jsSVGElementOntouchmove(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntouchmove(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(TOUCH_EVENTS)
+JSC::EncodedJSValue jsSVGElementOntouchstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntouchstart(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(TOUCH_EVENTS)
+JSC::EncodedJSValue jsSVGElementOntouchforcechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOntouchforcechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitmouseforcechanged(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitmouseforcechanged(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitmouseforcedown(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitmouseforcedown(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitmouseforcewillbegin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitmouseforcewillbegin(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitmouseforceup(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitmouseforceup(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitwillrevealbottom(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitwillrevealleft(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitwillrevealright(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitwillrevealright(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+JSC::EncodedJSValue jsSVGElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementOnwebkitwillrevealtop(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+JSC::EncodedJSValue jsSVGElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGElementPrototype>(vm.heap)) JSSVGElementPrototype(vm, globalObject, structure);
@@ -87,57 +262,171 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGElementConstructor = JSDOMConstructorNotConstructable<JSSVGElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGElementConstructor>(vm.heap)) JSSVGElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGElementConstructor::s_info = { "SVGElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGElementConstructor) };
-
-JSSVGElementConstructor::JSSVGElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGElementConstructor::s_info = { "SVGElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "xmlbase", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementXmlbase), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementXmlbase) },
-    { "ownerSVGElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOwnerSVGElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewportElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementViewportElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "xmllang", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementXmllang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementXmllang) },
-    { "xmlspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementXmlspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementXmlspace) },
-    { "className", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementClassName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "style", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "tabIndex", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementTabIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementTabIndex) },
-    { "getPresentationAttribute", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGElementPrototypeFunctionGetPresentationAttribute), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementConstructor) } },
+    { "ownerSVGElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOwnerSVGElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "viewportElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementViewportElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "xmllang", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementXmllang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementXmllang) } },
+    { "xmlspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementXmlspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementXmlspace) } },
+    { "className", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementClassName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "style", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "tabIndex", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementTabIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementTabIndex) } },
+    { "dataset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementDataset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onabort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnabort) } },
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+    { "onautocomplete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnautocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnautocomplete) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+    { "onautocompleteerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnautocompleteerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnautocompleteerror) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+    { "onblur", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnblur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnblur) } },
+    { "oncanplay", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOncanplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOncanplay) } },
+    { "oncanplaythrough", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOncanplaythrough), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOncanplaythrough) } },
+    { "onchange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnchange) } },
+    { "onclick", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnclick) } },
+    { "oncontextmenu", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOncontextmenu), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOncontextmenu) } },
+    { "oncuechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOncuechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOncuechange) } },
+    { "ondblclick", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndblclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndblclick) } },
+    { "ondrag", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndrag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndrag) } },
+    { "ondragend", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndragend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndragend) } },
+    { "ondragenter", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndragenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndragenter) } },
+    { "ondragleave", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndragleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndragleave) } },
+    { "ondragover", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndragover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndragover) } },
+    { "ondragstart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndragstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndragstart) } },
+    { "ondrop", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndrop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndrop) } },
+    { "ondurationchange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOndurationchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOndurationchange) } },
+    { "onemptied", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnemptied), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnemptied) } },
+    { "onended", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnended) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnerror) } },
+    { "onfocus", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnfocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnfocus) } },
+    { "oninput", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOninput), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOninput) } },
+    { "oninvalid", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOninvalid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOninvalid) } },
+    { "onkeydown", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnkeydown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnkeydown) } },
+    { "onkeypress", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnkeypress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnkeypress) } },
+    { "onkeyup", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnkeyup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnkeyup) } },
+    { "onload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnload) } },
+    { "onloadeddata", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnloadeddata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnloadeddata) } },
+    { "onloadedmetadata", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnloadedmetadata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnloadedmetadata) } },
+    { "onloadstart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnloadstart) } },
+    { "onmousedown", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmousedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmousedown) } },
+    { "onmouseenter", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmouseenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmouseenter) } },
+    { "onmouseleave", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmouseleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmouseleave) } },
+    { "onmousemove", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmousemove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmousemove) } },
+    { "onmouseout", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmouseout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmouseout) } },
+    { "onmouseover", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmouseover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmouseover) } },
+    { "onmouseup", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmouseup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmouseup) } },
+    { "onmousewheel", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnmousewheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnmousewheel) } },
+    { "onpause", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnpause), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnpause) } },
+    { "onplay", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnplay) } },
+    { "onplaying", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnplaying), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnplaying) } },
+    { "onprogress", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnprogress) } },
+    { "onratechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnratechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnratechange) } },
+    { "onreset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnreset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnreset) } },
+    { "onresize", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnresize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnresize) } },
+    { "onscroll", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnscroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnscroll) } },
+    { "onseeked", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnseeked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnseeked) } },
+    { "onseeking", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnseeking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnseeking) } },
+    { "onselect", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnselect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnselect) } },
+    { "onstalled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnstalled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnstalled) } },
+    { "onsubmit", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnsubmit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnsubmit) } },
+    { "onsuspend", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnsuspend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnsuspend) } },
+    { "ontimeupdate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntimeupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntimeupdate) } },
+    { "ontoggle", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntoggle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntoggle) } },
+    { "onvolumechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnvolumechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnvolumechange) } },
+    { "onwaiting", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwaiting), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwaiting) } },
+    { "onsearch", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnsearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnsearch) } },
+    { "onwheel", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwheel) } },
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchcancel", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntouchcancel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntouchcancel) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchend", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntouchend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntouchend) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchmove", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntouchmove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntouchmove) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchstart", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntouchstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntouchstart) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchforcechange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOntouchforcechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOntouchforcechange) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+    { "onwebkitmouseforcechanged", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitmouseforcechanged), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitmouseforcechanged) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+    { "onwebkitmouseforcedown", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitmouseforcedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitmouseforcedown) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+    { "onwebkitmouseforcewillbegin", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitmouseforcewillbegin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitmouseforcewillbegin) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MOUSE_FORCE_EVENTS)
+    { "onwebkitmouseforceup", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitmouseforceup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitmouseforceup) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealbottom", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitwillrevealbottom), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitwillrevealbottom) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealleft", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitwillrevealleft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitwillrevealleft) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealright", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitwillrevealright), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitwillrevealright) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+    { "onwebkitwillrevealtop", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGElementOnwebkitwillrevealtop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGElementOnwebkitwillrevealtop) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+    { "getPresentationAttribute", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGElementPrototypeFunctionGetPresentationAttribute), (intptr_t) (0) } },
+    { "focus", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGElementPrototypeFunctionFocus), (intptr_t) (0) } },
+    { "blur", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGElementPrototypeFunctionBlur), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGElementPrototype::s_info = { "SVGElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGElementPrototype) };
@@ -150,272 +439,2578 @@ void JSSVGElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGElement::s_info = { "SVGElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGElement) };
 
-JSSVGElement::JSSVGElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGElement>&& impl)
-    : JSElement(structure, globalObject, WTF::move(impl))
+JSSVGElement::JSSVGElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGElement>&& impl)
+    : JSElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGElementPrototype::create(vm, globalObject, JSSVGElementPrototype::createStructure(vm, globalObject, JSElement::getPrototype(vm, globalObject)));
+    return JSSVGElementPrototype::create(vm, globalObject, JSSVGElementPrototype::createStructure(vm, globalObject, JSElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGElementXmlbase(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGElement* BindingCaller<JSSVGElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "xmlbase");
-        return throwGetterTypeError(*exec, "SVGElement", "xmlbase");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.xmlbase());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGElement*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsSVGElementOwnerSVGElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGElement* BindingCaller<JSSVGElement>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "ownerSVGElement");
-        return throwGetterTypeError(*exec, "SVGElement", "ownerSVGElement");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ownerSVGElement()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGElement*>(state.thisValue());
 }
 
+static inline JSValue jsSVGElementOwnerSVGElementGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGElementViewportElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGElementOwnerSVGElement(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "viewportElement");
-        return throwGetterTypeError(*exec, "SVGElement", "viewportElement");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.viewportElement()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOwnerSVGElementGetter>(state, thisValue, "ownerSVGElement");
 }
 
-
-EncodedJSValue jsSVGElementXmllang(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGElementOwnerSVGElementGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "xmllang");
-        return throwGetterTypeError(*exec, "SVGElement", "xmllang");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.xmllang());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGSVGElement>>(state, *thisObject.globalObject(), impl.ownerSVGElement());
+    return result;
 }
 
+static inline JSValue jsSVGElementViewportElementGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGElementXmlspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGElementViewportElement(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "xmlspace");
-        return throwGetterTypeError(*exec, "SVGElement", "xmlspace");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.xmlspace());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementViewportElementGetter>(state, thisValue, "viewportElement");
 }
 
-
-EncodedJSValue jsSVGElementClassName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGElementViewportElementGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "className");
-        return throwGetterTypeError(*exec, "SVGElement", "className");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.classNameAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGElement>>(state, *thisObject.globalObject(), impl.viewportElement());
+    return result;
 }
 
+static inline JSValue jsSVGElementXmllangGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGElementStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGElementXmllang(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "style");
-        return throwGetterTypeError(*exec, "SVGElement", "style");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.style()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementXmllangGetter>(state, thisValue, "xmllang");
 }
 
-
-EncodedJSValue jsSVGElementTabIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGElementXmllangGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGElement", "tabIndex");
-        return throwGetterTypeError(*exec, "SVGElement", "tabIndex");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.tabIndex());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.xmllang());
+    return result;
 }
 
+static inline JSValue jsSVGElementXmlspaceGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGElementXmlspace(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGElementPrototype* domObject = jsDynamicCast<JSSVGElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementXmlspaceGetter>(state, thisValue, "xmlspace");
 }
 
-void setJSSVGElementXmlbase(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsSVGElementXmlspaceGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.xmlspace());
+    return result;
+}
+
+static inline JSValue jsSVGElementClassNameGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementClassName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementClassNameGetter>(state, thisValue, "className");
+}
+
+static inline JSValue jsSVGElementClassNameGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.classNameAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGElementStyleGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementStyle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementStyleGetter>(state, thisValue, "style");
+}
+
+static inline JSValue jsSVGElementStyleGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSStyleDeclaration>>(state, *thisObject.globalObject(), impl.cssomStyle());
+    return result;
+}
+
+static inline JSValue jsSVGElementTabIndexGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementTabIndex(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementTabIndexGetter>(state, thisValue, "tabIndex");
+}
+
+static inline JSValue jsSVGElementTabIndexGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.tabIndex());
+    return result;
+}
+
+static inline JSValue jsSVGElementDatasetGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementDataset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementDatasetGetter>(state, thisValue, "dataset");
+}
+
+static inline JSValue jsSVGElementDatasetGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMStringMap>>(state, *thisObject.globalObject(), impl.dataset());
+    return result;
+}
+
+static inline JSValue jsSVGElementOnabortGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnabort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnabortGetter>(state, thisValue, "onabort");
+}
+
+static inline JSValue jsSVGElementOnabortGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().abortEvent);
+}
+
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+static inline JSValue jsSVGElementOnautocompleteGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnautocomplete(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnautocompleteGetter>(state, thisValue, "onautocomplete");
+}
+
+static inline JSValue jsSVGElementOnautocompleteGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().autocompleteEvent);
+}
+
+#endif
+
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+static inline JSValue jsSVGElementOnautocompleteerrorGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnautocompleteerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnautocompleteerrorGetter>(state, thisValue, "onautocompleteerror");
+}
+
+static inline JSValue jsSVGElementOnautocompleteerrorGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().autocompleteerrorEvent);
+}
+
+#endif
+
+static inline JSValue jsSVGElementOnblurGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnblur(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnblurGetter>(state, thisValue, "onblur");
+}
+
+static inline JSValue jsSVGElementOnblurGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().blurEvent);
+}
+
+static inline JSValue jsSVGElementOncanplayGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOncanplay(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOncanplayGetter>(state, thisValue, "oncanplay");
+}
+
+static inline JSValue jsSVGElementOncanplayGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().canplayEvent);
+}
+
+static inline JSValue jsSVGElementOncanplaythroughGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOncanplaythrough(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOncanplaythroughGetter>(state, thisValue, "oncanplaythrough");
+}
+
+static inline JSValue jsSVGElementOncanplaythroughGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().canplaythroughEvent);
+}
+
+static inline JSValue jsSVGElementOnchangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnchange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnchangeGetter>(state, thisValue, "onchange");
+}
+
+static inline JSValue jsSVGElementOnchangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().changeEvent);
+}
+
+static inline JSValue jsSVGElementOnclickGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnclick(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnclickGetter>(state, thisValue, "onclick");
+}
+
+static inline JSValue jsSVGElementOnclickGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().clickEvent);
+}
+
+static inline JSValue jsSVGElementOncontextmenuGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOncontextmenu(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOncontextmenuGetter>(state, thisValue, "oncontextmenu");
+}
+
+static inline JSValue jsSVGElementOncontextmenuGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().contextmenuEvent);
+}
+
+static inline JSValue jsSVGElementOncuechangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOncuechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOncuechangeGetter>(state, thisValue, "oncuechange");
+}
+
+static inline JSValue jsSVGElementOncuechangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().cuechangeEvent);
+}
+
+static inline JSValue jsSVGElementOndblclickGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndblclick(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndblclickGetter>(state, thisValue, "ondblclick");
+}
+
+static inline JSValue jsSVGElementOndblclickGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dblclickEvent);
+}
+
+static inline JSValue jsSVGElementOndragGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndrag(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragGetter>(state, thisValue, "ondrag");
+}
+
+static inline JSValue jsSVGElementOndragGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragEvent);
+}
+
+static inline JSValue jsSVGElementOndragendGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndragend(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragendGetter>(state, thisValue, "ondragend");
+}
+
+static inline JSValue jsSVGElementOndragendGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragendEvent);
+}
+
+static inline JSValue jsSVGElementOndragenterGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndragenter(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragenterGetter>(state, thisValue, "ondragenter");
+}
+
+static inline JSValue jsSVGElementOndragenterGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragenterEvent);
+}
+
+static inline JSValue jsSVGElementOndragleaveGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndragleave(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragleaveGetter>(state, thisValue, "ondragleave");
+}
+
+static inline JSValue jsSVGElementOndragleaveGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragleaveEvent);
+}
+
+static inline JSValue jsSVGElementOndragoverGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndragover(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragoverGetter>(state, thisValue, "ondragover");
+}
+
+static inline JSValue jsSVGElementOndragoverGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragoverEvent);
+}
+
+static inline JSValue jsSVGElementOndragstartGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndragstart(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndragstartGetter>(state, thisValue, "ondragstart");
+}
+
+static inline JSValue jsSVGElementOndragstartGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dragstartEvent);
+}
+
+static inline JSValue jsSVGElementOndropGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndrop(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndropGetter>(state, thisValue, "ondrop");
+}
+
+static inline JSValue jsSVGElementOndropGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().dropEvent);
+}
+
+static inline JSValue jsSVGElementOndurationchangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOndurationchange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOndurationchangeGetter>(state, thisValue, "ondurationchange");
+}
+
+static inline JSValue jsSVGElementOndurationchangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().durationchangeEvent);
+}
+
+static inline JSValue jsSVGElementOnemptiedGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnemptied(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnemptiedGetter>(state, thisValue, "onemptied");
+}
+
+static inline JSValue jsSVGElementOnemptiedGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().emptiedEvent);
+}
+
+static inline JSValue jsSVGElementOnendedGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnended(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnendedGetter>(state, thisValue, "onended");
+}
+
+static inline JSValue jsSVGElementOnendedGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().endedEvent);
+}
+
+static inline JSValue jsSVGElementOnerrorGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsSVGElementOnerrorGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+static inline JSValue jsSVGElementOnfocusGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnfocus(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnfocusGetter>(state, thisValue, "onfocus");
+}
+
+static inline JSValue jsSVGElementOnfocusGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().focusEvent);
+}
+
+static inline JSValue jsSVGElementOninputGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOninput(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOninputGetter>(state, thisValue, "oninput");
+}
+
+static inline JSValue jsSVGElementOninputGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().inputEvent);
+}
+
+static inline JSValue jsSVGElementOninvalidGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOninvalid(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOninvalidGetter>(state, thisValue, "oninvalid");
+}
+
+static inline JSValue jsSVGElementOninvalidGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().invalidEvent);
+}
+
+static inline JSValue jsSVGElementOnkeydownGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnkeydown(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnkeydownGetter>(state, thisValue, "onkeydown");
+}
+
+static inline JSValue jsSVGElementOnkeydownGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().keydownEvent);
+}
+
+static inline JSValue jsSVGElementOnkeypressGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnkeypress(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnkeypressGetter>(state, thisValue, "onkeypress");
+}
+
+static inline JSValue jsSVGElementOnkeypressGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().keypressEvent);
+}
+
+static inline JSValue jsSVGElementOnkeyupGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnkeyup(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnkeyupGetter>(state, thisValue, "onkeyup");
+}
+
+static inline JSValue jsSVGElementOnkeyupGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().keyupEvent);
+}
+
+static inline JSValue jsSVGElementOnloadGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnload(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnloadGetter>(state, thisValue, "onload");
+}
+
+static inline JSValue jsSVGElementOnloadGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().loadEvent);
+}
+
+static inline JSValue jsSVGElementOnloadeddataGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnloadeddata(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnloadeddataGetter>(state, thisValue, "onloadeddata");
+}
+
+static inline JSValue jsSVGElementOnloadeddataGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().loadeddataEvent);
+}
+
+static inline JSValue jsSVGElementOnloadedmetadataGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnloadedmetadata(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnloadedmetadataGetter>(state, thisValue, "onloadedmetadata");
+}
+
+static inline JSValue jsSVGElementOnloadedmetadataGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().loadedmetadataEvent);
+}
+
+static inline JSValue jsSVGElementOnloadstartGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnloadstart(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnloadstartGetter>(state, thisValue, "onloadstart");
+}
+
+static inline JSValue jsSVGElementOnloadstartGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().loadstartEvent);
+}
+
+static inline JSValue jsSVGElementOnmousedownGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmousedown(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmousedownGetter>(state, thisValue, "onmousedown");
+}
+
+static inline JSValue jsSVGElementOnmousedownGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mousedownEvent);
+}
+
+static inline JSValue jsSVGElementOnmouseenterGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmouseenter(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmouseenterGetter, CastedThisErrorBehavior::ReturnEarly>(state, thisValue, "onmouseenter");
+}
+
+static inline JSValue jsSVGElementOnmouseenterGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mouseenterEvent);
+}
+
+static inline JSValue jsSVGElementOnmouseleaveGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmouseleave(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmouseleaveGetter, CastedThisErrorBehavior::ReturnEarly>(state, thisValue, "onmouseleave");
+}
+
+static inline JSValue jsSVGElementOnmouseleaveGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mouseleaveEvent);
+}
+
+static inline JSValue jsSVGElementOnmousemoveGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmousemove(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmousemoveGetter>(state, thisValue, "onmousemove");
+}
+
+static inline JSValue jsSVGElementOnmousemoveGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mousemoveEvent);
+}
+
+static inline JSValue jsSVGElementOnmouseoutGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmouseout(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmouseoutGetter>(state, thisValue, "onmouseout");
+}
+
+static inline JSValue jsSVGElementOnmouseoutGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mouseoutEvent);
+}
+
+static inline JSValue jsSVGElementOnmouseoverGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmouseover(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmouseoverGetter>(state, thisValue, "onmouseover");
+}
+
+static inline JSValue jsSVGElementOnmouseoverGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mouseoverEvent);
+}
+
+static inline JSValue jsSVGElementOnmouseupGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmouseup(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmouseupGetter>(state, thisValue, "onmouseup");
+}
+
+static inline JSValue jsSVGElementOnmouseupGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mouseupEvent);
+}
+
+static inline JSValue jsSVGElementOnmousewheelGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnmousewheel(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnmousewheelGetter>(state, thisValue, "onmousewheel");
+}
+
+static inline JSValue jsSVGElementOnmousewheelGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().mousewheelEvent);
+}
+
+static inline JSValue jsSVGElementOnpauseGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnpause(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnpauseGetter>(state, thisValue, "onpause");
+}
+
+static inline JSValue jsSVGElementOnpauseGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().pauseEvent);
+}
+
+static inline JSValue jsSVGElementOnplayGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnplay(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnplayGetter>(state, thisValue, "onplay");
+}
+
+static inline JSValue jsSVGElementOnplayGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().playEvent);
+}
+
+static inline JSValue jsSVGElementOnplayingGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnplaying(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnplayingGetter>(state, thisValue, "onplaying");
+}
+
+static inline JSValue jsSVGElementOnplayingGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().playingEvent);
+}
+
+static inline JSValue jsSVGElementOnprogressGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnprogress(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnprogressGetter>(state, thisValue, "onprogress");
+}
+
+static inline JSValue jsSVGElementOnprogressGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().progressEvent);
+}
+
+static inline JSValue jsSVGElementOnratechangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnratechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnratechangeGetter>(state, thisValue, "onratechange");
+}
+
+static inline JSValue jsSVGElementOnratechangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().ratechangeEvent);
+}
+
+static inline JSValue jsSVGElementOnresetGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnreset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnresetGetter>(state, thisValue, "onreset");
+}
+
+static inline JSValue jsSVGElementOnresetGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().resetEvent);
+}
+
+static inline JSValue jsSVGElementOnresizeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnresize(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnresizeGetter>(state, thisValue, "onresize");
+}
+
+static inline JSValue jsSVGElementOnresizeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().resizeEvent);
+}
+
+static inline JSValue jsSVGElementOnscrollGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnscroll(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnscrollGetter>(state, thisValue, "onscroll");
+}
+
+static inline JSValue jsSVGElementOnscrollGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().scrollEvent);
+}
+
+static inline JSValue jsSVGElementOnseekedGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnseeked(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnseekedGetter>(state, thisValue, "onseeked");
+}
+
+static inline JSValue jsSVGElementOnseekedGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().seekedEvent);
+}
+
+static inline JSValue jsSVGElementOnseekingGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnseeking(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnseekingGetter>(state, thisValue, "onseeking");
+}
+
+static inline JSValue jsSVGElementOnseekingGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().seekingEvent);
+}
+
+static inline JSValue jsSVGElementOnselectGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnselect(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnselectGetter>(state, thisValue, "onselect");
+}
+
+static inline JSValue jsSVGElementOnselectGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().selectEvent);
+}
+
+static inline JSValue jsSVGElementOnstalledGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnstalled(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnstalledGetter>(state, thisValue, "onstalled");
+}
+
+static inline JSValue jsSVGElementOnstalledGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().stalledEvent);
+}
+
+static inline JSValue jsSVGElementOnsubmitGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnsubmit(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnsubmitGetter>(state, thisValue, "onsubmit");
+}
+
+static inline JSValue jsSVGElementOnsubmitGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().submitEvent);
+}
+
+static inline JSValue jsSVGElementOnsuspendGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnsuspend(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnsuspendGetter>(state, thisValue, "onsuspend");
+}
+
+static inline JSValue jsSVGElementOnsuspendGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().suspendEvent);
+}
+
+static inline JSValue jsSVGElementOntimeupdateGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntimeupdate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntimeupdateGetter>(state, thisValue, "ontimeupdate");
+}
+
+static inline JSValue jsSVGElementOntimeupdateGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().timeupdateEvent);
+}
+
+static inline JSValue jsSVGElementOntoggleGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntoggle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntoggleGetter>(state, thisValue, "ontoggle");
+}
+
+static inline JSValue jsSVGElementOntoggleGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().toggleEvent);
+}
+
+static inline JSValue jsSVGElementOnvolumechangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnvolumechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnvolumechangeGetter>(state, thisValue, "onvolumechange");
+}
+
+static inline JSValue jsSVGElementOnvolumechangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().volumechangeEvent);
+}
+
+static inline JSValue jsSVGElementOnwaitingGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwaiting(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwaitingGetter>(state, thisValue, "onwaiting");
+}
+
+static inline JSValue jsSVGElementOnwaitingGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().waitingEvent);
+}
+
+static inline JSValue jsSVGElementOnsearchGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnsearch(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnsearchGetter>(state, thisValue, "onsearch");
+}
+
+static inline JSValue jsSVGElementOnsearchGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().searchEvent);
+}
+
+static inline JSValue jsSVGElementOnwheelGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwheel(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwheelGetter>(state, thisValue, "onwheel");
+}
+
+static inline JSValue jsSVGElementOnwheelGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().wheelEvent);
+}
+
+#if ENABLE(TOUCH_EVENTS)
+static inline JSValue jsSVGElementOntouchcancelGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntouchcancel(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntouchcancelGetter>(state, thisValue, "ontouchcancel");
+}
+
+static inline JSValue jsSVGElementOntouchcancelGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().touchcancelEvent);
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline JSValue jsSVGElementOntouchendGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntouchend(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntouchendGetter>(state, thisValue, "ontouchend");
+}
+
+static inline JSValue jsSVGElementOntouchendGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().touchendEvent);
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline JSValue jsSVGElementOntouchmoveGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntouchmove(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntouchmoveGetter>(state, thisValue, "ontouchmove");
+}
+
+static inline JSValue jsSVGElementOntouchmoveGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().touchmoveEvent);
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline JSValue jsSVGElementOntouchstartGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntouchstart(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntouchstartGetter>(state, thisValue, "ontouchstart");
+}
+
+static inline JSValue jsSVGElementOntouchstartGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().touchstartEvent);
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline JSValue jsSVGElementOntouchforcechangeGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOntouchforcechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOntouchforcechangeGetter>(state, thisValue, "ontouchforcechange");
+}
+
+static inline JSValue jsSVGElementOntouchforcechangeGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().touchforcechangeEvent);
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitmouseforcechangedGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitmouseforcechanged(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitmouseforcechangedGetter>(state, thisValue, "onwebkitmouseforcechanged");
+}
+
+static inline JSValue jsSVGElementOnwebkitmouseforcechangedGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitmouseforcechangedEvent);
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitmouseforcedownGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitmouseforcedown(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitmouseforcedownGetter>(state, thisValue, "onwebkitmouseforcedown");
+}
+
+static inline JSValue jsSVGElementOnwebkitmouseforcedownGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitmouseforcedownEvent);
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitmouseforcewillbeginGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitmouseforcewillbegin(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitmouseforcewillbeginGetter>(state, thisValue, "onwebkitmouseforcewillbegin");
+}
+
+static inline JSValue jsSVGElementOnwebkitmouseforcewillbeginGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitmouseforcewillbeginEvent);
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitmouseforceupGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitmouseforceup(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitmouseforceupGetter>(state, thisValue, "onwebkitmouseforceup");
+}
+
+static inline JSValue jsSVGElementOnwebkitmouseforceupGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitmouseforceupEvent);
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitwillrevealbottomGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitwillrevealbottom(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitwillrevealbottomGetter>(state, thisValue, "onwebkitwillrevealbottom");
+}
+
+static inline JSValue jsSVGElementOnwebkitwillrevealbottomGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealbottomEvent);
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitwillrevealleftGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitwillrevealleft(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitwillrevealleftGetter>(state, thisValue, "onwebkitwillrevealleft");
+}
+
+static inline JSValue jsSVGElementOnwebkitwillrevealleftGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealleftEvent);
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitwillrevealrightGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitwillrevealright(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitwillrevealrightGetter>(state, thisValue, "onwebkitwillrevealright");
+}
+
+static inline JSValue jsSVGElementOnwebkitwillrevealrightGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealrightEvent);
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline JSValue jsSVGElementOnwebkitwillrevealtopGetter(ExecState&, JSSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGElementOnwebkitwillrevealtop(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGElement>::attribute<jsSVGElementOnwebkitwillrevealtopGetter>(state, thisValue, "onwebkitwillrevealtop");
+}
+
+static inline JSValue jsSVGElementOnwebkitwillrevealtopGetter(ExecState& state, JSSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().webkitwillrevealtopEvent);
+}
+
+#endif
+
+EncodedJSValue jsSVGElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGElementPrototype* domObject = jsDynamicDowncast<JSSVGElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGElement", "xmlbase");
-        else
-            throwSetterTypeError(*exec, "SVGElement", "xmlbase");
-        return;
+    JSSVGElementPrototype* domObject = jsDynamicDowncast<JSSVGElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setXmlbase(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGElementXmllangFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementXmllang(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementXmllangFunction>(state, thisValue, encodedValue, "xmllang");
+}
+
+static inline bool setJSSVGElementXmllangFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setXmllang(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGElementXmllang(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGElementXmlspaceFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementXmlspace(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGElement", "xmllang");
-        else
-            throwSetterTypeError(*exec, "SVGElement", "xmllang");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setXmllang(nativeValue);
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementXmlspaceFunction>(state, thisValue, encodedValue, "xmlspace");
+}
+
+static inline bool setJSSVGElementXmlspaceFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setXmlspace(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGElementXmlspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGElementTabIndexFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementTabIndex(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGElement", "xmlspace");
-        else
-            throwSetterTypeError(*exec, "SVGElement", "xmlspace");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setXmlspace(nativeValue);
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementTabIndexFunction>(state, thisValue, encodedValue, "tabIndex");
+}
+
+static inline bool setJSSVGElementTabIndexFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTabIndex(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGElementTabIndex(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGElementOnabortFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnabort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGElement", "tabIndex");
-        else
-            throwSetterTypeError(*exec, "SVGElement", "tabIndex");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTabIndex(nativeValue);
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnabortFunction>(state, thisValue, encodedValue, "onabort");
+}
+
+static inline bool setJSSVGElementOnabortFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().abortEvent, value);
+    return true;
 }
 
 
-JSValue JSSVGElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+static inline bool setJSSVGElementOnautocompleteFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnautocomplete(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnautocompleteFunction>(state, thisValue, encodedValue, "onautocomplete");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionGetPresentationAttribute(ExecState* exec)
+static inline bool setJSSVGElementOnautocompleteFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGElement* castedThis = jsDynamicCast<JSSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGElement", "getPresentationAttribute");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGElement::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getPresentationAttribute(name)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().autocompleteEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(REQUEST_AUTOCOMPLETE)
+static inline bool setJSSVGElementOnautocompleteerrorFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnautocompleteerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnautocompleteerrorFunction>(state, thisValue, encodedValue, "onautocompleteerror");
+}
+
+static inline bool setJSSVGElementOnautocompleteerrorFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().autocompleteerrorEvent, value);
+    return true;
+}
+
+#endif
+
+static inline bool setJSSVGElementOnblurFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnblur(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnblurFunction>(state, thisValue, encodedValue, "onblur");
+}
+
+static inline bool setJSSVGElementOnblurFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().blurEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOncanplayFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOncanplay(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOncanplayFunction>(state, thisValue, encodedValue, "oncanplay");
+}
+
+static inline bool setJSSVGElementOncanplayFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().canplayEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOncanplaythroughFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOncanplaythrough(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOncanplaythroughFunction>(state, thisValue, encodedValue, "oncanplaythrough");
+}
+
+static inline bool setJSSVGElementOncanplaythroughFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().canplaythroughEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnchangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnchange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnchangeFunction>(state, thisValue, encodedValue, "onchange");
+}
+
+static inline bool setJSSVGElementOnchangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().changeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnclickFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnclick(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnclickFunction>(state, thisValue, encodedValue, "onclick");
+}
+
+static inline bool setJSSVGElementOnclickFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().clickEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOncontextmenuFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOncontextmenu(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOncontextmenuFunction>(state, thisValue, encodedValue, "oncontextmenu");
+}
+
+static inline bool setJSSVGElementOncontextmenuFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().contextmenuEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOncuechangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOncuechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOncuechangeFunction>(state, thisValue, encodedValue, "oncuechange");
+}
+
+static inline bool setJSSVGElementOncuechangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().cuechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndblclickFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndblclick(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndblclickFunction>(state, thisValue, encodedValue, "ondblclick");
+}
+
+static inline bool setJSSVGElementOndblclickFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dblclickEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndrag(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragFunction>(state, thisValue, encodedValue, "ondrag");
+}
+
+static inline bool setJSSVGElementOndragFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragendFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndragend(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragendFunction>(state, thisValue, encodedValue, "ondragend");
+}
+
+static inline bool setJSSVGElementOndragendFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragendEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragenterFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndragenter(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragenterFunction>(state, thisValue, encodedValue, "ondragenter");
+}
+
+static inline bool setJSSVGElementOndragenterFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragenterEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragleaveFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndragleave(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragleaveFunction>(state, thisValue, encodedValue, "ondragleave");
+}
+
+static inline bool setJSSVGElementOndragleaveFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragleaveEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragoverFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndragover(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragoverFunction>(state, thisValue, encodedValue, "ondragover");
+}
+
+static inline bool setJSSVGElementOndragoverFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragoverEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndragstartFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndragstart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndragstartFunction>(state, thisValue, encodedValue, "ondragstart");
+}
+
+static inline bool setJSSVGElementOndragstartFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dragstartEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndropFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndrop(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndropFunction>(state, thisValue, encodedValue, "ondrop");
+}
+
+static inline bool setJSSVGElementOndropFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().dropEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOndurationchangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOndurationchange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOndurationchangeFunction>(state, thisValue, encodedValue, "ondurationchange");
+}
+
+static inline bool setJSSVGElementOndurationchangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().durationchangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnemptiedFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnemptied(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnemptiedFunction>(state, thisValue, encodedValue, "onemptied");
+}
+
+static inline bool setJSSVGElementOnemptiedFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().emptiedEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnendedFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnended(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnendedFunction>(state, thisValue, encodedValue, "onended");
+}
+
+static inline bool setJSSVGElementOnendedFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().endedEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnerrorFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSSVGElementOnerrorFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnfocusFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnfocus(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnfocusFunction>(state, thisValue, encodedValue, "onfocus");
+}
+
+static inline bool setJSSVGElementOnfocusFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().focusEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOninputFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOninput(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOninputFunction>(state, thisValue, encodedValue, "oninput");
+}
+
+static inline bool setJSSVGElementOninputFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().inputEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOninvalidFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOninvalid(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOninvalidFunction>(state, thisValue, encodedValue, "oninvalid");
+}
+
+static inline bool setJSSVGElementOninvalidFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().invalidEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnkeydownFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnkeydown(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnkeydownFunction>(state, thisValue, encodedValue, "onkeydown");
+}
+
+static inline bool setJSSVGElementOnkeydownFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().keydownEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnkeypressFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnkeypress(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnkeypressFunction>(state, thisValue, encodedValue, "onkeypress");
+}
+
+static inline bool setJSSVGElementOnkeypressFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().keypressEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnkeyupFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnkeyup(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnkeyupFunction>(state, thisValue, encodedValue, "onkeyup");
+}
+
+static inline bool setJSSVGElementOnkeyupFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().keyupEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnloadFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnload(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnloadFunction>(state, thisValue, encodedValue, "onload");
+}
+
+static inline bool setJSSVGElementOnloadFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().loadEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnloadeddataFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnloadeddata(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnloadeddataFunction>(state, thisValue, encodedValue, "onloadeddata");
+}
+
+static inline bool setJSSVGElementOnloadeddataFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().loadeddataEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnloadedmetadataFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnloadedmetadata(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnloadedmetadataFunction>(state, thisValue, encodedValue, "onloadedmetadata");
+}
+
+static inline bool setJSSVGElementOnloadedmetadataFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().loadedmetadataEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnloadstartFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnloadstart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnloadstartFunction>(state, thisValue, encodedValue, "onloadstart");
+}
+
+static inline bool setJSSVGElementOnloadstartFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().loadstartEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmousedownFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmousedown(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmousedownFunction>(state, thisValue, encodedValue, "onmousedown");
+}
+
+static inline bool setJSSVGElementOnmousedownFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mousedownEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmouseenterFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmouseenter(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmouseenterFunction, CastedThisErrorBehavior::ReturnEarly>(state, thisValue, encodedValue, "onmouseenter");
+}
+
+static inline bool setJSSVGElementOnmouseenterFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mouseenterEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmouseleaveFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmouseleave(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmouseleaveFunction, CastedThisErrorBehavior::ReturnEarly>(state, thisValue, encodedValue, "onmouseleave");
+}
+
+static inline bool setJSSVGElementOnmouseleaveFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mouseleaveEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmousemoveFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmousemove(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmousemoveFunction>(state, thisValue, encodedValue, "onmousemove");
+}
+
+static inline bool setJSSVGElementOnmousemoveFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mousemoveEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmouseoutFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmouseout(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmouseoutFunction>(state, thisValue, encodedValue, "onmouseout");
+}
+
+static inline bool setJSSVGElementOnmouseoutFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mouseoutEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmouseoverFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmouseover(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmouseoverFunction>(state, thisValue, encodedValue, "onmouseover");
+}
+
+static inline bool setJSSVGElementOnmouseoverFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mouseoverEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmouseupFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmouseup(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmouseupFunction>(state, thisValue, encodedValue, "onmouseup");
+}
+
+static inline bool setJSSVGElementOnmouseupFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mouseupEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnmousewheelFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnmousewheel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnmousewheelFunction>(state, thisValue, encodedValue, "onmousewheel");
+}
+
+static inline bool setJSSVGElementOnmousewheelFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().mousewheelEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnpauseFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnpause(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnpauseFunction>(state, thisValue, encodedValue, "onpause");
+}
+
+static inline bool setJSSVGElementOnpauseFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().pauseEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnplayFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnplay(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnplayFunction>(state, thisValue, encodedValue, "onplay");
+}
+
+static inline bool setJSSVGElementOnplayFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().playEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnplayingFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnplaying(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnplayingFunction>(state, thisValue, encodedValue, "onplaying");
+}
+
+static inline bool setJSSVGElementOnplayingFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().playingEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnprogressFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnprogress(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnprogressFunction>(state, thisValue, encodedValue, "onprogress");
+}
+
+static inline bool setJSSVGElementOnprogressFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().progressEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnratechangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnratechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnratechangeFunction>(state, thisValue, encodedValue, "onratechange");
+}
+
+static inline bool setJSSVGElementOnratechangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().ratechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnresetFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnreset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnresetFunction>(state, thisValue, encodedValue, "onreset");
+}
+
+static inline bool setJSSVGElementOnresetFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().resetEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnresizeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnresize(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnresizeFunction>(state, thisValue, encodedValue, "onresize");
+}
+
+static inline bool setJSSVGElementOnresizeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().resizeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnscrollFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnscroll(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnscrollFunction>(state, thisValue, encodedValue, "onscroll");
+}
+
+static inline bool setJSSVGElementOnscrollFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().scrollEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnseekedFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnseeked(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnseekedFunction>(state, thisValue, encodedValue, "onseeked");
+}
+
+static inline bool setJSSVGElementOnseekedFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().seekedEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnseekingFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnseeking(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnseekingFunction>(state, thisValue, encodedValue, "onseeking");
+}
+
+static inline bool setJSSVGElementOnseekingFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().seekingEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnselectFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnselect(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnselectFunction>(state, thisValue, encodedValue, "onselect");
+}
+
+static inline bool setJSSVGElementOnselectFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().selectEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnstalledFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnstalled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnstalledFunction>(state, thisValue, encodedValue, "onstalled");
+}
+
+static inline bool setJSSVGElementOnstalledFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().stalledEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnsubmitFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnsubmit(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnsubmitFunction>(state, thisValue, encodedValue, "onsubmit");
+}
+
+static inline bool setJSSVGElementOnsubmitFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().submitEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnsuspendFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnsuspend(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnsuspendFunction>(state, thisValue, encodedValue, "onsuspend");
+}
+
+static inline bool setJSSVGElementOnsuspendFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().suspendEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOntimeupdateFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntimeupdate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntimeupdateFunction>(state, thisValue, encodedValue, "ontimeupdate");
+}
+
+static inline bool setJSSVGElementOntimeupdateFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().timeupdateEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOntoggleFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntoggle(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntoggleFunction>(state, thisValue, encodedValue, "ontoggle");
+}
+
+static inline bool setJSSVGElementOntoggleFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().toggleEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnvolumechangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnvolumechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnvolumechangeFunction>(state, thisValue, encodedValue, "onvolumechange");
+}
+
+static inline bool setJSSVGElementOnvolumechangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().volumechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnwaitingFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwaiting(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwaitingFunction>(state, thisValue, encodedValue, "onwaiting");
+}
+
+static inline bool setJSSVGElementOnwaitingFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().waitingEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnsearchFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnsearch(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnsearchFunction>(state, thisValue, encodedValue, "onsearch");
+}
+
+static inline bool setJSSVGElementOnsearchFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().searchEvent, value);
+    return true;
+}
+
+
+static inline bool setJSSVGElementOnwheelFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwheel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwheelFunction>(state, thisValue, encodedValue, "onwheel");
+}
+
+static inline bool setJSSVGElementOnwheelFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().wheelEvent, value);
+    return true;
+}
+
+
+#if ENABLE(TOUCH_EVENTS)
+static inline bool setJSSVGElementOntouchcancelFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntouchcancel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntouchcancelFunction>(state, thisValue, encodedValue, "ontouchcancel");
+}
+
+static inline bool setJSSVGElementOntouchcancelFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().touchcancelEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline bool setJSSVGElementOntouchendFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntouchend(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntouchendFunction>(state, thisValue, encodedValue, "ontouchend");
+}
+
+static inline bool setJSSVGElementOntouchendFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().touchendEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline bool setJSSVGElementOntouchmoveFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntouchmove(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntouchmoveFunction>(state, thisValue, encodedValue, "ontouchmove");
+}
+
+static inline bool setJSSVGElementOntouchmoveFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().touchmoveEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline bool setJSSVGElementOntouchstartFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntouchstart(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntouchstartFunction>(state, thisValue, encodedValue, "ontouchstart");
+}
+
+static inline bool setJSSVGElementOntouchstartFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().touchstartEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+static inline bool setJSSVGElementOntouchforcechangeFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOntouchforcechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOntouchforcechangeFunction>(state, thisValue, encodedValue, "ontouchforcechange");
+}
+
+static inline bool setJSSVGElementOntouchforcechangeFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().touchforcechangeEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline bool setJSSVGElementOnwebkitmouseforcechangedFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitmouseforcechanged(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitmouseforcechangedFunction>(state, thisValue, encodedValue, "onwebkitmouseforcechanged");
+}
+
+static inline bool setJSSVGElementOnwebkitmouseforcechangedFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitmouseforcechangedEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline bool setJSSVGElementOnwebkitmouseforcedownFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitmouseforcedown(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitmouseforcedownFunction>(state, thisValue, encodedValue, "onwebkitmouseforcedown");
+}
+
+static inline bool setJSSVGElementOnwebkitmouseforcedownFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitmouseforcedownEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline bool setJSSVGElementOnwebkitmouseforcewillbeginFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitmouseforcewillbegin(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitmouseforcewillbeginFunction>(state, thisValue, encodedValue, "onwebkitmouseforcewillbegin");
+}
+
+static inline bool setJSSVGElementOnwebkitmouseforcewillbeginFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitmouseforcewillbeginEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(MOUSE_FORCE_EVENTS)
+static inline bool setJSSVGElementOnwebkitmouseforceupFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitmouseforceup(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitmouseforceupFunction>(state, thisValue, encodedValue, "onwebkitmouseforceup");
+}
+
+static inline bool setJSSVGElementOnwebkitmouseforceupFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitmouseforceupEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSSVGElementOnwebkitwillrevealbottomFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitwillrevealbottom(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitwillrevealbottomFunction>(state, thisValue, encodedValue, "onwebkitwillrevealbottom");
+}
+
+static inline bool setJSSVGElementOnwebkitwillrevealbottomFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealbottomEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSSVGElementOnwebkitwillrevealleftFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitwillrevealleft(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitwillrevealleftFunction>(state, thisValue, encodedValue, "onwebkitwillrevealleft");
+}
+
+static inline bool setJSSVGElementOnwebkitwillrevealleftFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealleftEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSSVGElementOnwebkitwillrevealrightFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitwillrevealright(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitwillrevealrightFunction>(state, thisValue, encodedValue, "onwebkitwillrevealright");
+}
+
+static inline bool setJSSVGElementOnwebkitwillrevealrightFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealrightEvent, value);
+    return true;
+}
+
+#endif
+
+#if ENABLE(WILL_REVEAL_EDGE_EVENTS)
+static inline bool setJSSVGElementOnwebkitwillrevealtopFunction(ExecState&, JSSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGElementOnwebkitwillrevealtop(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGElement>::setAttribute<setJSSVGElementOnwebkitwillrevealtopFunction>(state, thisValue, encodedValue, "onwebkitwillrevealtop");
+}
+
+static inline bool setJSSVGElementOnwebkitwillrevealtopFunction(ExecState& state, JSSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().webkitwillrevealtopEvent, value);
+    return true;
+}
+
+#endif
+
+JSValue JSSVGElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionGetPresentationAttributeCaller(JSC::ExecState*, JSSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionGetPresentationAttribute(ExecState* state)
+{
+    return BindingCaller<JSSVGElement>::callOperation<jsSVGElementPrototypeFunctionGetPresentationAttributeCaller>(state, "getPresentationAttribute");
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionGetPresentationAttributeCaller(JSC::ExecState* state, JSSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto name = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<DeprecatedCSSOMValue>>(*state, *castedThis->globalObject(), impl.getPresentationAttribute(WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionFocusCaller(JSC::ExecState*, JSSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionFocus(ExecState* state)
+{
+    return BindingCaller<JSSVGElement>::callOperation<jsSVGElementPrototypeFunctionFocusCaller>(state, "focus");
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionFocusCaller(JSC::ExecState* state, JSSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.focus();
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionBlurCaller(JSC::ExecState*, JSSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGElementPrototypeFunctionBlur(ExecState* state)
+{
+    return BindingCaller<JSSVGElement>::callOperation<jsSVGElementPrototypeFunctionBlurCaller>(state, "blur");
+}
+
+static inline JSC::EncodedJSValue jsSVGElementPrototypeFunctionBlurCaller(JSC::ExecState* state, JSSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.blur();
+    return JSValue::encode(jsUndefined());
+}
+
+void JSSVGElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 SVGElement* JSSVGElement::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGElement*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSVGElement*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

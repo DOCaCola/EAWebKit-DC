@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2013 Apple Inc. All rights reserved.
- * Copyright (C) 2016 Electronic Arts, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -572,10 +571,7 @@ public:
     }
 
     bool operator!=(const FragmentForwardIterator& other) const { return m_fragmentIndex != other.m_fragmentIndex; }
-    //+EAWebKitChange
-    //08/23/2016 fix compile error seen when building with VS2015 update 3
     bool operator==(const FragmentForwardIterator& other) const { return m_fragmentIndex == other.m_fragmentIndex; }
-    //-EAWebKitChange
     unsigned operator*() const { return m_fragmentIndex; }
 
 private:

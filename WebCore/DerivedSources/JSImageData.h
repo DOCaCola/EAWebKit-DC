@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSImageData_h
-#define JSImageData_h
+#pragma once
 
 #include "ImageData.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSImageData : public JSDOMWrapper {
+class JSImageData : public JSDOMWrapper<ImageData> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<ImageData>;
     static JSImageData* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ImageData>&& impl)
     {
-        JSImageData* ptr = new (NotNull, JSC::allocateCell<JSImageData>(globalObject->vm().heap)) JSImageData(structure, globalObject, WTF::move(impl));
+        JSImageData* ptr = new (NotNull, JSC::allocateCell<JSImageData>(globalObject->vm().heap)) JSImageData(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static ImageData* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSImageData();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ImageData& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ImageData* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSImageData(JSC::Structure*, JSDOMGlobalObject*, Ref<ImageData>&&);
+    JSImageData(JSC::Structure*, JSDOMGlobalObject&, Ref<ImageData>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSImageDataOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ImageData*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ImageData*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ImageData& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(ImageData* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ImageData&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ImageData* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ImageData>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ImageData>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<ImageData> {
+    using WrapperClass = JSImageData;
+    using ToWrappedReturnType = ImageData*;
+};
 
 } // namespace WebCore
-
-#endif

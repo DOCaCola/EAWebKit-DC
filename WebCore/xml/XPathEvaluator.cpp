@@ -37,36 +37,26 @@ namespace WebCore {
 
 using namespace XPath;
 
-PassRefPtr<XPathExpression> XPathEvaluator::createExpression(const String& expression,
-                                                             XPathNSResolver* resolver,
-                                                             ExceptionCode& ec)
+ExceptionOr<Ref<XPathExpression>> XPathEvaluator::createExpression(const String& expression, RefPtr<XPathNSResolver>&& resolver)
 {
-    return XPathExpression::createExpression(expression, resolver, ec);
+    return XPathExpression::createExpression(expression, WTFMove(resolver));
 }
 
-PassRefPtr<XPathNSResolver> XPathEvaluator::createNSResolver(Node* nodeResolver)
+Ref<XPathNSResolver> XPathEvaluator::createNSResolver(Node* nodeResolver)
 {
     return NativeXPathNSResolver::create(nodeResolver);
 }
 
-PassRefPtr<XPathResult> XPathEvaluator::evaluate(const String& expression,
-                                                 Node* contextNode,
-                                                 XPathNSResolver* resolver,
-                                                 unsigned short type,
-                                                 XPathResult* result,
-                                                 ExceptionCode& ec)
+ExceptionOr<Ref<XPathResult>> XPathEvaluator::evaluate(const String& expression, Node* contextNode, RefPtr<XPathNSResolver>&& resolver, unsigned short type, XPathResult* result)
 {
-    if (!isValidContextNode(contextNode)) {
-        ec = NOT_SUPPORTED_ERR;
-        return 0;
-    }
+    if (!isValidContextNode(contextNode))
+        return Exception { NOT_SUPPORTED_ERR };
 
-    ec = 0;
-    RefPtr<XPathExpression> expr = createExpression(expression, resolver, ec);
-    if (ec)
-        return 0;
-    
-    return expr->evaluate(contextNode, type, result, ec);
+    auto createResult = createExpression(expression, WTFMove(resolver));
+    if (createResult.hasException())
+        return createResult.releaseException();
+
+    return createResult.releaseReturnValue()->evaluate(contextNode, type, result);
 }
 
 }

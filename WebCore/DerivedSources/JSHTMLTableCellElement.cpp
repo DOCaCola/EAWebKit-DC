@@ -22,10 +22,9 @@
 #include "JSHTMLTableCellElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLTableCellElement.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,40 +33,41 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLTableCellElementCellIndex(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLTableCellElementAbbr(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementAbbr(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementAxis(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementAxis(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementBgColor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementBgColor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementCh(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementCh(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementChOff(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementChOff(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementColSpan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementColSpan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementHeaders(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementHeaders(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementNoWrap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementNoWrap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementRowSpan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementRowSpan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementScope(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementScope(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementVAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementVAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTableCellElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTableCellElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLTableCellElementCellIndex(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLTableCellElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementAxis(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementAxis(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementBgColor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementBgColor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementCh(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementCh(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementChOff(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementChOff(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementColSpan(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementColSpan(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementRowSpan(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementRowSpan(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementHeaders(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementHeaders(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementNoWrap(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementNoWrap(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementVAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementVAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementAbbr(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementAbbr(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementScope(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementScope(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTableCellElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTableCellElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLTableCellElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLTableCellElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLTableCellElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCellElementPrototype>(vm.heap)) JSHTMLTableCellElementPrototype(vm, globalObject, structure);
@@ -90,63 +90,42 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLTableCellElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLTableCellElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLTableCellElementConstructor = JSDOMConstructorNotConstructable<JSHTMLTableCellElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLTableCellElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLTableCellElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCellElementConstructor>(vm.heap)) JSHTMLTableCellElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLTableCellElementConstructor::s_info = { "HTMLTableCellElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTableCellElementConstructor) };
-
-JSHTMLTableCellElementConstructor::JSHTMLTableCellElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLTableCellElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLTableCellElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLTableCellElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLTableCellElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLTableCellElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLTableCellElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLTableCellElementConstructor::s_info = { "HTMLTableCellElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTableCellElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLTableCellElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cellIndex", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementCellIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "abbr", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAbbr), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAbbr) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAlign) },
-    { "axis", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAxis), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAxis) },
-    { "bgColor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementBgColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementBgColor) },
-    { "ch", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementCh), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementCh) },
-    { "chOff", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementChOff), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementChOff) },
-    { "colSpan", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementColSpan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementColSpan) },
-    { "headers", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementHeaders), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementHeaders) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementHeight) },
-    { "noWrap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementNoWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementNoWrap) },
-    { "rowSpan", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementRowSpan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementRowSpan) },
-    { "scope", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementScope), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementScope) },
-    { "vAlign", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementVAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementVAlign) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementWidth) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementConstructor) } },
+    { "cellIndex", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementCellIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAlign) } },
+    { "axis", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAxis), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAxis) } },
+    { "bgColor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementBgColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementBgColor) } },
+    { "ch", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementCh), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementCh) } },
+    { "chOff", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementChOff), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementChOff) } },
+    { "colSpan", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementColSpan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementColSpan) } },
+    { "rowSpan", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementRowSpan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementRowSpan) } },
+    { "headers", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementHeaders), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementHeaders) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementHeight) } },
+    { "noWrap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementNoWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementNoWrap) } },
+    { "vAlign", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementVAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementVAlign) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementWidth) } },
+    { "abbr", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementAbbr), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementAbbr) } },
+    { "scope", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTableCellElementScope), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTableCellElementScope) } },
 };
 
 const ClassInfo JSHTMLTableCellElementPrototype::s_info = { "HTMLTableCellElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTableCellElementPrototype) };
@@ -159,567 +138,574 @@ void JSHTMLTableCellElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLTableCellElement::s_info = { "HTMLTableCellElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTableCellElement) };
 
-JSHTMLTableCellElement::JSHTMLTableCellElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTableCellElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLTableCellElement::JSHTMLTableCellElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLTableCellElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLTableCellElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLTableCellElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLTableCellElementPrototype::create(vm, globalObject, JSHTMLTableCellElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLTableCellElementPrototype::create(vm, globalObject, JSHTMLTableCellElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLTableCellElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLTableCellElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLTableCellElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLTableCellElementCellIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLTableCellElement* BindingCaller<JSHTMLTableCellElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "cellIndex");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "cellIndex");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.cellIndex());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLTableCellElementCellIndexGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementAbbr(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementCellIndex(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "abbr");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "abbr");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::abbrAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementCellIndexGetter>(state, thisValue, "cellIndex");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementCellIndexGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "align");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "align");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.cellIndex());
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementAlignGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementAxis(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "axis");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "axis");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::axisAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementAlignGetter>(state, thisValue, "align");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementBgColor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementAlignGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "bgColor");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "bgColor");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::bgcolorAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::alignAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementAxisGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementCh(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementAxis(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "ch");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "ch");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::charAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementAxisGetter>(state, thisValue, "axis");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementChOff(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementAxisGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "chOff");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "chOff");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::charoffAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::axisAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementBgColorGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementColSpan(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementBgColor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "colSpan");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "colSpan");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.colSpan());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementBgColorGetter>(state, thisValue, "bgColor");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementHeaders(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementBgColorGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "headers");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "headers");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::headersAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::bgcolorAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementChGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementCh(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "height");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementChGetter>(state, thisValue, "ch");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementNoWrap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementChGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "noWrap");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "noWrap");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::nowrapAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::charAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementChOffGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementRowSpan(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementChOff(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "rowSpan");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "rowSpan");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.rowSpan());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementChOffGetter>(state, thisValue, "chOff");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementScope(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementChOffGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "scope");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "scope");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::scopeAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::charoffAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementColSpanGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementVAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementColSpan(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "vAlign");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "vAlign");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::valignAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementColSpanGetter>(state, thisValue, "colSpan");
 }
 
-
-EncodedJSValue jsHTMLTableCellElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLTableCellElementColSpanGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTableCellElement", "width");
-        return throwGetterTypeError(*exec, "HTMLTableCellElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.colSpanForBindings());
+    return result;
 }
 
+static inline JSValue jsHTMLTableCellElementRowSpanGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTableCellElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLTableCellElementRowSpan(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLTableCellElementPrototype* domObject = jsDynamicCast<JSHTMLTableCellElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLTableCellElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementRowSpanGetter>(state, thisValue, "rowSpan");
 }
 
-void setJSHTMLTableCellElementAbbr(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLTableCellElementRowSpanGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.rowSpanForBindings());
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementHeadersGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementHeaders(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementHeadersGetter>(state, thisValue, "headers");
+}
+
+static inline JSValue jsHTMLTableCellElementHeadersGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::headersAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementHeightGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsHTMLTableCellElementHeightGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::heightAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementNoWrapGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementNoWrap(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementNoWrapGetter>(state, thisValue, "noWrap");
+}
+
+static inline JSValue jsHTMLTableCellElementNoWrapGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::nowrapAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementVAlignGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementVAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementVAlignGetter>(state, thisValue, "vAlign");
+}
+
+static inline JSValue jsHTMLTableCellElementVAlignGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::valignAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementWidthGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsHTMLTableCellElementWidthGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::widthAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementAbbrGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementAbbr(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementAbbrGetter>(state, thisValue, "abbr");
+}
+
+static inline JSValue jsHTMLTableCellElementAbbrGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::abbrAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLTableCellElementScopeGetter(ExecState&, JSHTMLTableCellElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTableCellElementScope(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTableCellElement>::attribute<jsHTMLTableCellElementScopeGetter>(state, thisValue, "scope");
+}
+
+static inline JSValue jsHTMLTableCellElementScopeGetter(ExecState& state, JSHTMLTableCellElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.scope());
+    return result;
+}
+
+EncodedJSValue jsHTMLTableCellElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLTableCellElementPrototype* domObject = jsDynamicDowncast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLTableCellElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLTableCellElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "abbr");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "abbr");
-        return;
+    JSHTMLTableCellElementPrototype* domObject = jsDynamicDowncast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::abbrAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLTableCellElementAlignFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementAlignFunction>(state, thisValue, encodedValue, "align");
+}
+
+static inline bool setJSHTMLTableCellElementAlignFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementAxisFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementAxis(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "align");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "align");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementAxisFunction>(state, thisValue, encodedValue, "axis");
+}
+
+static inline bool setJSHTMLTableCellElementAxisFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::axisAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementAxis(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementBgColorFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementBgColor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "axis");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "axis");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::axisAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementBgColorFunction>(state, thisValue, encodedValue, "bgColor");
+}
+
+static inline bool setJSHTMLTableCellElementBgColorFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::bgcolorAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementBgColor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementChFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementCh(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "bgColor");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "bgColor");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::bgcolorAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementChFunction>(state, thisValue, encodedValue, "ch");
+}
+
+static inline bool setJSHTMLTableCellElementChFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementCh(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementChOffFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementChOff(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "ch");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "ch");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementChOffFunction>(state, thisValue, encodedValue, "chOff");
+}
+
+static inline bool setJSHTMLTableCellElementChOffFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charoffAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementChOff(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementColSpanFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementColSpan(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "chOff");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "chOff");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charoffAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementColSpanFunction>(state, thisValue, encodedValue, "colSpan");
+}
+
+static inline bool setJSHTMLTableCellElementColSpanFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setColSpanForBindings(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementColSpan(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementRowSpanFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementRowSpan(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "colSpan");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "colSpan");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setColSpan(nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementRowSpanFunction>(state, thisValue, encodedValue, "rowSpan");
+}
+
+static inline bool setJSHTMLTableCellElementRowSpanFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setRowSpanForBindings(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementHeaders(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementHeadersFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementHeaders(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "headers");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "headers");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::headersAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementHeadersFunction>(state, thisValue, encodedValue, "headers");
+}
+
+static inline bool setJSHTMLTableCellElementHeadersFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::headersAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementHeightFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementHeight(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "height");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "height");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::heightAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementHeightFunction>(state, thisValue, encodedValue, "height");
+}
+
+static inline bool setJSHTMLTableCellElementHeightFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::heightAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementNoWrap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementNoWrapFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementNoWrap(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "noWrap");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "noWrap");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::nowrapAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementNoWrapFunction>(state, thisValue, encodedValue, "noWrap");
+}
+
+static inline bool setJSHTMLTableCellElementNoWrapFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::nowrapAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementRowSpan(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementVAlignFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementVAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "rowSpan");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "rowSpan");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setRowSpan(nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementVAlignFunction>(state, thisValue, encodedValue, "vAlign");
+}
+
+static inline bool setJSHTMLTableCellElementVAlignFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::valignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementScope(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementWidthFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementWidth(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "scope");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "scope");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::scopeAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementWidthFunction>(state, thisValue, encodedValue, "width");
+}
+
+static inline bool setJSHTMLTableCellElementWidthFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementVAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementAbbrFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementAbbr(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "vAlign");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "vAlign");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::valignAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementAbbrFunction>(state, thisValue, encodedValue, "abbr");
+}
+
+static inline bool setJSHTMLTableCellElementAbbrFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::abbrAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLTableCellElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLTableCellElementScopeFunction(ExecState&, JSHTMLTableCellElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTableCellElementScope(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTableCellElement* castedThis = jsDynamicCast<JSHTMLTableCellElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTableCellElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTableCellElement", "width");
-        else
-            throwSetterTypeError(*exec, "HTMLTableCellElement", "width");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, nativeValue);
+    return BindingCaller<JSHTMLTableCellElement>::setAttribute<setJSHTMLTableCellElementScopeFunction>(state, thisValue, encodedValue, "scope");
+}
+
+static inline bool setJSHTMLTableCellElementScopeFunction(ExecState& state, JSHTMLTableCellElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setScope(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLTableCellElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLTableCellElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLTableCellElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLTableCellElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLTableCellElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLTableCellElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

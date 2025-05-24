@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSSVGSVGElement.h"
 
-#include "Element.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSElement.h"
 #include "JSNodeList.h"
 #include "JSSVGAngle.h"
@@ -39,20 +39,7 @@
 #include "JSSVGRect.h"
 #include "JSSVGTransform.h"
 #include "JSSVGViewSpec.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
-#include "SVGAngle.h"
-#include "SVGLength.h"
-#include "SVGMatrix.h"
-#include "SVGPoint.h"
-#include "SVGRect.h"
-#include "SVGSVGElement.h"
-#include "SVGStaticPropertyTearOff.h"
-#include "SVGTransform.h"
-#include "SVGViewSpec.h"
-#include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -87,34 +74,35 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetElementById
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGSVGElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementContentScriptType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGSVGElementContentScriptType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGSVGElementContentStyleType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGSVGElementContentStyleType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGSVGElementViewport(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementUseCurrentView(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementCurrentView(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementCurrentScale(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGSVGElementCurrentScale(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGSVGElementCurrentTranslate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementViewBox(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementPreserveAspectRatio(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGSVGElementZoomAndPan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGSVGElementZoomAndPan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGSVGElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementContentScriptType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGSVGElementContentScriptType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGSVGElementContentStyleType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGSVGElementContentStyleType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGSVGElementViewport(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementUseCurrentView(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementCurrentView(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementCurrentScale(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGSVGElementCurrentScale(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGSVGElementCurrentTranslate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementViewBox(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementPreserveAspectRatio(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGSVGElementZoomAndPan(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGSVGElementZoomAndPan(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGSVGElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGSVGElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGSVGElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGSVGElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGSVGElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGSVGElementPrototype>(vm.heap)) JSSVGSVGElementPrototype(vm, globalObject, structure);
@@ -137,108 +125,86 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGSVGElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGSVGElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGSVGElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGSVGElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGSVGElementConstructor>(vm.heap)) JSSVGSVGElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGSVGElementConstructor = JSDOMConstructorNotConstructable<JSSVGSVGElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGSVGElementConstructorTableValues[] =
 {
-    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
+static_assert(SVGSVGElement::SVG_ZOOMANDPAN_UNKNOWN == 0, "SVG_ZOOMANDPAN_UNKNOWN in SVGSVGElement does not match value from IDL");
+static_assert(SVGSVGElement::SVG_ZOOMANDPAN_DISABLE == 1, "SVG_ZOOMANDPAN_DISABLE in SVGSVGElement does not match value from IDL");
+static_assert(SVGSVGElement::SVG_ZOOMANDPAN_MAGNIFY == 2, "SVG_ZOOMANDPAN_MAGNIFY in SVGSVGElement does not match value from IDL");
 
-COMPILE_ASSERT(0 == SVGSVGElement::SVG_ZOOMANDPAN_UNKNOWN, SVGSVGElementEnumSVG_ZOOMANDPAN_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGSVGElement::SVG_ZOOMANDPAN_DISABLE, SVGSVGElementEnumSVG_ZOOMANDPAN_DISABLEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGSVGElement::SVG_ZOOMANDPAN_MAGNIFY, SVGSVGElementEnumSVG_ZOOMANDPAN_MAGNIFYIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSSVGSVGElementConstructor::s_info = { "SVGSVGElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSVGElementConstructor) };
-
-JSSVGSVGElementConstructor::JSSVGSVGElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGSVGElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGGraphicsElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGSVGElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGSVGElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGSVGElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGSVGElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGSVGElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGSVGElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGSVGElementConstructor::s_info = { "SVGSVGElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSVGElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGSVGElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "contentScriptType", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementContentScriptType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementContentScriptType) },
-    { "contentStyleType", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementContentStyleType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementContentStyleType) },
-    { "viewport", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementViewport), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pixelUnitToMillimeterX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPixelUnitToMillimeterX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pixelUnitToMillimeterY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPixelUnitToMillimeterY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenPixelToMillimeterX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementScreenPixelToMillimeterX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenPixelToMillimeterY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementScreenPixelToMillimeterY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "useCurrentView", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementUseCurrentView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "currentView", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "currentScale", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementCurrentScale) },
-    { "currentTranslate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentTranslate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewBox", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAspectRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "zoomAndPan", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementZoomAndPan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementZoomAndPan) },
-    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "suspendRedraw", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionSuspendRedraw), (intptr_t) (0) },
-    { "unsuspendRedraw", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnsuspendRedraw), (intptr_t) (0) },
-    { "unsuspendRedrawAll", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAll), (intptr_t) (0) },
-    { "forceRedraw", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionForceRedraw), (intptr_t) (0) },
-    { "pauseAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionPauseAnimations), (intptr_t) (0) },
-    { "unpauseAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnpauseAnimations), (intptr_t) (0) },
-    { "animationsPaused", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionAnimationsPaused), (intptr_t) (0) },
-    { "getCurrentTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetCurrentTime), (intptr_t) (0) },
-    { "setCurrentTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionSetCurrentTime), (intptr_t) (0) },
-    { "getIntersectionList", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetIntersectionList), (intptr_t) (0) },
-    { "getEnclosureList", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetEnclosureList), (intptr_t) (0) },
-    { "checkIntersection", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCheckIntersection), (intptr_t) (0) },
-    { "checkEnclosure", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCheckEnclosure), (intptr_t) (0) },
-    { "deselectAll", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionDeselectAll), (intptr_t) (0) },
-    { "createSVGNumber", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGNumber), (intptr_t) (0) },
-    { "createSVGLength", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGLength), (intptr_t) (0) },
-    { "createSVGAngle", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGAngle), (intptr_t) (0) },
-    { "createSVGPoint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGPoint), (intptr_t) (0) },
-    { "createSVGMatrix", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGMatrix), (intptr_t) (0) },
-    { "createSVGRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGRect), (intptr_t) (0) },
-    { "createSVGTransform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGTransform), (intptr_t) (0) },
-    { "createSVGTransformFromMatrix", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrix), (intptr_t) (0) },
-    { "getElementById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetElementById), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementConstructor) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "contentScriptType", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementContentScriptType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementContentScriptType) } },
+    { "contentStyleType", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementContentStyleType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementContentStyleType) } },
+    { "viewport", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementViewport), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pixelUnitToMillimeterX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPixelUnitToMillimeterX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pixelUnitToMillimeterY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPixelUnitToMillimeterY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenPixelToMillimeterX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementScreenPixelToMillimeterX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenPixelToMillimeterY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementScreenPixelToMillimeterY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "useCurrentView", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementUseCurrentView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentView", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentScale", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementCurrentScale) } },
+    { "currentTranslate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementCurrentTranslate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "viewBox", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAspectRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "zoomAndPan", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSVGElementZoomAndPan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGSVGElementZoomAndPan) } },
+    { "suspendRedraw", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionSuspendRedraw), (intptr_t) (0) } },
+    { "unsuspendRedraw", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnsuspendRedraw), (intptr_t) (0) } },
+    { "unsuspendRedrawAll", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAll), (intptr_t) (0) } },
+    { "forceRedraw", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionForceRedraw), (intptr_t) (0) } },
+    { "pauseAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionPauseAnimations), (intptr_t) (0) } },
+    { "unpauseAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionUnpauseAnimations), (intptr_t) (0) } },
+    { "animationsPaused", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionAnimationsPaused), (intptr_t) (0) } },
+    { "getCurrentTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetCurrentTime), (intptr_t) (0) } },
+    { "setCurrentTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionSetCurrentTime), (intptr_t) (0) } },
+    { "getIntersectionList", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetIntersectionList), (intptr_t) (1) } },
+    { "getEnclosureList", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetEnclosureList), (intptr_t) (1) } },
+    { "checkIntersection", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCheckIntersection), (intptr_t) (2) } },
+    { "checkEnclosure", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCheckEnclosure), (intptr_t) (2) } },
+    { "deselectAll", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionDeselectAll), (intptr_t) (0) } },
+    { "createSVGNumber", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGNumber), (intptr_t) (0) } },
+    { "createSVGLength", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGLength), (intptr_t) (0) } },
+    { "createSVGAngle", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGAngle), (intptr_t) (0) } },
+    { "createSVGPoint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGPoint), (intptr_t) (0) } },
+    { "createSVGMatrix", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGMatrix), (intptr_t) (0) } },
+    { "createSVGRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGRect), (intptr_t) (0) } },
+    { "createSVGTransform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGTransform), (intptr_t) (0) } },
+    { "createSVGTransformFromMatrix", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrix), (intptr_t) (1) } },
+    { "getElementById", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGSVGElementPrototypeFunctionGetElementById), (intptr_t) (1) } },
+    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGSVGElementPrototype::s_info = { "SVGSVGElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSVGElementPrototype) };
@@ -251,779 +217,843 @@ void JSSVGSVGElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGSVGElement::s_info = { "SVGSVGElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSVGElement) };
 
-JSSVGSVGElement::JSSVGSVGElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGSVGElement>&& impl)
-    : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
+JSSVGSVGElement::JSSVGSVGElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGSVGElement>&& impl)
+    : JSSVGGraphicsElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGSVGElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGSVGElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGSVGElementPrototype::create(vm, globalObject, JSSVGSVGElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::getPrototype(vm, globalObject)));
+    return JSSVGSVGElementPrototype::create(vm, globalObject, JSSVGSVGElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGSVGElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGSVGElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGSVGElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGSVGElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGSVGElement* BindingCaller<JSSVGSVGElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "x");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGSVGElement*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsSVGSVGElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGSVGElement* BindingCaller<JSSVGSVGElement>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "y");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGSVGElement*>(state.thisValue());
 }
 
+static inline JSValue jsSVGSVGElementXGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "width");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementXGetter>(state, thisValue, "x");
 }
 
-
-EncodedJSValue jsSVGSVGElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementXGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "height");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementYGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementContentScriptType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "contentScriptType");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "contentScriptType");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.contentScriptType());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementYGetter>(state, thisValue, "y");
 }
 
-
-EncodedJSValue jsSVGSVGElementContentStyleType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementYGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "contentStyleType");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "contentStyleType");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.contentStyleType());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementWidthGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementViewport(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "viewport");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "viewport");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<FloatRect>::create(impl.viewport())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementWidthGetter>(state, thisValue, "width");
 }
 
-
-EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementWidthGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "pixelUnitToMillimeterX");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "pixelUnitToMillimeterX");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.pixelUnitToMillimeterX());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementHeightGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "pixelUnitToMillimeterY");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "pixelUnitToMillimeterY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.pixelUnitToMillimeterY());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementHeightGetter>(state, thisValue, "height");
 }
 
-
-EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementHeightGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "screenPixelToMillimeterX");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "screenPixelToMillimeterX");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.screenPixelToMillimeterX());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementContentScriptTypeGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementContentScriptType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "screenPixelToMillimeterY");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "screenPixelToMillimeterY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.screenPixelToMillimeterY());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementContentScriptTypeGetter>(state, thisValue, "contentScriptType");
 }
 
-
-EncodedJSValue jsSVGSVGElementUseCurrentView(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementContentScriptTypeGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "useCurrentView");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "useCurrentView");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.useCurrentView());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.contentScriptType());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementContentStyleTypeGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementCurrentView(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementContentStyleType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "currentView");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "currentView");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.currentView()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementContentStyleTypeGetter>(state, thisValue, "contentStyleType");
 }
 
-
-EncodedJSValue jsSVGSVGElementCurrentScale(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementContentStyleTypeGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "currentScale");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "currentScale");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.currentScale());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.contentStyleType());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementViewportGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementCurrentTranslate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementViewport(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "currentTranslate");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "currentTranslate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticPropertyTearOff<SVGSVGElement, SVGPoint>::create(impl, impl.currentTranslate(), &SVGSVGElement::updateCurrentTranslate)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementViewportGetter>(state, thisValue, "viewport");
 }
 
-
-EncodedJSValue jsSVGSVGElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementViewportGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGRect>>(state, *thisObject.globalObject(), impl.viewport());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementPixelUnitToMillimeterXGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementViewBox(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterX(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "viewBox");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "viewBox");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedRect> obj = impl.viewBoxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementPixelUnitToMillimeterXGetter>(state, thisValue, "pixelUnitToMillimeterX");
 }
 
-
-EncodedJSValue jsSVGSVGElementPreserveAspectRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGSVGElementPixelUnitToMillimeterXGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "preserveAspectRatio");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "preserveAspectRatio");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedPreserveAspectRatio> obj = impl.preserveAspectRatioAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.pixelUnitToMillimeterX());
+    return result;
 }
 
+static inline JSValue jsSVGSVGElementPixelUnitToMillimeterYGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGSVGElementZoomAndPan(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGSVGElementPixelUnitToMillimeterY(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGSVGElement", "zoomAndPan");
-        return throwGetterTypeError(*exec, "SVGSVGElement", "zoomAndPan");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.zoomAndPan());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementPixelUnitToMillimeterYGetter>(state, thisValue, "pixelUnitToMillimeterY");
 }
 
-
-EncodedJSValue jsSVGSVGElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGSVGElementPixelUnitToMillimeterYGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
 {
-    JSSVGSVGElementPrototype* domObject = jsDynamicCast<JSSVGSVGElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGSVGElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.pixelUnitToMillimeterY());
+    return result;
 }
 
-void setJSSVGSVGElementContentScriptType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsSVGSVGElementScreenPixelToMillimeterXGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterX(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementScreenPixelToMillimeterXGetter>(state, thisValue, "screenPixelToMillimeterX");
+}
+
+static inline JSValue jsSVGSVGElementScreenPixelToMillimeterXGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.screenPixelToMillimeterX());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementScreenPixelToMillimeterYGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementScreenPixelToMillimeterY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementScreenPixelToMillimeterYGetter>(state, thisValue, "screenPixelToMillimeterY");
+}
+
+static inline JSValue jsSVGSVGElementScreenPixelToMillimeterYGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.screenPixelToMillimeterY());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementUseCurrentViewGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementUseCurrentView(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementUseCurrentViewGetter>(state, thisValue, "useCurrentView");
+}
+
+static inline JSValue jsSVGSVGElementUseCurrentViewGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.useCurrentView());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementCurrentViewGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementCurrentView(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementCurrentViewGetter>(state, thisValue, "currentView");
+}
+
+static inline JSValue jsSVGSVGElementCurrentViewGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGViewSpec>>(state, *thisObject.globalObject(), impl.currentView());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementCurrentScaleGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementCurrentScale(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementCurrentScaleGetter>(state, thisValue, "currentScale");
+}
+
+static inline JSValue jsSVGSVGElementCurrentScaleGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.currentScale());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementCurrentTranslateGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementCurrentTranslate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementCurrentTranslateGetter>(state, thisValue, "currentTranslate");
+}
+
+static inline JSValue jsSVGSVGElementCurrentTranslateGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGPoint>>(state, *thisObject.globalObject(), impl.currentTranslate());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementExternalResourcesRequiredGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGSVGElementExternalResourcesRequiredGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementViewBoxGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementViewBox(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementViewBoxGetter>(state, thisValue, "viewBox");
+}
+
+static inline JSValue jsSVGSVGElementViewBoxGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedRect>>(state, *thisObject.globalObject(), impl.viewBoxAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementPreserveAspectRatioGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementPreserveAspectRatio(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementPreserveAspectRatioGetter>(state, thisValue, "preserveAspectRatio");
+}
+
+static inline JSValue jsSVGSVGElementPreserveAspectRatioGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedPreserveAspectRatio>>(state, *thisObject.globalObject(), impl.preserveAspectRatioAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGSVGElementZoomAndPanGetter(ExecState&, JSSVGSVGElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGSVGElementZoomAndPan(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGSVGElement>::attribute<jsSVGSVGElementZoomAndPanGetter>(state, thisValue, "zoomAndPan");
+}
+
+static inline JSValue jsSVGSVGElementZoomAndPanGetter(ExecState& state, JSSVGSVGElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.zoomAndPan());
+    return result;
+}
+
+EncodedJSValue jsSVGSVGElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGSVGElementPrototype* domObject = jsDynamicDowncast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGSVGElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGSVGElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGSVGElement", "contentScriptType");
-        else
-            throwSetterTypeError(*exec, "SVGSVGElement", "contentScriptType");
-        return;
+    JSSVGSVGElementPrototype* domObject = jsDynamicDowncast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setContentScriptType(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGSVGElementContentScriptTypeFunction(ExecState&, JSSVGSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGSVGElementContentScriptType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGSVGElement>::setAttribute<setJSSVGSVGElementContentScriptTypeFunction>(state, thisValue, encodedValue, "contentScriptType");
+}
+
+static inline bool setJSSVGSVGElementContentScriptTypeFunction(ExecState& state, JSSVGSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setContentScriptType(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGSVGElementContentStyleType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGSVGElementContentStyleTypeFunction(ExecState&, JSSVGSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGSVGElementContentStyleType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGSVGElement", "contentStyleType");
-        else
-            throwSetterTypeError(*exec, "SVGSVGElement", "contentStyleType");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setContentStyleType(nativeValue);
+    return BindingCaller<JSSVGSVGElement>::setAttribute<setJSSVGSVGElementContentStyleTypeFunction>(state, thisValue, encodedValue, "contentStyleType");
+}
+
+static inline bool setJSSVGSVGElementContentStyleTypeFunction(ExecState& state, JSSVGSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setContentStyleType(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGSVGElementCurrentScale(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGSVGElementCurrentScaleFunction(ExecState&, JSSVGSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGSVGElementCurrentScale(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGSVGElement", "currentScale");
-        else
-            throwSetterTypeError(*exec, "SVGSVGElement", "currentScale");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setCurrentScale(nativeValue);
+    return BindingCaller<JSSVGSVGElement>::setAttribute<setJSSVGSVGElementCurrentScaleFunction>(state, thisValue, encodedValue, "currentScale");
+}
+
+static inline bool setJSSVGSVGElementCurrentScaleFunction(ExecState& state, JSSVGSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setCurrentScale(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGSVGElementZoomAndPan(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGSVGElementZoomAndPanFunction(ExecState&, JSSVGSVGElement&, JSValue, ThrowScope&);
+
+bool setJSSVGSVGElementZoomAndPan(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGSVGElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGSVGElement", "zoomAndPan");
-        else
-            throwSetterTypeError(*exec, "SVGSVGElement", "zoomAndPan");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    uint16_t nativeValue = toUInt16(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setZoomAndPan(nativeValue);
+    return BindingCaller<JSSVGSVGElement>::setAttribute<setJSSVGSVGElementZoomAndPanFunction>(state, thisValue, encodedValue, "zoomAndPan");
+}
+
+static inline bool setJSSVGSVGElementZoomAndPanFunction(ExecState& state, JSSVGSVGElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedShort>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setZoomAndPan(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSSVGSVGElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGSVGElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGSVGElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGSVGElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionSuspendRedraw(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionSuspendRedrawCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionSuspendRedraw(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "suspendRedraw");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    unsigned maxWaitMilliseconds = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.suspendRedraw(maxWaitMilliseconds));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionSuspendRedrawCaller>(state, "suspendRedraw");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnsuspendRedraw(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionSuspendRedrawCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "unsuspendRedraw");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    unsigned suspendHandleId = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.unsuspendRedraw(suspendHandleId);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto maxWaitMilliseconds = convert<IDLUnsignedLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(impl.suspendRedraw(WTFMove(maxWaitMilliseconds))));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnsuspendRedrawCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnsuspendRedraw(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionUnsuspendRedrawCaller>(state, "unsuspendRedraw");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnsuspendRedrawCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto suspendHandleId = convert<IDLUnsignedLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.unsuspendRedraw(WTFMove(suspendHandleId));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAll(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAllCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAll(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "unsuspendRedrawAll");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAllCaller>(state, "unsuspendRedrawAll");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAllCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.unsuspendRedrawAll();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionForceRedraw(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionForceRedrawCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionForceRedraw(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "forceRedraw");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionForceRedrawCaller>(state, "forceRedraw");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionForceRedrawCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.forceRedraw();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionPauseAnimations(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionPauseAnimationsCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionPauseAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "pauseAnimations");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionPauseAnimationsCaller>(state, "pauseAnimations");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionPauseAnimationsCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.pauseAnimations();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnpauseAnimations(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnpauseAnimationsCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionUnpauseAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "unpauseAnimations");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionUnpauseAnimationsCaller>(state, "unpauseAnimations");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionUnpauseAnimationsCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.unpauseAnimations();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionAnimationsPaused(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionAnimationsPausedCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionAnimationsPaused(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "animationsPaused");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.animationsPaused());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionAnimationsPausedCaller>(state, "animationsPaused");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetCurrentTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionAnimationsPausedCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "getCurrentTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.getCurrentTime());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.animationsPaused()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionSetCurrentTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetCurrentTimeCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetCurrentTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "setCurrentTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    float seconds = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setCurrentTime(seconds);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionGetCurrentTimeCaller>(state, "getCurrentTime");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetCurrentTimeCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLUnrestrictedFloat>(impl.getCurrentTime()));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionSetCurrentTimeCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionSetCurrentTime(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionSetCurrentTimeCaller>(state, "setCurrentTime");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionSetCurrentTimeCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto seconds = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setCurrentTime(WTFMove(seconds));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetIntersectionList(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetIntersectionListCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetIntersectionList(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "getIntersectionList");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    SVGPropertyTearOff<FloatRect>* rect = JSSVGRect::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!rect) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    SVGElement* referenceElement = JSSVGElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getIntersectionList(rect->propertyReference(), referenceElement)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionGetIntersectionListCaller>(state, "getIntersectionList");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetEnclosureList(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetIntersectionListCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "getEnclosureList");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    SVGPropertyTearOff<FloatRect>* rect = JSSVGRect::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!rect) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    SVGElement* referenceElement = JSSVGElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getEnclosureList(rect->propertyReference(), referenceElement)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rect = convert<IDLInterface<SVGRect>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "rect", "SVGSVGElement", "getIntersectionList", "SVGRect"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto referenceElement = convert<IDLNullable<IDLInterface<SVGElement>>>(*state, state->argument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "referenceElement", "SVGSVGElement", "getIntersectionList", "SVGElement"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), impl.getIntersectionList(*rect, WTFMove(referenceElement))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCheckIntersection(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetEnclosureListCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetEnclosureList(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "checkIntersection");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    SVGElement* element = JSSVGElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    SVGPropertyTearOff<FloatRect>* rect = JSSVGRect::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!rect) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    JSValue result = jsBoolean(impl.checkIntersection(element, rect->propertyReference()));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionGetEnclosureListCaller>(state, "getEnclosureList");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCheckEnclosure(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetEnclosureListCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "checkEnclosure");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    SVGElement* element = JSSVGElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    SVGPropertyTearOff<FloatRect>* rect = JSSVGRect::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!rect) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    JSValue result = jsBoolean(impl.checkEnclosure(element, rect->propertyReference()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rect = convert<IDLInterface<SVGRect>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "rect", "SVGSVGElement", "getEnclosureList", "SVGRect"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto referenceElement = convert<IDLNullable<IDLInterface<SVGElement>>>(*state, state->argument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "referenceElement", "SVGSVGElement", "getEnclosureList", "SVGElement"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), impl.getEnclosureList(*rect, WTFMove(referenceElement))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionDeselectAll(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCheckIntersectionCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCheckIntersection(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "deselectAll");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCheckIntersectionCaller>(state, "checkIntersection");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCheckIntersectionCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto element = convert<IDLNullable<IDLInterface<SVGElement>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "element", "SVGSVGElement", "checkIntersection", "SVGElement"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto rect = convert<IDLInterface<SVGRect>>(*state, state->uncheckedArgument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "rect", "SVGSVGElement", "checkIntersection", "SVGRect"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.checkIntersection(WTFMove(element), *rect)));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCheckEnclosureCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCheckEnclosure(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCheckEnclosureCaller>(state, "checkEnclosure");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCheckEnclosureCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto element = convert<IDLNullable<IDLInterface<SVGElement>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "element", "SVGSVGElement", "checkEnclosure", "SVGElement"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto rect = convert<IDLInterface<SVGRect>>(*state, state->uncheckedArgument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "rect", "SVGSVGElement", "checkEnclosure", "SVGRect"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.checkEnclosure(WTFMove(element), *rect)));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionDeselectAllCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionDeselectAll(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionDeselectAllCaller>(state, "deselectAll");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionDeselectAllCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.deselectAll();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGNumber(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGNumberCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGNumber(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGNumber");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<float>::create(impl.createSVGNumber())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGNumberCaller>(state, "createSVGNumber");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGLength(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGNumberCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGLength");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGLength>::create(impl.createSVGLength())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGNumber>>(*state, *castedThis->globalObject(), impl.createSVGNumber()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGAngle(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGLengthCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGLength(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGAngle");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGAngle>::create(impl.createSVGAngle())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGLengthCaller>(state, "createSVGLength");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGPoint(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGLengthCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGPoint");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGPoint>::create(impl.createSVGPoint())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGLength>>(*state, *castedThis->globalObject(), impl.createSVGLength()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGMatrix(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGAngleCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGAngle(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGMatrix");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(impl.createSVGMatrix())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGAngleCaller>(state, "createSVGAngle");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGRect(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGAngleCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGRect");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<FloatRect>::create(impl.createSVGRect())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGAngle>>(*state, *castedThis->globalObject(), impl.createSVGAngle()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGTransform(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGPointCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGPoint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGTransform");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGTransform>::create(impl.createSVGTransform())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGPointCaller>(state, "createSVGPoint");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrix(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGPointCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "createSVGTransformFromMatrix");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    SVGPropertyTearOff<SVGMatrix>* matrix = JSSVGMatrix::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!matrix) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGTransform>::create(impl.createSVGTransformFromMatrix(matrix->propertyReference()))));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGPoint>>(*state, *castedThis->globalObject(), impl.createSVGPoint()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetElementById(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGMatrixCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGMatrix(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGSVGElement* castedThis = jsDynamicCast<JSSVGSVGElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGSVGElement", "getElementById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGSVGElement::info());
-    auto& impl = castedThis->impl();
-    AtomicString elementId = exec->argument(0).toString(exec)->toExistingAtomicString(exec).get();
-    if (elementId.isNull())
-        return JSValue::encode(jsNull());
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementById(elementId)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGMatrixCaller>(state, "createSVGMatrix");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGMatrixCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGMatrix>>(*state, *castedThis->globalObject(), impl.createSVGMatrix()));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGRectCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGRect(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGRectCaller>(state, "createSVGRect");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGRectCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGRect>>(*state, *castedThis->globalObject(), impl.createSVGRect()));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGTransformCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGTransform(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGTransformCaller>(state, "createSVGTransform");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGTransformCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGTransform>>(*state, *castedThis->globalObject(), impl.createSVGTransform()));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrixCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrix(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrixCaller>(state, "createSVGTransformFromMatrix");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrixCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto matrix = convert<IDLInterface<SVGMatrix>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "matrix", "SVGSVGElement", "createSVGTransformFromMatrix", "SVGMatrix"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGTransform>>(*state, *castedThis->globalObject(), impl.createSVGTransformFromMatrix(*matrix)));
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetElementByIdCaller(JSC::ExecState*, JSSVGSVGElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGSVGElementPrototypeFunctionGetElementById(ExecState* state)
+{
+    return BindingCaller<JSSVGSVGElement>::callOperation<jsSVGSVGElementPrototypeFunctionGetElementByIdCaller>(state, "getElementById");
+}
+
+static inline JSC::EncodedJSValue jsSVGSVGElementPrototypeFunctionGetElementByIdCaller(JSC::ExecState* state, JSSVGSVGElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto elementId = AtomicString(state->uncheckedArgument(0).toString(state)->toExistingAtomicString(state));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Element>>(*state, *castedThis->globalObject(), impl.getElementById(WTFMove(elementId))));
+}
+
+void JSSVGSVGElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGSVGElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

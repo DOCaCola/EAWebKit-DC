@@ -18,12 +18,12 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBRequest_h
-#define JSIDBRequest_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
 #include "IDBRequest.h"
+#include "JSDOMConvert.h"
 #include "JSEventTarget.h"
 #include <wtf/NeverDestroyed.h>
 
@@ -31,16 +31,17 @@ namespace WebCore {
 
 class JSIDBRequest : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = IDBRequest;
     static JSIDBRequest* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBRequest>&& impl)
     {
-        JSIDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBRequest>(globalObject->vm().heap)) JSIDBRequest(structure, globalObject, WTF::move(impl));
+        JSIDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBRequest>(globalObject->vm().heap)) JSIDBRequest(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBRequest* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,22 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    IDBRequest& impl() const
+    IDBRequest& wrapped() const
     {
-        return static_cast<IDBRequest&>(Base::impl());
+        return static_cast<IDBRequest&>(Base::wrapped());
     }
 protected:
-    JSIDBRequest(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBRequest>&&);
+    JSIDBRequest(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBRequest>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBRequestOwner : public JSC::WeakHandleOwner {
@@ -80,12 +76,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBRequest*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBRequest*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBRequest& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBRequest* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBRequest&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBRequest* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBRequest>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBRequest>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBRequest> {
+    using WrapperClass = JSIDBRequest;
+    using ToWrappedReturnType = IDBRequest*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, IDBRequest::ReadyState);
+
+template<> std::optional<IDBRequest::ReadyState> parseEnumeration<IDBRequest::ReadyState>(JSC::ExecState&, JSC::JSValue);
+template<> IDBRequest::ReadyState convertEnumeration<IDBRequest::ReadyState>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<IDBRequest::ReadyState>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

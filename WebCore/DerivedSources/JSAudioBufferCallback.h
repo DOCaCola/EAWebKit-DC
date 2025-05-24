@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioBufferCallback_h
-#define JSAudioBufferCallback_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -40,18 +39,20 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSAudioBufferCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(AudioBuffer* audioBuffer);
 
 private:
-    JSAudioBufferCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSAudioBufferCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(AudioBufferCallback&);
+inline JSC::JSValue toJS(AudioBufferCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

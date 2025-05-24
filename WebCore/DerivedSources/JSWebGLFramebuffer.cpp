@@ -25,7 +25,8 @@
 #include "JSWebGLFramebuffer.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLFramebuffer.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLFramebufferConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLFramebufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLFramebufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLFramebufferPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLFramebufferPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLFramebufferPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLFramebufferPrototype>(vm.heap)) JSWebGLFramebufferPrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLFramebufferConstructor : public DOMConstructorObject {
-private:
-    JSWebGLFramebufferConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLFramebufferConstructor = JSDOMConstructorNotConstructable<JSWebGLFramebuffer>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLFramebufferConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLFramebufferConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLFramebufferConstructor>(vm.heap)) JSWebGLFramebufferConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLFramebufferConstructor::s_info = { "WebGLFramebufferConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLFramebufferConstructor) };
-
-JSWebGLFramebufferConstructor::JSWebGLFramebufferConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLFramebufferConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLFramebufferConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLFramebufferConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLFramebuffer::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLFramebuffer::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLFramebuffer"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLFramebufferConstructor::s_info = { "WebGLFramebuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLFramebufferConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLFramebufferPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLFramebufferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLFramebufferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLFramebufferConstructor) } },
 };
 
 const ClassInfo JSWebGLFramebufferPrototype::s_info = { "WebGLFramebufferPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLFramebufferPrototype) };
@@ -115,10 +97,16 @@ void JSWebGLFramebufferPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLFramebuffer::s_info = { "WebGLFramebuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLFramebuffer) };
 
-JSWebGLFramebuffer::JSWebGLFramebuffer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLFramebuffer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLFramebuffer::JSWebGLFramebuffer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLFramebuffer>&& impl)
+    : JSDOMWrapper<WebGLFramebuffer>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLFramebuffer::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLFramebuffer::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSWebGLFramebuffer::createPrototype(VM& vm, JSGlobalObject* globalObje
     return JSWebGLFramebufferPrototype::create(vm, globalObject, JSWebGLFramebufferPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLFramebuffer::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLFramebuffer::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLFramebuffer>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSWebGLFramebuffer::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLFramebuffer::~JSWebGLFramebuffer();
 }
 
-JSWebGLFramebuffer::~JSWebGLFramebuffer()
+EncodedJSValue jsWebGLFramebufferConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLFramebufferPrototype* domObject = jsDynamicDowncast<JSWebGLFramebufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLFramebuffer::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsWebGLFramebufferConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSWebGLFramebufferConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSWebGLFramebufferPrototype* domObject = jsDynamicCast<JSWebGLFramebufferPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLFramebuffer::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLFramebufferPrototype* domObject = jsDynamicDowncast<JSWebGLFramebufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSWebGLFramebuffer::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWebGLFramebuffer::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLFramebufferConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLFramebufferConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLFramebufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSWebGLFramebufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknow
 
 void JSWebGLFramebufferOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLFramebuffer = jsCast<JSWebGLFramebuffer*>(handle.slot()->asCell());
+    auto* jsWebGLFramebuffer = static_cast<JSWebGLFramebuffer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLFramebuffer->impl(), jsWebGLFramebuffer);
+    uncacheWrapper(world, &jsWebGLFramebuffer->wrapped(), jsWebGLFramebuffer);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLFramebuffer@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16WebGLFramebufferE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLFramebuffer* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLFramebuffer>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLFramebuffer>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLFramebuffer@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLFramebu
 #if COMPILER(CLANG)
     // If this fails WebGLFramebuffer does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLFramebuffer), WebGLFramebuffer_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLFramebuffer), "WebGLFramebuffer is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLFramebu
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLFramebuffer>(globalObject, impl);
+    return createWrapper<WebGLFramebuffer>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLFramebuffer& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLFramebuffer* JSWebGLFramebuffer::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLFramebuffer*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLFramebuffer*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

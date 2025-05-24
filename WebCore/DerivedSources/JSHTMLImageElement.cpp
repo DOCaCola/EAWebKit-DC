@@ -21,11 +21,11 @@
 #include "config.h"
 #include "JSHTMLImageElement.h"
 
-#include "HTMLImageElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,46 +34,50 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLImageElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementAlt(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementAlt(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementBorder(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementBorder(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementCrossOrigin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementCrossOrigin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementHspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementHspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementIsMap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementIsMap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementLongDesc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementLongDesc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementSrc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementSrc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementSrcset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementSrcset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementUseMap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementUseMap(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementVspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementVspace(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementComplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLImageElementLowsrc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLImageElementLowsrc(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLImageElementNaturalHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLImageElementNaturalWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLImageElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLImageElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLImageElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementAlt(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementAlt(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementBorder(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementBorder(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementCrossOrigin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementCrossOrigin(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementHspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementHspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementIsMap(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementIsMap(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementLongDesc(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementLongDesc(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementSrc(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementSrc(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementSrcset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementSrcset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementSizes(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementSizes(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementCurrentSrc(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementUseMap(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementUseMap(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementVspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementVspace(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementComplete(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementLowsrc(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementLowsrc(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLImageElementNaturalHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementNaturalWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLImageElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLImageElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLImageElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLImageElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLImageElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElementPrototype>(vm.heap)) JSHTMLImageElementPrototype(vm, globalObject, structure);
@@ -96,68 +100,79 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLImageElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLImageElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLImageElementConstructor = JSDOMConstructorNotConstructable<JSHTMLImageElement>;
+using JSHTMLImageElementNamedConstructor = JSDOMNamedConstructor<JSHTMLImageElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLImageElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLImageElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElementConstructor>(vm.heap)) JSHTMLImageElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLImageElementConstructor::s_info = { "HTMLImageElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLImageElementConstructor) };
-
-JSHTMLImageElementConstructor::JSHTMLImageElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLImageElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLImageElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLImageElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLImageElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLImageElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLImageElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLImageElementConstructor::s_info = { "HTMLImageElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLImageElementConstructor) };
+
+template<> EncodedJSValue JSC_HOST_CALL JSHTMLImageElementNamedConstructor::construct(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSHTMLImageElementNamedConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    auto width = state->argument(0).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto height = state->argument(1).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = HTMLImageElement::createForJSConstructor(*castedThis->document(), WTFMove(width), WTFMove(height));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<HTMLImageElement>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+template<> JSValue JSHTMLImageElementNamedConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSHTMLElement::getConstructor(vm, &globalObject);
+}
+
+template<> void JSHTMLImageElementNamedConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLImageElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Image"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSHTMLImageElementNamedConstructor::s_info = { "Image", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLImageElementNamedConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLImageElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementName) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementAlign) },
-    { "alt", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementAlt), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementAlt) },
-    { "border", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementBorder), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementBorder) },
-    { "crossOrigin", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementCrossOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementCrossOrigin) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementHeight) },
-    { "hspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementHspace) },
-    { "isMap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementIsMap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementIsMap) },
-    { "longDesc", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementLongDesc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementLongDesc) },
-    { "src", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementSrc) },
-    { "srcset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementSrcset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementSrcset) },
-    { "useMap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementUseMap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementUseMap) },
-    { "vspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementVspace) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementWidth) },
-    { "complete", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementComplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lowsrc", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementLowsrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementLowsrc) },
-    { "naturalHeight", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementNaturalHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "naturalWidth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementNaturalWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementConstructor) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementName) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementAlign) } },
+    { "alt", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementAlt), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementAlt) } },
+    { "border", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementBorder), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementBorder) } },
+    { "crossOrigin", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementCrossOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementCrossOrigin) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementHeight) } },
+    { "hspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementHspace) } },
+    { "isMap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementIsMap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementIsMap) } },
+    { "longDesc", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementLongDesc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementLongDesc) } },
+    { "src", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementSrc) } },
+    { "srcset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementSrcset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementSrcset) } },
+    { "sizes", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementSizes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementSizes) } },
+    { "currentSrc", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementCurrentSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "useMap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementUseMap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementUseMap) } },
+    { "vspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementVspace) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementWidth) } },
+    { "complete", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementComplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lowsrc", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementLowsrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLImageElementLowsrc) } },
+    { "naturalHeight", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementNaturalHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "naturalWidth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementNaturalWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLImageElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLImageElementPrototype::s_info = { "HTMLImageElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLImageElementPrototype) };
@@ -170,678 +185,773 @@ void JSHTMLImageElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLImageElement::s_info = { "HTMLImageElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLImageElement) };
 
-JSHTMLImageElement::JSHTMLImageElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLImageElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLImageElement::JSHTMLImageElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLImageElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLImageElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLImageElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLImageElementPrototype::create(vm, globalObject, JSHTMLImageElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLImageElementPrototype::create(vm, globalObject, JSHTMLImageElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLImageElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLImageElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLImageElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLImageElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLImageElement* BindingCaller<JSHTMLImageElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "name");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLImageElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLImageElementNameGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "align");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "align");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementNameGetter>(state, thisValue, "name");
 }
 
-
-EncodedJSValue jsHTMLImageElementAlt(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementNameGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "alt");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "alt");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::altAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getNameAttribute());
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementAlignGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementBorder(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "border");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "border");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::borderAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementAlignGetter>(state, thisValue, "align");
 }
 
-
-EncodedJSValue jsHTMLImageElementCrossOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementAlignGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "crossOrigin");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "crossOrigin");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::crossoriginAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::alignAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementAltGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementAlt(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "height");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.height());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementAltGetter>(state, thisValue, "alt");
 }
 
-
-EncodedJSValue jsHTMLImageElementHspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementAltGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "hspace");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "hspace");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.getIntegralAttribute(WebCore::HTMLNames::hspaceAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::altAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementBorderGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementIsMap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementBorder(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "isMap");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "isMap");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::ismapAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementBorderGetter>(state, thisValue, "border");
 }
 
-
-EncodedJSValue jsHTMLImageElementLongDesc(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementBorderGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "longDesc");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "longDesc");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::longdescAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::borderAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementCrossOriginGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementSrc(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementCrossOrigin(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "src");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "src");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementCrossOriginGetter>(state, thisValue, "crossOrigin");
 }
 
-
-EncodedJSValue jsHTMLImageElementSrcset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementCrossOriginGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "srcset");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "srcset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::srcsetAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.crossOrigin());
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementHeightGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementUseMap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "useMap");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "useMap");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::usemapAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementHeightGetter>(state, thisValue, "height");
 }
 
-
-EncodedJSValue jsHTMLImageElementVspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementHeightGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "vspace");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "vspace");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.getIntegralAttribute(WebCore::HTMLNames::vspaceAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.height());
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementHspaceGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementHspace(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "width");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.width());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementHspaceGetter>(state, thisValue, "hspace");
 }
 
-
-EncodedJSValue jsHTMLImageElementComplete(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementHspaceGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "complete");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "complete");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.complete());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::hspaceAttr)));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementIsMapGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementLowsrc(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementIsMap(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "lowsrc");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "lowsrc");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::lowsrcAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementIsMapGetter>(state, thisValue, "isMap");
 }
 
-
-EncodedJSValue jsHTMLImageElementNaturalHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementIsMapGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "naturalHeight");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "naturalHeight");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.naturalHeight());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::ismapAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementLongDescGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementNaturalWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementLongDesc(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "naturalWidth");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "naturalWidth");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.naturalWidth());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementLongDescGetter>(state, thisValue, "longDesc");
 }
 
-
-EncodedJSValue jsHTMLImageElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLImageElementLongDescGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "x");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.x());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::longdescAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLImageElementSrcGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLImageElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLImageElementSrc(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLImageElement", "y");
-        return throwGetterTypeError(*exec, "HTMLImageElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.y());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementSrcGetter>(state, thisValue, "src");
 }
 
-
-EncodedJSValue jsHTMLImageElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLImageElementSrcGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLImageElementPrototype* domObject = jsDynamicCast<JSHTMLImageElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLImageElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
+    return result;
 }
 
-void setJSHTMLImageElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLImageElementSrcsetGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementSrcset(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementSrcsetGetter>(state, thisValue, "srcset");
+}
+
+static inline JSValue jsHTMLImageElementSrcsetGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::srcsetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementSizesGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementSizes(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementSizesGetter>(state, thisValue, "sizes");
+}
+
+static inline JSValue jsHTMLImageElementSizesGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::sizesAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementCurrentSrcGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementCurrentSrc(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementCurrentSrcGetter>(state, thisValue, "currentSrc");
+}
+
+static inline JSValue jsHTMLImageElementCurrentSrcGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.currentSrc());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementUseMapGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementUseMap(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementUseMapGetter>(state, thisValue, "useMap");
+}
+
+static inline JSValue jsHTMLImageElementUseMapGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::usemapAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementVspaceGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementVspace(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementVspaceGetter>(state, thisValue, "vspace");
+}
+
+static inline JSValue jsHTMLImageElementVspaceGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::vspaceAttr)));
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementWidthGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsHTMLImageElementWidthGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.width());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementCompleteGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementComplete(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementCompleteGetter>(state, thisValue, "complete");
+}
+
+static inline JSValue jsHTMLImageElementCompleteGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.complete());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementLowsrcGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementLowsrc(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementLowsrcGetter>(state, thisValue, "lowsrc");
+}
+
+static inline JSValue jsHTMLImageElementLowsrcGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::lowsrcAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementNaturalHeightGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementNaturalHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementNaturalHeightGetter>(state, thisValue, "naturalHeight");
+}
+
+static inline JSValue jsHTMLImageElementNaturalHeightGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.naturalHeight());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementNaturalWidthGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementNaturalWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementNaturalWidthGetter>(state, thisValue, "naturalWidth");
+}
+
+static inline JSValue jsHTMLImageElementNaturalWidthGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.naturalWidth());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementXGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsHTMLImageElementXGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.x());
+    return result;
+}
+
+static inline JSValue jsHTMLImageElementYGetter(ExecState&, JSHTMLImageElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLImageElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLImageElement>::attribute<jsHTMLImageElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsHTMLImageElementYGetter(ExecState& state, JSHTMLImageElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.y());
+    return result;
+}
+
+EncodedJSValue jsHTMLImageElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLImageElementPrototype* domObject = jsDynamicDowncast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLImageElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLImageElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "name");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "name");
-        return;
+    JSHTMLImageElementPrototype* domObject = jsDynamicDowncast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLImageElementNameFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSHTMLImageElementNameFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementAlignFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "align");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "align");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementAlignFunction>(state, thisValue, encodedValue, "align");
+}
+
+static inline bool setJSHTMLImageElementAlignFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementAlt(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementAltFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementAlt(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "alt");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "alt");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::altAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementAltFunction>(state, thisValue, encodedValue, "alt");
+}
+
+static inline bool setJSHTMLImageElementAltFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::altAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementBorder(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementBorderFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementBorder(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "border");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "border");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::borderAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementBorderFunction>(state, thisValue, encodedValue, "border");
+}
+
+static inline bool setJSHTMLImageElementBorderFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::borderAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementCrossOrigin(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementCrossOriginFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementCrossOrigin(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "crossOrigin");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "crossOrigin");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::crossoriginAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementCrossOriginFunction>(state, thisValue, encodedValue, "crossOrigin");
+}
+
+static inline bool setJSHTMLImageElementCrossOriginFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLDOMString>>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setCrossOrigin(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementHeightFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementHeight(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "height");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "height");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHeight(nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementHeightFunction>(state, thisValue, encodedValue, "height");
+}
+
+static inline bool setJSHTMLImageElementHeightFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setHeight(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementHspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementHspaceFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementHspace(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "hspace");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "hspace");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setIntegralAttribute(WebCore::HTMLNames::hspaceAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementHspaceFunction>(state, thisValue, encodedValue, "hspace");
+}
+
+static inline bool setJSHTMLImageElementHspaceFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::hspaceAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementIsMap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementIsMapFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementIsMap(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "isMap");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "isMap");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::ismapAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementIsMapFunction>(state, thisValue, encodedValue, "isMap");
+}
+
+static inline bool setJSHTMLImageElementIsMapFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::ismapAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementLongDesc(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementLongDescFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementLongDesc(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "longDesc");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "longDesc");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::longdescAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementLongDescFunction>(state, thisValue, encodedValue, "longDesc");
+}
+
+static inline bool setJSHTMLImageElementLongDescFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::longdescAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementSrc(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementSrcFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementSrc(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "src");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "src");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementSrcFunction>(state, thisValue, encodedValue, "src");
+}
+
+static inline bool setJSHTMLImageElementSrcFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementSrcset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementSrcsetFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementSrcset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "srcset");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "srcset");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcsetAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementSrcsetFunction>(state, thisValue, encodedValue, "srcset");
+}
+
+static inline bool setJSHTMLImageElementSrcsetFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcsetAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementUseMap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementSizesFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementSizes(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "useMap");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "useMap");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::usemapAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementSizesFunction>(state, thisValue, encodedValue, "sizes");
+}
+
+static inline bool setJSHTMLImageElementSizesFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::sizesAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementVspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementUseMapFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementUseMap(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "vspace");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "vspace");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setIntegralAttribute(WebCore::HTMLNames::vspaceAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementUseMapFunction>(state, thisValue, encodedValue, "useMap");
+}
+
+static inline bool setJSHTMLImageElementUseMapFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::usemapAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementVspaceFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementVspace(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "width");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "width");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setWidth(nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementVspaceFunction>(state, thisValue, encodedValue, "vspace");
+}
+
+static inline bool setJSHTMLImageElementVspaceFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::vspaceAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLImageElementLowsrc(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLImageElementWidthFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementWidth(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLImageElement* castedThis = jsDynamicCast<JSHTMLImageElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLImageElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLImageElement", "lowsrc");
-        else
-            throwSetterTypeError(*exec, "HTMLImageElement", "lowsrc");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::lowsrcAttr, nativeValue);
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementWidthFunction>(state, thisValue, encodedValue, "width");
+}
+
+static inline bool setJSHTMLImageElementWidthFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setWidth(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLImageElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSHTMLImageElementLowsrcFunction(ExecState&, JSHTMLImageElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLImageElementLowsrc(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLImageElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSHTMLImageElement>::setAttribute<setJSHTMLImageElementLowsrcFunction>(state, thisValue, encodedValue, "lowsrc");
+}
+
+static inline bool setJSHTMLImageElementLowsrcFunction(ExecState& state, JSHTMLImageElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::lowsrcAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLImageElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLImageElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+JSValue JSHTMLImageElement::getNamedConstructor(VM& vm, JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLImageElementNamedConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLImageElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLImageElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7HTMLImageElement@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore16HTMLImageElementE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<HTMLImageElement>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7HTMLImageElement@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore16HTMLImageElementE[2];
+#if COMPILER(CLANG)
+    // If this fails HTMLImageElement does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(HTMLImageElement), "HTMLImageElement is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // HTMLImageElement has subclasses. If HTMLImageElement has subclasses that get passed
+    // to toJS() we currently require HTMLImageElement you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<HTMLImageElement>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLImageElement& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 HTMLImageElement* JSHTMLImageElement::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSHTMLImageElement*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSHTMLImageElement*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

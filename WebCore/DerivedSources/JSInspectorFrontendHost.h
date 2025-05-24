@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSInspectorFrontendHost_h
-#define JSInspectorFrontendHost_h
+#pragma once
 
 #include "InspectorFrontendHost.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSInspectorFrontendHost : public JSDOMWrapper {
+class JSInspectorFrontendHost : public JSDOMWrapper<InspectorFrontendHost> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<InspectorFrontendHost>;
     static JSInspectorFrontendHost* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<InspectorFrontendHost>&& impl)
     {
-        JSInspectorFrontendHost* ptr = new (NotNull, JSC::allocateCell<JSInspectorFrontendHost>(globalObject->vm().heap)) JSInspectorFrontendHost(structure, globalObject, WTF::move(impl));
+        JSInspectorFrontendHost* ptr = new (NotNull, JSC::allocateCell<JSInspectorFrontendHost>(globalObject->vm().heap)) JSInspectorFrontendHost(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static InspectorFrontendHost* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSInspectorFrontendHost();
 
     DECLARE_INFO;
 
@@ -52,23 +50,11 @@ public:
 
 
     // Custom functions
-    JSC::JSValue platform(JSC::ExecState*);
-    JSC::JSValue port(JSC::ExecState*);
-    JSC::JSValue showContextMenu(JSC::ExecState*);
-    InspectorFrontendHost& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    InspectorFrontendHost* m_impl;
+    JSC::JSValue showContextMenu(JSC::ExecState&);
 protected:
-    JSInspectorFrontendHost(JSC::Structure*, JSDOMGlobalObject*, Ref<InspectorFrontendHost>&&);
+    JSInspectorFrontendHost(JSC::Structure*, JSDOMGlobalObject&, Ref<InspectorFrontendHost>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSInspectorFrontendHostOwner : public JSC::WeakHandleOwner {
@@ -83,10 +69,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, InspectorFrontendHos
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InspectorFrontendHost*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, InspectorFrontendHost& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(InspectorFrontendHost* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InspectorFrontendHost&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, InspectorFrontendHost* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<InspectorFrontendHost>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<InspectorFrontendHost>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<InspectorFrontendHost> {
+    using WrapperClass = JSInspectorFrontendHost;
+    using ToWrappedReturnType = InspectorFrontendHost*;
+};
 
 } // namespace WebCore
-
-#endif

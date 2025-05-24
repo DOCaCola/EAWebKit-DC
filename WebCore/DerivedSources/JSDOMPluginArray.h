@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMPluginArray_h
-#define JSDOMPluginArray_h
+#pragma once
 
 #include "DOMPluginArray.h"
 #include "JSDOMWrapper.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSDOMPluginArray : public JSDOMWrapper {
+class JSDOMPluginArray : public JSDOMWrapper<DOMPluginArray> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMPluginArray>;
     static JSDOMPluginArray* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMPluginArray>&& impl)
     {
-        JSDOMPluginArray* ptr = new (NotNull, JSC::allocateCell<JSDOMPluginArray>(globalObject->vm().heap)) JSDOMPluginArray(structure, globalObject, WTF::move(impl));
+        JSDOMPluginArray* ptr = new (NotNull, JSC::allocateCell<JSDOMPluginArray>(globalObject->vm().heap)) JSDOMPluginArray(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMPluginArray* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMPluginArray();
 
     DECLARE_INFO;
 
@@ -53,26 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMPluginArray& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMPluginArray* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMPluginArray(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMPluginArray>&&);
+    JSDOMPluginArray(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMPluginArray>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMPluginArray*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMPluginArrayOwner : public JSC::WeakHandleOwner {
@@ -87,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMPluginArray*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPluginArray*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMPluginArray& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMPluginArray* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPluginArray&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMPluginArray* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMPluginArray>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMPluginArray>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMPluginArray> {
+    using WrapperClass = JSDOMPluginArray;
+    using ToWrappedReturnType = DOMPluginArray*;
+};
 
 } // namespace WebCore
-
-#endif

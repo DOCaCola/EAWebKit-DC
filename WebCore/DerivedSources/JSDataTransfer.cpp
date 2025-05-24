@@ -21,19 +21,17 @@
 #include "config.h"
 #include "JSDataTransfer.h"
 
-#include "DataTransfer.h"
-#include "ExceptionCode.h"
-#include "FileList.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSElement.h"
 #include "JSFileList.h"
-#include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
 #if ENABLE(DATA_TRANSFER_ITEMS)
-#include "DataTransferItemList.h"
 #include "JSDataTransferItemList.h"
 #endif
 
@@ -43,27 +41,28 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionClearData(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetDragImage(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionGetData(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetData(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetDragImage(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionClearData(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsDataTransferDropEffect(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSDataTransferDropEffect(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsDataTransferEffectAllowed(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSDataTransferEffectAllowed(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsDataTransferTypes(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDataTransferFiles(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataTransferDropEffect(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataTransferDropEffect(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsDataTransferEffectAllowed(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataTransferEffectAllowed(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(DATA_TRANSFER_ITEMS)
-JSC::EncodedJSValue jsDataTransferItems(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataTransferItems(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
-JSC::EncodedJSValue jsDataTransferConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataTransferTypes(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataTransferFiles(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataTransferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataTransferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDataTransferPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDataTransferPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDataTransferPrototype* ptr = new (NotNull, JSC::allocateCell<JSDataTransferPrototype>(vm.heap)) JSDataTransferPrototype(vm, globalObject, structure);
@@ -86,74 +85,41 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDataTransferConstructor : public DOMConstructorObject {
-private:
-    JSDataTransferConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDataTransferConstructor = JSDOMConstructorNotConstructable<JSDataTransfer>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDataTransferConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDataTransferConstructor* ptr = new (NotNull, JSC::allocateCell<JSDataTransferConstructor>(vm.heap)) JSDataTransferConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSDataTransferTableIndex[2] = {
-    { 0, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSDataTransferTableValues[] =
+template<> JSValue JSDataTransferConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "types", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferTypes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDataTransferTable = { 1, 1, true, JSDataTransferTableValues, 0, JSDataTransferTableIndex };
-const ClassInfo JSDataTransferConstructor::s_info = { "DataTransferConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataTransferConstructor) };
-
-JSDataTransferConstructor::JSDataTransferConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDataTransferConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDataTransferConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDataTransfer::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDataTransfer::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DataTransfer"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDataTransferConstructor::s_info = { "DataTransfer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataTransferConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDataTransferPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "dropEffect", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferDropEffect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataTransferDropEffect) },
-    { "effectAllowed", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferEffectAllowed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataTransferEffectAllowed) },
-    { "files", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferFiles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataTransferConstructor) } },
+    { "dropEffect", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferDropEffect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataTransferDropEffect) } },
+    { "effectAllowed", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferEffectAllowed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataTransferEffectAllowed) } },
 #if ENABLE(DATA_TRANSFER_ITEMS)
-    { "items", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "items", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "clearData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionClearData), (intptr_t) (0) },
-    { "getData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionGetData), (intptr_t) (1) },
-    { "setData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionSetData), (intptr_t) (2) },
-    { "setDragImage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionSetDragImage), (intptr_t) (3) },
+    { "types", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferTypes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "files", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferFiles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setDragImage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionSetDragImage), (intptr_t) (3) } },
+    { "getData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionGetData), (intptr_t) (1) } },
+    { "setData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionSetData), (intptr_t) (2) } },
+    { "clearData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferPrototypeFunctionClearData), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDataTransferPrototype::s_info = { "DataTransferPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataTransferPrototype) };
@@ -164,12 +130,18 @@ void JSDataTransferPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSDataTransferPrototypeTableValues, *this);
 }
 
-const ClassInfo JSDataTransfer::s_info = { "DataTransfer", &Base::s_info, &JSDataTransferTable, CREATE_METHOD_TABLE(JSDataTransfer) };
+const ClassInfo JSDataTransfer::s_info = { "DataTransfer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataTransfer) };
 
-JSDataTransfer::JSDataTransfer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataTransfer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDataTransfer::JSDataTransfer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DataTransfer>&& impl)
+    : JSDOMWrapper<DataTransfer>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDataTransfer::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDataTransfer::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -177,7 +149,7 @@ JSObject* JSDataTransfer::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDataTransferPrototype::create(vm, globalObject, JSDataTransferPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDataTransfer::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDataTransfer::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDataTransfer>(vm, globalObject);
 }
@@ -188,230 +160,246 @@ void JSDataTransfer::destroy(JSC::JSCell* cell)
     thisObject->JSDataTransfer::~JSDataTransfer();
 }
 
-JSDataTransfer::~JSDataTransfer()
+template<> inline JSDataTransfer* BindingCaller<JSDataTransfer>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDataTransfer*>(JSValue::decode(thisValue));
 }
 
-bool JSDataTransfer::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSDataTransfer* BindingCaller<JSDataTransfer>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSDataTransfer*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDataTransfer, Base>(exec, JSDataTransferTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSDataTransfer*>(state.thisValue());
 }
 
-EncodedJSValue jsDataTransferDropEffect(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDataTransferDropEffectGetter(ExecState&, JSDataTransfer&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataTransferDropEffect(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DataTransfer", "dropEffect");
-        return throwGetterTypeError(*exec, "DataTransfer", "dropEffect");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.dropEffect());
-    return JSValue::encode(result);
+    return BindingCaller<JSDataTransfer>::attribute<jsDataTransferDropEffectGetter>(state, thisValue, "dropEffect");
 }
 
-
-EncodedJSValue jsDataTransferEffectAllowed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDataTransferDropEffectGetter(ExecState& state, JSDataTransfer& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DataTransfer", "effectAllowed");
-        return throwGetterTypeError(*exec, "DataTransfer", "effectAllowed");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.effectAllowed());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.dropEffect());
+    return result;
 }
 
+static inline JSValue jsDataTransferEffectAllowedGetter(ExecState&, JSDataTransfer&, ThrowScope& throwScope);
 
-EncodedJSValue jsDataTransferTypes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDataTransferEffectAllowed(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDataTransfer*>(slotBase);
-    return JSValue::encode(castedThis->types(exec));
+    return BindingCaller<JSDataTransfer>::attribute<jsDataTransferEffectAllowedGetter>(state, thisValue, "effectAllowed");
 }
 
-
-EncodedJSValue jsDataTransferFiles(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDataTransferEffectAllowedGetter(ExecState& state, JSDataTransfer& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DataTransfer", "files");
-        return throwGetterTypeError(*exec, "DataTransfer", "files");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.files()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.effectAllowed());
+    return result;
 }
-
 
 #if ENABLE(DATA_TRANSFER_ITEMS)
-EncodedJSValue jsDataTransferItems(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDataTransferItemsGetter(ExecState&, JSDataTransfer&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataTransferItems(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DataTransfer", "items");
-        return throwGetterTypeError(*exec, "DataTransfer", "items");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.items()));
-    return JSValue::encode(result);
+    return BindingCaller<JSDataTransfer>::attribute<jsDataTransferItemsGetter>(state, thisValue, "items");
+}
+
+static inline JSValue jsDataTransferItemsGetter(ExecState& state, JSDataTransfer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DataTransferItemList>>(state, *thisObject.globalObject(), impl.items());
+    return result;
 }
 
 #endif
 
-EncodedJSValue jsDataTransferConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsDataTransferTypesGetter(ExecState&, JSDataTransfer&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataTransferTypes(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSDataTransferPrototype* domObject = jsDynamicCast<JSDataTransferPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDataTransfer::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSDataTransfer>::attribute<jsDataTransferTypesGetter>(state, thisValue, "types");
 }
 
-void setJSDataTransferDropEffect(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsDataTransferTypesGetter(ExecState& state, JSDataTransfer& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLFrozenArray<IDLDOMString>>(state, *thisObject.globalObject(), impl.types());
+    return result;
+}
+
+static inline JSValue jsDataTransferFilesGetter(ExecState&, JSDataTransfer&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataTransferFiles(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDataTransfer>::attribute<jsDataTransferFilesGetter>(state, thisValue, "files");
+}
+
+static inline JSValue jsDataTransferFilesGetter(ExecState& state, JSDataTransfer& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<FileList>>(state, *thisObject.globalObject(), impl.files());
+    return result;
+}
+
+EncodedJSValue jsDataTransferConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDataTransferPrototype* domObject = jsDynamicDowncast<JSDataTransferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDataTransfer::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDataTransferConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DataTransfer", "dropEffect");
-        else
-            throwSetterTypeError(*exec, "DataTransfer", "dropEffect");
-        return;
+    JSDataTransferPrototype* domObject = jsDynamicDowncast<JSDataTransferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDropEffect(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSDataTransferDropEffectFunction(ExecState&, JSDataTransfer&, JSValue, ThrowScope&);
+
+bool setJSDataTransferDropEffect(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSDataTransfer>::setAttribute<setJSDataTransferDropEffectFunction>(state, thisValue, encodedValue, "dropEffect");
+}
+
+static inline bool setJSDataTransferDropEffectFunction(ExecState& state, JSDataTransfer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDropEffect(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSDataTransferEffectAllowed(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSDataTransferEffectAllowedFunction(ExecState&, JSDataTransfer&, JSValue, ThrowScope&);
+
+bool setJSDataTransferEffectAllowed(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataTransferPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DataTransfer", "effectAllowed");
-        else
-            throwSetterTypeError(*exec, "DataTransfer", "effectAllowed");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setEffectAllowed(nativeValue);
+    return BindingCaller<JSDataTransfer>::setAttribute<setJSDataTransferEffectAllowedFunction>(state, thisValue, encodedValue, "effectAllowed");
+}
+
+static inline bool setJSDataTransferEffectAllowedFunction(ExecState& state, JSDataTransfer& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setEffectAllowed(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSDataTransfer::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSDataTransfer::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDataTransferConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDataTransferConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionClearData(ExecState* exec)
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionSetDragImageCaller(JSC::ExecState*, JSDataTransfer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetDragImage(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransfer", "clearData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransfer::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSDataTransfer>::callOperation<jsDataTransferPrototypeFunctionSetDragImageCaller>(state, "setDragImage");
+}
 
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        impl.clearData();
-        return JSValue::encode(jsUndefined());
-    }
-
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.clearData(type);
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionSetDragImageCaller(JSC::ExecState* state, JSDataTransfer* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto image = convert<IDLNullable<IDLInterface<Element>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "image", "DataTransfer", "setDragImage", "Element"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x = convert<IDLLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLLong>(*state, state->uncheckedArgument(2), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setDragImage(WTFMove(image), WTFMove(x), WTFMove(y));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionGetData(ExecState* exec)
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionGetDataCaller(JSC::ExecState*, JSDataTransfer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionGetData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransfer", "getData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransfer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.getData(type));
-    return JSValue::encode(result);
+    return BindingCaller<JSDataTransfer>::callOperation<jsDataTransferPrototypeFunctionGetDataCaller>(state, "getData");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetData(ExecState* exec)
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionGetDataCaller(JSC::ExecState* state, JSDataTransfer* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransfer", "setData");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransfer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String data = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setData(type, data);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto format = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.getData(WTFMove(format))));
+}
+
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionSetDataCaller(JSC::ExecState*, JSDataTransfer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetData(ExecState* state)
+{
+    return BindingCaller<JSDataTransfer>::callOperation<jsDataTransferPrototypeFunctionSetDataCaller>(state, "setData");
+}
+
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionSetDataCaller(JSC::ExecState* state, JSDataTransfer* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto format = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto data = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setData(WTFMove(format), WTFMove(data));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionSetDragImage(ExecState* exec)
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionClearDataCaller(JSC::ExecState*, JSDataTransfer*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDataTransferPrototypeFunctionClearData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDataTransfer* castedThis = jsDynamicCast<JSDataTransfer*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransfer", "setDragImage");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransfer::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* image = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setDragImage(image, x, y);
+    return BindingCaller<JSDataTransfer>::callOperation<jsDataTransferPrototypeFunctionClearDataCaller>(state, "clearData");
+}
+
+static inline JSC::EncodedJSValue jsDataTransferPrototypeFunctionClearDataCaller(JSC::ExecState* state, JSDataTransfer* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto format = state->argument(0).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.clearData(WTFMove(format));
     return JSValue::encode(jsUndefined());
 }
 
@@ -424,24 +412,25 @@ bool JSDataTransferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSDataTransferOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDataTransfer = jsCast<JSDataTransfer*>(handle.slot()->asCell());
+    auto* jsDataTransfer = static_cast<JSDataTransfer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDataTransfer->impl(), jsDataTransfer);
+    uncacheWrapper(world, &jsDataTransfer->wrapped(), jsDataTransfer);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DataTransfer* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DataTransfer>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDataTransfer>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSDataTransfer>(globalObject, impl);
+    return createWrapper<DataTransfer>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataTransfer& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DataTransfer* JSDataTransfer::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDataTransfer*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDataTransfer*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

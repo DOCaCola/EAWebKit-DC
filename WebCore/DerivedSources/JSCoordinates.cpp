@@ -24,8 +24,8 @@
 
 #include "JSCoordinates.h"
 
-#include "Coordinates.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,17 +34,18 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsCoordinatesLatitude(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesLongitude(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesAltitude(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesAccuracy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesAltitudeAccuracy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesHeading(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCoordinatesSpeed(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesLatitude(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesLongitude(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesAltitude(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesAccuracy(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesAltitudeAccuracy(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesHeading(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCoordinatesSpeed(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCoordinatesConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCoordinatesPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCoordinatesPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCoordinatesPrototype* ptr = new (NotNull, JSC::allocateCell<JSCoordinatesPrototype>(vm.heap)) JSCoordinatesPrototype(vm, globalObject, structure);
@@ -71,13 +72,13 @@ private:
 
 static const HashTableValue JSCoordinatesPrototypeTableValues[] =
 {
-    { "latitude", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesLatitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "longitude", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesLongitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "altitude", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAltitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "accuracy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAccuracy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "altitudeAccuracy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAltitudeAccuracy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "heading", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesHeading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "speed", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesSpeed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "latitude", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesLatitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "longitude", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesLongitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "altitude", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAltitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "accuracy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAccuracy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "altitudeAccuracy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesAltitudeAccuracy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "heading", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesHeading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "speed", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCoordinatesSpeed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCoordinatesPrototype::s_info = { "CoordinatesPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCoordinatesPrototype) };
@@ -90,10 +91,16 @@ void JSCoordinatesPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCoordinates::s_info = { "Coordinates", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCoordinates) };
 
-JSCoordinates::JSCoordinates(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Coordinates>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCoordinates::JSCoordinates(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Coordinates>&& impl)
+    : JSDOMWrapper<Coordinates>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCoordinates::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCoordinates::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -101,7 +108,7 @@ JSObject* JSCoordinates::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSCoordinatesPrototype::create(vm, globalObject, JSCoordinatesPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSCoordinates::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCoordinates::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCoordinates>(vm, globalObject);
 }
@@ -112,141 +119,136 @@ void JSCoordinates::destroy(JSC::JSCell* cell)
     thisObject->JSCoordinates::~JSCoordinates();
 }
 
-JSCoordinates::~JSCoordinates()
+template<> inline JSCoordinates* BindingCaller<JSCoordinates>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSCoordinates*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsCoordinatesLatitude(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsCoordinatesLatitudeGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesLatitude(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "latitude");
-        return throwGetterTypeError(*exec, "Coordinates", "latitude");
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesLatitudeGetter>(state, thisValue, "latitude");
+}
+
+static inline JSValue jsCoordinatesLatitudeGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.latitude());
+    return result;
+}
+
+static inline JSValue jsCoordinatesLongitudeGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesLongitude(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesLongitudeGetter>(state, thisValue, "longitude");
+}
+
+static inline JSValue jsCoordinatesLongitudeGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.longitude());
+    return result;
+}
+
+static inline JSValue jsCoordinatesAltitudeGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesAltitude(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesAltitudeGetter>(state, thisValue, "altitude");
+}
+
+static inline JSValue jsCoordinatesAltitudeGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnrestrictedDouble>>(impl.altitude());
+    return result;
+}
+
+static inline JSValue jsCoordinatesAccuracyGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesAccuracy(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesAccuracyGetter>(state, thisValue, "accuracy");
+}
+
+static inline JSValue jsCoordinatesAccuracyGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.accuracy());
+    return result;
+}
+
+static inline JSValue jsCoordinatesAltitudeAccuracyGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesAltitudeAccuracy(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesAltitudeAccuracyGetter>(state, thisValue, "altitudeAccuracy");
+}
+
+static inline JSValue jsCoordinatesAltitudeAccuracyGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnrestrictedDouble>>(impl.altitudeAccuracy());
+    return result;
+}
+
+static inline JSValue jsCoordinatesHeadingGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesHeading(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesHeadingGetter>(state, thisValue, "heading");
+}
+
+static inline JSValue jsCoordinatesHeadingGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnrestrictedDouble>>(impl.heading());
+    return result;
+}
+
+static inline JSValue jsCoordinatesSpeedGetter(ExecState&, JSCoordinates&, ThrowScope& throwScope);
+
+EncodedJSValue jsCoordinatesSpeed(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCoordinates>::attribute<jsCoordinatesSpeedGetter>(state, thisValue, "speed");
+}
+
+static inline JSValue jsCoordinatesSpeedGetter(ExecState& state, JSCoordinates& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnrestrictedDouble>>(impl.speed());
+    return result;
+}
+
+bool setJSCoordinatesConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCoordinatesPrototype* domObject = jsDynamicDowncast<JSCoordinatesPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.latitude());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
-
-
-EncodedJSValue jsCoordinatesLongitude(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "longitude");
-        return throwGetterTypeError(*exec, "Coordinates", "longitude");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.longitude());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCoordinatesAltitude(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "altitude");
-        return throwGetterTypeError(*exec, "Coordinates", "altitude");
-    }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.altitude(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCoordinatesAccuracy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "accuracy");
-        return throwGetterTypeError(*exec, "Coordinates", "accuracy");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.accuracy());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCoordinatesAltitudeAccuracy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "altitudeAccuracy");
-        return throwGetterTypeError(*exec, "Coordinates", "altitudeAccuracy");
-    }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.altitudeAccuracy(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCoordinatesHeading(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "heading");
-        return throwGetterTypeError(*exec, "Coordinates", "heading");
-    }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.heading(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCoordinatesSpeed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCoordinates* castedThis = jsDynamicCast<JSCoordinates*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCoordinatesPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Coordinates", "speed");
-        return throwGetterTypeError(*exec, "Coordinates", "speed");
-    }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.speed(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
-}
-
 
 bool JSCoordinatesOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -257,31 +259,32 @@ bool JSCoordinatesOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSCoordinatesOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsCoordinates = jsCast<JSCoordinates*>(handle.slot()->asCell());
+    auto* jsCoordinates = static_cast<JSCoordinates*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCoordinates->impl(), jsCoordinates);
+    uncacheWrapper(world, &jsCoordinates->wrapped(), jsCoordinates);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Coordinates* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Coordinates>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCoordinates>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to Coordinates.
-    COMPILE_ASSERT(!__is_polymorphic(Coordinates), Coordinates_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(Coordinates), "Coordinates is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSCoordinates>(globalObject, impl);
+    return createWrapper<Coordinates>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Coordinates& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Coordinates* JSCoordinates::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSCoordinates*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSCoordinates*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

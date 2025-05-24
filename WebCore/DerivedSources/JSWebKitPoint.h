@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitPoint_h
-#define JSWebKitPoint_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "WebKitPoint.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSWebKitPoint : public JSDOMWrapper {
+class JSWebKitPoint : public JSDOMWrapper<WebKitPoint> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebKitPoint>;
     static JSWebKitPoint* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitPoint>&& impl)
     {
-        JSWebKitPoint* ptr = new (NotNull, JSC::allocateCell<JSWebKitPoint>(globalObject->vm().heap)) JSWebKitPoint(structure, globalObject, WTF::move(impl));
+        JSWebKitPoint* ptr = new (NotNull, JSC::allocateCell<JSWebKitPoint>(globalObject->vm().heap)) JSWebKitPoint(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitPoint* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitPoint();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitPoint& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitPoint* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebKitPoint(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitPoint>&&);
+    JSWebKitPoint(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitPoint>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebKitPointOwner : public JSC::WeakHandleOwner {
@@ -79,13 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitPoint*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitPoint*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitPoint& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebKitPoint* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitPoint(JSC::ExecState*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitPoint&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitPoint* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebKitPoint>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebKitPoint>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<WebKitPoint> {
+    using WrapperClass = JSWebKitPoint;
+    using ToWrappedReturnType = WebKitPoint*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSHTMLHRElement.h"
 
-#include "HTMLHRElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,19 +33,22 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLHRElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHRElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHRElementNoShade(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHRElementNoShade(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHRElementSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHRElementSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHRElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHRElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHRElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLHRElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHRElementColor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementColor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHRElementNoShade(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementNoShade(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHRElementSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHRElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHRElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHRElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLHRElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLHRElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLHRElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLHRElementPrototype>(vm.heap)) JSHTMLHRElementPrototype(vm, globalObject, structure);
@@ -69,52 +71,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLHRElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLHRElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLHRElementConstructor = JSDOMConstructorNotConstructable<JSHTMLHRElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLHRElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLHRElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLHRElementConstructor>(vm.heap)) JSHTMLHRElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLHRElementConstructor::s_info = { "HTMLHRElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHRElementConstructor) };
-
-JSHTMLHRElementConstructor::JSHTMLHRElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLHRElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLHRElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLHRElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLHRElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLHRElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLHRElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLHRElementConstructor::s_info = { "HTMLHRElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHRElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLHRElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementAlign) },
-    { "noShade", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementNoShade), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementNoShade) },
-    { "size", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementSize) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementWidth) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementConstructor) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementAlign) } },
+    { "color", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementColor) } },
+    { "noShade", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementNoShade), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementNoShade) } },
+    { "size", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementSize) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHRElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHRElementWidth) } },
 };
 
 const ClassInfo JSHTMLHRElementPrototype::s_info = { "HTMLHRElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHRElementPrototype) };
@@ -127,180 +109,243 @@ void JSHTMLHRElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLHRElement::s_info = { "HTMLHRElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHRElement) };
 
-JSHTMLHRElement::JSHTMLHRElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLHRElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLHRElement::JSHTMLHRElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLHRElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLHRElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLHRElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLHRElementPrototype::create(vm, globalObject, JSHTMLHRElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLHRElementPrototype::create(vm, globalObject, JSHTMLHRElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLHRElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLHRElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLHRElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLHRElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLHRElement* BindingCaller<JSHTMLHRElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHRElement", "align");
-        return throwGetterTypeError(*exec, "HTMLHRElement", "align");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLHRElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLHRElementAlignGetter(ExecState&, JSHTMLHRElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLHRElementNoShade(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLHRElementAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHRElement", "noShade");
-        return throwGetterTypeError(*exec, "HTMLHRElement", "noShade");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::noshadeAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLHRElement>::attribute<jsHTMLHRElementAlignGetter>(state, thisValue, "align");
 }
 
-
-EncodedJSValue jsHTMLHRElementSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLHRElementAlignGetter(ExecState& state, JSHTMLHRElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHRElement", "size");
-        return throwGetterTypeError(*exec, "HTMLHRElement", "size");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::sizeAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::alignAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLHRElementColorGetter(ExecState&, JSHTMLHRElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLHRElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLHRElementColor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHRElement", "width");
-        return throwGetterTypeError(*exec, "HTMLHRElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLHRElement>::attribute<jsHTMLHRElementColorGetter>(state, thisValue, "color");
 }
 
-
-EncodedJSValue jsHTMLHRElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLHRElementColorGetter(ExecState& state, JSHTMLHRElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLHRElementPrototype* domObject = jsDynamicCast<JSHTMLHRElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLHRElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::colorAttr));
+    return result;
 }
 
-void setJSHTMLHRElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLHRElementNoShadeGetter(ExecState&, JSHTMLHRElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLHRElementNoShade(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLHRElement>::attribute<jsHTMLHRElementNoShadeGetter>(state, thisValue, "noShade");
+}
+
+static inline JSValue jsHTMLHRElementNoShadeGetter(ExecState& state, JSHTMLHRElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::noshadeAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLHRElementSizeGetter(ExecState&, JSHTMLHRElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLHRElementSize(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLHRElement>::attribute<jsHTMLHRElementSizeGetter>(state, thisValue, "size");
+}
+
+static inline JSValue jsHTMLHRElementSizeGetter(ExecState& state, JSHTMLHRElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::sizeAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLHRElementWidthGetter(ExecState&, JSHTMLHRElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLHRElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLHRElement>::attribute<jsHTMLHRElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsHTMLHRElementWidthGetter(ExecState& state, JSHTMLHRElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::widthAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLHRElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLHRElementPrototype* domObject = jsDynamicDowncast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLHRElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLHRElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHRElement", "align");
-        else
-            throwSetterTypeError(*exec, "HTMLHRElement", "align");
-        return;
+    JSHTMLHRElementPrototype* domObject = jsDynamicDowncast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLHRElementAlignFunction(ExecState&, JSHTMLHRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHRElementAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLHRElement>::setAttribute<setJSHTMLHRElementAlignFunction>(state, thisValue, encodedValue, "align");
+}
+
+static inline bool setJSHTMLHRElementAlignFunction(ExecState& state, JSHTMLHRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLHRElementNoShade(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLHRElementColorFunction(ExecState&, JSHTMLHRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHRElementColor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHRElement", "noShade");
-        else
-            throwSetterTypeError(*exec, "HTMLHRElement", "noShade");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::noshadeAttr, nativeValue);
+    return BindingCaller<JSHTMLHRElement>::setAttribute<setJSHTMLHRElementColorFunction>(state, thisValue, encodedValue, "color");
+}
+
+static inline bool setJSHTMLHRElementColorFunction(ExecState& state, JSHTMLHRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::colorAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLHRElementSize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLHRElementNoShadeFunction(ExecState&, JSHTMLHRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHRElementNoShade(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHRElement", "size");
-        else
-            throwSetterTypeError(*exec, "HTMLHRElement", "size");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::sizeAttr, nativeValue);
+    return BindingCaller<JSHTMLHRElement>::setAttribute<setJSHTMLHRElementNoShadeFunction>(state, thisValue, encodedValue, "noShade");
+}
+
+static inline bool setJSHTMLHRElementNoShadeFunction(ExecState& state, JSHTMLHRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::noshadeAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLHRElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLHRElementSizeFunction(ExecState&, JSHTMLHRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHRElementSize(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHRElement* castedThis = jsDynamicCast<JSHTMLHRElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHRElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHRElement", "width");
-        else
-            throwSetterTypeError(*exec, "HTMLHRElement", "width");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, nativeValue);
+    return BindingCaller<JSHTMLHRElement>::setAttribute<setJSHTMLHRElementSizeFunction>(state, thisValue, encodedValue, "size");
+}
+
+static inline bool setJSHTMLHRElementSizeFunction(ExecState& state, JSHTMLHRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::sizeAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLHRElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSHTMLHRElementWidthFunction(ExecState&, JSHTMLHRElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHRElementWidth(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLHRElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSHTMLHRElement>::setAttribute<setJSHTMLHRElementWidthFunction>(state, thisValue, encodedValue, "width");
+}
+
+static inline bool setJSHTMLHRElementWidthFunction(ExecState& state, JSHTMLHRElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLHRElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLHRElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLHRElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLHRElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

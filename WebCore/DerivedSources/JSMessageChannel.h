@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMessageChannel_h
-#define JSMessageChannel_h
+#pragma once
 
 #if ENABLE(CHANNEL_MESSAGING)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSMessageChannel : public JSDOMWrapper {
+class JSMessageChannel : public JSDOMWrapper<MessageChannel> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MessageChannel>;
     static JSMessageChannel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageChannel>&& impl)
     {
-        JSMessageChannel* ptr = new (NotNull, JSC::allocateCell<JSMessageChannel>(globalObject->vm().heap)) JSMessageChannel(structure, globalObject, WTF::move(impl));
+        JSMessageChannel* ptr = new (NotNull, JSC::allocateCell<JSMessageChannel>(globalObject->vm().heap)) JSMessageChannel(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MessageChannel* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMessageChannel();
 
     DECLARE_INFO;
 
@@ -52,24 +50,16 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    MessageChannel& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MessageChannel* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSMessageChannel(JSC::Structure*, JSDOMGlobalObject*, Ref<MessageChannel>&&);
+    JSMessageChannel(JSC::Structure*, JSDOMGlobalObject&, Ref<MessageChannel>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMessageChannelOwner : public JSC::WeakHandleOwner {
@@ -84,12 +74,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MessageChannel*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MessageChannel*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MessageChannel& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MessageChannel* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MessageChannel&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MessageChannel* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MessageChannel>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MessageChannel>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MessageChannel> {
+    using WrapperClass = JSMessageChannel;
+    using ToWrappedReturnType = MessageChannel*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CHANNEL_MESSAGING)
-
-#endif

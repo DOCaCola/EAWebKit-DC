@@ -24,6 +24,7 @@
 
 #include "JSPositionErrorCallback.h"
 
+#include "JSDOMConvert.h"
 #include "JSPositionError.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
@@ -35,7 +36,7 @@ namespace WebCore {
 JSPositionErrorCallback::JSPositionErrorCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : PositionErrorCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -49,31 +50,39 @@ JSPositionErrorCallback::~JSPositionErrorCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
-
-
-// Functions
 
 bool JSPositionErrorCallback::handleEvent(PositionError* error)
 {
     if (!canInvokeCallback())
         return true;
 
-    Ref<JSPositionErrorCallback> protect(*this);
+    Ref<JSPositionErrorCallback> protectedThis(*this);
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), error));
+    args.append(toJS<IDLInterface<PositionError>>(*state, *m_data->globalObject(), error));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
 }
 
+JSC::JSValue toJS(PositionErrorCallback& impl)
+{
+    if (!static_cast<JSPositionErrorCallback&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSPositionErrorCallback&>(impl).callbackData()->callback();
+
 }
+
+} // namespace WebCore
 
 #endif // ENABLE(GEOLOCATION)

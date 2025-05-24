@@ -24,12 +24,10 @@
 
 #include "JSTouchEvent.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMWindow.h"
 #include "JSTouchList.h"
-#include "TouchEvent.h"
-#include "TouchList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -37,24 +35,91 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> TouchEvent::Init convertDictionary<TouchEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    TouchEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue detailValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "detail"));
+    if (!detailValue.isUndefined()) {
+        result.detail = convert<IDLLong>(state, detailValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.detail = 0;
+    JSValue viewValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "view"));
+    if (!viewValue.isUndefined()) {
+        result.view = convert<IDLNullable<IDLInterface<DOMWindow>>>(state, viewValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.view = nullptr;
+    JSValue changedTouchesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "changedTouches"));
+    if (!changedTouchesValue.isUndefined()) {
+        result.changedTouches = convert<IDLNullable<IDLInterface<TouchList>>>(state, changedTouchesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.changedTouches = nullptr;
+    JSValue targetTouchesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "targetTouches"));
+    if (!targetTouchesValue.isUndefined()) {
+        result.targetTouches = convert<IDLNullable<IDLInterface<TouchList>>>(state, targetTouchesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.targetTouches = nullptr;
+    JSValue touchesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "touches"));
+    if (!touchesValue.isUndefined()) {
+        result.touches = convert<IDLNullable<IDLInterface<TouchList>>>(state, touchesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.touches = nullptr;
+    return result;
+}
+
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsTouchEventPrototypeFunctionInitTouchEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsTouchEventTouches(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventTargetTouches(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventChangedTouches(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventCtrlKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventShiftKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventAltKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventMetaKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventTouches(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventTargetTouches(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventChangedTouches(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventCtrlKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventShiftKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventAltKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventMetaKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTouchEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSTouchEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSTouchEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSTouchEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSTouchEventPrototype>(vm.heap)) JSTouchEventPrototype(vm, globalObject, structure);
@@ -77,85 +142,52 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTouchEventConstructor : public DOMConstructorObject {
-private:
-    JSTouchEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSTouchEventConstructor = JSDOMConstructor<JSTouchEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTouchEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTouchEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSTouchEventConstructor>(vm.heap)) JSTouchEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSTouchEventTableIndex[18] = {
-    { -1, -1 },
-    { -1, -1 },
-    { 3, 17 },
-    { 4, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, 16 },
-    { -1, -1 },
-    { 2, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { 5, -1 },
-    { 6, -1 },
-};
-
-
-static const HashTableValue JSTouchEventTableValues[] =
+template<> EncodedJSValue JSC_HOST_CALL JSTouchEventConstructor::construct(ExecState* state)
 {
-    { "touches", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "targetTouches", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventTargetTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "changedTouches", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventChangedTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ctrlKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventCtrlKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "shiftKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventShiftKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "altKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventAltKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "metaKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventMetaKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSTouchEventTable = { 7, 15, true, JSTouchEventTableValues, 0, JSTouchEventTableIndex };
-const ClassInfo JSTouchEventConstructor::s_info = { "TouchEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchEventConstructor) };
-
-JSTouchEventConstructor::JSTouchEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSTouchEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<TouchEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = TouchEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<TouchEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSTouchEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSTouchEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTouchEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    return JSUIEvent::getConstructor(vm, &globalObject);
+}
+
+template<> void JSTouchEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSTouchEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TouchEvent"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTouchEventConstructor::s_info = { "TouchEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTouchEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "initTouchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTouchEventPrototypeFunctionInitTouchEvent), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTouchEventConstructor) } },
+    { "touches", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "targetTouches", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventTargetTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "changedTouches", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventChangedTouches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ctrlKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventCtrlKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "shiftKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventShiftKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "altKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventAltKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "metaKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchEventMetaKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initTouchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTouchEventPrototypeFunctionInitTouchEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSTouchEventPrototype::s_info = { "TouchEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchEventPrototype) };
@@ -166,197 +198,259 @@ void JSTouchEventPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSTouchEventPrototypeTableValues, *this);
 }
 
-const ClassInfo JSTouchEvent::s_info = { "TouchEvent", &Base::s_info, &JSTouchEventTable, CREATE_METHOD_TABLE(JSTouchEvent) };
+const ClassInfo JSTouchEvent::s_info = { "TouchEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchEvent) };
 
-JSTouchEvent::JSTouchEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TouchEvent>&& impl)
-    : JSUIEvent(structure, globalObject, WTF::move(impl))
+JSTouchEvent::JSTouchEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TouchEvent>&& impl)
+    : JSUIEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSTouchEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSTouchEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSTouchEventPrototype::create(vm, globalObject, JSTouchEventPrototype::createStructure(vm, globalObject, JSUIEvent::getPrototype(vm, globalObject)));
+    return JSTouchEventPrototype::create(vm, globalObject, JSTouchEventPrototype::createStructure(vm, globalObject, JSUIEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSTouchEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSTouchEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTouchEvent>(vm, globalObject);
 }
 
-bool JSTouchEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSTouchEvent* BindingCaller<JSTouchEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSTouchEvent*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSTouchEvent, Base>(exec, JSTouchEventTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSTouchEvent*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsTouchEventTouches(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSTouchEvent* BindingCaller<JSTouchEvent>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "touches");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.touches()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSTouchEvent*>(state.thisValue());
 }
 
+static inline JSValue jsTouchEventTouchesGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsTouchEventTargetTouches(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchEventTouches(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "targetTouches");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.targetTouches()));
-    return JSValue::encode(result);
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventTouchesGetter>(state, thisValue, "touches");
 }
 
-
-EncodedJSValue jsTouchEventChangedTouches(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTouchEventTouchesGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "changedTouches");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.changedTouches()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TouchList>>(state, *thisObject.globalObject(), impl.touches());
+    return result;
 }
 
+static inline JSValue jsTouchEventTargetTouchesGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsTouchEventCtrlKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchEventTargetTouches(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "ctrlKey");
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.ctrlKey());
-    return JSValue::encode(result);
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventTargetTouchesGetter>(state, thisValue, "targetTouches");
 }
 
-
-EncodedJSValue jsTouchEventShiftKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTouchEventTargetTouchesGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "shiftKey");
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.shiftKey());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TouchList>>(state, *thisObject.globalObject(), impl.targetTouches());
+    return result;
 }
 
+static inline JSValue jsTouchEventChangedTouchesGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsTouchEventAltKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchEventChangedTouches(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "altKey");
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.altKey());
-    return JSValue::encode(result);
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventChangedTouchesGetter>(state, thisValue, "changedTouches");
 }
 
-
-EncodedJSValue jsTouchEventMetaKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTouchEventChangedTouchesGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchEvent*>(slotBase);
-    JSTouchEvent* castedThisObject = jsDynamicCast<JSTouchEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchEvent", "metaKey");
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.metaKey());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TouchList>>(state, *thisObject.globalObject(), impl.changedTouches());
+    return result;
 }
 
+static inline JSValue jsTouchEventCtrlKeyGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsTouchEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTouchEventCtrlKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSTouchEventPrototype* domObject = jsDynamicCast<JSTouchEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTouchEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventCtrlKeyGetter>(state, thisValue, "ctrlKey");
 }
 
-JSValue JSTouchEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsTouchEventCtrlKeyGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSTouchEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.ctrlKey());
+    return result;
 }
 
-EncodedJSValue JSC_HOST_CALL jsTouchEventPrototypeFunctionInitTouchEvent(ExecState* exec)
+static inline JSValue jsTouchEventShiftKeyGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsTouchEventShiftKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTouchEvent* castedThis = jsDynamicCast<JSTouchEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TouchEvent", "initTouchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTouchEvent::info());
-    auto& impl = castedThis->impl();
-    TouchList* touches = JSTouchList::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    TouchList* targetTouches = JSTouchList::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    TouchList* changedTouches = JSTouchList::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String type = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    DOMWindow* view = JSDOMWindow::toWrapped(exec->argument(4));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int screenX = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int screenY = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int clientX = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int clientY = toInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool ctrlKey = exec->argument(9).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool altKey = exec->argument(10).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool shiftKey = exec->argument(11).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool metaKey = exec->argument(12).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.initTouchEvent(touches, targetTouches, changedTouches, type, view, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventShiftKeyGetter>(state, thisValue, "shiftKey");
+}
+
+static inline JSValue jsTouchEventShiftKeyGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.shiftKey());
+    return result;
+}
+
+static inline JSValue jsTouchEventAltKeyGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsTouchEventAltKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventAltKeyGetter>(state, thisValue, "altKey");
+}
+
+static inline JSValue jsTouchEventAltKeyGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.altKey());
+    return result;
+}
+
+static inline JSValue jsTouchEventMetaKeyGetter(ExecState&, JSTouchEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsTouchEventMetaKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTouchEvent>::attribute<jsTouchEventMetaKeyGetter>(state, thisValue, "metaKey");
+}
+
+static inline JSValue jsTouchEventMetaKeyGetter(ExecState& state, JSTouchEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.metaKey());
+    return result;
+}
+
+EncodedJSValue jsTouchEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSTouchEventPrototype* domObject = jsDynamicDowncast<JSTouchEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSTouchEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSTouchEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSTouchEventPrototype* domObject = jsDynamicDowncast<JSTouchEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSTouchEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSTouchEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsTouchEventPrototypeFunctionInitTouchEventCaller(JSC::ExecState*, JSTouchEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTouchEventPrototypeFunctionInitTouchEvent(ExecState* state)
+{
+    return BindingCaller<JSTouchEvent>::callOperation<jsTouchEventPrototypeFunctionInitTouchEventCaller>(state, "initTouchEvent");
+}
+
+static inline JSC::EncodedJSValue jsTouchEventPrototypeFunctionInitTouchEventCaller(JSC::ExecState* state, JSTouchEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto touches = convert<IDLNullable<IDLInterface<TouchList>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "touches", "TouchEvent", "initTouchEvent", "TouchList"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto targetTouches = convert<IDLNullable<IDLInterface<TouchList>>>(*state, state->argument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "targetTouches", "TouchEvent", "initTouchEvent", "TouchList"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto changedTouches = convert<IDLNullable<IDLInterface<TouchList>>>(*state, state->argument(2), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 2, "changedTouches", "TouchEvent", "initTouchEvent", "TouchList"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto type = convert<IDLDOMString>(*state, state->argument(3), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto view = convert<IDLNullable<IDLInterface<DOMWindow>>>(*state, state->argument(4), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 4, "view", "TouchEvent", "initTouchEvent", "DOMWindow"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenX = convert<IDLLong>(*state, state->argument(5), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenY = convert<IDLLong>(*state, state->argument(6), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto clientX = convert<IDLLong>(*state, state->argument(7), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto clientY = convert<IDLLong>(*state, state->argument(8), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto ctrlKey = convert<IDLBoolean>(*state, state->argument(9));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto altKey = convert<IDLBoolean>(*state, state->argument(10));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto shiftKey = convert<IDLBoolean>(*state, state->argument(11));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto metaKey = convert<IDLBoolean>(*state, state->argument(12));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.initTouchEvent(WTFMove(touches), WTFMove(targetTouches), WTFMove(changedTouches), WTFMove(type), WTFMove(view), WTFMove(screenX), WTFMove(screenY), WTFMove(clientX), WTFMove(clientY), WTFMove(ctrlKey), WTFMove(altKey), WTFMove(shiftKey), WTFMove(metaKey));
     return JSValue::encode(jsUndefined());
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7TouchEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore10TouchEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<TouchEvent>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7TouchEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore10TouchEventE[2];
+#if COMPILER(CLANG)
+    // If this fails TouchEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(TouchEvent), "TouchEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // TouchEvent has subclasses. If TouchEvent has subclasses that get passed
+    // to toJS() we currently require TouchEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<TouchEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TouchEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

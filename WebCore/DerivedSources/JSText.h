@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSText_h
-#define JSText_h
+#pragma once
 
 #include "JSCharacterData.h"
 #include "Text.h"
@@ -28,43 +27,46 @@ namespace WebCore {
 
 class JSText : public JSCharacterData {
 public:
-    typedef JSCharacterData Base;
+    using Base = JSCharacterData;
+    using DOMWrapped = Text;
     static JSText* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Text>&& impl)
     {
-        JSText* ptr = new (NotNull, JSC::allocateCell<JSText>(globalObject->vm().heap)) JSText(structure, globalObject, WTF::move(impl));
+        JSText* ptr = new (NotNull, JSC::allocateCell<JSText>(globalObject->vm().heap)) JSText(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSTextNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Text& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    Text& wrapped() const
     {
-        return static_cast<Text&>(Base::impl());
+        return static_cast<Text&>(Base::wrapped());
     }
 protected:
-    JSText(JSC::Structure*, JSDOMGlobalObject*, Ref<Text>&&);
+    JSText(JSC::Structure*, JSDOMGlobalObject&, Ref<Text>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Text*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Text&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Text* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Text>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Text>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<Text> {
+    using WrapperClass = JSText;
+    using ToWrappedReturnType = Text*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEDiffuseLightingElement_h
-#define JSSVGFEDiffuseLightingElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEDiffuseLightingElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEDiffuseLightingElement;
     static JSSVGFEDiffuseLightingElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDiffuseLightingElement>&& impl)
     {
-        JSSVGFEDiffuseLightingElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDiffuseLightingElement>(globalObject->vm().heap)) JSSVGFEDiffuseLightingElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDiffuseLightingElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDiffuseLightingElement>(globalObject->vm().heap)) JSSVGFEDiffuseLightingElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDiffuseLightingElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEDiffuseLightingElement& wrapped() const
     {
-        return static_cast<SVGFEDiffuseLightingElement&>(Base::impl());
+        return static_cast<SVGFEDiffuseLightingElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDiffuseLightingElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDiffuseLightingElement>&&);
+    JSSVGFEDiffuseLightingElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDiffuseLightingElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEDiffuseLightingElement> {
+    using WrapperClass = JSSVGFEDiffuseLightingElement;
+    using ToWrappedReturnType = SVGFEDiffuseLightingElement*;
+};
 
 } // namespace WebCore
-
-#endif

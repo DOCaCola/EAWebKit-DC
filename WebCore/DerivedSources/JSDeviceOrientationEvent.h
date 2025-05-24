@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDeviceOrientationEvent_h
-#define JSDeviceOrientationEvent_h
+#pragma once
 
 #if ENABLE(DEVICE_ORIENTATION)
 
@@ -30,56 +29,42 @@ namespace WebCore {
 
 class JSDeviceOrientationEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = DeviceOrientationEvent;
     static JSDeviceOrientationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DeviceOrientationEvent>&& impl)
     {
-        JSDeviceOrientationEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceOrientationEvent>(globalObject->vm().heap)) JSDeviceOrientationEvent(structure, globalObject, WTF::move(impl));
+        JSDeviceOrientationEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceOrientationEvent>(globalObject->vm().heap)) JSDeviceOrientationEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    JSC::JSValue alpha(JSC::ExecState*) const;
-    JSC::JSValue beta(JSC::ExecState*) const;
-    JSC::JSValue gamma(JSC::ExecState*) const;
-    JSC::JSValue absolute(JSC::ExecState*) const;
-
-    // Custom functions
-    JSC::JSValue initDeviceOrientationEvent(JSC::ExecState*);
-    DeviceOrientationEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    DeviceOrientationEvent& wrapped() const
     {
-        return static_cast<DeviceOrientationEvent&>(Base::impl());
+        return static_cast<DeviceOrientationEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDeviceOrientationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<DeviceOrientationEvent>&&);
+    JSDeviceOrientationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<DeviceOrientationEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<DeviceOrientationEvent> {
+    using WrapperClass = JSDeviceOrientationEvent;
+    using ToWrappedReturnType = DeviceOrientationEvent*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(DEVICE_ORIENTATION)
-
-#endif

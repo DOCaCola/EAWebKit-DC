@@ -22,12 +22,12 @@
 #include "JSSVGViewElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedPreserveAspectRatio.h"
 #include "JSSVGAnimatedRect.h"
 #include "JSSVGStringList.h"
-#include "SVGStringList.h"
-#include "SVGViewElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,17 +36,18 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGViewElementViewTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGViewElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGViewElementViewBox(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGViewElementPreserveAspectRatio(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGViewElementZoomAndPan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGViewElementZoomAndPan(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGViewElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGViewElementViewTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGViewElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGViewElementViewBox(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGViewElementPreserveAspectRatio(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGViewElementZoomAndPan(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGViewElementZoomAndPan(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGViewElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGViewElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGViewElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGViewElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGViewElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGViewElementPrototype>(vm.heap)) JSSVGViewElementPrototype(vm, globalObject, structure);
@@ -69,71 +70,49 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGViewElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGViewElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGViewElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGViewElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGViewElementConstructor>(vm.heap)) JSSVGViewElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGViewElementConstructor = JSDOMConstructorNotConstructable<JSSVGViewElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGViewElementConstructorTableValues[] =
 {
-    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
+static_assert(SVGViewElement::SVG_ZOOMANDPAN_UNKNOWN == 0, "SVG_ZOOMANDPAN_UNKNOWN in SVGViewElement does not match value from IDL");
+static_assert(SVGViewElement::SVG_ZOOMANDPAN_DISABLE == 1, "SVG_ZOOMANDPAN_DISABLE in SVGViewElement does not match value from IDL");
+static_assert(SVGViewElement::SVG_ZOOMANDPAN_MAGNIFY == 2, "SVG_ZOOMANDPAN_MAGNIFY in SVGViewElement does not match value from IDL");
 
-COMPILE_ASSERT(0 == SVGViewElement::SVG_ZOOMANDPAN_UNKNOWN, SVGViewElementEnumSVG_ZOOMANDPAN_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGViewElement::SVG_ZOOMANDPAN_DISABLE, SVGViewElementEnumSVG_ZOOMANDPAN_DISABLEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGViewElement::SVG_ZOOMANDPAN_MAGNIFY, SVGViewElementEnumSVG_ZOOMANDPAN_MAGNIFYIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSSVGViewElementConstructor::s_info = { "SVGViewElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGViewElementConstructor) };
-
-JSSVGViewElementConstructor::JSSVGViewElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGViewElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGViewElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGViewElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGViewElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGViewElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGViewElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGViewElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGViewElementConstructor::s_info = { "SVGViewElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGViewElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGViewElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewTarget", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementViewTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewBox", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAspectRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "zoomAndPan", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementZoomAndPan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGViewElementZoomAndPan) },
-    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGViewElementConstructor) } },
+    { "viewTarget", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementViewTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "viewBox", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAspectRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "zoomAndPan", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGViewElementZoomAndPan), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGViewElementZoomAndPan) } },
+    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ZOOMANDPAN_DISABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGViewElementPrototype::s_info = { "SVGViewElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGViewElementPrototype) };
@@ -146,140 +125,167 @@ void JSSVGViewElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGViewElement::s_info = { "SVGViewElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGViewElement) };
 
-JSSVGViewElement::JSSVGViewElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGViewElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGViewElement::JSSVGViewElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGViewElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGViewElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGViewElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGViewElementPrototype::create(vm, globalObject, JSSVGViewElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGViewElementPrototype::create(vm, globalObject, JSSVGViewElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGViewElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGViewElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGViewElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGViewElementViewTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGViewElement* BindingCaller<JSSVGViewElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGViewElement", "viewTarget");
-        return throwGetterTypeError(*exec, "SVGViewElement", "viewTarget");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.viewTarget())));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGViewElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsSVGViewElementViewTargetGetter(ExecState&, JSSVGViewElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGViewElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGViewElementViewTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGViewElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGViewElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGViewElement>::attribute<jsSVGViewElementViewTargetGetter>(state, thisValue, "viewTarget");
 }
 
-
-EncodedJSValue jsSVGViewElementViewBox(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGViewElementViewTargetGetter(ExecState& state, JSSVGViewElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGViewElement", "viewBox");
-        return throwGetterTypeError(*exec, "SVGViewElement", "viewBox");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedRect> obj = impl.viewBoxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGStringList>>(state, *thisObject.globalObject(), impl.viewTarget());
+    return result;
 }
 
+static inline JSValue jsSVGViewElementExternalResourcesRequiredGetter(ExecState&, JSSVGViewElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGViewElementPreserveAspectRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGViewElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGViewElement", "preserveAspectRatio");
-        return throwGetterTypeError(*exec, "SVGViewElement", "preserveAspectRatio");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedPreserveAspectRatio> obj = impl.preserveAspectRatioAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGViewElement>::attribute<jsSVGViewElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
 }
 
-
-EncodedJSValue jsSVGViewElementZoomAndPan(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGViewElementExternalResourcesRequiredGetter(ExecState& state, JSSVGViewElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGViewElement", "zoomAndPan");
-        return throwGetterTypeError(*exec, "SVGViewElement", "zoomAndPan");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.zoomAndPan());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
 }
 
+static inline JSValue jsSVGViewElementViewBoxGetter(ExecState&, JSSVGViewElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGViewElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGViewElementViewBox(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGViewElementPrototype* domObject = jsDynamicCast<JSSVGViewElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGViewElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSSVGViewElement>::attribute<jsSVGViewElementViewBoxGetter>(state, thisValue, "viewBox");
 }
 
-void setJSSVGViewElementZoomAndPan(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsSVGViewElementViewBoxGetter(ExecState& state, JSSVGViewElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedRect>>(state, *thisObject.globalObject(), impl.viewBoxAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGViewElementPreserveAspectRatioGetter(ExecState&, JSSVGViewElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGViewElementPreserveAspectRatio(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGViewElement>::attribute<jsSVGViewElementPreserveAspectRatioGetter>(state, thisValue, "preserveAspectRatio");
+}
+
+static inline JSValue jsSVGViewElementPreserveAspectRatioGetter(ExecState& state, JSSVGViewElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedPreserveAspectRatio>>(state, *thisObject.globalObject(), impl.preserveAspectRatioAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGViewElementZoomAndPanGetter(ExecState&, JSSVGViewElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGViewElementZoomAndPan(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGViewElement>::attribute<jsSVGViewElementZoomAndPanGetter>(state, thisValue, "zoomAndPan");
+}
+
+static inline JSValue jsSVGViewElementZoomAndPanGetter(ExecState& state, JSSVGViewElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.zoomAndPan());
+    return result;
+}
+
+EncodedJSValue jsSVGViewElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGViewElementPrototype* domObject = jsDynamicDowncast<JSSVGViewElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGViewElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGViewElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGViewElement* castedThis = jsDynamicCast<JSSVGViewElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGViewElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGViewElement", "zoomAndPan");
-        else
-            throwSetterTypeError(*exec, "SVGViewElement", "zoomAndPan");
-        return;
+    JSSVGViewElementPrototype* domObject = jsDynamicDowncast<JSSVGViewElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    uint16_t nativeValue = toUInt16(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setZoomAndPan(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGViewElementZoomAndPanFunction(ExecState&, JSSVGViewElement&, JSValue, ThrowScope&);
+
+bool setJSSVGViewElementZoomAndPan(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGViewElement>::setAttribute<setJSSVGViewElementZoomAndPanFunction>(state, thisValue, encodedValue, "zoomAndPan");
+}
+
+static inline bool setJSSVGViewElementZoomAndPanFunction(ExecState& state, JSSVGViewElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnsignedShort>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setZoomAndPan(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSSVGViewElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGViewElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGViewElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGViewElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGViewElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGViewElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

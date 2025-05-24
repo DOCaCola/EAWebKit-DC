@@ -18,12 +18,12 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLVideoElement_h
-#define JSHTMLVideoElement_h
+#pragma once
 
 #if ENABLE(VIDEO)
 
 #include "HTMLVideoElement.h"
+#include "JSDOMConvert.h"
 #include "JSHTMLMediaElement.h"
 #include "JSNode.h"
 #include <wtf/NeverDestroyed.h>
@@ -32,16 +32,17 @@ namespace WebCore {
 
 class JSHTMLVideoElement : public JSHTMLMediaElement {
 public:
-    typedef JSHTMLMediaElement Base;
+    using Base = JSHTMLMediaElement;
+    using DOMWrapped = HTMLVideoElement;
     static JSHTMLVideoElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLVideoElement>&& impl)
     {
-        JSHTMLVideoElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLVideoElement>(globalObject->vm().heap)) JSHTMLVideoElement(structure, globalObject, WTF::move(impl));
+        JSHTMLVideoElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLVideoElement>(globalObject->vm().heap)) JSHTMLVideoElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLVideoElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -51,20 +52,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLVideoElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLVideoElement& wrapped() const
     {
-        return static_cast<HTMLVideoElement&>(Base::impl());
+        return static_cast<HTMLVideoElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLVideoElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLVideoElement>&&);
+    JSHTMLVideoElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLVideoElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSHTMLVideoElementOwner : public JSNodeOwner {
@@ -79,10 +77,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLVideoElement*)
     return &owner.get();
 }
 
+inline void* wrapperKey(HTMLVideoElement* wrappableObject)
+{
+    return wrappableObject;
+}
+
+
+template<> struct JSDOMWrapperConverterTraits<HTMLVideoElement> {
+    using WrapperClass = JSHTMLVideoElement;
+    using ToWrappedReturnType = HTMLVideoElement*;
+};
+#if ENABLE(VIDEO_PRESENTATION_MODE)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, HTMLVideoElement::VideoPresentationMode);
+
+template<> std::optional<HTMLVideoElement::VideoPresentationMode> parseEnumeration<HTMLVideoElement::VideoPresentationMode>(JSC::ExecState&, JSC::JSValue);
+template<> HTMLVideoElement::VideoPresentationMode convertEnumeration<HTMLVideoElement::VideoPresentationMode>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<HTMLVideoElement::VideoPresentationMode>();
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO)
-
-#endif

@@ -18,27 +18,27 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLLinkElement_h
-#define JSHTMLLinkElement_h
+#pragma once
 
 #include "HTMLLinkElement.h"
 #include "JSHTMLElement.h"
 
 namespace WebCore {
 
-class JSHTMLLinkElement : public JSHTMLElement {
+class WEBCORE_EXPORT JSHTMLLinkElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLLinkElement;
     static JSHTMLLinkElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLinkElement>&& impl)
     {
-        JSHTMLLinkElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElement>(globalObject->vm().heap)) JSHTMLLinkElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLinkElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElement>(globalObject->vm().heap)) JSHTMLLinkElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static HTMLLinkElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
 
@@ -47,29 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setSizes(JSC::ExecState*, JSC::JSValue);
-    HTMLLinkElement& impl() const
+    HTMLLinkElement& wrapped() const
     {
-        return static_cast<HTMLLinkElement&>(Base::impl());
+        return static_cast<HTMLLinkElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLLinkElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLinkElement>&&);
+    JSHTMLLinkElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLinkElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLLinkElement> {
+    using WrapperClass = JSHTMLLinkElement;
+    using ToWrappedReturnType = HTMLLinkElement*;
+};
 
 } // namespace WebCore
-
-#endif

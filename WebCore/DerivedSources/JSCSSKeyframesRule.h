@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSKeyframesRule_h
-#define JSCSSKeyframesRule_h
+#pragma once
 
 #include "CSSKeyframesRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSKeyframesRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSKeyframesRule;
     static JSCSSKeyframesRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSKeyframesRule>&& impl)
     {
-        JSCSSKeyframesRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRule>(globalObject->vm().heap)) JSCSSKeyframesRule(structure, globalObject, WTF::move(impl));
+        JSCSSKeyframesRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRule>(globalObject->vm().heap)) JSCSSKeyframesRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
 
@@ -49,26 +49,23 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSKeyframesRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSKeyframesRule& wrapped() const
     {
-        return static_cast<CSSKeyframesRule&>(Base::impl());
+        return static_cast<CSSKeyframesRule&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSCSSKeyframesRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSKeyframesRule>&&);
+    JSCSSKeyframesRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSKeyframesRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSKeyframesRule> {
+    using WrapperClass = JSCSSKeyframesRule;
+    using ToWrappedReturnType = CSSKeyframesRule*;
+};
 
 } // namespace WebCore
-
-#endif

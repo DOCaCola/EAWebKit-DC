@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaDevices_h
-#define JSMediaDevices_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "MediaDevices.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMediaDevices : public JSDOMWrapper {
+class JSMediaDevices : public JSDOMWrapper<MediaDevices> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaDevices>;
     static JSMediaDevices* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDevices>&& impl)
     {
-        JSMediaDevices* ptr = new (NotNull, JSC::allocateCell<JSMediaDevices>(globalObject->vm().heap)) JSMediaDevices(structure, globalObject, WTF::move(impl));
+        JSMediaDevices* ptr = new (NotNull, JSC::allocateCell<JSMediaDevices>(globalObject->vm().heap)) JSMediaDevices(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaDevices* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaDevices();
 
     DECLARE_INFO;
 
@@ -52,20 +51,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaDevices& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaDevices* m_impl;
 protected:
-    JSMediaDevices(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaDevices>&&);
+    JSMediaDevices(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaDevices>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaDevicesOwner : public JSC::WeakHandleOwner {
@@ -80,12 +69,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaDevices*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaDevices*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaDevices& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaDevices* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaDevices&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaDevices* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaDevices>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaDevices>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaDevices> {
+    using WrapperClass = JSMediaDevices;
+    using ToWrappedReturnType = MediaDevices*;
+};
+#if ENABLE(MEDIA_STREAM)
+
+template<> MediaDevices::StreamConstraints convertDictionary<MediaDevices::StreamConstraints>(JSC::ExecState&, JSC::JSValue);
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif

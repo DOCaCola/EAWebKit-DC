@@ -22,10 +22,9 @@
 #include "JSProcessingInstruction.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSStyleSheet.h"
-#include "ProcessingInstruction.h"
-#include "StyleSheet.h"
-#include "URL.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsProcessingInstructionTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsProcessingInstructionSheet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsProcessingInstructionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProcessingInstructionTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProcessingInstructionSheet(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProcessingInstructionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSProcessingInstructionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSProcessingInstructionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSProcessingInstructionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSProcessingInstructionPrototype* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstructionPrototype>(vm.heap)) JSProcessingInstructionPrototype(vm, globalObject, structure);
@@ -63,50 +63,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSProcessingInstructionConstructor : public DOMConstructorObject {
-private:
-    JSProcessingInstructionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSProcessingInstructionConstructor = JSDOMConstructorNotConstructable<JSProcessingInstruction>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSProcessingInstructionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSProcessingInstructionConstructor* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstructionConstructor>(vm.heap)) JSProcessingInstructionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSProcessingInstructionConstructor::s_info = { "ProcessingInstructionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProcessingInstructionConstructor) };
-
-JSProcessingInstructionConstructor::JSProcessingInstructionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSProcessingInstructionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCharacterData::getConstructor(vm, &globalObject);
 }
 
-void JSProcessingInstructionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSProcessingInstructionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSProcessingInstruction::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSProcessingInstruction::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ProcessingInstruction"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSProcessingInstructionConstructor::s_info = { "ProcessingInstruction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProcessingInstructionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSProcessingInstructionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "target", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "sheet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSProcessingInstructionConstructor) } },
+    { "target", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sheet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProcessingInstructionSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSProcessingInstructionPrototype::s_info = { "ProcessingInstructionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProcessingInstructionPrototype) };
@@ -119,66 +98,138 @@ void JSProcessingInstructionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSProcessingInstruction::s_info = { "ProcessingInstruction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProcessingInstruction) };
 
-JSProcessingInstruction::JSProcessingInstruction(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProcessingInstruction>&& impl)
-    : JSCharacterData(structure, globalObject, WTF::move(impl))
+JSProcessingInstruction::JSProcessingInstruction(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ProcessingInstruction>&& impl)
+    : JSCharacterData(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSProcessingInstruction::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSProcessingInstruction::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSProcessingInstructionPrototype::create(vm, globalObject, JSProcessingInstructionPrototype::createStructure(vm, globalObject, JSCharacterData::getPrototype(vm, globalObject)));
+    return JSProcessingInstructionPrototype::create(vm, globalObject, JSProcessingInstructionPrototype::createStructure(vm, globalObject, JSCharacterData::prototype(vm, globalObject)));
 }
 
-JSObject* JSProcessingInstruction::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSProcessingInstruction::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSProcessingInstruction>(vm, globalObject);
 }
 
-EncodedJSValue jsProcessingInstructionTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSProcessingInstruction* BindingCaller<JSProcessingInstruction>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSProcessingInstruction* castedThis = jsDynamicCast<JSProcessingInstruction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSProcessingInstructionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ProcessingInstruction", "target");
-        return throwGetterTypeError(*exec, "ProcessingInstruction", "target");
+    return jsDynamicDowncast<JSProcessingInstruction*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsProcessingInstructionTargetGetter(ExecState&, JSProcessingInstruction&, ThrowScope& throwScope);
+
+EncodedJSValue jsProcessingInstructionTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSProcessingInstruction>::attribute<jsProcessingInstructionTargetGetter>(state, thisValue, "target");
+}
+
+static inline JSValue jsProcessingInstructionTargetGetter(ExecState& state, JSProcessingInstruction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.target());
+    return result;
+}
+
+static inline JSValue jsProcessingInstructionSheetGetter(ExecState&, JSProcessingInstruction&, ThrowScope& throwScope);
+
+EncodedJSValue jsProcessingInstructionSheet(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSProcessingInstruction>::attribute<jsProcessingInstructionSheetGetter>(state, thisValue, "sheet");
+}
+
+static inline JSValue jsProcessingInstructionSheetGetter(ExecState& state, JSProcessingInstruction& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<StyleSheet>>(state, *thisObject.globalObject(), impl.sheet());
+    return result;
+}
+
+EncodedJSValue jsProcessingInstructionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSProcessingInstructionPrototype* domObject = jsDynamicDowncast<JSProcessingInstructionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSProcessingInstruction::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSProcessingInstructionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSProcessingInstructionPrototype* domObject = jsDynamicDowncast<JSProcessingInstructionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.target());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsProcessingInstructionSheet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSProcessingInstruction::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSProcessingInstruction* castedThis = jsDynamicCast<JSProcessingInstruction*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSProcessingInstructionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ProcessingInstruction", "sheet");
-        return throwGetterTypeError(*exec, "ProcessingInstruction", "sheet");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.sheet()));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSProcessingInstructionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsProcessingInstructionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+void JSProcessingInstruction::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    JSProcessingInstructionPrototype* domObject = jsDynamicCast<JSProcessingInstructionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSProcessingInstruction::getConstructor(exec->vm(), domObject->globalObject()));
+    auto* thisObject = jsCast<JSProcessingInstruction*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
-JSValue JSProcessingInstruction::getConstructor(VM& vm, JSGlobalObject* globalObject)
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7ProcessingInstruction@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore21ProcessingInstructionE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<ProcessingInstruction>&& impl)
 {
-    return getDOMConstructor<JSProcessingInstructionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7ProcessingInstruction@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore21ProcessingInstructionE[2];
+#if COMPILER(CLANG)
+    // If this fails ProcessingInstruction does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(ProcessingInstruction), "ProcessingInstruction is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // ProcessingInstruction has subclasses. If ProcessingInstruction has subclasses that get passed
+    // to toJS() we currently require ProcessingInstruction you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<ProcessingInstruction>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ProcessingInstruction& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

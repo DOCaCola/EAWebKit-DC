@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOfflineAudioContext_h
-#define JSOfflineAudioContext_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSOfflineAudioContext : public JSAudioContext {
 public:
-    typedef JSAudioContext Base;
+    using Base = JSAudioContext;
+    using DOMWrapped = OfflineAudioContext;
     static JSOfflineAudioContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OfflineAudioContext>&& impl)
     {
-        JSOfflineAudioContext* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContext>(globalObject->vm().heap)) JSOfflineAudioContext(structure, globalObject, WTF::move(impl));
+        JSOfflineAudioContext* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContext>(globalObject->vm().heap)) JSOfflineAudioContext(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,22 +49,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    OfflineAudioContext& impl() const
+    OfflineAudioContext& wrapped() const
     {
-        return static_cast<OfflineAudioContext&>(Base::impl());
+        return static_cast<OfflineAudioContext&>(Base::wrapped());
     }
 protected:
-    JSOfflineAudioContext(JSC::Structure*, JSDOMGlobalObject*, Ref<OfflineAudioContext>&&);
+    JSOfflineAudioContext(JSC::Structure*, JSDOMGlobalObject&, Ref<OfflineAudioContext>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSOfflineAudioContextOwner : public JSC::WeakHandleOwner {
@@ -79,12 +74,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OfflineAudioContext*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OfflineAudioContext& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(OfflineAudioContext* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioContext&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OfflineAudioContext* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OfflineAudioContext>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OfflineAudioContext>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OfflineAudioContext> {
+    using WrapperClass = JSOfflineAudioContext;
+    using ToWrappedReturnType = OfflineAudioContext*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

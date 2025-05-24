@@ -25,9 +25,7 @@
 #include "JSPositionError.h"
 
 #include "JSDOMBinding.h"
-#include "PositionError.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,12 +34,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsPositionErrorCode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsPositionErrorMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPositionErrorCode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPositionErrorMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSPositionErrorConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSPositionErrorPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSPositionErrorPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSPositionErrorPrototype* ptr = new (NotNull, JSC::allocateCell<JSPositionErrorPrototype>(vm.heap)) JSPositionErrorPrototype(vm, globalObject, structure);
@@ -64,30 +63,15 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSPositionErrorTableIndex[4] = {
-    { -1, -1 },
-    { 0, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSPositionErrorTableValues[] =
-{
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSPositionErrorTable = { 2, 3, true, JSPositionErrorTableValues, 0, JSPositionErrorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSPositionErrorPrototypeTableValues[] =
 {
-    { "PERMISSION_DENIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "POSITION_UNAVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "code", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "PERMISSION_DENIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "POSITION_UNAVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSPositionErrorPrototype::s_info = { "PositionErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPositionErrorPrototype) };
@@ -98,12 +82,18 @@ void JSPositionErrorPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSPositionErrorPrototypeTableValues, *this);
 }
 
-const ClassInfo JSPositionError::s_info = { "PositionError", &Base::s_info, &JSPositionErrorTable, CREATE_METHOD_TABLE(JSPositionError) };
+const ClassInfo JSPositionError::s_info = { "PositionError", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPositionError) };
 
-JSPositionError::JSPositionError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<PositionError>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPositionError::JSPositionError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<PositionError>&& impl)
+    : JSDOMWrapper<PositionError>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSPositionError::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSPositionError::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -111,7 +101,7 @@ JSObject* JSPositionError::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSPositionErrorPrototype::create(vm, globalObject, JSPositionErrorPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSPositionError::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSPositionError::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSPositionError>(vm, globalObject);
 }
@@ -122,41 +112,56 @@ void JSPositionError::destroy(JSC::JSCell* cell)
     thisObject->JSPositionError::~JSPositionError();
 }
 
-JSPositionError::~JSPositionError()
+template<> inline JSPositionError* BindingCaller<JSPositionError>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSPositionError*>(JSValue::decode(thisValue));
 }
 
-bool JSPositionError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsPositionErrorCodeGetter(ExecState&, JSPositionError&, ThrowScope& throwScope);
+
+EncodedJSValue jsPositionErrorCode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSPositionError*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSPositionError, Base>(exec, JSPositionErrorTable, thisObject, propertyName, slot);
+    return BindingCaller<JSPositionError>::attribute<jsPositionErrorCodeGetter>(state, thisValue, "code");
 }
 
-EncodedJSValue jsPositionErrorCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsPositionErrorCodeGetter(ExecState& state, JSPositionError& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSPositionError*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.code());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.code());
+    return result;
 }
 
+static inline JSValue jsPositionErrorMessageGetter(ExecState&, JSPositionError&, ThrowScope& throwScope);
 
-EncodedJSValue jsPositionErrorMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsPositionErrorMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSPositionError*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
-    return JSValue::encode(result);
+    return BindingCaller<JSPositionError>::attribute<jsPositionErrorMessageGetter>(state, thisValue, "message");
 }
 
+static inline JSValue jsPositionErrorMessageGetter(ExecState& state, JSPositionError& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.message());
+    return result;
+}
+
+bool setJSPositionErrorConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSPositionErrorPrototype* domObject = jsDynamicDowncast<JSPositionErrorPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
 
 bool JSPositionErrorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -167,31 +172,32 @@ bool JSPositionErrorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> 
 
 void JSPositionErrorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsPositionError = jsCast<JSPositionError*>(handle.slot()->asCell());
+    auto* jsPositionError = static_cast<JSPositionError*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPositionError->impl(), jsPositionError);
+    uncacheWrapper(world, &jsPositionError->wrapped(), jsPositionError);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PositionError* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<PositionError>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSPositionError>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to PositionError.
-    COMPILE_ASSERT(!__is_polymorphic(PositionError), PositionError_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(PositionError), "PositionError is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSPositionError>(globalObject, impl);
+    return createWrapper<PositionError>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PositionError& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 PositionError* JSPositionError::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSPositionError*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSPositionError*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitCSSRegionRule_h
-#define JSWebKitCSSRegionRule_h
+#pragma once
 
 #if ENABLE(CSS_REGIONS)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSWebKitCSSRegionRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = WebKitCSSRegionRule;
     static JSWebKitCSSRegionRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSRegionRule>&& impl)
     {
-        JSWebKitCSSRegionRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRule>(globalObject->vm().heap)) JSWebKitCSSRegionRule(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSRegionRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRule>(globalObject->vm().heap)) JSWebKitCSSRegionRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSRegionRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WebKitCSSRegionRule& wrapped() const
     {
-        return static_cast<WebKitCSSRegionRule&>(Base::impl());
+        return static_cast<WebKitCSSRegionRule&>(Base::wrapped());
     }
 protected:
-    JSWebKitCSSRegionRule(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSRegionRule>&&);
+    JSWebKitCSSRegionRule(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSRegionRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<WebKitCSSRegionRule> {
+    using WrapperClass = JSWebKitCSSRegionRule;
+    using ToWrappedReturnType = WebKitCSSRegionRule*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CSS_REGIONS)
-
-#endif

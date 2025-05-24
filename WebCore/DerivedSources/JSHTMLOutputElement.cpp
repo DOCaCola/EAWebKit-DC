@@ -21,22 +21,17 @@
 #include "config.h"
 #include "JSHTMLOutputElement.h"
 
-#include "DOMSettableTokenList.h"
-#include "ExceptionCode.h"
-#include "HTMLFormElement.h"
+#include "CustomElementReactionQueue.h"
 #include "HTMLNames.h"
-#include "HTMLOutputElement.h"
 #include "JSDOMBinding.h"
-#include "JSDOMSettableTokenList.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSDOMTokenList.h"
 #include "JSHTMLFormElement.h"
 #include "JSNodeList.h"
 #include "JSValidityState.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
-#include "URL.h"
-#include "ValidityState.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -46,28 +41,31 @@ namespace WebCore {
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionCheckValidity(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionReportValidity(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionSetCustomValidity(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLOutputElementHtmlFor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementForm(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLOutputElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLOutputElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementDefaultValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLOutputElementDefaultValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLOutputElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLOutputElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLOutputElementWillValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementValidity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementValidationMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementLabels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLOutputElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementHtmlFor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOutputElementHtmlFor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOutputElementForm(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOutputElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOutputElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementDefaultValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOutputElementDefaultValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOutputElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOutputElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLOutputElementWillValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementValidity(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementValidationMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementLabels(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLOutputElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLOutputElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLOutputElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLOutputElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLOutputElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLOutputElementPrototype>(vm.heap)) JSHTMLOutputElementPrototype(vm, globalObject, structure);
@@ -90,60 +88,40 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLOutputElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLOutputElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLOutputElementConstructor = JSDOMConstructorNotConstructable<JSHTMLOutputElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLOutputElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLOutputElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLOutputElementConstructor>(vm.heap)) JSHTMLOutputElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLOutputElementConstructor::s_info = { "HTMLOutputElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOutputElementConstructor) };
-
-JSHTMLOutputElementConstructor::JSHTMLOutputElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLOutputElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLOutputElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLOutputElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLOutputElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLOutputElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLOutputElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLOutputElementConstructor::s_info = { "HTMLOutputElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOutputElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLOutputElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "htmlFor", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementHtmlFor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementName) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultValue", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementDefaultValue) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementValue) },
-    { "willValidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validationMessage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLOutputElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
-    { "setCustomValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLOutputElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementConstructor) } },
+    { "htmlFor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementHtmlFor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementHtmlFor) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementName) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultValue", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementDefaultValue) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOutputElementValue) } },
+    { "willValidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validationMessage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOutputElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOutputElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "reportValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOutputElementPrototypeFunctionReportValidity), (intptr_t) (0) } },
+    { "setCustomValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOutputElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) } },
 };
 
 const ClassInfo JSHTMLOutputElementPrototype::s_info = { "HTMLOutputElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOutputElementPrototype) };
@@ -152,295 +130,372 @@ void JSHTMLOutputElementPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSHTMLOutputElementPrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().interactiveFormValidationEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("reportValidity"), strlen("reportValidity"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSHTMLOutputElement::s_info = { "HTMLOutputElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOutputElement) };
 
-JSHTMLOutputElement::JSHTMLOutputElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOutputElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLOutputElement::JSHTMLOutputElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLOutputElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLOutputElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLOutputElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLOutputElementPrototype::create(vm, globalObject, JSHTMLOutputElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLOutputElementPrototype::create(vm, globalObject, JSHTMLOutputElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLOutputElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLOutputElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLOutputElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLOutputElementHtmlFor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLOutputElement* BindingCaller<JSHTMLOutputElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "htmlFor");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "htmlFor");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.htmlFor()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsHTMLOutputElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLOutputElement* BindingCaller<JSHTMLOutputElement>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "form");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "form");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLOutputElement*>(state.thisValue());
 }
 
+static inline JSValue jsHTMLOutputElementHtmlForGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOutputElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOutputElementHtmlFor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "name");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementHtmlForGetter>(state, thisValue, "htmlFor");
 }
 
-
-EncodedJSValue jsHTMLOutputElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLOutputElementHtmlForGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "type");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMTokenList>>(state, *thisObject.globalObject(), impl.htmlFor());
+    return result;
 }
 
+static inline JSValue jsHTMLOutputElementFormGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOutputElementDefaultValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOutputElementForm(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "defaultValue");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "defaultValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.defaultValue());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementFormGetter>(state, thisValue, "form");
 }
 
-
-EncodedJSValue jsHTMLOutputElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLOutputElementFormGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "value");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "value");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.value());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLFormElement>>(state, *thisObject.globalObject(), impl.form());
+    return result;
 }
 
+static inline JSValue jsHTMLOutputElementNameGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOutputElementWillValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOutputElementName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "willValidate");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "willValidate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.willValidate());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementNameGetter>(state, thisValue, "name");
 }
 
-
-EncodedJSValue jsHTMLOutputElementValidity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLOutputElementNameGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "validity");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "validity");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.validity()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getNameAttribute());
+    return result;
 }
 
+static inline JSValue jsHTMLOutputElementTypeGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOutputElementValidationMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOutputElementType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "validationMessage");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "validationMessage");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.validationMessage());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementTypeGetter>(state, thisValue, "type");
 }
 
-
-EncodedJSValue jsHTMLOutputElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLOutputElementTypeGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOutputElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLOutputElement", "labels");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
 }
 
+static inline JSValue jsHTMLOutputElementDefaultValueGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLOutputElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLOutputElementDefaultValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLOutputElementPrototype* domObject = jsDynamicCast<JSHTMLOutputElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLOutputElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementDefaultValueGetter>(state, thisValue, "defaultValue");
 }
 
-void setJSHTMLOutputElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLOutputElementDefaultValueGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.defaultValue());
+    return result;
+}
+
+static inline JSValue jsHTMLOutputElementValueGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOutputElementValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementValueGetter>(state, thisValue, "value");
+}
+
+static inline JSValue jsHTMLOutputElementValueGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.value());
+    return result;
+}
+
+static inline JSValue jsHTMLOutputElementWillValidateGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOutputElementWillValidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementWillValidateGetter>(state, thisValue, "willValidate");
+}
+
+static inline JSValue jsHTMLOutputElementWillValidateGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.willValidate());
+    return result;
+}
+
+static inline JSValue jsHTMLOutputElementValidityGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOutputElementValidity(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementValidityGetter>(state, thisValue, "validity");
+}
+
+static inline JSValue jsHTMLOutputElementValidityGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<ValidityState>>(state, *thisObject.globalObject(), impl.validity());
+    return result;
+}
+
+static inline JSValue jsHTMLOutputElementValidationMessageGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOutputElementValidationMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementValidationMessageGetter>(state, thisValue, "validationMessage");
+}
+
+static inline JSValue jsHTMLOutputElementValidationMessageGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.validationMessage());
+    return result;
+}
+
+static inline JSValue jsHTMLOutputElementLabelsGetter(ExecState&, JSHTMLOutputElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLOutputElementLabels(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLOutputElement>::attribute<jsHTMLOutputElementLabelsGetter>(state, thisValue, "labels");
+}
+
+static inline JSValue jsHTMLOutputElementLabelsGetter(ExecState& state, JSHTMLOutputElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<NodeList>>(state, *thisObject.globalObject(), impl.labels());
+    return result;
+}
+
+EncodedJSValue jsHTMLOutputElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLOutputElementPrototype* domObject = jsDynamicDowncast<JSHTMLOutputElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLOutputElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLOutputElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOutputElement", "name");
-        else
-            throwSetterTypeError(*exec, "HTMLOutputElement", "name");
-        return;
+    JSHTMLOutputElementPrototype* domObject = jsDynamicDowncast<JSHTMLOutputElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLOutputElementHtmlForFunction(ExecState&, JSHTMLOutputElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLOutputElementHtmlFor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLOutputElement>::setAttribute<setJSHTMLOutputElementHtmlForFunction>(state, thisValue, encodedValue, "htmlFor");
+}
+
+static inline bool setJSHTMLOutputElementHtmlForFunction(ExecState& state, JSHTMLOutputElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    Ref<DOMTokenList> forwardedImpl = thisObject.wrapped().htmlFor();
+    auto& impl = forwardedImpl.get();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLOutputElementDefaultValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLOutputElementNameFunction(ExecState&, JSHTMLOutputElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLOutputElementName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOutputElement", "defaultValue");
-        else
-            throwSetterTypeError(*exec, "HTMLOutputElement", "defaultValue");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDefaultValue(nativeValue);
+    return BindingCaller<JSHTMLOutputElement>::setAttribute<setJSHTMLOutputElementNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSHTMLOutputElementNameFunction(ExecState& state, JSHTMLOutputElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLOutputElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLOutputElementDefaultValueFunction(ExecState&, JSHTMLOutputElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLOutputElementDefaultValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOutputElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOutputElement", "value");
-        else
-            throwSetterTypeError(*exec, "HTMLOutputElement", "value");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setValue(nativeValue);
+    return BindingCaller<JSHTMLOutputElement>::setAttribute<setJSHTMLOutputElementDefaultValueFunction>(state, thisValue, encodedValue, "defaultValue");
+}
+
+static inline bool setJSHTMLOutputElementDefaultValueFunction(ExecState& state, JSHTMLOutputElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDefaultValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLOutputElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSHTMLOutputElementValueFunction(ExecState&, JSHTMLOutputElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLOutputElementValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLOutputElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSHTMLOutputElement>::setAttribute<setJSHTMLOutputElementValueFunction>(state, thisValue, encodedValue, "value");
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionCheckValidity(ExecState* exec)
+static inline bool setJSHTMLOutputElementValueFunction(ExecState& state, JSHTMLOutputElement& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOutputElement", "checkValidity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOutputElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.checkValidity());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionSetCustomValidity(ExecState* exec)
+
+JSValue JSHTMLOutputElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLOutputElement* castedThis = jsDynamicCast<JSHTMLOutputElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOutputElement", "setCustomValidity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOutputElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String error = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setCustomValidity(error);
+    return getDOMConstructor<JSHTMLOutputElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionCheckValidityCaller(JSC::ExecState*, JSHTMLOutputElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionCheckValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLOutputElement>::callOperation<jsHTMLOutputElementPrototypeFunctionCheckValidityCaller>(state, "checkValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionCheckValidityCaller(JSC::ExecState* state, JSHTMLOutputElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.checkValidity()));
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionReportValidityCaller(JSC::ExecState*, JSHTMLOutputElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionReportValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLOutputElement>::callOperation<jsHTMLOutputElementPrototypeFunctionReportValidityCaller>(state, "reportValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionReportValidityCaller(JSC::ExecState* state, JSHTMLOutputElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.reportValidity()));
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionSetCustomValidityCaller(JSC::ExecState*, JSHTMLOutputElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLOutputElementPrototypeFunctionSetCustomValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLOutputElement>::callOperation<jsHTMLOutputElementPrototypeFunctionSetCustomValidityCaller>(state, "setCustomValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLOutputElementPrototypeFunctionSetCustomValidityCaller(JSC::ExecState* state, JSHTMLOutputElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto error = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setCustomValidity(WTFMove(error));
     return JSValue::encode(jsUndefined());
+}
+
+void JSHTMLOutputElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLOutputElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

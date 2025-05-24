@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLOptionsCollection_h
-#define JSHTMLOptionsCollection_h
+#pragma once
 
 #include "HTMLOptionsCollection.h"
 #include "JSHTMLCollection.h"
@@ -29,20 +28,22 @@ namespace WebCore {
 
 class JSHTMLOptionsCollection : public JSHTMLCollection {
 public:
-    typedef JSHTMLCollection Base;
+    using Base = JSHTMLCollection;
+    using DOMWrapped = HTMLOptionsCollection;
     static JSHTMLOptionsCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptionsCollection>&& impl)
     {
-        JSHTMLOptionsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionsCollection>(globalObject->vm().heap)) JSHTMLOptionsCollection(structure, globalObject, WTF::move(impl));
+        JSHTMLOptionsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionsCollection>(globalObject->vm().heap)) JSHTMLOptionsCollection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static HTMLOptionsCollection* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT HTMLOptionsCollection* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
+    static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
 
     DECLARE_INFO;
 
@@ -51,28 +52,18 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    void setLength(JSC::ExecState*, JSC::JSValue);
-
-    // Custom functions
-    JSC::JSValue remove(JSC::ExecState*);
-    HTMLOptionsCollection& impl() const
+    static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    HTMLOptionsCollection& wrapped() const
     {
-        return static_cast<HTMLOptionsCollection&>(Base::impl());
+        return static_cast<HTMLOptionsCollection&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLOptionsCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptionsCollection>&&);
+    JSHTMLOptionsCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptionsCollection>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
     void indexSetter(JSC::ExecState*, unsigned index, JSC::JSValue);
 };
 
@@ -88,8 +79,15 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLOptionsCollectio
     return &owner.get();
 }
 
+inline void* wrapperKey(HTMLOptionsCollection* wrappableObject)
+{
+    return wrappableObject;
+}
 
+
+template<> struct JSDOMWrapperConverterTraits<HTMLOptionsCollection> {
+    using WrapperClass = JSHTMLOptionsCollection;
+    using ToWrappedReturnType = HTMLOptionsCollection*;
+};
 
 } // namespace WebCore
-
-#endif

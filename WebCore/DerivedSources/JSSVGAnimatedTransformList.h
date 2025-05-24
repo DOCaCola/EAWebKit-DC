@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedTransformList_h
-#define JSSVGAnimatedTransformList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedTransformList.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedTransformList : public JSDOMWrapper {
+class JSSVGAnimatedTransformList : public JSDOMWrapper<SVGAnimatedTransformList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedTransformList>;
     static JSSVGAnimatedTransformList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedTransformList>&& impl)
     {
-        JSSVGAnimatedTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedTransformList>(globalObject->vm().heap)) JSSVGAnimatedTransformList(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedTransformList>(globalObject->vm().heap)) JSSVGAnimatedTransformList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedTransformList* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedTransformList();
 
     DECLARE_INFO;
 
@@ -52,23 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedTransformList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedTransformList* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedTransformList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedTransformList>&&);
+    JSSVGAnimatedTransformList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedTransformList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedTransformListOwner : public JSC::WeakHandleOwner {
@@ -83,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedTransform
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedTransformList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedTransformList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedTransformList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedTransformList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedTransformList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedTransformList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedTransformList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedTransformList> {
+    using WrapperClass = JSSVGAnimatedTransformList;
+    using ToWrappedReturnType = SVGAnimatedTransformList*;
+};
 
 } // namespace WebCore
-
-#endif

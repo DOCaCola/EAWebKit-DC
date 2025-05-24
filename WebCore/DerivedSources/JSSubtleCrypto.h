@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSubtleCrypto_h
-#define JSSubtleCrypto_h
+#pragma once
 
 #if ENABLE(SUBTLE_CRYPTO)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "SubtleCrypto.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSubtleCrypto : public JSDOMWrapper {
+class JSSubtleCrypto : public JSDOMWrapper<SubtleCrypto> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SubtleCrypto>;
     static JSSubtleCrypto* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SubtleCrypto>&& impl)
     {
-        JSSubtleCrypto* ptr = new (NotNull, JSC::allocateCell<JSSubtleCrypto>(globalObject->vm().heap)) JSSubtleCrypto(structure, globalObject, WTF::move(impl));
+        JSSubtleCrypto* ptr = new (NotNull, JSC::allocateCell<JSSubtleCrypto>(globalObject->vm().heap)) JSSubtleCrypto(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SubtleCrypto* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSubtleCrypto();
 
     DECLARE_INFO;
 
@@ -52,32 +51,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue encrypt(JSC::ExecState*);
-    JSC::JSValue decrypt(JSC::ExecState*);
-    JSC::JSValue sign(JSC::ExecState*);
-    JSC::JSValue verify(JSC::ExecState*);
-    JSC::JSValue digest(JSC::ExecState*);
-    JSC::JSValue generateKey(JSC::ExecState*);
-    JSC::JSValue importKey(JSC::ExecState*);
-    JSC::JSValue exportKey(JSC::ExecState*);
-    JSC::JSValue wrapKey(JSC::ExecState*);
-    JSC::JSValue unwrapKey(JSC::ExecState*);
-    SubtleCrypto& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SubtleCrypto* m_impl;
+    JSC::JSValue encrypt(JSC::ExecState&);
+    JSC::JSValue decrypt(JSC::ExecState&);
+    JSC::JSValue sign(JSC::ExecState&);
+    JSC::JSValue verify(JSC::ExecState&);
+    JSC::JSValue digest(JSC::ExecState&);
+    JSC::JSValue deriveKey(JSC::ExecState&);
+    JSC::JSValue deriveBits(JSC::ExecState&);
+    JSC::JSValue generateKey(JSC::ExecState&);
+    JSC::JSValue importKey(JSC::ExecState&);
+    JSC::JSValue exportKey(JSC::ExecState&);
+    JSC::JSValue wrapKey(JSC::ExecState&);
+    JSC::JSValue unwrapKey(JSC::ExecState&);
 protected:
-    JSSubtleCrypto(JSC::Structure*, JSDOMGlobalObject*, Ref<SubtleCrypto>&&);
+    JSSubtleCrypto(JSC::Structure*, JSDOMGlobalObject&, Ref<SubtleCrypto>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSubtleCryptoOwner : public JSC::WeakHandleOwner {
@@ -92,12 +84,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SubtleCrypto*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SubtleCrypto*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SubtleCrypto& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SubtleCrypto* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SubtleCrypto&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SubtleCrypto* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SubtleCrypto>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SubtleCrypto>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SubtleCrypto> {
+    using WrapperClass = JSSubtleCrypto;
+    using ToWrappedReturnType = SubtleCrypto*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, SubtleCrypto::KeyFormat);
+
+template<> std::optional<SubtleCrypto::KeyFormat> parseEnumeration<SubtleCrypto::KeyFormat>(JSC::ExecState&, JSC::JSValue);
+template<> SubtleCrypto::KeyFormat convertEnumeration<SubtleCrypto::KeyFormat>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<SubtleCrypto::KeyFormat>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(SUBTLE_CRYPTO)
-
-#endif

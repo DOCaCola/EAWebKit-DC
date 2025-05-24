@@ -21,15 +21,16 @@
 #include "config.h"
 #include "JSNamedNodeMap.h"
 
+#include "CustomElementReactionQueue.h"
 #include "Element.h"
-#include "ExceptionCode.h"
+#include "JSAttr.h"
 #include "JSDOMBinding.h"
-#include "JSNode.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSNodeCustom.h"
-#include "NamedNodeMap.h"
-#include "Node.h"
-#include "wtf/text/AtomicString.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -39,22 +40,23 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItem(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItem(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionItem(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItemNS(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItemNS(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsNamedNodeMapLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsNamedNodeMapConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNamedNodeMapLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNamedNodeMapConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNamedNodeMapConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSNamedNodeMapPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSNamedNodeMapPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSNamedNodeMapPrototype* ptr = new (NotNull, JSC::allocateCell<JSNamedNodeMapPrototype>(vm.heap)) JSNamedNodeMapPrototype(vm, globalObject, structure);
@@ -77,72 +79,36 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSNamedNodeMapConstructor : public DOMConstructorObject {
-private:
-    JSNamedNodeMapConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSNamedNodeMapConstructor = JSDOMConstructorNotConstructable<JSNamedNodeMap>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSNamedNodeMapConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSNamedNodeMapConstructor* ptr = new (NotNull, JSC::allocateCell<JSNamedNodeMapConstructor>(vm.heap)) JSNamedNodeMapConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSNamedNodeMapTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSNamedNodeMapTableValues[] =
+template<> JSValue JSNamedNodeMapConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNamedNodeMapConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNamedNodeMapLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSNamedNodeMapTable = { 2, 3, true, JSNamedNodeMapTableValues, 0, JSNamedNodeMapTableIndex };
-const ClassInfo JSNamedNodeMapConstructor::s_info = { "NamedNodeMapConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNamedNodeMapConstructor) };
-
-JSNamedNodeMapConstructor::JSNamedNodeMapConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSNamedNodeMapConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSNamedNodeMapConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSNamedNodeMap::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSNamedNodeMap::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("NamedNodeMap"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSNamedNodeMapConstructor::s_info = { "NamedNodeMap", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNamedNodeMapConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSNamedNodeMapPrototypeTableValues[] =
 {
-    { "getNamedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionGetNamedItem), (intptr_t) (0) },
-    { "setNamedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionSetNamedItem), (intptr_t) (0) },
-    { "removeNamedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionRemoveNamedItem), (intptr_t) (0) },
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionItem), (intptr_t) (0) },
-    { "getNamedItemNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionGetNamedItemNS), (intptr_t) (0) },
-    { "setNamedItemNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionSetNamedItemNS), (intptr_t) (0) },
-    { "removeNamedItemNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNamedNodeMapConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNamedNodeMapConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNamedNodeMapLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionItem), (intptr_t) (1) } },
+    { "getNamedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionGetNamedItem), (intptr_t) (1) } },
+    { "getNamedItemNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionGetNamedItemNS), (intptr_t) (2) } },
+    { "setNamedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionSetNamedItem), (intptr_t) (1) } },
+    { "setNamedItemNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionSetNamedItemNS), (intptr_t) (1) } },
+    { "removeNamedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionRemoveNamedItem), (intptr_t) (1) } },
+    { "removeNamedItemNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS), (intptr_t) (2) } },
 };
 
 const ClassInfo JSNamedNodeMapPrototype::s_info = { "NamedNodeMapPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNamedNodeMapPrototype) };
@@ -151,14 +117,21 @@ void JSNamedNodeMapPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSNamedNodeMapPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSNamedNodeMap::s_info = { "NamedNodeMap", &Base::s_info, &JSNamedNodeMapTable, CREATE_METHOD_TABLE(JSNamedNodeMap) };
+const ClassInfo JSNamedNodeMap::s_info = { "NamedNodeMap", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNamedNodeMap) };
 
-JSNamedNodeMap::JSNamedNodeMap(Structure* structure, JSDOMGlobalObject* globalObject, Ref<NamedNodeMap>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSNamedNodeMap::JSNamedNodeMap(Structure* structure, JSDOMGlobalObject& globalObject, Ref<NamedNodeMap>&& impl)
+    : JSDOMWrapper<NamedNodeMap>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSNamedNodeMap::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSNamedNodeMap::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -166,7 +139,7 @@ JSObject* JSNamedNodeMap::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSNamedNodeMapPrototype::create(vm, globalObject, JSNamedNodeMapPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSNamedNodeMap::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSNamedNodeMap::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSNamedNodeMap>(vm, globalObject);
 }
@@ -177,216 +150,256 @@ void JSNamedNodeMap::destroy(JSC::JSCell* cell)
     thisObject->JSNamedNodeMap::~JSNamedNodeMap();
 }
 
-JSNamedNodeMap::~JSNamedNodeMap()
-{
-    releaseImpl();
-}
-
-bool JSNamedNodeMap::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSNamedNodeMap::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSNamedNodeMap*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    JSValue proto = thisObject->prototype();
-    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(exec, propertyName))
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Attr>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
+        return true;
+    }
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
+        return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
         return false;
 
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSNamedNodeMap>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
+    if (!optionalIndex && thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().getNamedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLInterface<Attr>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly | DontEnum, toJS<IDLNullable<IDLInterface<Attr>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
-        return true;
-    }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return getStaticValueSlot<JSNamedNodeMap, Base>(exec, JSNamedNodeMapTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSNamedNodeMap::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSNamedNodeMap::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSNamedNodeMap*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<Attr>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsNamedNodeMapLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSNamedNodeMap*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsNamedNodeMapConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSNamedNodeMap* domObject = jsDynamicCast<JSNamedNodeMap*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSNamedNodeMap::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSNamedNodeMap::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSNamedNodeMap::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSNamedNodeMap*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSNamedNodeMap::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSNamedNodeMap* BindingCaller<JSNamedNodeMap>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSNamedNodeMapConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSNamedNodeMap*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItem(ExecState* exec)
+template<> inline JSNamedNodeMap* BindingCaller<JSNamedNodeMap>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "getNamedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getNamedItem(name)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSNamedNodeMap*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItem(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "setNamedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.setNamedItem(node, ec)));
+static inline JSValue jsNamedNodeMapLengthGetter(ExecState&, JSNamedNodeMap&, ThrowScope& throwScope);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue jsNamedNodeMapLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNamedNodeMap>::attribute<jsNamedNodeMapLengthGetter>(state, thisValue, "length");
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItem(ExecState* exec)
+static inline JSValue jsNamedNodeMapLengthGetter(ExecState& state, JSNamedNodeMap& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "removeNamedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.removeNamedItem(name, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue jsNamedNodeMapConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSNamedNodeMapPrototype* domObject = jsDynamicDowncast<JSNamedNodeMapPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSNamedNodeMap::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItemNS(ExecState* exec)
+bool setJSNamedNodeMapConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "getNamedItemNS");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String localName = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getNamedItemNS(namespaceURI, localName)));
-    return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSNamedNodeMapPrototype* domObject = jsDynamicDowncast<JSNamedNodeMapPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItemNS(ExecState* exec)
+JSValue JSNamedNodeMap::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "setNamedItemNS");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.setNamedItemNS(node, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return getDOMConstructor<JSNamedNodeMapConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNamedNodeMap* castedThis = jsDynamicCast<JSNamedNodeMap*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NamedNodeMap", "removeNamedItemNS");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNamedNodeMap::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String localName = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.removeNamedItemNS(namespaceURI, localName, ec)));
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionItemCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionItemCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Attr>>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionGetNamedItemCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItem(ExecState* state)
+{
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionGetNamedItemCaller>(state, "getNamedItem");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionGetNamedItemCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Attr>>>(*state, *castedThis->globalObject(), impl.getNamedItem(WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionGetNamedItemNSCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionGetNamedItemNS(ExecState* state)
+{
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionGetNamedItemNSCaller>(state, "getNamedItemNS");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionGetNamedItemNSCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto namespaceURI = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto localName = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Attr>>>(*state, *castedThis->globalObject(), impl.getNamedItemNS(WTFMove(namespaceURI), WTFMove(localName))));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionSetNamedItemCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItem(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionSetNamedItemCaller>(state, "setNamedItem");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionSetNamedItemCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto attr = convert<IDLInterface<Attr>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "attr", "NamedNodeMap", "setNamedItem", "Attr"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Attr>>>(*state, *castedThis->globalObject(), throwScope, impl.setNamedItem(*attr)));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionSetNamedItemNSCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionSetNamedItemNS(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionSetNamedItemNSCaller>(state, "setNamedItemNS");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionSetNamedItemNSCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto attr = convert<IDLInterface<Attr>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "attr", "NamedNodeMap", "setNamedItemNS", "Attr"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Attr>>>(*state, *castedThis->globalObject(), throwScope, impl.setNamedItem(*attr)));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionRemoveNamedItemCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItem(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionRemoveNamedItemCaller>(state, "removeNamedItem");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionRemoveNamedItemCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Attr>>(*state, *castedThis->globalObject(), throwScope, impl.removeNamedItem(WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionRemoveNamedItemNSCaller(JSC::ExecState*, JSNamedNodeMap*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSNamedNodeMap>::callOperation<jsNamedNodeMapPrototypeFunctionRemoveNamedItemNSCaller>(state, "removeNamedItemNS");
+}
+
+static inline JSC::EncodedJSValue jsNamedNodeMapPrototypeFunctionRemoveNamedItemNSCaller(JSC::ExecState* state, JSNamedNodeMap* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto namespaceURI = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto localName = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Attr>>(*state, *castedThis->globalObject(), throwScope, impl.removeNamedItemNS(WTFMove(namespaceURI), WTFMove(localName))));
 }
 
 bool JSNamedNodeMapOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsNamedNodeMap = jsCast<JSNamedNodeMap*>(handle.slot()->asCell());
-    Element* element = WTF::getPtr(jsNamedNodeMap->impl().element());
+    Element* element = WTF::getPtr(jsNamedNodeMap->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -395,31 +408,32 @@ bool JSNamedNodeMapOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSNamedNodeMapOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsNamedNodeMap = jsCast<JSNamedNodeMap*>(handle.slot()->asCell());
+    auto* jsNamedNodeMap = static_cast<JSNamedNodeMap*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNamedNodeMap->impl(), jsNamedNodeMap);
+    uncacheWrapper(world, &jsNamedNodeMap->wrapped(), jsNamedNodeMap);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, NamedNodeMap* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<NamedNodeMap>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSNamedNodeMap>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to NamedNodeMap.
-    COMPILE_ASSERT(!__is_polymorphic(NamedNodeMap), NamedNodeMap_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(NamedNodeMap), "NamedNodeMap is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSNamedNodeMap>(globalObject, impl);
+    return createWrapper<NamedNodeMap>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NamedNodeMap& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 NamedNodeMap* JSNamedNodeMap::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSNamedNodeMap*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSNamedNodeMap*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

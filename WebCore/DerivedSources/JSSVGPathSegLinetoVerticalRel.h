@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegLinetoVerticalRel_h
-#define JSSVGPathSegLinetoVerticalRel_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegLinetoVerticalRel : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegLinetoVerticalRel;
     static JSSVGPathSegLinetoVerticalRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoVerticalRel>&& impl)
     {
-        JSSVGPathSegLinetoVerticalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoVerticalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoVerticalRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoVerticalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoVerticalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoVerticalRel(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoVerticalRel& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegLinetoVerticalRel& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoVerticalRel&>(Base::impl());
+        return static_cast<SVGPathSegLinetoVerticalRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoVerticalRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoVerticalRel>&&);
+    JSSVGPathSegLinetoVerticalRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoVerticalRel>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegLinetoVerticalRel> {
+    using WrapperClass = JSSVGPathSegLinetoVerticalRel;
+    using ToWrappedReturnType = SVGPathSegLinetoVerticalRel*;
+};
 
 } // namespace WebCore
-
-#endif

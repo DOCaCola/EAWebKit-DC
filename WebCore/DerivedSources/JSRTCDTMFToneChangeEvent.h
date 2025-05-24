@@ -18,59 +18,60 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCDTMFToneChangeEvent_h
-#define JSRTCDTMFToneChangeEvent_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "RTCDTMFToneChangeEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSRTCDTMFToneChangeEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = RTCDTMFToneChangeEvent;
     static JSRTCDTMFToneChangeEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
     {
-        JSRTCDTMFToneChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFToneChangeEvent>(globalObject->vm().heap)) JSRTCDTMFToneChangeEvent(structure, globalObject, WTF::move(impl));
+        JSRTCDTMFToneChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFToneChangeEvent>(globalObject->vm().heap)) JSRTCDTMFToneChangeEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    RTCDTMFToneChangeEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    RTCDTMFToneChangeEvent& wrapped() const
     {
-        return static_cast<RTCDTMFToneChangeEvent&>(Base::impl());
+        return static_cast<RTCDTMFToneChangeEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCDTMFToneChangeEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDTMFToneChangeEvent>&&);
+    JSRTCDTMFToneChangeEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDTMFToneChangeEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDTMFToneChangeEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCDTMFToneChangeEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCDTMFToneChangeEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCDTMFToneChangeEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillRTCDTMFToneChangeEventInit(RTCDTMFToneChangeEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<RTCDTMFToneChangeEvent> {
+    using WrapperClass = JSRTCDTMFToneChangeEvent;
+    using ToWrappedReturnType = RTCDTMFToneChangeEvent*;
+};
+template<> RTCDTMFToneChangeEvent::Init convertDictionary<RTCDTMFToneChangeEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

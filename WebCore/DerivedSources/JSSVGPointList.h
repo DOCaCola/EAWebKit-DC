@@ -18,33 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPointList_h
-#define JSSVGPointList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedListPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGPointList.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGPointList : public JSDOMWrapper {
+class JSSVGPointList : public JSDOMWrapper<SVGPointList> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGPointList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGListPropertyTearOff<SVGPointList>>&& impl)
+    using Base = JSDOMWrapper<SVGPointList>;
+    static JSSVGPointList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPointList>&& impl)
     {
-        JSSVGPointList* ptr = new (NotNull, JSC::allocateCell<JSSVGPointList>(globalObject->vm().heap)) JSSVGPointList(structure, globalObject, WTF::move(impl));
+        JSSVGPointList* ptr = new (NotNull, JSC::allocateCell<JSSVGPointList>(globalObject->vm().heap)) JSSVGPointList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGListPropertyTearOff<SVGPointList>* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGPointList* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPointList();
 
     DECLARE_INFO;
 
@@ -53,23 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGListPropertyTearOff<SVGPointList>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGListPropertyTearOff<SVGPointList>* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGPointList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGListPropertyTearOff<SVGPointList>>&&);
+    JSSVGPointList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPointList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGPointListOwner : public JSC::WeakHandleOwner {
@@ -78,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGListPropertyTearOff<SVGPointList>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPointList*)
 {
     static NeverDestroyed<JSSVGPointListOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGListPropertyTearOff<SVGPointList>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGListPropertyTearOff<SVGPointList>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGPointList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPointList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPointList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGPointList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGPointList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGPointList> {
+    using WrapperClass = JSSVGPointList;
+    using ToWrappedReturnType = SVGPointList*;
+};
 
 } // namespace WebCore
-
-#endif

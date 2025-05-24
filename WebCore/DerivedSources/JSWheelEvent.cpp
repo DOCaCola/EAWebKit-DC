@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSWheelEvent.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMWindow.h"
-#include "JSDictionary.h"
-#include "WheelEvent.h"
+#include "JSEventTarget.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -33,25 +32,182 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> WheelEvent::Init convertDictionary<WheelEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    WheelEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue detailValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "detail"));
+    if (!detailValue.isUndefined()) {
+        result.detail = convert<IDLLong>(state, detailValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.detail = 0;
+    JSValue viewValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "view"));
+    if (!viewValue.isUndefined()) {
+        result.view = convert<IDLNullable<IDLInterface<DOMWindow>>>(state, viewValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.view = nullptr;
+    JSValue altKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "altKey"));
+    if (!altKeyValue.isUndefined()) {
+        result.altKey = convert<IDLBoolean>(state, altKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.altKey = false;
+    JSValue ctrlKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ctrlKey"));
+    if (!ctrlKeyValue.isUndefined()) {
+        result.ctrlKey = convert<IDLBoolean>(state, ctrlKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.ctrlKey = false;
+    JSValue metaKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "metaKey"));
+    if (!metaKeyValue.isUndefined()) {
+        result.metaKey = convert<IDLBoolean>(state, metaKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.metaKey = false;
+    JSValue modifierAltGraphValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "modifierAltGraph"));
+    if (!modifierAltGraphValue.isUndefined()) {
+        result.modifierAltGraph = convert<IDLBoolean>(state, modifierAltGraphValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.modifierAltGraph = false;
+    JSValue modifierCapsLockValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "modifierCapsLock"));
+    if (!modifierCapsLockValue.isUndefined()) {
+        result.modifierCapsLock = convert<IDLBoolean>(state, modifierCapsLockValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.modifierCapsLock = false;
+    JSValue shiftKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "shiftKey"));
+    if (!shiftKeyValue.isUndefined()) {
+        result.shiftKey = convert<IDLBoolean>(state, shiftKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.shiftKey = false;
+    JSValue buttonValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "button"));
+    if (!buttonValue.isUndefined()) {
+        result.button = convert<IDLUnsignedShort>(state, buttonValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.button = 0;
+    JSValue clientXValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "clientX"));
+    if (!clientXValue.isUndefined()) {
+        result.clientX = convert<IDLLong>(state, clientXValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.clientX = 0;
+    JSValue clientYValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "clientY"));
+    if (!clientYValue.isUndefined()) {
+        result.clientY = convert<IDLLong>(state, clientYValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.clientY = 0;
+    JSValue relatedTargetValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "relatedTarget"));
+    if (!relatedTargetValue.isUndefined()) {
+        result.relatedTarget = convert<IDLNullable<IDLInterface<EventTarget>>>(state, relatedTargetValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.relatedTarget = nullptr;
+    JSValue screenXValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "screenX"));
+    if (!screenXValue.isUndefined()) {
+        result.screenX = convert<IDLLong>(state, screenXValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.screenX = 0;
+    JSValue screenYValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "screenY"));
+    if (!screenYValue.isUndefined()) {
+        result.screenY = convert<IDLLong>(state, screenYValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.screenY = 0;
+    JSValue deltaModeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deltaMode"));
+    if (!deltaModeValue.isUndefined()) {
+        result.deltaMode = convert<IDLUnsignedLong>(state, deltaModeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.deltaMode = 0;
+    JSValue deltaXValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deltaX"));
+    if (!deltaXValue.isUndefined()) {
+        result.deltaX = convert<IDLDouble>(state, deltaXValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.deltaX = 0.0;
+    JSValue deltaYValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deltaY"));
+    if (!deltaYValue.isUndefined()) {
+        result.deltaY = convert<IDLDouble>(state, deltaYValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.deltaY = 0.0;
+    JSValue deltaZValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "deltaZ"));
+    if (!deltaZValue.isUndefined()) {
+        result.deltaZ = convert<IDLDouble>(state, deltaZValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.deltaZ = 0.0;
+    JSValue wheelDeltaXValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "wheelDeltaX"));
+    if (!wheelDeltaXValue.isUndefined()) {
+        result.wheelDeltaX = convert<IDLLong>(state, wheelDeltaXValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.wheelDeltaX = 0;
+    JSValue wheelDeltaYValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "wheelDeltaY"));
+    if (!wheelDeltaYValue.isUndefined()) {
+        result.wheelDeltaY = convert<IDLLong>(state, wheelDeltaYValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.wheelDeltaY = 0;
+    return result;
+}
+
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsWheelEventPrototypeFunctionInitWebKitWheelEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsWheelEventDeltaX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventDeltaY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventDeltaZ(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventDeltaMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventWheelDeltaX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventWheelDeltaY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventWheelDelta(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventWebkitDirectionInvertedFromDevice(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWheelEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventDeltaX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventDeltaY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventDeltaZ(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventDeltaMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventWheelDeltaX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventWheelDeltaY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventWheelDelta(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventWebkitDirectionInvertedFromDevice(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWheelEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWheelEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWheelEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWheelEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWheelEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSWheelEventPrototype>(vm.heap)) JSWheelEventPrototype(vm, globalObject, structure);
@@ -74,139 +230,70 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWheelEventConstructor : public DOMConstructorObject {
-private:
-    JSWheelEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSWheelEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWheelEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSWheelEventConstructor>(vm.heap)) JSWheelEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSWheelEvent(JSC::ExecState*);
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-};
+using JSWheelEventConstructor = JSDOMConstructor<JSWheelEvent>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSWheelEventConstructorTableValues[] =
 {
-    { "DOM_DELTA_PIXEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00), (intptr_t) (0) },
-    { "DOM_DELTA_LINE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x01), (intptr_t) (0) },
-    { "DOM_DELTA_PAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x02), (intptr_t) (0) },
+    { "DOM_DELTA_PIXEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00) } },
+    { "DOM_DELTA_LINE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x01) } },
+    { "DOM_DELTA_PAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x02) } },
 };
 
+static_assert(WheelEvent::DOM_DELTA_PIXEL == 0x00, "DOM_DELTA_PIXEL in WheelEvent does not match value from IDL");
+static_assert(WheelEvent::DOM_DELTA_LINE == 0x01, "DOM_DELTA_LINE in WheelEvent does not match value from IDL");
+static_assert(WheelEvent::DOM_DELTA_PAGE == 0x02, "DOM_DELTA_PAGE in WheelEvent does not match value from IDL");
 
-COMPILE_ASSERT(0x00 == WheelEvent::DOM_DELTA_PIXEL, WheelEventEnumDOM_DELTA_PIXELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x01 == WheelEvent::DOM_DELTA_LINE, WheelEventEnumDOM_DELTA_LINEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0x02 == WheelEvent::DOM_DELTA_PAGE, WheelEventEnumDOM_DELTA_PAGEIsWrongUseDoNotCheckConstants);
-
-EncodedJSValue JSC_HOST_CALL JSWheelEventConstructor::constructJSWheelEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSWheelEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSWheelEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    WheelEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillWheelEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<WheelEvent> event = WheelEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSWheelEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<WheelEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = WheelEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<WheelEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillWheelEventInit(WheelEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSWheelEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillMouseEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("deltaX", eventInit.deltaX))
-        return false;
-    if (!dictionary.tryGetProperty("deltaY", eventInit.deltaY))
-        return false;
-    if (!dictionary.tryGetProperty("deltaZ", eventInit.deltaZ))
-        return false;
-    if (!dictionary.tryGetProperty("deltaMode", eventInit.deltaMode))
-        return false;
-    if (!dictionary.tryGetProperty("wheelDeltaX", eventInit.wheelDeltaX))
-        return false;
-    if (!dictionary.tryGetProperty("wheelDeltaY", eventInit.wheelDeltaY))
-        return false;
-    return true;
+    return JSMouseEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSWheelEventConstructor::s_info = { "WheelEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWheelEventConstructor) };
-
-JSWheelEventConstructor::JSWheelEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWheelEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWheelEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWheelEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWheelEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WheelEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSWheelEventConstructorTableValues, *this);
 }
 
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-ConstructType JSWheelEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWheelEvent;
-    return ConstructTypeHost;
-}
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
+template<> const ClassInfo JSWheelEventConstructor::s_info = { "WheelEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWheelEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWheelEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "deltaX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "deltaY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "deltaZ", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaZ), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "deltaMode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "wheelDeltaX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDeltaX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "wheelDeltaY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDeltaY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "wheelDelta", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDelta), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitDirectionInvertedFromDevice", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWebkitDirectionInvertedFromDevice), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "DOM_DELTA_PIXEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00), (intptr_t) (0) },
-    { "DOM_DELTA_LINE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x01), (intptr_t) (0) },
-    { "DOM_DELTA_PAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x02), (intptr_t) (0) },
-    { "initWebKitWheelEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWheelEventPrototypeFunctionInitWebKitWheelEvent), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWheelEventConstructor) } },
+    { "deltaX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "deltaY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "deltaZ", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaZ), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "deltaMode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventDeltaMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "wheelDeltaX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDeltaX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "wheelDeltaY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDeltaY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "wheelDelta", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWheelDelta), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitDirectionInvertedFromDevice", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWheelEventWebkitDirectionInvertedFromDevice), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initWebKitWheelEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWheelEventPrototypeFunctionInitWebKitWheelEvent), (intptr_t) (0) } },
+    { "DOM_DELTA_PIXEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00) } },
+    { "DOM_DELTA_LINE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x01) } },
+    { "DOM_DELTA_PAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x02) } },
 };
 
 const ClassInfo JSWheelEventPrototype::s_info = { "WheelEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWheelEventPrototype) };
@@ -219,213 +306,269 @@ void JSWheelEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWheelEvent::s_info = { "WheelEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWheelEvent) };
 
-JSWheelEvent::JSWheelEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WheelEvent>&& impl)
-    : JSMouseEvent(structure, globalObject, WTF::move(impl))
+JSWheelEvent::JSWheelEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WheelEvent>&& impl)
+    : JSMouseEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWheelEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWheelEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWheelEventPrototype::create(vm, globalObject, JSWheelEventPrototype::createStructure(vm, globalObject, JSMouseEvent::getPrototype(vm, globalObject)));
+    return JSWheelEventPrototype::create(vm, globalObject, JSWheelEventPrototype::createStructure(vm, globalObject, JSMouseEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSWheelEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWheelEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWheelEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsWheelEventDeltaX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWheelEvent* BindingCaller<JSWheelEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "deltaX");
-        return throwGetterTypeError(*exec, "WheelEvent", "deltaX");
+    return jsDynamicDowncast<JSWheelEvent*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSWheelEvent* BindingCaller<JSWheelEvent>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSWheelEvent*>(state.thisValue());
+}
+
+static inline JSValue jsWheelEventDeltaXGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventDeltaX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventDeltaXGetter>(state, thisValue, "deltaX");
+}
+
+static inline JSValue jsWheelEventDeltaXGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.deltaX());
+    return result;
+}
+
+static inline JSValue jsWheelEventDeltaYGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventDeltaY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventDeltaYGetter>(state, thisValue, "deltaY");
+}
+
+static inline JSValue jsWheelEventDeltaYGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.deltaY());
+    return result;
+}
+
+static inline JSValue jsWheelEventDeltaZGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventDeltaZ(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventDeltaZGetter>(state, thisValue, "deltaZ");
+}
+
+static inline JSValue jsWheelEventDeltaZGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.deltaZ());
+    return result;
+}
+
+static inline JSValue jsWheelEventDeltaModeGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventDeltaMode(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventDeltaModeGetter>(state, thisValue, "deltaMode");
+}
+
+static inline JSValue jsWheelEventDeltaModeGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.deltaMode());
+    return result;
+}
+
+static inline JSValue jsWheelEventWheelDeltaXGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventWheelDeltaX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventWheelDeltaXGetter>(state, thisValue, "wheelDeltaX");
+}
+
+static inline JSValue jsWheelEventWheelDeltaXGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.wheelDeltaX());
+    return result;
+}
+
+static inline JSValue jsWheelEventWheelDeltaYGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventWheelDeltaY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventWheelDeltaYGetter>(state, thisValue, "wheelDeltaY");
+}
+
+static inline JSValue jsWheelEventWheelDeltaYGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.wheelDeltaY());
+    return result;
+}
+
+static inline JSValue jsWheelEventWheelDeltaGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventWheelDelta(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventWheelDeltaGetter>(state, thisValue, "wheelDelta");
+}
+
+static inline JSValue jsWheelEventWheelDeltaGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.wheelDelta());
+    return result;
+}
+
+static inline JSValue jsWheelEventWebkitDirectionInvertedFromDeviceGetter(ExecState&, JSWheelEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsWheelEventWebkitDirectionInvertedFromDevice(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWheelEvent>::attribute<jsWheelEventWebkitDirectionInvertedFromDeviceGetter>(state, thisValue, "webkitDirectionInvertedFromDevice");
+}
+
+static inline JSValue jsWheelEventWebkitDirectionInvertedFromDeviceGetter(ExecState& state, JSWheelEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.webkitDirectionInvertedFromDevice());
+    return result;
+}
+
+EncodedJSValue jsWheelEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWheelEventPrototype* domObject = jsDynamicDowncast<JSWheelEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWheelEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWheelEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWheelEventPrototype* domObject = jsDynamicDowncast<JSWheelEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.deltaX());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsWheelEventDeltaY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSWheelEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "deltaY");
-        return throwGetterTypeError(*exec, "WheelEvent", "deltaY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.deltaY());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSWheelEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsWheelEventPrototypeFunctionInitWebKitWheelEventCaller(JSC::ExecState*, JSWheelEvent*, JSC::ThrowScope&);
 
-EncodedJSValue jsWheelEventDeltaZ(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsWheelEventPrototypeFunctionInitWebKitWheelEvent(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "deltaZ");
-        return throwGetterTypeError(*exec, "WheelEvent", "deltaZ");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.deltaZ());
-    return JSValue::encode(result);
+    return BindingCaller<JSWheelEvent>::callOperation<jsWheelEventPrototypeFunctionInitWebKitWheelEventCaller>(state, "initWebKitWheelEvent");
 }
 
-
-EncodedJSValue jsWheelEventDeltaMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsWheelEventPrototypeFunctionInitWebKitWheelEventCaller(JSC::ExecState* state, JSWheelEvent* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "deltaMode");
-        return throwGetterTypeError(*exec, "WheelEvent", "deltaMode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.deltaMode());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWheelEventWheelDeltaX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "wheelDeltaX");
-        return throwGetterTypeError(*exec, "WheelEvent", "wheelDeltaX");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.wheelDeltaX());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWheelEventWheelDeltaY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "wheelDeltaY");
-        return throwGetterTypeError(*exec, "WheelEvent", "wheelDeltaY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.wheelDeltaY());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWheelEventWheelDelta(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "wheelDelta");
-        return throwGetterTypeError(*exec, "WheelEvent", "wheelDelta");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.wheelDelta());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWheelEventWebkitDirectionInvertedFromDevice(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWheelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WheelEvent", "webkitDirectionInvertedFromDevice");
-        return throwGetterTypeError(*exec, "WheelEvent", "webkitDirectionInvertedFromDevice");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.webkitDirectionInvertedFromDevice());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWheelEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSWheelEventPrototype* domObject = jsDynamicCast<JSWheelEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWheelEvent::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSWheelEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSWheelEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsWheelEventPrototypeFunctionInitWebKitWheelEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSWheelEvent* castedThis = jsDynamicCast<JSWheelEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WheelEvent", "initWebKitWheelEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWheelEvent::info());
-    auto& impl = castedThis->impl();
-    int wheelDeltaX = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int wheelDeltaY = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    DOMWindow* view = JSDOMWindow::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int screenX = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int screenY = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int clientX = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int clientY = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool ctrlKey = exec->argument(7).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool altKey = exec->argument(8).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool shiftKey = exec->argument(9).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool metaKey = exec->argument(10).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.initWebKitWheelEvent(wheelDeltaX, wheelDeltaY, view, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto wheelDeltaX = convert<IDLLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto wheelDeltaY = convert<IDLLong>(*state, state->argument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto view = convert<IDLNullable<IDLInterface<DOMWindow>>>(*state, state->argument(2), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 2, "view", "WheelEvent", "initWebKitWheelEvent", "DOMWindow"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenX = convert<IDLLong>(*state, state->argument(3), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenY = convert<IDLLong>(*state, state->argument(4), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto clientX = convert<IDLLong>(*state, state->argument(5), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto clientY = convert<IDLLong>(*state, state->argument(6), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto ctrlKey = convert<IDLBoolean>(*state, state->argument(7));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto altKey = convert<IDLBoolean>(*state, state->argument(8));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto shiftKey = convert<IDLBoolean>(*state, state->argument(9));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto metaKey = convert<IDLBoolean>(*state, state->argument(10));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.initWebKitWheelEvent(WTFMove(wheelDeltaX), WTFMove(wheelDeltaY), WTFMove(view), WTFMove(screenX), WTFMove(screenY), WTFMove(clientX), WTFMove(clientY), WTFMove(ctrlKey), WTFMove(altKey), WTFMove(shiftKey), WTFMove(metaKey));
     return JSValue::encode(jsUndefined());
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7WheelEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore10WheelEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WheelEvent>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WheelEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore10WheelEventE[2];
+#if COMPILER(CLANG)
+    // If this fails WheelEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(WheelEvent), "WheelEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // WheelEvent has subclasses. If WheelEvent has subclasses that get passed
+    // to toJS() we currently require WheelEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<WheelEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WheelEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

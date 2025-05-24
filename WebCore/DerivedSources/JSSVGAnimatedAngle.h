@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedAngle_h
-#define JSSVGAnimatedAngle_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedAngle.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedAngle : public JSDOMWrapper {
+class JSSVGAnimatedAngle : public JSDOMWrapper<SVGAnimatedAngle> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedAngle>;
     static JSSVGAnimatedAngle* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedAngle>&& impl)
     {
-        JSSVGAnimatedAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedAngle>(globalObject->vm().heap)) JSSVGAnimatedAngle(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedAngle>(globalObject->vm().heap)) JSSVGAnimatedAngle(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedAngle* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedAngle();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedAngle& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedAngle* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedAngle(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedAngle>&&);
+    JSSVGAnimatedAngle(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedAngle>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedAngleOwner : public JSC::WeakHandleOwner {
@@ -80,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedAngle*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedAngle*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedAngle& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedAngle* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedAngle&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedAngle* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedAngle>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedAngle>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedAngle> {
+    using WrapperClass = JSSVGAnimatedAngle;
+    using ToWrappedReturnType = SVGAnimatedAngle*;
+};
 
 } // namespace WebCore
-
-#endif

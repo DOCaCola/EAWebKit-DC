@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCanvasProxy_h
-#define JSCanvasProxy_h
+#pragma once
 
 #if ENABLE(CANVAS_PROXY)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSCanvasProxy : public JSDOMWrapper {
+class JSCanvasProxy : public JSDOMWrapper<CanvasProxy> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<CanvasProxy>;
     static JSCanvasProxy* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasProxy>&& impl)
     {
-        JSCanvasProxy* ptr = new (NotNull, JSC::allocateCell<JSCanvasProxy>(globalObject->vm().heap)) JSCanvasProxy(structure, globalObject, WTF::move(impl));
+        JSCanvasProxy* ptr = new (NotNull, JSC::allocateCell<JSCanvasProxy>(globalObject->vm().heap)) JSCanvasProxy(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static CanvasProxy* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCanvasProxy();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CanvasProxy& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CanvasProxy* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSCanvasProxy(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasProxy>&&);
+    JSCanvasProxy(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasProxy>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSCanvasProxyOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasProxy*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasProxy*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CanvasProxy& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(CanvasProxy* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasProxy&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasProxy* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CanvasProxy>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CanvasProxy>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<CanvasProxy> {
+    using WrapperClass = JSCanvasProxy;
+    using ToWrappedReturnType = CanvasProxy*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CANVAS_PROXY)
-
-#endif

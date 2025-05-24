@@ -18,68 +18,70 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDeviceMotionEvent_h
-#define JSDeviceMotionEvent_h
+#pragma once
 
 #if ENABLE(DEVICE_ORIENTATION)
 
 #include "DeviceMotionEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
 class JSDeviceMotionEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = DeviceMotionEvent;
     static JSDeviceMotionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DeviceMotionEvent>&& impl)
     {
-        JSDeviceMotionEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEvent>(globalObject->vm().heap)) JSDeviceMotionEvent(structure, globalObject, WTF::move(impl));
+        JSDeviceMotionEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEvent>(globalObject->vm().heap)) JSDeviceMotionEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    JSC::JSValue acceleration(JSC::ExecState*) const;
-    JSC::JSValue accelerationIncludingGravity(JSC::ExecState*) const;
-    JSC::JSValue rotationRate(JSC::ExecState*) const;
-    JSC::JSValue interval(JSC::ExecState*) const;
-
-    // Custom functions
-    JSC::JSValue initDeviceMotionEvent(JSC::ExecState*);
-    DeviceMotionEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    DeviceMotionEvent& wrapped() const
     {
-        return static_cast<DeviceMotionEvent&>(Base::impl());
+        return static_cast<DeviceMotionEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDeviceMotionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<DeviceMotionEvent>&&);
+    JSDeviceMotionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<DeviceMotionEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+
+template<> struct JSDOMWrapperConverterTraits<DeviceMotionEvent> {
+    using WrapperClass = JSDeviceMotionEvent;
+    using ToWrappedReturnType = DeviceMotionEvent*;
+};
+#if ENABLE(DEVICE_ORIENTATION)
+
+template<> DeviceMotionEvent::Acceleration convertDictionary<DeviceMotionEvent::Acceleration>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const DeviceMotionEvent::Acceleration&);
+
+#endif
+
+#if ENABLE(DEVICE_ORIENTATION)
+
+template<> DeviceMotionEvent::RotationRate convertDictionary<DeviceMotionEvent::RotationRate>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const DeviceMotionEvent::RotationRate&);
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(DEVICE_ORIENTATION)
-
-#endif

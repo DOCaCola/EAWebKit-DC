@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDirectoryElement_h
-#define JSHTMLDirectoryElement_h
+#pragma once
 
 #include "HTMLDirectoryElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLDirectoryElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLDirectoryElement;
     static JSHTMLDirectoryElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDirectoryElement>&& impl)
     {
-        JSHTMLDirectoryElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDirectoryElement>(globalObject->vm().heap)) JSHTMLDirectoryElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDirectoryElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDirectoryElement>(globalObject->vm().heap)) JSHTMLDirectoryElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLDirectoryElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLDirectoryElement& wrapped() const
     {
-        return static_cast<HTMLDirectoryElement&>(Base::impl());
+        return static_cast<HTMLDirectoryElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDirectoryElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDirectoryElement>&&);
+    JSHTMLDirectoryElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDirectoryElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLDirectoryElement> {
+    using WrapperClass = JSHTMLDirectoryElement;
+    using ToWrappedReturnType = HTMLDirectoryElement*;
+};
 
 } // namespace WebCore
-
-#endif

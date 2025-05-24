@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSEXTBlendMinMax_h
-#define JSEXTBlendMinMax_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSEXTBlendMinMax : public JSDOMWrapper {
+class JSEXTBlendMinMax : public JSDOMWrapper<EXTBlendMinMax> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<EXTBlendMinMax>;
     static JSEXTBlendMinMax* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTBlendMinMax>&& impl)
     {
-        JSEXTBlendMinMax* ptr = new (NotNull, JSC::allocateCell<JSEXTBlendMinMax>(globalObject->vm().heap)) JSEXTBlendMinMax(structure, globalObject, WTF::move(impl));
+        JSEXTBlendMinMax* ptr = new (NotNull, JSC::allocateCell<JSEXTBlendMinMax>(globalObject->vm().heap)) JSEXTBlendMinMax(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTBlendMinMax* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTBlendMinMax();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTBlendMinMax& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTBlendMinMax* m_impl;
 protected:
-    JSEXTBlendMinMax(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTBlendMinMax>&&);
+    JSEXTBlendMinMax(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTBlendMinMax>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSEXTBlendMinMaxOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTBlendMinMax*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTBlendMinMax*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTBlendMinMax& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(EXTBlendMinMax* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTBlendMinMax&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTBlendMinMax* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<EXTBlendMinMax>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<EXTBlendMinMax>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<EXTBlendMinMax> {
+    using WrapperClass = JSEXTBlendMinMax;
+    using ToWrappedReturnType = EXTBlendMinMax*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

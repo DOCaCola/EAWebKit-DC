@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEMergeNodeElement_h
-#define JSSVGFEMergeNodeElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEMergeNodeElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEMergeNodeElement;
     static JSSVGFEMergeNodeElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEMergeNodeElement>&& impl)
     {
-        JSSVGFEMergeNodeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMergeNodeElement>(globalObject->vm().heap)) JSSVGFEMergeNodeElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEMergeNodeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMergeNodeElement>(globalObject->vm().heap)) JSSVGFEMergeNodeElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEMergeNodeElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEMergeNodeElement& wrapped() const
     {
-        return static_cast<SVGFEMergeNodeElement&>(Base::impl());
+        return static_cast<SVGFEMergeNodeElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEMergeNodeElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEMergeNodeElement>&&);
+    JSSVGFEMergeNodeElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEMergeNodeElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEMergeNodeElement> {
+    using WrapperClass = JSSVGFEMergeNodeElement;
+    using ToWrappedReturnType = SVGFEMergeNodeElement*;
+};
 
 } // namespace WebCore
-
-#endif

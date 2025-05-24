@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLProgram_h
-#define JSWebGLProgram_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLProgram : public JSDOMWrapper {
+class JSWebGLProgram : public JSDOMWrapper<WebGLProgram> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLProgram>;
     static JSWebGLProgram* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLProgram>&& impl)
     {
-        JSWebGLProgram* ptr = new (NotNull, JSC::allocateCell<JSWebGLProgram>(globalObject->vm().heap)) JSWebGLProgram(structure, globalObject, WTF::move(impl));
+        JSWebGLProgram* ptr = new (NotNull, JSC::allocateCell<JSWebGLProgram>(globalObject->vm().heap)) JSWebGLProgram(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLProgram* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLProgram();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLProgram& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLProgram* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLProgram(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLProgram>&&);
+    JSWebGLProgram(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLProgram>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLProgramOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLProgram*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLProgram*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLProgram& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLProgram* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLProgram&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLProgram* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLProgram>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLProgram>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLProgram> {
+    using WrapperClass = JSWebGLProgram;
+    using ToWrappedReturnType = WebGLProgram*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

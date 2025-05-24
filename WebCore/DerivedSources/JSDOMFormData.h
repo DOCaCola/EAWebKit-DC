@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMFormData_h
-#define JSDOMFormData_h
+#pragma once
 
 #include "DOMFormData.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMFormData : public JSDOMWrapper {
+class JSDOMFormData : public JSDOMWrapper<DOMFormData> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMFormData>;
     static JSDOMFormData* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMFormData>&& impl)
     {
-        JSDOMFormData* ptr = new (NotNull, JSC::allocateCell<JSDOMFormData>(globalObject->vm().heap)) JSDOMFormData(structure, globalObject, WTF::move(impl));
+        JSDOMFormData* ptr = new (NotNull, JSC::allocateCell<JSDOMFormData>(globalObject->vm().heap)) JSDOMFormData(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMFormData* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMFormData();
 
     DECLARE_INFO;
 
@@ -50,24 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom functions
-    JSC::JSValue append(JSC::ExecState*);
-    DOMFormData& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMFormData* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMFormData(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMFormData>&&);
+    JSDOMFormData(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMFormData>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMFormDataOwner : public JSC::WeakHandleOwner {
@@ -82,13 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMFormData*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMFormData*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMFormData& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMFormData* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMFormData(JSC::ExecState*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMFormData&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMFormData* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMFormData>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMFormData>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<DOMFormData> {
+    using WrapperClass = JSDOMFormData;
+    using ToWrappedReturnType = DOMFormData*;
+};
 
 } // namespace WebCore
-
-#endif

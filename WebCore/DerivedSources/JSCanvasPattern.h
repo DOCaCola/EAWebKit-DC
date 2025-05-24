@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCanvasPattern_h
-#define JSCanvasPattern_h
+#pragma once
 
 #include "CanvasPattern.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSCanvasPattern : public JSDOMWrapper {
+class JSCanvasPattern : public JSDOMWrapper<CanvasPattern> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<CanvasPattern>;
     static JSCanvasPattern* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasPattern>&& impl)
     {
-        JSCanvasPattern* ptr = new (NotNull, JSC::allocateCell<JSCanvasPattern>(globalObject->vm().heap)) JSCanvasPattern(structure, globalObject, WTF::move(impl));
+        JSCanvasPattern* ptr = new (NotNull, JSC::allocateCell<JSCanvasPattern>(globalObject->vm().heap)) JSCanvasPattern(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static CanvasPattern* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCanvasPattern();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CanvasPattern& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CanvasPattern* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSCanvasPattern(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasPattern>&&);
+    JSCanvasPattern(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasPattern>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSCanvasPatternOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasPattern*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasPattern*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CanvasPattern& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(CanvasPattern* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasPattern&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasPattern* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CanvasPattern>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CanvasPattern>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<CanvasPattern> {
+    using WrapperClass = JSCanvasPattern;
+    using ToWrappedReturnType = CanvasPattern*;
+};
 
 } // namespace WebCore
-
-#endif

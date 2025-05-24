@@ -44,7 +44,7 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_acceleratedDrawingEnabled(page->settings().acceleratedDrawingEnabled())
     , m_acceleratedFiltersEnabled(page->settings().acceleratedFiltersEnabled())
     , m_aggressiveTileRetentionEnabled(page->settings().aggressiveTileRetentionEnabled())
-    , m_allowCustomScrollbarInMainFrame(page->settings().allowCustomScrollbarInMainFrame())
+    , m_allowContentSecurityPolicySourceStarToMatchAnyProtocol(page->settings().allowContentSecurityPolicySourceStarToMatchAnyProtocol())
     , m_allowDisplayOfInsecureContent(page->settings().allowDisplayOfInsecureContent())
     , m_allowFileAccessFromFileURLs(page->settings().allowFileAccessFromFileURLs())
     , m_allowMultiElementImplicitSubmission(page->settings().allowMultiElementImplicitSubmission())
@@ -55,11 +55,11 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_allowsAirPlayForMediaPlayback(page->settings().allowsAirPlayForMediaPlayback())
 #endif
     , m_allowsInlineMediaPlayback(page->settings().allowsInlineMediaPlayback())
+    , m_allowsInlineMediaPlaybackAfterFullscreen(page->settings().allowsInlineMediaPlaybackAfterFullscreen())
     , m_allowsPictureInPictureMediaPlayback(page->settings().allowsPictureInPictureMediaPlayback())
     , m_alwaysUseAcceleratedOverflowScroll(page->settings().alwaysUseAcceleratedOverflowScroll())
-    , m_antialiased2dCanvasEnabled(page->settings().antialiased2dCanvasEnabled())
+    , m_animatedImageAsyncDecodingEnabled(page->settings().animatedImageAsyncDecodingEnabled())
     , m_appleMailPaginationQuirkEnabled(page->settings().appleMailPaginationQuirkEnabled())
-    , m_applyDeviceScaleFactorInCompositor(page->settings().applyDeviceScaleFactorInCompositor())
     , m_asynchronousSpellCheckingEnabled(page->settings().asynchronousSpellCheckingEnabled())
 #if ENABLE(ATTACHMENT_ELEMENT)
     , m_attachmentElementEnabled(page->settings().attachmentElementEnabled())
@@ -79,11 +79,13 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_defaultFontSize(page->settings().defaultFontSize())
     , m_defaultTextEncodingName(page->settings().defaultTextEncodingName())
     , m_defaultVideoPosterURL(page->settings().defaultVideoPosterURL())
+    , m_deferredCSSParserEnabled(page->settings().deferredCSSParserEnabled())
     , m_delegatesPageScaling(page->settings().delegatesPageScaling())
     , m_developerExtrasEnabled(page->settings().developerExtrasEnabled())
     , m_deviceHeight(page->settings().deviceHeight())
     , m_deviceWidth(page->settings().deviceWidth())
     , m_diagnosticLoggingEnabled(page->settings().diagnosticLoggingEnabled())
+    , m_displayListDrawingEnabled(page->settings().displayListDrawingEnabled())
     , m_domTimersThrottlingEnabled(page->settings().domTimersThrottlingEnabled())
     , m_downloadableBinaryFontsEnabled(page->settings().downloadableBinaryFontsEnabled())
     , m_enableInheritURIQueryComponent(page->settings().enableInheritURIQueryComponent())
@@ -103,15 +105,19 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
 #endif
     , m_httpEquivEnabled(page->settings().httpEquivEnabled())
     , m_hyperlinkAuditingEnabled(page->settings().hyperlinkAuditingEnabled())
-    , m_ignoreViewportScalingConstraints(page->settings().ignoreViewportScalingConstraints())
 #if ENABLE(SERVICE_CONTROLS)
     , m_imageControlsEnabled(page->settings().imageControlsEnabled())
 #endif
     , m_imageSubsamplingEnabled(page->settings().imageSubsamplingEnabled())
     , m_incrementalRenderingSuppressionTimeoutInSeconds(page->settings().incrementalRenderingSuppressionTimeoutInSeconds())
+    , m_inlineMediaPlaybackRequiresPlaysInlineAttribute(page->settings().inlineMediaPlaybackRequiresPlaysInlineAttribute())
+    , m_inputEventsEnabled(page->settings().inputEventsEnabled())
     , m_interactiveFormValidationEnabled(page->settings().interactiveFormValidationEnabled())
+    , m_invisibleAutoplayNotPermitted(page->settings().invisibleAutoplayNotPermitted())
     , m_javaScriptCanAccessClipboard(page->settings().javaScriptCanAccessClipboard())
     , m_javaScriptCanOpenWindowsAutomatically(page->settings().javaScriptCanOpenWindowsAutomatically())
+    , m_langAttributeAwareFormControlUIEnabled(page->settings().langAttributeAwareFormControlUIEnabled())
+    , m_largeImageAsyncDecodingEnabled(page->settings().largeImageAsyncDecodingEnabled())
     , m_layoutFallbackWidth(page->settings().layoutFallbackWidth())
     , m_loadDeferringEnabled(page->settings().loadDeferringEnabled())
     , m_loadsSiteIconsIgnoringImageLoadingSetting(page->settings().loadsSiteIconsIgnoringImageLoadingSetting())
@@ -119,7 +125,7 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_localStorageDatabasePath(page->settings().localStorageDatabasePath())
     , m_localStorageEnabled(page->settings().localStorageEnabled())
     , m_logsPageMessagesToSystemConsoleEnabled(page->settings().logsPageMessagesToSystemConsoleEnabled())
-    , m_longMousePressEnabled(page->settings().longMousePressEnabled())
+    , m_mainContentUserGestureOverrideEnabled(page->settings().mainContentUserGestureOverrideEnabled())
     , m_maxParseDuration(page->settings().maxParseDuration())
     , m_maximumHTMLParserDOMTreeDepth(page->settings().maximumHTMLParserDOMTreeDepth())
     , m_maximumPlugInSnapshotAttempts(page->settings().maximumPlugInSnapshotAttempts())
@@ -132,30 +138,30 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
 #if ENABLE(MEDIA_SOURCE)
     , m_mediaSourceEnabled(page->settings().mediaSourceEnabled())
 #endif
-    , m_mediaStreamEnabled(page->settings().mediaStreamEnabled())
     , m_minimumAccelerated2dCanvasSize(page->settings().minimumAccelerated2dCanvasSize())
     , m_minimumFontSize(page->settings().minimumFontSize())
     , m_minimumLogicalFontSize(page->settings().minimumLogicalFontSize())
-#if ENABLE(IOS_TEXT_AUTOSIZING)
+#if ENABLE(TEXT_AUTOSIZING)
     , m_minimumZoomFontSize(page->settings().minimumZoomFontSize())
 #endif
     , m_needsIsLoadingInAPISenseQuirk(page->settings().needsIsLoadingInAPISenseQuirk())
     , m_needsKeyboardEventDisambiguationQuirks(page->settings().needsKeyboardEventDisambiguationQuirks())
     , m_needsSiteSpecificQuirks(page->settings().needsSiteSpecificQuirks())
+    , m_needsStorageAccessFromFileURLsQuirk(page->settings().needsStorageAccessFromFileURLsQuirk())
     , m_newBlockInsideInlineModelEnabled(page->settings().newBlockInsideInlineModelEnabled())
     , m_notificationsEnabled(page->settings().notificationsEnabled())
     , m_offlineWebApplicationCacheEnabled(page->settings().offlineWebApplicationCacheEnabled())
-    , m_openGLMultisamplingEnabled(page->settings().openGLMultisamplingEnabled())
     , m_pageCacheSupportsPlugins(page->settings().pageCacheSupportsPlugins())
     , m_paginateDuringLayoutEnabled(page->settings().paginateDuringLayoutEnabled())
     , m_passwordEchoDurationInSeconds(page->settings().passwordEchoDurationInSeconds())
     , m_passwordEchoEnabled(page->settings().passwordEchoEnabled())
     , m_plugInSnapshottingEnabled(page->settings().plugInSnapshottingEnabled())
+    , m_preferLowPowerWebGLRendering(page->settings().preferLowPowerWebGLRendering())
     , m_preventKeyboardDOMEventDispatch(page->settings().preventKeyboardDOMEventDispatch())
     , m_primaryPlugInSnapshotDetectionEnabled(page->settings().primaryPlugInSnapshotDetectionEnabled())
-    , m_privilegedWebGLExtensionsEnabled(page->settings().privilegedWebGLExtensionsEnabled())
+    , m_quickTimePluginReplacementEnabled(page->settings().quickTimePluginReplacementEnabled())
     , m_requestAnimationFrameEnabled(page->settings().requestAnimationFrameEnabled())
-    , m_requiresUserGestureForMediaPlayback(page->settings().requiresUserGestureForMediaPlayback())
+    , m_requiresUserGestureToLoadVideo(page->settings().requiresUserGestureToLoadVideo())
 #if ENABLE(RUBBER_BANDING)
     , m_rubberBandingForSubScrollableRegionsEnabled(page->settings().rubberBandingForSubScrollableRegionsEnabled())
 #endif
@@ -166,11 +172,12 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_scrollingCoordinatorEnabled(page->settings().scrollingCoordinatorEnabled())
     , m_scrollingTreeIncludesFrames(page->settings().scrollingTreeIncludesFrames())
     , m_selectTrailingWhitespaceEnabled(page->settings().selectTrailingWhitespaceEnabled())
-    , m_selectionIncludesAltImageText(page->settings().selectionIncludesAltImageText())
+    , m_selectionPaintingWithoutSelectionGapsEnabled(page->settings().selectionPaintingWithoutSelectionGapsEnabled())
 #if ENABLE(SERVICE_CONTROLS)
     , m_serviceControlsEnabled(page->settings().serviceControlsEnabled())
 #endif
     , m_sessionStorageQuota(page->settings().sessionStorageQuota())
+    , m_shouldConvertInvalidURLsToBlank(page->settings().shouldConvertInvalidURLsToBlank())
     , m_shouldConvertPositionStyleOnCopy(page->settings().shouldConvertPositionStyleOnCopy())
     , m_shouldDispatchJavaScriptWindowOnErrorEvents(page->settings().shouldDispatchJavaScriptWindowOnErrorEvents())
 #if ENABLE(VIDEO_TRACK)
@@ -185,6 +192,7 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_shouldInjectUserScriptsInInitialEmptyDocument(page->settings().shouldInjectUserScriptsInInitialEmptyDocument())
     , m_shouldPrintBackgrounds(page->settings().shouldPrintBackgrounds())
     , m_shouldRespectImageOrientation(page->settings().shouldRespectImageOrientation())
+    , m_shouldSuppressKeyboardInputDuringProvisionalNavigation(page->settings().shouldSuppressKeyboardInputDuringProvisionalNavigation())
     , m_shouldTransformsAffectOverflow(page->settings().shouldTransformsAffectOverflow())
     , m_showDebugBorders(page->settings().showDebugBorders())
     , m_showRepaintCounter(page->settings().showRepaintCounter())
@@ -196,16 +204,20 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_smartInsertDeleteEnabled(page->settings().smartInsertDeleteEnabled())
     , m_snapshotAllPlugIns(page->settings().snapshotAllPlugIns())
     , m_spatialNavigationEnabled(page->settings().spatialNavigationEnabled())
+    , m_springTimingFunctionEnabled(page->settings().springTimingFunctionEnabled())
     , m_standalone(page->settings().standalone())
     , m_subpixelCSSOMElementMetricsEnabled(page->settings().subpixelCSSOMElementMetricsEnabled())
     , m_suppressesIncrementalRendering(page->settings().suppressesIncrementalRendering())
-    , m_syncXHRInDocumentsEnabled(page->settings().syncXHRInDocumentsEnabled())
     , m_telephoneNumberParsingEnabled(page->settings().telephoneNumberParsingEnabled())
     , m_temporaryTileCohortRetentionEnabled(page->settings().temporaryTileCohortRetentionEnabled())
     , m_textAreasAreResizable(page->settings().textAreasAreResizable())
+#if ENABLE(TEXT_AUTOSIZING)
+    , m_textAutosizingEnabled(page->settings().textAutosizingEnabled())
+#endif
+    , m_treatIPAddressAsDomain(page->settings().treatIPAddressAsDomain())
     , m_treatsAnyTextCSSLinkAsStylesheet(page->settings().treatsAnyTextCSSLinkAsStylesheet())
     , m_unifiedTextCheckerEnabled(page->settings().unifiedTextCheckerEnabled())
-    , m_unsafePluginPastingEnabled(page->settings().unsafePluginPastingEnabled())
+    , m_useGiantTiles(page->settings().useGiantTiles())
     , m_useImageDocumentForSubframePDF(page->settings().useImageDocumentForSubframePDF())
     , m_useLegacyBackgroundSizeShorthandBehavior(page->settings().useLegacyBackgroundSizeShorthandBehavior())
     , m_useLegacyTextAlignPositionedElementBehavior(page->settings().useLegacyTextAlignPositionedElementBehavior())
@@ -215,6 +227,8 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
 #endif
     , m_usesEncodingDetector(page->settings().usesEncodingDetector())
     , m_validationMessageTimerMagnification(page->settings().validationMessageTimerMagnification())
+    , m_videoPlaybackRequiresUserGesture(page->settings().videoPlaybackRequiresUserGesture())
+    , m_visualViewportEnabled(page->settings().visualViewportEnabled())
     , m_wantsBalancedSetDefersLoadingBehavior(page->settings().wantsBalancedSetDefersLoadingBehavior())
 #if ENABLE(WEB_ARCHIVE)
     , m_webArchiveDebugModeEnabled(page->settings().webArchiveDebugModeEnabled())
@@ -225,6 +239,7 @@ InternalSettingsGenerated::InternalSettingsGenerated(Page* page)
     , m_webSecurityEnabled(page->settings().webSecurityEnabled())
     , m_windowFocusRestricted(page->settings().windowFocusRestricted())
     , m_xssAuditorEnabled(page->settings().xssAuditorEnabled())
+    , m_youTubeFlashPluginReplacementEnabled(page->settings().youTubeFlashPluginReplacementEnabled())
 {
 }
 
@@ -243,7 +258,7 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setAcceleratedDrawingEnabled(m_acceleratedDrawingEnabled);
     m_page->settings().setAcceleratedFiltersEnabled(m_acceleratedFiltersEnabled);
     m_page->settings().setAggressiveTileRetentionEnabled(m_aggressiveTileRetentionEnabled);
-    m_page->settings().setAllowCustomScrollbarInMainFrame(m_allowCustomScrollbarInMainFrame);
+    m_page->settings().setAllowContentSecurityPolicySourceStarToMatchAnyProtocol(m_allowContentSecurityPolicySourceStarToMatchAnyProtocol);
     m_page->settings().setAllowDisplayOfInsecureContent(m_allowDisplayOfInsecureContent);
     m_page->settings().setAllowFileAccessFromFileURLs(m_allowFileAccessFromFileURLs);
     m_page->settings().setAllowMultiElementImplicitSubmission(m_allowMultiElementImplicitSubmission);
@@ -254,11 +269,11 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setAllowsAirPlayForMediaPlayback(m_allowsAirPlayForMediaPlayback);
 #endif
     m_page->settings().setAllowsInlineMediaPlayback(m_allowsInlineMediaPlayback);
+    m_page->settings().setAllowsInlineMediaPlaybackAfterFullscreen(m_allowsInlineMediaPlaybackAfterFullscreen);
     m_page->settings().setAllowsPictureInPictureMediaPlayback(m_allowsPictureInPictureMediaPlayback);
     m_page->settings().setAlwaysUseAcceleratedOverflowScroll(m_alwaysUseAcceleratedOverflowScroll);
-    m_page->settings().setAntialiased2dCanvasEnabled(m_antialiased2dCanvasEnabled);
+    m_page->settings().setAnimatedImageAsyncDecodingEnabled(m_animatedImageAsyncDecodingEnabled);
     m_page->settings().setAppleMailPaginationQuirkEnabled(m_appleMailPaginationQuirkEnabled);
-    m_page->settings().setApplyDeviceScaleFactorInCompositor(m_applyDeviceScaleFactorInCompositor);
     m_page->settings().setAsynchronousSpellCheckingEnabled(m_asynchronousSpellCheckingEnabled);
 #if ENABLE(ATTACHMENT_ELEMENT)
     m_page->settings().setAttachmentElementEnabled(m_attachmentElementEnabled);
@@ -278,11 +293,13 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setDefaultFontSize(m_defaultFontSize);
     m_page->settings().setDefaultTextEncodingName(m_defaultTextEncodingName);
     m_page->settings().setDefaultVideoPosterURL(m_defaultVideoPosterURL);
+    m_page->settings().setDeferredCSSParserEnabled(m_deferredCSSParserEnabled);
     m_page->settings().setDelegatesPageScaling(m_delegatesPageScaling);
     m_page->settings().setDeveloperExtrasEnabled(m_developerExtrasEnabled);
     m_page->settings().setDeviceHeight(m_deviceHeight);
     m_page->settings().setDeviceWidth(m_deviceWidth);
     m_page->settings().setDiagnosticLoggingEnabled(m_diagnosticLoggingEnabled);
+    m_page->settings().setDisplayListDrawingEnabled(m_displayListDrawingEnabled);
     m_page->settings().setDOMTimersThrottlingEnabled(m_domTimersThrottlingEnabled);
     m_page->settings().setDownloadableBinaryFontsEnabled(m_downloadableBinaryFontsEnabled);
     m_page->settings().setEnableInheritURIQueryComponent(m_enableInheritURIQueryComponent);
@@ -302,15 +319,19 @@ void InternalSettingsGenerated::resetToConsistentState()
 #endif
     m_page->settings().setHttpEquivEnabled(m_httpEquivEnabled);
     m_page->settings().setHyperlinkAuditingEnabled(m_hyperlinkAuditingEnabled);
-    m_page->settings().setIgnoreViewportScalingConstraints(m_ignoreViewportScalingConstraints);
 #if ENABLE(SERVICE_CONTROLS)
     m_page->settings().setImageControlsEnabled(m_imageControlsEnabled);
 #endif
     m_page->settings().setImageSubsamplingEnabled(m_imageSubsamplingEnabled);
     m_page->settings().setIncrementalRenderingSuppressionTimeoutInSeconds(m_incrementalRenderingSuppressionTimeoutInSeconds);
+    m_page->settings().setInlineMediaPlaybackRequiresPlaysInlineAttribute(m_inlineMediaPlaybackRequiresPlaysInlineAttribute);
+    m_page->settings().setInputEventsEnabled(m_inputEventsEnabled);
     m_page->settings().setInteractiveFormValidationEnabled(m_interactiveFormValidationEnabled);
+    m_page->settings().setInvisibleAutoplayNotPermitted(m_invisibleAutoplayNotPermitted);
     m_page->settings().setJavaScriptCanAccessClipboard(m_javaScriptCanAccessClipboard);
     m_page->settings().setJavaScriptCanOpenWindowsAutomatically(m_javaScriptCanOpenWindowsAutomatically);
+    m_page->settings().setLangAttributeAwareFormControlUIEnabled(m_langAttributeAwareFormControlUIEnabled);
+    m_page->settings().setLargeImageAsyncDecodingEnabled(m_largeImageAsyncDecodingEnabled);
     m_page->settings().setLayoutFallbackWidth(m_layoutFallbackWidth);
     m_page->settings().setLoadDeferringEnabled(m_loadDeferringEnabled);
     m_page->settings().setLoadsSiteIconsIgnoringImageLoadingSetting(m_loadsSiteIconsIgnoringImageLoadingSetting);
@@ -318,7 +339,7 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setLocalStorageDatabasePath(m_localStorageDatabasePath);
     m_page->settings().setLocalStorageEnabled(m_localStorageEnabled);
     m_page->settings().setLogsPageMessagesToSystemConsoleEnabled(m_logsPageMessagesToSystemConsoleEnabled);
-    m_page->settings().setLongMousePressEnabled(m_longMousePressEnabled);
+    m_page->settings().setMainContentUserGestureOverrideEnabled(m_mainContentUserGestureOverrideEnabled);
     m_page->settings().setMaxParseDuration(m_maxParseDuration);
     m_page->settings().setMaximumHTMLParserDOMTreeDepth(m_maximumHTMLParserDOMTreeDepth);
     m_page->settings().setMaximumPlugInSnapshotAttempts(m_maximumPlugInSnapshotAttempts);
@@ -331,30 +352,30 @@ void InternalSettingsGenerated::resetToConsistentState()
 #if ENABLE(MEDIA_SOURCE)
     m_page->settings().setMediaSourceEnabled(m_mediaSourceEnabled);
 #endif
-    m_page->settings().setMediaStreamEnabled(m_mediaStreamEnabled);
     m_page->settings().setMinimumAccelerated2dCanvasSize(m_minimumAccelerated2dCanvasSize);
     m_page->settings().setMinimumFontSize(m_minimumFontSize);
     m_page->settings().setMinimumLogicalFontSize(m_minimumLogicalFontSize);
-#if ENABLE(IOS_TEXT_AUTOSIZING)
+#if ENABLE(TEXT_AUTOSIZING)
     m_page->settings().setMinimumZoomFontSize(m_minimumZoomFontSize);
 #endif
     m_page->settings().setNeedsIsLoadingInAPISenseQuirk(m_needsIsLoadingInAPISenseQuirk);
     m_page->settings().setNeedsKeyboardEventDisambiguationQuirks(m_needsKeyboardEventDisambiguationQuirks);
     m_page->settings().setNeedsSiteSpecificQuirks(m_needsSiteSpecificQuirks);
+    m_page->settings().setNeedsStorageAccessFromFileURLsQuirk(m_needsStorageAccessFromFileURLsQuirk);
     m_page->settings().setNewBlockInsideInlineModelEnabled(m_newBlockInsideInlineModelEnabled);
     m_page->settings().setNotificationsEnabled(m_notificationsEnabled);
     m_page->settings().setOfflineWebApplicationCacheEnabled(m_offlineWebApplicationCacheEnabled);
-    m_page->settings().setOpenGLMultisamplingEnabled(m_openGLMultisamplingEnabled);
     m_page->settings().setPageCacheSupportsPlugins(m_pageCacheSupportsPlugins);
     m_page->settings().setPaginateDuringLayoutEnabled(m_paginateDuringLayoutEnabled);
     m_page->settings().setPasswordEchoDurationInSeconds(m_passwordEchoDurationInSeconds);
     m_page->settings().setPasswordEchoEnabled(m_passwordEchoEnabled);
     m_page->settings().setPlugInSnapshottingEnabled(m_plugInSnapshottingEnabled);
+    m_page->settings().setPreferLowPowerWebGLRendering(m_preferLowPowerWebGLRendering);
     m_page->settings().setPreventKeyboardDOMEventDispatch(m_preventKeyboardDOMEventDispatch);
     m_page->settings().setPrimaryPlugInSnapshotDetectionEnabled(m_primaryPlugInSnapshotDetectionEnabled);
-    m_page->settings().setPrivilegedWebGLExtensionsEnabled(m_privilegedWebGLExtensionsEnabled);
+    m_page->settings().setQuickTimePluginReplacementEnabled(m_quickTimePluginReplacementEnabled);
     m_page->settings().setRequestAnimationFrameEnabled(m_requestAnimationFrameEnabled);
-    m_page->settings().setRequiresUserGestureForMediaPlayback(m_requiresUserGestureForMediaPlayback);
+    m_page->settings().setRequiresUserGestureToLoadVideo(m_requiresUserGestureToLoadVideo);
 #if ENABLE(RUBBER_BANDING)
     m_page->settings().setRubberBandingForSubScrollableRegionsEnabled(m_rubberBandingForSubScrollableRegionsEnabled);
 #endif
@@ -365,11 +386,12 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setScrollingCoordinatorEnabled(m_scrollingCoordinatorEnabled);
     m_page->settings().setScrollingTreeIncludesFrames(m_scrollingTreeIncludesFrames);
     m_page->settings().setSelectTrailingWhitespaceEnabled(m_selectTrailingWhitespaceEnabled);
-    m_page->settings().setSelectionIncludesAltImageText(m_selectionIncludesAltImageText);
+    m_page->settings().setSelectionPaintingWithoutSelectionGapsEnabled(m_selectionPaintingWithoutSelectionGapsEnabled);
 #if ENABLE(SERVICE_CONTROLS)
     m_page->settings().setServiceControlsEnabled(m_serviceControlsEnabled);
 #endif
     m_page->settings().setSessionStorageQuota(m_sessionStorageQuota);
+    m_page->settings().setShouldConvertInvalidURLsToBlank(m_shouldConvertInvalidURLsToBlank);
     m_page->settings().setShouldConvertPositionStyleOnCopy(m_shouldConvertPositionStyleOnCopy);
     m_page->settings().setShouldDispatchJavaScriptWindowOnErrorEvents(m_shouldDispatchJavaScriptWindowOnErrorEvents);
 #if ENABLE(VIDEO_TRACK)
@@ -384,6 +406,7 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setShouldInjectUserScriptsInInitialEmptyDocument(m_shouldInjectUserScriptsInInitialEmptyDocument);
     m_page->settings().setShouldPrintBackgrounds(m_shouldPrintBackgrounds);
     m_page->settings().setShouldRespectImageOrientation(m_shouldRespectImageOrientation);
+    m_page->settings().setShouldSuppressKeyboardInputDuringProvisionalNavigation(m_shouldSuppressKeyboardInputDuringProvisionalNavigation);
     m_page->settings().setShouldTransformsAffectOverflow(m_shouldTransformsAffectOverflow);
     m_page->settings().setShowDebugBorders(m_showDebugBorders);
     m_page->settings().setShowRepaintCounter(m_showRepaintCounter);
@@ -395,16 +418,20 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setSmartInsertDeleteEnabled(m_smartInsertDeleteEnabled);
     m_page->settings().setSnapshotAllPlugIns(m_snapshotAllPlugIns);
     m_page->settings().setSpatialNavigationEnabled(m_spatialNavigationEnabled);
+    m_page->settings().setSpringTimingFunctionEnabled(m_springTimingFunctionEnabled);
     m_page->settings().setStandalone(m_standalone);
     m_page->settings().setSubpixelCSSOMElementMetricsEnabled(m_subpixelCSSOMElementMetricsEnabled);
     m_page->settings().setSuppressesIncrementalRendering(m_suppressesIncrementalRendering);
-    m_page->settings().setSyncXHRInDocumentsEnabled(m_syncXHRInDocumentsEnabled);
     m_page->settings().setTelephoneNumberParsingEnabled(m_telephoneNumberParsingEnabled);
     m_page->settings().setTemporaryTileCohortRetentionEnabled(m_temporaryTileCohortRetentionEnabled);
     m_page->settings().setTextAreasAreResizable(m_textAreasAreResizable);
+#if ENABLE(TEXT_AUTOSIZING)
+    m_page->settings().setTextAutosizingEnabled(m_textAutosizingEnabled);
+#endif
+    m_page->settings().setTreatIPAddressAsDomain(m_treatIPAddressAsDomain);
     m_page->settings().setTreatsAnyTextCSSLinkAsStylesheet(m_treatsAnyTextCSSLinkAsStylesheet);
     m_page->settings().setUnifiedTextCheckerEnabled(m_unifiedTextCheckerEnabled);
-    m_page->settings().setUnsafePluginPastingEnabled(m_unsafePluginPastingEnabled);
+    m_page->settings().setUseGiantTiles(m_useGiantTiles);
     m_page->settings().setUseImageDocumentForSubframePDF(m_useImageDocumentForSubframePDF);
     m_page->settings().setUseLegacyBackgroundSizeShorthandBehavior(m_useLegacyBackgroundSizeShorthandBehavior);
     m_page->settings().setUseLegacyTextAlignPositionedElementBehavior(m_useLegacyTextAlignPositionedElementBehavior);
@@ -414,6 +441,8 @@ void InternalSettingsGenerated::resetToConsistentState()
 #endif
     m_page->settings().setUsesEncodingDetector(m_usesEncodingDetector);
     m_page->settings().setValidationMessageTimerMagnification(m_validationMessageTimerMagnification);
+    m_page->settings().setVideoPlaybackRequiresUserGesture(m_videoPlaybackRequiresUserGesture);
+    m_page->settings().setVisualViewportEnabled(m_visualViewportEnabled);
     m_page->settings().setWantsBalancedSetDefersLoadingBehavior(m_wantsBalancedSetDefersLoadingBehavior);
 #if ENABLE(WEB_ARCHIVE)
     m_page->settings().setWebArchiveDebugModeEnabled(m_webArchiveDebugModeEnabled);
@@ -424,6 +453,7 @@ void InternalSettingsGenerated::resetToConsistentState()
     m_page->settings().setWebSecurityEnabled(m_webSecurityEnabled);
     m_page->settings().setWindowFocusRestricted(m_windowFocusRestricted);
     m_page->settings().setXSSAuditorEnabled(m_xssAuditorEnabled);
+    m_page->settings().setYouTubeFlashPluginReplacementEnabled(m_youTubeFlashPluginReplacementEnabled);
 }
 void InternalSettingsGenerated::setDOMPasteAllowed(bool DOMPasteAllowed)
 {
@@ -470,9 +500,9 @@ void InternalSettingsGenerated::setAggressiveTileRetentionEnabled(bool aggressiv
     m_page->settings().setAggressiveTileRetentionEnabled(aggressiveTileRetentionEnabled);
 }
 
-void InternalSettingsGenerated::setAllowCustomScrollbarInMainFrame(bool allowCustomScrollbarInMainFrame)
+void InternalSettingsGenerated::setAllowContentSecurityPolicySourceStarToMatchAnyProtocol(bool allowContentSecurityPolicySourceStarToMatchAnyProtocol)
 {
-    m_page->settings().setAllowCustomScrollbarInMainFrame(allowCustomScrollbarInMainFrame);
+    m_page->settings().setAllowContentSecurityPolicySourceStarToMatchAnyProtocol(allowContentSecurityPolicySourceStarToMatchAnyProtocol);
 }
 
 void InternalSettingsGenerated::setAllowDisplayOfInsecureContent(bool allowDisplayOfInsecureContent)
@@ -519,6 +549,11 @@ void InternalSettingsGenerated::setAllowsInlineMediaPlayback(bool allowsInlineMe
     m_page->settings().setAllowsInlineMediaPlayback(allowsInlineMediaPlayback);
 }
 
+void InternalSettingsGenerated::setAllowsInlineMediaPlaybackAfterFullscreen(bool allowsInlineMediaPlaybackAfterFullscreen)
+{
+    m_page->settings().setAllowsInlineMediaPlaybackAfterFullscreen(allowsInlineMediaPlaybackAfterFullscreen);
+}
+
 void InternalSettingsGenerated::setAllowsPictureInPictureMediaPlayback(bool allowsPictureInPictureMediaPlayback)
 {
     m_page->settings().setAllowsPictureInPictureMediaPlayback(allowsPictureInPictureMediaPlayback);
@@ -529,19 +564,14 @@ void InternalSettingsGenerated::setAlwaysUseAcceleratedOverflowScroll(bool alway
     m_page->settings().setAlwaysUseAcceleratedOverflowScroll(alwaysUseAcceleratedOverflowScroll);
 }
 
-void InternalSettingsGenerated::setAntialiased2dCanvasEnabled(bool antialiased2dCanvasEnabled)
+void InternalSettingsGenerated::setAnimatedImageAsyncDecodingEnabled(bool animatedImageAsyncDecodingEnabled)
 {
-    m_page->settings().setAntialiased2dCanvasEnabled(antialiased2dCanvasEnabled);
+    m_page->settings().setAnimatedImageAsyncDecodingEnabled(animatedImageAsyncDecodingEnabled);
 }
 
 void InternalSettingsGenerated::setAppleMailPaginationQuirkEnabled(bool appleMailPaginationQuirkEnabled)
 {
     m_page->settings().setAppleMailPaginationQuirkEnabled(appleMailPaginationQuirkEnabled);
-}
-
-void InternalSettingsGenerated::setApplyDeviceScaleFactorInCompositor(bool applyDeviceScaleFactorInCompositor)
-{
-    m_page->settings().setApplyDeviceScaleFactorInCompositor(applyDeviceScaleFactorInCompositor);
 }
 
 void InternalSettingsGenerated::setAsynchronousSpellCheckingEnabled(bool asynchronousSpellCheckingEnabled)
@@ -633,6 +663,11 @@ void InternalSettingsGenerated::setDefaultVideoPosterURL(const String& defaultVi
     m_page->settings().setDefaultVideoPosterURL(defaultVideoPosterURL);
 }
 
+void InternalSettingsGenerated::setDeferredCSSParserEnabled(bool deferredCSSParserEnabled)
+{
+    m_page->settings().setDeferredCSSParserEnabled(deferredCSSParserEnabled);
+}
+
 void InternalSettingsGenerated::setDelegatesPageScaling(bool delegatesPageScaling)
 {
     m_page->settings().setDelegatesPageScaling(delegatesPageScaling);
@@ -656,6 +691,11 @@ void InternalSettingsGenerated::setDeviceWidth(int deviceWidth)
 void InternalSettingsGenerated::setDiagnosticLoggingEnabled(bool diagnosticLoggingEnabled)
 {
     m_page->settings().setDiagnosticLoggingEnabled(diagnosticLoggingEnabled);
+}
+
+void InternalSettingsGenerated::setDisplayListDrawingEnabled(bool displayListDrawingEnabled)
+{
+    m_page->settings().setDisplayListDrawingEnabled(displayListDrawingEnabled);
 }
 
 void InternalSettingsGenerated::setDOMTimersThrottlingEnabled(bool domTimersThrottlingEnabled)
@@ -747,11 +787,6 @@ void InternalSettingsGenerated::setHyperlinkAuditingEnabled(bool hyperlinkAuditi
     m_page->settings().setHyperlinkAuditingEnabled(hyperlinkAuditingEnabled);
 }
 
-void InternalSettingsGenerated::setIgnoreViewportScalingConstraints(bool ignoreViewportScalingConstraints)
-{
-    m_page->settings().setIgnoreViewportScalingConstraints(ignoreViewportScalingConstraints);
-}
-
 void InternalSettingsGenerated::setImageControlsEnabled(bool imageControlsEnabled)
 {
 #if ENABLE(SERVICE_CONTROLS)
@@ -771,9 +806,24 @@ void InternalSettingsGenerated::setIncrementalRenderingSuppressionTimeoutInSecon
     m_page->settings().setIncrementalRenderingSuppressionTimeoutInSeconds(incrementalRenderingSuppressionTimeoutInSeconds);
 }
 
+void InternalSettingsGenerated::setInlineMediaPlaybackRequiresPlaysInlineAttribute(bool inlineMediaPlaybackRequiresPlaysInlineAttribute)
+{
+    m_page->settings().setInlineMediaPlaybackRequiresPlaysInlineAttribute(inlineMediaPlaybackRequiresPlaysInlineAttribute);
+}
+
+void InternalSettingsGenerated::setInputEventsEnabled(bool inputEventsEnabled)
+{
+    m_page->settings().setInputEventsEnabled(inputEventsEnabled);
+}
+
 void InternalSettingsGenerated::setInteractiveFormValidationEnabled(bool interactiveFormValidationEnabled)
 {
     m_page->settings().setInteractiveFormValidationEnabled(interactiveFormValidationEnabled);
+}
+
+void InternalSettingsGenerated::setInvisibleAutoplayNotPermitted(bool invisibleAutoplayNotPermitted)
+{
+    m_page->settings().setInvisibleAutoplayNotPermitted(invisibleAutoplayNotPermitted);
 }
 
 void InternalSettingsGenerated::setJavaScriptCanAccessClipboard(bool javaScriptCanAccessClipboard)
@@ -784,6 +834,16 @@ void InternalSettingsGenerated::setJavaScriptCanAccessClipboard(bool javaScriptC
 void InternalSettingsGenerated::setJavaScriptCanOpenWindowsAutomatically(bool javaScriptCanOpenWindowsAutomatically)
 {
     m_page->settings().setJavaScriptCanOpenWindowsAutomatically(javaScriptCanOpenWindowsAutomatically);
+}
+
+void InternalSettingsGenerated::setLangAttributeAwareFormControlUIEnabled(bool langAttributeAwareFormControlUIEnabled)
+{
+    m_page->settings().setLangAttributeAwareFormControlUIEnabled(langAttributeAwareFormControlUIEnabled);
+}
+
+void InternalSettingsGenerated::setLargeImageAsyncDecodingEnabled(bool largeImageAsyncDecodingEnabled)
+{
+    m_page->settings().setLargeImageAsyncDecodingEnabled(largeImageAsyncDecodingEnabled);
 }
 
 void InternalSettingsGenerated::setLayoutFallbackWidth(int layoutFallbackWidth)
@@ -821,9 +881,9 @@ void InternalSettingsGenerated::setLogsPageMessagesToSystemConsoleEnabled(bool l
     m_page->settings().setLogsPageMessagesToSystemConsoleEnabled(logsPageMessagesToSystemConsoleEnabled);
 }
 
-void InternalSettingsGenerated::setLongMousePressEnabled(bool longMousePressEnabled)
+void InternalSettingsGenerated::setMainContentUserGestureOverrideEnabled(bool mainContentUserGestureOverrideEnabled)
 {
-    m_page->settings().setLongMousePressEnabled(longMousePressEnabled);
+    m_page->settings().setMainContentUserGestureOverrideEnabled(mainContentUserGestureOverrideEnabled);
 }
 
 void InternalSettingsGenerated::setMaxParseDuration(double maxParseDuration)
@@ -874,11 +934,6 @@ void InternalSettingsGenerated::setMediaSourceEnabled(bool mediaSourceEnabled)
 #endif
 }
 
-void InternalSettingsGenerated::setMediaStreamEnabled(bool mediaStreamEnabled)
-{
-    m_page->settings().setMediaStreamEnabled(mediaStreamEnabled);
-}
-
 void InternalSettingsGenerated::setMinimumAccelerated2dCanvasSize(int minimumAccelerated2dCanvasSize)
 {
     m_page->settings().setMinimumAccelerated2dCanvasSize(minimumAccelerated2dCanvasSize);
@@ -896,7 +951,7 @@ void InternalSettingsGenerated::setMinimumLogicalFontSize(int minimumLogicalFont
 
 void InternalSettingsGenerated::setMinimumZoomFontSize(float minimumZoomFontSize)
 {
-#if ENABLE(IOS_TEXT_AUTOSIZING)
+#if ENABLE(TEXT_AUTOSIZING)
     m_page->settings().setMinimumZoomFontSize(minimumZoomFontSize);
 #else
     UNUSED_PARAM(minimumZoomFontSize);
@@ -918,6 +973,11 @@ void InternalSettingsGenerated::setNeedsSiteSpecificQuirks(bool needsSiteSpecifi
     m_page->settings().setNeedsSiteSpecificQuirks(needsSiteSpecificQuirks);
 }
 
+void InternalSettingsGenerated::setNeedsStorageAccessFromFileURLsQuirk(bool needsStorageAccessFromFileURLsQuirk)
+{
+    m_page->settings().setNeedsStorageAccessFromFileURLsQuirk(needsStorageAccessFromFileURLsQuirk);
+}
+
 void InternalSettingsGenerated::setNewBlockInsideInlineModelEnabled(bool newBlockInsideInlineModelEnabled)
 {
     m_page->settings().setNewBlockInsideInlineModelEnabled(newBlockInsideInlineModelEnabled);
@@ -931,11 +991,6 @@ void InternalSettingsGenerated::setNotificationsEnabled(bool notificationsEnable
 void InternalSettingsGenerated::setOfflineWebApplicationCacheEnabled(bool offlineWebApplicationCacheEnabled)
 {
     m_page->settings().setOfflineWebApplicationCacheEnabled(offlineWebApplicationCacheEnabled);
-}
-
-void InternalSettingsGenerated::setOpenGLMultisamplingEnabled(bool openGLMultisamplingEnabled)
-{
-    m_page->settings().setOpenGLMultisamplingEnabled(openGLMultisamplingEnabled);
 }
 
 void InternalSettingsGenerated::setPageCacheSupportsPlugins(bool pageCacheSupportsPlugins)
@@ -963,6 +1018,11 @@ void InternalSettingsGenerated::setPlugInSnapshottingEnabled(bool plugInSnapshot
     m_page->settings().setPlugInSnapshottingEnabled(plugInSnapshottingEnabled);
 }
 
+void InternalSettingsGenerated::setPreferLowPowerWebGLRendering(bool preferLowPowerWebGLRendering)
+{
+    m_page->settings().setPreferLowPowerWebGLRendering(preferLowPowerWebGLRendering);
+}
+
 void InternalSettingsGenerated::setPreventKeyboardDOMEventDispatch(bool preventKeyboardDOMEventDispatch)
 {
     m_page->settings().setPreventKeyboardDOMEventDispatch(preventKeyboardDOMEventDispatch);
@@ -973,9 +1033,9 @@ void InternalSettingsGenerated::setPrimaryPlugInSnapshotDetectionEnabled(bool pr
     m_page->settings().setPrimaryPlugInSnapshotDetectionEnabled(primaryPlugInSnapshotDetectionEnabled);
 }
 
-void InternalSettingsGenerated::setPrivilegedWebGLExtensionsEnabled(bool privilegedWebGLExtensionsEnabled)
+void InternalSettingsGenerated::setQuickTimePluginReplacementEnabled(bool quickTimePluginReplacementEnabled)
 {
-    m_page->settings().setPrivilegedWebGLExtensionsEnabled(privilegedWebGLExtensionsEnabled);
+    m_page->settings().setQuickTimePluginReplacementEnabled(quickTimePluginReplacementEnabled);
 }
 
 void InternalSettingsGenerated::setRequestAnimationFrameEnabled(bool requestAnimationFrameEnabled)
@@ -983,9 +1043,9 @@ void InternalSettingsGenerated::setRequestAnimationFrameEnabled(bool requestAnim
     m_page->settings().setRequestAnimationFrameEnabled(requestAnimationFrameEnabled);
 }
 
-void InternalSettingsGenerated::setRequiresUserGestureForMediaPlayback(bool requiresUserGestureForMediaPlayback)
+void InternalSettingsGenerated::setRequiresUserGestureToLoadVideo(bool requiresUserGestureToLoadVideo)
 {
-    m_page->settings().setRequiresUserGestureForMediaPlayback(requiresUserGestureForMediaPlayback);
+    m_page->settings().setRequiresUserGestureToLoadVideo(requiresUserGestureToLoadVideo);
 }
 
 void InternalSettingsGenerated::setRubberBandingForSubScrollableRegionsEnabled(bool rubberBandingForSubScrollableRegionsEnabled)
@@ -1026,9 +1086,9 @@ void InternalSettingsGenerated::setSelectTrailingWhitespaceEnabled(bool selectTr
     m_page->settings().setSelectTrailingWhitespaceEnabled(selectTrailingWhitespaceEnabled);
 }
 
-void InternalSettingsGenerated::setSelectionIncludesAltImageText(bool selectionIncludesAltImageText)
+void InternalSettingsGenerated::setSelectionPaintingWithoutSelectionGapsEnabled(bool selectionPaintingWithoutSelectionGapsEnabled)
 {
-    m_page->settings().setSelectionIncludesAltImageText(selectionIncludesAltImageText);
+    m_page->settings().setSelectionPaintingWithoutSelectionGapsEnabled(selectionPaintingWithoutSelectionGapsEnabled);
 }
 
 void InternalSettingsGenerated::setServiceControlsEnabled(bool serviceControlsEnabled)
@@ -1043,6 +1103,11 @@ void InternalSettingsGenerated::setServiceControlsEnabled(bool serviceControlsEn
 void InternalSettingsGenerated::setSessionStorageQuota(unsigned sessionStorageQuota)
 {
     m_page->settings().setSessionStorageQuota(sessionStorageQuota);
+}
+
+void InternalSettingsGenerated::setShouldConvertInvalidURLsToBlank(bool shouldConvertInvalidURLsToBlank)
+{
+    m_page->settings().setShouldConvertInvalidURLsToBlank(shouldConvertInvalidURLsToBlank);
 }
 
 void InternalSettingsGenerated::setShouldConvertPositionStyleOnCopy(bool shouldConvertPositionStyleOnCopy)
@@ -1095,6 +1160,11 @@ void InternalSettingsGenerated::setShouldPrintBackgrounds(bool shouldPrintBackgr
 void InternalSettingsGenerated::setShouldRespectImageOrientation(bool shouldRespectImageOrientation)
 {
     m_page->settings().setShouldRespectImageOrientation(shouldRespectImageOrientation);
+}
+
+void InternalSettingsGenerated::setShouldSuppressKeyboardInputDuringProvisionalNavigation(bool shouldSuppressKeyboardInputDuringProvisionalNavigation)
+{
+    m_page->settings().setShouldSuppressKeyboardInputDuringProvisionalNavigation(shouldSuppressKeyboardInputDuringProvisionalNavigation);
 }
 
 void InternalSettingsGenerated::setShouldTransformsAffectOverflow(bool shouldTransformsAffectOverflow)
@@ -1152,6 +1222,11 @@ void InternalSettingsGenerated::setSpatialNavigationEnabled(bool spatialNavigati
     m_page->settings().setSpatialNavigationEnabled(spatialNavigationEnabled);
 }
 
+void InternalSettingsGenerated::setSpringTimingFunctionEnabled(bool springTimingFunctionEnabled)
+{
+    m_page->settings().setSpringTimingFunctionEnabled(springTimingFunctionEnabled);
+}
+
 void InternalSettingsGenerated::setStandalone(bool standalone)
 {
     m_page->settings().setStandalone(standalone);
@@ -1165,11 +1240,6 @@ void InternalSettingsGenerated::setSubpixelCSSOMElementMetricsEnabled(bool subpi
 void InternalSettingsGenerated::setSuppressesIncrementalRendering(bool suppressesIncrementalRendering)
 {
     m_page->settings().setSuppressesIncrementalRendering(suppressesIncrementalRendering);
-}
-
-void InternalSettingsGenerated::setSyncXHRInDocumentsEnabled(bool syncXHRInDocumentsEnabled)
-{
-    m_page->settings().setSyncXHRInDocumentsEnabled(syncXHRInDocumentsEnabled);
 }
 
 void InternalSettingsGenerated::setTelephoneNumberParsingEnabled(bool telephoneNumberParsingEnabled)
@@ -1187,6 +1257,20 @@ void InternalSettingsGenerated::setTextAreasAreResizable(bool textAreasAreResiza
     m_page->settings().setTextAreasAreResizable(textAreasAreResizable);
 }
 
+void InternalSettingsGenerated::setTextAutosizingEnabled(bool textAutosizingEnabled)
+{
+#if ENABLE(TEXT_AUTOSIZING)
+    m_page->settings().setTextAutosizingEnabled(textAutosizingEnabled);
+#else
+    UNUSED_PARAM(textAutosizingEnabled);
+#endif
+}
+
+void InternalSettingsGenerated::setTreatIPAddressAsDomain(bool treatIPAddressAsDomain)
+{
+    m_page->settings().setTreatIPAddressAsDomain(treatIPAddressAsDomain);
+}
+
 void InternalSettingsGenerated::setTreatsAnyTextCSSLinkAsStylesheet(bool treatsAnyTextCSSLinkAsStylesheet)
 {
     m_page->settings().setTreatsAnyTextCSSLinkAsStylesheet(treatsAnyTextCSSLinkAsStylesheet);
@@ -1197,9 +1281,9 @@ void InternalSettingsGenerated::setUnifiedTextCheckerEnabled(bool unifiedTextChe
     m_page->settings().setUnifiedTextCheckerEnabled(unifiedTextCheckerEnabled);
 }
 
-void InternalSettingsGenerated::setUnsafePluginPastingEnabled(bool unsafePluginPastingEnabled)
+void InternalSettingsGenerated::setUseGiantTiles(bool useGiantTiles)
 {
-    m_page->settings().setUnsafePluginPastingEnabled(unsafePluginPastingEnabled);
+    m_page->settings().setUseGiantTiles(useGiantTiles);
 }
 
 void InternalSettingsGenerated::setUseImageDocumentForSubframePDF(bool useImageDocumentForSubframePDF)
@@ -1239,6 +1323,16 @@ void InternalSettingsGenerated::setUsesEncodingDetector(bool usesEncodingDetecto
 void InternalSettingsGenerated::setValidationMessageTimerMagnification(int validationMessageTimerMagnification)
 {
     m_page->settings().setValidationMessageTimerMagnification(validationMessageTimerMagnification);
+}
+
+void InternalSettingsGenerated::setVideoPlaybackRequiresUserGesture(bool videoPlaybackRequiresUserGesture)
+{
+    m_page->settings().setVideoPlaybackRequiresUserGesture(videoPlaybackRequiresUserGesture);
+}
+
+void InternalSettingsGenerated::setVisualViewportEnabled(bool visualViewportEnabled)
+{
+    m_page->settings().setVisualViewportEnabled(visualViewportEnabled);
 }
 
 void InternalSettingsGenerated::setWantsBalancedSetDefersLoadingBehavior(bool wantsBalancedSetDefersLoadingBehavior)
@@ -1283,6 +1377,11 @@ void InternalSettingsGenerated::setWindowFocusRestricted(bool windowFocusRestric
 void InternalSettingsGenerated::setXSSAuditorEnabled(bool xssAuditorEnabled)
 {
     m_page->settings().setXSSAuditorEnabled(xssAuditorEnabled);
+}
+
+void InternalSettingsGenerated::setYouTubeFlashPluginReplacementEnabled(bool youTubeFlashPluginReplacementEnabled)
+{
+    m_page->settings().setYouTubeFlashPluginReplacementEnabled(youTubeFlashPluginReplacementEnabled);
 }
 
 } // namespace WebCore

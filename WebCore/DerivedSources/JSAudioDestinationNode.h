@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioDestinationNode_h
-#define JSAudioDestinationNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSAudioDestinationNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = AudioDestinationNode;
     static JSAudioDestinationNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioDestinationNode>&& impl)
     {
-        JSAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSAudioDestinationNode>(globalObject->vm().heap)) JSAudioDestinationNode(structure, globalObject, WTF::move(impl));
+        JSAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSAudioDestinationNode>(globalObject->vm().heap)) JSAudioDestinationNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioDestinationNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    AudioDestinationNode& wrapped() const
     {
-        return static_cast<AudioDestinationNode&>(Base::impl());
+        return static_cast<AudioDestinationNode&>(Base::wrapped());
     }
 protected:
-    JSAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioDestinationNode>&&);
+    JSAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioDestinationNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioDestinationNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioDestinationNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioDestinationNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioDestinationNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioDestinationNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioDestinationNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<AudioDestinationNode> {
+    using WrapperClass = JSAudioDestinationNode;
+    using ToWrappedReturnType = AudioDestinationNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

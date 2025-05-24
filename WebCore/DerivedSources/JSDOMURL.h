@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMURL_h
-#define JSDOMURL_h
+#pragma once
 
 #include "DOMURL.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMURL : public JSDOMWrapper {
+class WEBCORE_EXPORT JSDOMURL : public JSDOMWrapper<DOMURL> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMURL>;
     static JSDOMURL* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMURL>&& impl)
     {
-        JSDOMURL* ptr = new (NotNull, JSC::allocateCell<JSDOMURL>(globalObject->vm().heap)) JSDOMURL(structure, globalObject, WTF::move(impl));
+        JSDOMURL* ptr = new (NotNull, JSC::allocateCell<JSDOMURL>(globalObject->vm().heap)) JSDOMURL(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMURL* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMURL();
 
     DECLARE_INFO;
 
@@ -50,21 +48,14 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMURL& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    mutable JSC::WriteBarrier<JSC::Unknown> m_searchParams;
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-private:
-    DOMURL* m_impl;
 protected:
-    JSDOMURL(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMURL>&&);
+    JSDOMURL(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMURL>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMURLOwner : public JSC::WeakHandleOwner {
@@ -79,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMURL*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMURL*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMURL& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMURL* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMURL&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMURL* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMURL>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMURL>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMURL> {
+    using WrapperClass = JSDOMURL;
+    using ToWrappedReturnType = DOMURL*;
+};
 
 } // namespace WebCore
-
-#endif

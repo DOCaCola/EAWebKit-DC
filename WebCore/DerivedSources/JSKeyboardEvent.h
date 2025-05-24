@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSKeyboardEvent_h
-#define JSKeyboardEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSUIEvent.h"
 #include "KeyboardEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSKeyboardEvent : public JSUIEvent {
 public:
-    typedef JSUIEvent Base;
+    using Base = JSUIEvent;
+    using DOMWrapped = KeyboardEvent;
     static JSKeyboardEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<KeyboardEvent>&& impl)
     {
-        JSKeyboardEvent* ptr = new (NotNull, JSC::allocateCell<JSKeyboardEvent>(globalObject->vm().heap)) JSKeyboardEvent(structure, globalObject, WTF::move(impl));
+        JSKeyboardEvent* ptr = new (NotNull, JSC::allocateCell<JSKeyboardEvent>(globalObject->vm().heap)) JSKeyboardEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    KeyboardEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    KeyboardEvent& wrapped() const
     {
-        return static_cast<KeyboardEvent&>(Base::impl());
+        return static_cast<KeyboardEvent&>(Base::wrapped());
     }
 protected:
-    JSKeyboardEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<KeyboardEvent>&&);
+    JSKeyboardEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<KeyboardEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, KeyboardEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, KeyboardEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<KeyboardEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<KeyboardEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillKeyboardEventInit(KeyboardEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<KeyboardEvent> {
+    using WrapperClass = JSKeyboardEvent;
+    using ToWrappedReturnType = KeyboardEvent*;
+};
+template<> KeyboardEvent::Init convertDictionary<KeyboardEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

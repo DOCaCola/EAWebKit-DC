@@ -18,60 +18,60 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLContextEvent_h
-#define JSWebGLContextEvent_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "WebGLContextEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSWebGLContextEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = WebGLContextEvent;
     static JSWebGLContextEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLContextEvent>&& impl)
     {
-        JSWebGLContextEvent* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextEvent>(globalObject->vm().heap)) JSWebGLContextEvent(structure, globalObject, WTF::move(impl));
+        JSWebGLContextEvent* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextEvent>(globalObject->vm().heap)) JSWebGLContextEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLContextEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WebGLContextEvent& wrapped() const
     {
-        return static_cast<WebGLContextEvent&>(Base::impl());
+        return static_cast<WebGLContextEvent&>(Base::wrapped());
     }
 protected:
-    JSWebGLContextEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLContextEvent>&&);
+    JSWebGLContextEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLContextEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLContextEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLContextEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLContextEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLContextEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillWebGLContextEventInit(WebGLContextEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<WebGLContextEvent> {
+    using WrapperClass = JSWebGLContextEvent;
+    using ToWrappedReturnType = WebGLContextEvent*;
+};
+template<> WebGLContextEvent::Init convertDictionary<WebGLContextEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

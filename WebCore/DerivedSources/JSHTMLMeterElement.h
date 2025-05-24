@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMeterElement_h
-#define JSHTMLMeterElement_h
+#pragma once
 
 #if ENABLE(METER_ELEMENT)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSHTMLMeterElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMeterElement;
     static JSHTMLMeterElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMeterElement>&& impl)
     {
-        JSHTMLMeterElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElement>(globalObject->vm().heap)) JSHTMLMeterElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMeterElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElement>(globalObject->vm().heap)) JSHTMLMeterElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMeterElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLMeterElement& wrapped() const
     {
-        return static_cast<HTMLMeterElement&>(Base::impl());
+        return static_cast<HTMLMeterElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMeterElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMeterElement>&&);
+    JSHTMLMeterElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMeterElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLMeterElement> {
+    using WrapperClass = JSHTMLMeterElement;
+    using ToWrappedReturnType = HTMLMeterElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(METER_ELEMENT)
-
-#endif

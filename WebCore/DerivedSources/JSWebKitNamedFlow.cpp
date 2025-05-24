@@ -22,20 +22,12 @@
 #include "JSWebKitNamedFlow.h"
 
 #include "Element.h"
-#include "Event.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "JSEvent.h"
-#include "JSEventListener.h"
+#include "JSDOMConvert.h"
 #include "JSNode.h"
 #include "JSNodeCustom.h"
 #include "JSNodeList.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
-#include "URL.h"
-#include "WebKitNamedFlow.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -47,19 +39,17 @@ namespace WebCore {
 JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegionsByContent(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegions(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetContent(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsWebKitNamedFlowName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebKitNamedFlowOverset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebKitNamedFlowFirstEmptyRegionIndex(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitNamedFlowName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitNamedFlowOverset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitNamedFlowFirstEmptyRegionIndex(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebKitNamedFlowConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebKitNamedFlowPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebKitNamedFlowPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebKitNamedFlowPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamedFlowPrototype>(vm.heap)) JSWebKitNamedFlowPrototype(vm, globalObject, structure);
@@ -86,15 +76,12 @@ private:
 
 static const HashTableValue JSWebKitNamedFlowPrototypeTableValues[] =
 {
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "overset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowOverset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "firstEmptyRegionIndex", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowFirstEmptyRegionIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "getRegionsByContent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetRegionsByContent), (intptr_t) (1) },
-    { "getRegions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetRegions), (intptr_t) (0) },
-    { "getContent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetContent), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "overset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowOverset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "firstEmptyRegionIndex", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamedFlowFirstEmptyRegionIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "getRegionsByContent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetRegionsByContent), (intptr_t) (1) } },
+    { "getRegions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetRegions), (intptr_t) (0) } },
+    { "getContent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitNamedFlowPrototypeFunctionGetContent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSWebKitNamedFlowPrototype::s_info = { "WebKitNamedFlowPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamedFlowPrototype) };
@@ -107,173 +94,147 @@ void JSWebKitNamedFlowPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitNamedFlow::s_info = { "WebKitNamedFlow", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamedFlow) };
 
-JSWebKitNamedFlow::JSWebKitNamedFlow(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitNamedFlow>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebKitNamedFlow::JSWebKitNamedFlow(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitNamedFlow>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebKitNamedFlow::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebKitNamedFlow::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWebKitNamedFlowPrototype::create(vm, globalObject, JSWebKitNamedFlowPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSWebKitNamedFlowPrototype::create(vm, globalObject, JSWebKitNamedFlowPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSWebKitNamedFlow::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebKitNamedFlow::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebKitNamedFlow>(vm, globalObject);
 }
 
-void JSWebKitNamedFlow::destroy(JSC::JSCell* cell)
+template<> inline JSWebKitNamedFlow* BindingCaller<JSWebKitNamedFlow>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSWebKitNamedFlow* thisObject = static_cast<JSWebKitNamedFlow*>(cell);
-    thisObject->JSWebKitNamedFlow::~JSWebKitNamedFlow();
+    return jsDynamicDowncast<JSWebKitNamedFlow*>(JSValue::decode(thisValue));
 }
 
-JSWebKitNamedFlow::~JSWebKitNamedFlow()
+template<> inline JSWebKitNamedFlow* BindingCaller<JSWebKitNamedFlow>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSWebKitNamedFlow*>(state.thisValue());
 }
 
-EncodedJSValue jsWebKitNamedFlowName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsWebKitNamedFlowNameGetter(ExecState&, JSWebKitNamedFlow&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebKitNamedFlowName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebKitNamedFlowPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitNamedFlow", "name");
-        return throwGetterTypeError(*exec, "WebKitNamedFlow", "name");
+    return BindingCaller<JSWebKitNamedFlow>::attribute<jsWebKitNamedFlowNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsWebKitNamedFlowNameGetter(ExecState& state, JSWebKitNamedFlow& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+static inline JSValue jsWebKitNamedFlowOversetGetter(ExecState&, JSWebKitNamedFlow&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebKitNamedFlowOverset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebKitNamedFlow>::attribute<jsWebKitNamedFlowOversetGetter>(state, thisValue, "overset");
+}
+
+static inline JSValue jsWebKitNamedFlowOversetGetter(ExecState& state, JSWebKitNamedFlow& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.overset());
+    return result;
+}
+
+static inline JSValue jsWebKitNamedFlowFirstEmptyRegionIndexGetter(ExecState&, JSWebKitNamedFlow&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebKitNamedFlowFirstEmptyRegionIndex(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebKitNamedFlow>::attribute<jsWebKitNamedFlowFirstEmptyRegionIndexGetter>(state, thisValue, "firstEmptyRegionIndex");
+}
+
+static inline JSValue jsWebKitNamedFlowFirstEmptyRegionIndexGetter(ExecState& state, JSWebKitNamedFlow& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.firstEmptyRegionIndex());
+    return result;
+}
+
+bool setJSWebKitNamedFlowConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebKitNamedFlowPrototype* domObject = jsDynamicDowncast<JSWebKitNamedFlowPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetRegionsByContentCaller(JSC::ExecState*, JSWebKitNamedFlow*, JSC::ThrowScope&);
 
-EncodedJSValue jsWebKitNamedFlowOverset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegionsByContent(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebKitNamedFlowPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitNamedFlow", "overset");
-        return throwGetterTypeError(*exec, "WebKitNamedFlow", "overset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.overset());
-    return JSValue::encode(result);
+    return BindingCaller<JSWebKitNamedFlow>::callOperation<jsWebKitNamedFlowPrototypeFunctionGetRegionsByContentCaller>(state, "getRegionsByContent");
 }
 
-
-EncodedJSValue jsWebKitNamedFlowFirstEmptyRegionIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetRegionsByContentCaller(JSC::ExecState* state, JSWebKitNamedFlow* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebKitNamedFlowPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitNamedFlow", "firstEmptyRegionIndex");
-        return throwGetterTypeError(*exec, "WebKitNamedFlow", "firstEmptyRegionIndex");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.firstEmptyRegionIndex());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto contentNode = convert<IDLNullable<IDLInterface<Node>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "contentNode", "WebKitNamedFlow", "getRegionsByContent", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), impl.getRegionsByContent(WTFMove(contentNode))));
 }
 
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetRegionsCaller(JSC::ExecState*, JSWebKitNamedFlow*, JSC::ThrowScope&);
 
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegionsByContent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "getRegionsByContent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Node* contentNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getRegionsByContent(contentNode)));
-    return JSValue::encode(result);
+    return BindingCaller<JSWebKitNamedFlow>::callOperation<jsWebKitNamedFlowPrototypeFunctionGetRegionsCaller>(state, "getRegions");
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetRegions(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetRegionsCaller(JSC::ExecState* state, JSWebKitNamedFlow* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "getRegions");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getRegions()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), impl.getRegions()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetContent(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetContentCaller(JSC::ExecState*, JSWebKitNamedFlow*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionGetContent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "getContent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getContent()));
-    return JSValue::encode(result);
+    return BindingCaller<JSWebKitNamedFlow>::callOperation<jsWebKitNamedFlowPrototypeFunctionGetContentCaller>(state, "getContent");
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionAddEventListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebKitNamedFlowPrototypeFunctionGetContentCaller(JSC::ExecState* state, JSWebKitNamedFlow* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionRemoveEventListener(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsWebKitNamedFlowPrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSWebKitNamedFlow* castedThis = jsDynamicCast<JSWebKitNamedFlow*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitNamedFlow", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitNamedFlow::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), impl.getContent()));
 }
 
 void JSWebKitNamedFlow::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -281,23 +242,23 @@ void JSWebKitNamedFlow::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSWebKitNamedFlow*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSWebKitNamedFlowOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebKitNamedFlow = jsCast<JSWebKitNamedFlow*>(handle.slot()->asCell());
-    if (jsWebKitNamedFlow->impl().isFiringEventListeners())
+    if (jsWebKitNamedFlow->wrapped().isFiringEventListeners())
         return true;
-    void* root = WebCore::root(jsWebKitNamedFlow->impl().ownerNode());
+    void* root = WebCore::root(jsWebKitNamedFlow->wrapped().ownerNode());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebKitNamedFlowOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebKitNamedFlow = jsCast<JSWebKitNamedFlow*>(handle.slot()->asCell());
+    auto* jsWebKitNamedFlow = static_cast<JSWebKitNamedFlow*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebKitNamedFlow->impl(), jsWebKitNamedFlow);
+    uncacheWrapper(world, &jsWebKitNamedFlow->wrapped(), jsWebKitNamedFlow);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -308,15 +269,12 @@ extern "C" { extern void (*const __identifier("??_7WebKitNamedFlow@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15WebKitNamedFlowE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamedFlow* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebKitNamedFlow>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebKitNamedFlow>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebKitNamedFlow@WebCore@@6B@"));
 #else
@@ -324,7 +282,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamedF
 #if COMPILER(CLANG)
     // If this fails WebKitNamedFlow does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebKitNamedFlow), WebKitNamedFlow_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebKitNamedFlow), "WebKitNamedFlow is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -333,13 +291,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamedF
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebKitNamedFlow>(globalObject, impl);
+    return createWrapper<WebKitNamedFlow>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitNamedFlow& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebKitNamedFlow* JSWebKitNamedFlow::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebKitNamedFlow*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebKitNamedFlow*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -24,8 +24,10 @@
 
 #include "JSDataCue.h"
 
-#include "DataCue.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +36,17 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsDataCueData(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSDataCueData(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsDataCueConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataCueData(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataCueData(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsDataCueValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataCueValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsDataCueType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDataCueConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDataCueConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDataCuePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDataCuePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDataCuePrototype* ptr = new (NotNull, JSC::allocateCell<JSDataCuePrototype>(vm.heap)) JSDataCuePrototype(vm, globalObject, structure);
@@ -63,56 +69,102 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDataCueConstructor : public DOMConstructorObject {
-private:
-    JSDataCueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDataCueConstructor = JSDOMConstructor<JSDataCue>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDataCueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDataCueConstructor* ptr = new (NotNull, JSC::allocateCell<JSDataCueConstructor>(vm.heap)) JSDataCueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSDataCueConstructor::s_info = { "DataCueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataCueConstructor) };
-
-JSDataCueConstructor::JSDataCueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static inline EncodedJSValue constructJSDataCue1(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSDataCueConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto startTime = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto endTime = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto data = convert<IDLInterface<ArrayBuffer>>(*state, state->uncheckedArgument(2), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 2, "data", "DataCue", nullptr, "ArrayBuffer"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "DataCue");
+    auto object = DataCue::create(*context, WTFMove(startTime), WTFMove(endTime), *data);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<DataCue>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSDataCueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+static inline EncodedJSValue constructJSDataCue2(ExecState* state)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDataCue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSDataCueConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto startTime = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto endTime = convert<IDLUnrestrictedDouble>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto value = convert<IDLAny>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto type = state->argument(3).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(3), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "DataCue");
+    auto object = DataCue::create(*context, WTFMove(startTime), WTFMove(endTime), WTFMove(value), WTFMove(type));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<DataCue>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+#if ENABLE(VIDEO_TRACK)
+template<> EncodedJSValue JSC_HOST_CALL JSDataCueConstructor::construct(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(4, state->argumentCount());
+    if (argsCount == 3) {
+        JSValue distinguishingArg = state->uncheckedArgument(2);
+#if ENABLE(VIDEO_TRACK)
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSArrayBuffer::info()))
+            return constructJSDataCue1(state);
+#endif
+#if ENABLE(VIDEO_TRACK)
+        return constructJSDataCue2(state);
+#endif
+    }
+    if (argsCount == 4) {
+#if ENABLE(VIDEO_TRACK)
+        return constructJSDataCue2(state);
+#endif
+    }
+    return argsCount < 3 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
+}
+#endif
+
+template<> JSValue JSDataCueConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSTextTrackCue::getConstructor(vm, &globalObject);
+}
+
+template<> void JSDataCueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSDataCue::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DataCue"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(3), ReadOnly | DontEnum);
 }
 
-ConstructType JSDataCueConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDataCue;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDataCueConstructor::s_info = { "DataCue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataCueConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDataCuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "data", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataCueData) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataCueConstructor) } },
+    { "data", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataCueData) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDataCueValue) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataCueType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSDataCuePrototype::s_info = { "DataCuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataCuePrototype) };
@@ -125,71 +177,192 @@ void JSDataCuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDataCue::s_info = { "DataCue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataCue) };
 
-JSDataCue::JSDataCue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataCue>&& impl)
-    : JSTextTrackCue(structure, globalObject, WTF::move(impl))
+JSDataCue::JSDataCue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DataCue>&& impl)
+    : JSTextTrackCue(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDataCue::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDataCue::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSDataCuePrototype::create(vm, globalObject, JSDataCuePrototype::createStructure(vm, globalObject, JSTextTrackCue::getPrototype(vm, globalObject)));
+    return JSDataCuePrototype::create(vm, globalObject, JSDataCuePrototype::createStructure(vm, globalObject, JSTextTrackCue::prototype(vm, globalObject)));
 }
 
-JSObject* JSDataCue::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDataCue::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDataCue>(vm, globalObject);
 }
 
-EncodedJSValue jsDataCueData(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSDataCue* BindingCaller<JSDataCue>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDataCue* castedThis = jsDynamicCast<JSDataCue*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DataCue", "data");
-        return throwGetterTypeError(*exec, "DataCue", "data");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.data()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSDataCue*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsDataCueDataGetter(ExecState&, JSDataCue&, ThrowScope& throwScope);
 
-EncodedJSValue jsDataCueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDataCueData(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSDataCuePrototype* domObject = jsDynamicCast<JSDataCuePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDataCue::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSDataCue>::attribute<jsDataCueDataGetter>(state, thisValue, "data");
 }
 
-void setJSDataCueData(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsDataCueDataGetter(ExecState& state, JSDataCue& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<ArrayBuffer>>(state, *thisObject.globalObject(), impl.data());
+    return result;
+}
+
+static inline JSValue jsDataCueValueGetter(ExecState&, JSDataCue&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataCueValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDataCue>::attribute<jsDataCueValueGetter>(state, thisValue, "value");
+}
+
+static inline JSValue jsDataCueValueGetter(ExecState& state, JSDataCue& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLAny>(impl.value(state));
+    return result;
+}
+
+static inline JSValue jsDataCueTypeGetter(ExecState&, JSDataCue&, ThrowScope& throwScope);
+
+EncodedJSValue jsDataCueType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDataCue>::attribute<jsDataCueTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsDataCueTypeGetter(ExecState& state, JSDataCue& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
+}
+
+EncodedJSValue jsDataCueConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDataCuePrototype* domObject = jsDynamicDowncast<JSDataCuePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDataCue::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDataCueConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSDataCue* castedThis = jsDynamicCast<JSDataCue*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDataCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DataCue", "data");
-        else
-            throwSetterTypeError(*exec, "DataCue", "data");
-        return;
+    JSDataCuePrototype* domObject = jsDynamicDowncast<JSDataCuePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    ArrayBuffer* nativeValue = toArrayBuffer(value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setData(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSDataCueDataFunction(ExecState&, JSDataCue&, JSValue, ThrowScope&);
+
+bool setJSDataCueData(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSDataCue>::setAttribute<setJSDataCueDataFunction>(state, thisValue, encodedValue, "data");
+}
+
+static inline bool setJSDataCueDataFunction(ExecState& state, JSDataCue& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLInterface<ArrayBuffer>>(state, value, [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwAttributeTypeError(state, scope, "DataCue", "data", "ArrayBuffer"); });
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setData(*nativeValue);
+    return true;
 }
 
 
-JSValue JSDataCue::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSDataCueValueFunction(ExecState&, JSDataCue&, JSValue, ThrowScope&);
+
+bool setJSDataCueValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSDataCueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSDataCue>::setAttribute<setJSDataCueValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSDataCueValueFunction(ExecState& state, JSDataCue& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLAny>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(state, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSDataCue::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDataCueConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSDataCue::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSDataCue*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7DataCue@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore7DataCueE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DataCue>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7DataCue@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore7DataCueE[2];
+#if COMPILER(CLANG)
+    // If this fails DataCue does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(DataCue), "DataCue is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // DataCue has subclasses. If DataCue has subclasses that get passed
+    // to toJS() we currently require DataCue you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<DataCue>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataCue& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

@@ -18,32 +18,30 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCDTMFSender_h
-#define JSRTCDTMFSender_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "RTCDTMFSender.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCDTMFSender : public JSDOMWrapper {
+class JSRTCDTMFSender : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = RTCDTMFSender;
     static JSRTCDTMFSender* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFSender>&& impl)
     {
-        JSRTCDTMFSender* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFSender>(globalObject->vm().heap)) JSRTCDTMFSender(structure, globalObject, WTF::move(impl));
+        JSRTCDTMFSender* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFSender>(globalObject->vm().heap)) JSRTCDTMFSender(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCDTMFSender* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSRTCDTMFSender();
 
     DECLARE_INFO;
 
@@ -54,20 +52,14 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    RTCDTMFSender& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCDTMFSender* m_impl;
-protected:
-    JSRTCDTMFSender(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDTMFSender>&&);
-
-    void finishCreation(JSC::VM& vm)
+    RTCDTMFSender& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<RTCDTMFSender&>(Base::wrapped());
     }
+protected:
+    JSRTCDTMFSender(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDTMFSender>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCDTMFSenderOwner : public JSC::WeakHandleOwner {
@@ -82,12 +74,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCDTMFSender*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDTMFSender*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCDTMFSender& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCDTMFSender* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDTMFSender&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCDTMFSender* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCDTMFSender>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCDTMFSender>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCDTMFSender> {
+    using WrapperClass = JSRTCDTMFSender;
+    using ToWrappedReturnType = RTCDTMFSender*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

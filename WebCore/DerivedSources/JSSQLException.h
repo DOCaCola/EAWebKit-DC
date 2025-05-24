@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSQLException_h
-#define JSSQLException_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SQLException.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSSQLException : public JSDOMWrapper {
+class JSSQLException : public JSDOMWrapper<SQLException> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SQLException>;
     static JSSQLException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLException>&& impl)
     {
-        JSSQLException* ptr = new (NotNull, JSC::allocateCell<JSSQLException>(globalObject->vm().heap)) JSSQLException(structure, globalObject, WTF::move(impl));
+        JSSQLException* ptr = new (NotNull, JSC::allocateCell<JSSQLException>(globalObject->vm().heap)) JSSQLException(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLException* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSQLException();
 
     DECLARE_INFO;
 
@@ -52,23 +49,13 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SQLException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLException* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSSQLException(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLException>&&);
+    JSSQLException(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLException>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSQLExceptionOwner : public JSC::WeakHandleOwner {
@@ -83,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLException*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLException& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SQLException* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLException&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLException* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SQLException>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SQLException>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SQLException> {
+    using WrapperClass = JSSQLException;
+    using ToWrappedReturnType = SQLException*;
+};
 
 } // namespace WebCore
-
-#endif

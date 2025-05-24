@@ -18,28 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWaveShaperNode_h
-#define JSWaveShaperNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
 #include "JSAudioNode.h"
+#include "JSDOMConvert.h"
 #include "WaveShaperNode.h"
 
 namespace WebCore {
 
 class JSWaveShaperNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = WaveShaperNode;
     static JSWaveShaperNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WaveShaperNode>&& impl)
     {
-        JSWaveShaperNode* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNode>(globalObject->vm().heap)) JSWaveShaperNode(structure, globalObject, WTF::move(impl));
+        JSWaveShaperNode* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNode>(globalObject->vm().heap)) JSWaveShaperNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +49,35 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WaveShaperNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    WaveShaperNode& wrapped() const
     {
-        return static_cast<WaveShaperNode&>(Base::impl());
+        return static_cast<WaveShaperNode&>(Base::wrapped());
     }
 protected:
-    JSWaveShaperNode(JSC::Structure*, JSDOMGlobalObject*, Ref<WaveShaperNode>&&);
+    JSWaveShaperNode(JSC::Structure*, JSDOMGlobalObject&, Ref<WaveShaperNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WaveShaperNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WaveShaperNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WaveShaperNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WaveShaperNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WaveShaperNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WaveShaperNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WaveShaperNode> {
+    using WrapperClass = JSWaveShaperNode;
+    using ToWrappedReturnType = WaveShaperNode*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, WaveShaperNode::OverSampleType);
+
+template<> std::optional<WaveShaperNode::OverSampleType> parseEnumeration<WaveShaperNode::OverSampleType>(JSC::ExecState&, JSC::JSValue);
+template<> WaveShaperNode::OverSampleType convertEnumeration<WaveShaperNode::OverSampleType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<WaveShaperNode::OverSampleType>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

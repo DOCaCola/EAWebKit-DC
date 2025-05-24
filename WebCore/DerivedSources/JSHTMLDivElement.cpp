@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSHTMLDivElement.h"
 
-#include "HTMLDivElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLDivElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLDivElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLDivElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLDivElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLDivElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLDivElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLDivElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLDivElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLDivElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLDivElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLDivElementPrototype>(vm.heap)) JSHTMLDivElementPrototype(vm, globalObject, structure);
@@ -63,49 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLDivElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLDivElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLDivElementConstructor = JSDOMConstructorNotConstructable<JSHTMLDivElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLDivElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLDivElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLDivElementConstructor>(vm.heap)) JSHTMLDivElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLDivElementConstructor::s_info = { "HTMLDivElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDivElementConstructor) };
-
-JSHTMLDivElementConstructor::JSHTMLDivElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLDivElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLDivElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLDivElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLDivElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLDivElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLDivElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLDivElementConstructor::s_info = { "HTMLDivElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDivElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLDivElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDivElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDivElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLDivElementAlign) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDivElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLDivElementConstructor) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDivElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLDivElementAlign) } },
 };
 
 const ClassInfo JSHTMLDivElementPrototype::s_info = { "HTMLDivElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDivElementPrototype) };
@@ -118,69 +97,103 @@ void JSHTMLDivElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLDivElement::s_info = { "HTMLDivElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDivElement) };
 
-JSHTMLDivElement::JSHTMLDivElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDivElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLDivElement::JSHTMLDivElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLDivElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLDivElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLDivElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLDivElementPrototype::create(vm, globalObject, JSHTMLDivElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLDivElementPrototype::create(vm, globalObject, JSHTMLDivElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLDivElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLDivElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLDivElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLDivElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLDivElement* BindingCaller<JSHTMLDivElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLDivElement* castedThis = jsDynamicCast<JSHTMLDivElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLDivElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLDivElement", "align");
-        return throwGetterTypeError(*exec, "HTMLDivElement", "align");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLDivElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLDivElementAlignGetter(ExecState&, JSHTMLDivElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLDivElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLDivElementAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLDivElementPrototype* domObject = jsDynamicCast<JSHTMLDivElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLDivElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLDivElement>::attribute<jsHTMLDivElementAlignGetter>(state, thisValue, "align");
 }
 
-void setJSHTMLDivElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLDivElementAlignGetter(ExecState& state, JSHTMLDivElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::alignAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLDivElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLDivElementPrototype* domObject = jsDynamicDowncast<JSHTMLDivElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLDivElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLDivElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLDivElement* castedThis = jsDynamicCast<JSHTMLDivElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLDivElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLDivElement", "align");
-        else
-            throwSetterTypeError(*exec, "HTMLDivElement", "align");
-        return;
+    JSHTMLDivElementPrototype* domObject = jsDynamicDowncast<JSHTMLDivElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLDivElementAlignFunction(ExecState&, JSHTMLDivElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLDivElementAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLDivElement>::setAttribute<setJSHTMLDivElementAlignFunction>(state, thisValue, encodedValue, "align");
+}
+
+static inline bool setJSHTMLDivElementAlignFunction(ExecState& state, JSHTMLDivElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLDivElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLDivElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLDivElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLDivElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLDivElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLDivElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

@@ -24,13 +24,11 @@
 
 #include "JSMediaSession.h"
 
-#include "Dictionary.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSMediaRemoteControls.h"
-#include "MediaRemoteControls.h"
-#include "MediaSession.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
@@ -38,20 +36,106 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, MediaSession::Kind enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("content"),
+        ASCIILiteral("transient"),
+        ASCIILiteral("transient-solo"),
+        ASCIILiteral("ambient"),
+    };
+    static_assert(static_cast<size_t>(MediaSession::Kind::Content) == 0, "MediaSession::Kind::Content is not 0 as expected");
+    static_assert(static_cast<size_t>(MediaSession::Kind::Transient) == 1, "MediaSession::Kind::Transient is not 1 as expected");
+    static_assert(static_cast<size_t>(MediaSession::Kind::TransientSolo) == 2, "MediaSession::Kind::TransientSolo is not 2 as expected");
+    static_assert(static_cast<size_t>(MediaSession::Kind::Ambient) == 3, "MediaSession::Kind::Ambient is not 3 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<MediaSession::Kind> parseEnumeration<MediaSession::Kind>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "content")
+        return MediaSession::Kind::Content;
+    if (stringValue == "transient")
+        return MediaSession::Kind::Transient;
+    if (stringValue == "transient-solo")
+        return MediaSession::Kind::TransientSolo;
+    if (stringValue == "ambient")
+        return MediaSession::Kind::Ambient;
+    return std::nullopt;
+}
+
+template<> MediaSession::Kind convertEnumeration<MediaSession::Kind>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<MediaSession::Kind>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<MediaSession::Kind>()
+{
+    return "\"content\", \"transient\", \"transient-solo\", \"ambient\"";
+}
+
+template<> MediaSession::Metadata convertDictionary<MediaSession::Metadata>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    MediaSession::Metadata result;
+    JSValue albumValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "album"));
+    if (!albumValue.isUndefined()) {
+        result.album = convert<IDLDOMString>(state, albumValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue artistValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "artist"));
+    if (!artistValue.isUndefined()) {
+        result.artist = convert<IDLDOMString>(state, artistValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue artworkValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "artwork"));
+    if (!artworkValue.isUndefined()) {
+        result.artwork = convert<IDLUSVString>(state, artworkValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue titleValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "title"));
+    if (!titleValue.isUndefined()) {
+        result.title = convert<IDLDOMString>(state, titleValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionSetMetadata(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionReleaseSession(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionDeactivate(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaSessionKind(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaSessionControls(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaSessionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSessionKind(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSessionControls(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSessionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSessionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaSessionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaSessionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaSessionPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaSessionPrototype>(vm.heap)) JSMediaSessionPrototype(vm, globalObject, structure);
@@ -74,80 +158,38 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaSessionConstructor : public DOMConstructorObject {
-private:
-    JSMediaSessionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSMediaSessionConstructor = JSDOMConstructor<JSMediaSession>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaSessionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaSessionConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaSessionConstructor>(vm.heap)) JSMediaSessionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaSession(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSMediaSessionConstructor::constructJSMediaSession(ExecState* exec)
+template<> JSC::EncodedJSValue JSC_HOST_CALL JSMediaSessionConstructor::construct(JSC::ExecState* exec)
 {
-    auto* castedThis = jsCast<JSMediaSessionConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* kindString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& kind = kindString->value(exec);
-    if (kind != "content" && kind != "transient" && kind != "transient-solo" && kind != "ambient")
-        return throwArgumentMustBeEnumError(*exec, 0, "kind", "MediaSession", nullptr, "\"content\", \"transient\", \"transient-solo\", \"ambient\"");
-    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaSession");
-    RefPtr<MediaSession> object = MediaSession::create(*context, kind);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    ASSERT(exec);
+    return constructJSMediaSession(*exec);
 }
 
-const ClassInfo JSMediaSessionConstructor::s_info = { "MediaSessionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSessionConstructor) };
-
-JSMediaSessionConstructor::JSMediaSessionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSMediaSessionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSMediaSessionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSMediaSessionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaSession::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaSession::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaSession"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSMediaSessionConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaSession;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaSessionConstructor::s_info = { "MediaSession", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSessionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaSessionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kind", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "controls", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionControls), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "setMetadata", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSessionPrototypeFunctionSetMetadata), (intptr_t) (1) },
-    { "releaseSession", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSessionPrototypeFunctionReleaseSession), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSessionConstructor) } },
+    { "kind", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "controls", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSessionControls), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setMetadata", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSessionPrototypeFunctionSetMetadata), (intptr_t) (1) } },
+    { "deactivate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSessionPrototypeFunctionDeactivate), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaSessionPrototype::s_info = { "MediaSessionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSessionPrototype) };
@@ -160,10 +202,16 @@ void JSMediaSessionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaSession::s_info = { "MediaSession", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSession) };
 
-JSMediaSession::JSMediaSession(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSession>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaSession::JSMediaSession(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaSession>&& impl)
+    : JSDOMWrapper<MediaSession>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaSession::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaSession::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -171,7 +219,7 @@ JSObject* JSMediaSession::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSMediaSessionPrototype::create(vm, globalObject, JSMediaSessionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMediaSession::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaSession::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaSession>(vm, globalObject);
 }
@@ -182,87 +230,110 @@ void JSMediaSession::destroy(JSC::JSCell* cell)
     thisObject->JSMediaSession::~JSMediaSession();
 }
 
-JSMediaSession::~JSMediaSession()
+template<> inline JSMediaSession* BindingCaller<JSMediaSession>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMediaSession*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsMediaSessionKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaSession* BindingCaller<JSMediaSession>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSession* castedThis = jsDynamicCast<JSMediaSession*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSessionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSession", "kind");
-        return throwGetterTypeError(*exec, "MediaSession", "kind");
+    return jsDynamicDowncast<JSMediaSession*>(state.thisValue());
+}
+
+static inline JSValue jsMediaSessionKindGetter(ExecState&, JSMediaSession&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSessionKind(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSession>::attribute<jsMediaSessionKindGetter>(state, thisValue, "kind");
+}
+
+static inline JSValue jsMediaSessionKindGetter(ExecState& state, JSMediaSession& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<MediaSession::Kind>>(state, impl.kind());
+    return result;
+}
+
+static inline JSValue jsMediaSessionControlsGetter(ExecState&, JSMediaSession&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSessionControls(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSession>::attribute<jsMediaSessionControlsGetter>(state, thisValue, "controls");
+}
+
+static inline JSValue jsMediaSessionControlsGetter(ExecState& state, JSMediaSession& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<MediaRemoteControls>>>(state, *thisObject.globalObject(), impl.controls());
+    return result;
+}
+
+EncodedJSValue jsMediaSessionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaSessionPrototype* domObject = jsDynamicDowncast<JSMediaSessionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaSession::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaSessionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSMediaSessionPrototype* domObject = jsDynamicDowncast<JSMediaSessionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsMediaSessionControls(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSMediaSession::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSession* castedThis = jsDynamicCast<JSMediaSession*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSessionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSession", "controls");
-        return throwGetterTypeError(*exec, "MediaSession", "controls");
-    }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.controls(isNull)));
-    if (isNull)
-        return JSValue::encode(jsNull());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSMediaSessionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsMediaSessionPrototypeFunctionSetMetadataCaller(JSC::ExecState*, JSMediaSession*, JSC::ThrowScope&);
 
-EncodedJSValue jsMediaSessionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionSetMetadata(ExecState* state)
 {
-    JSMediaSessionPrototype* domObject = jsDynamicCast<JSMediaSessionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaSession::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSMediaSession>::callOperation<jsMediaSessionPrototypeFunctionSetMetadataCaller>(state, "setMetadata");
 }
 
-JSValue JSMediaSession::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsMediaSessionPrototypeFunctionSetMetadataCaller(JSC::ExecState* state, JSMediaSession* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSMediaSessionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionSetMetadata(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSMediaSession* castedThis = jsDynamicCast<JSMediaSession*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaSession", "setMetadata");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaSession::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Dictionary metadata = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setMetadata(metadata);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto metadata = convert<IDLNullable<IDLDictionary<MediaSession::Metadata>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setMetadata(WTFMove(metadata));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionReleaseSession(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaSessionPrototypeFunctionDeactivateCaller(JSC::ExecState*, JSMediaSession*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSessionPrototypeFunctionDeactivate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaSession* castedThis = jsDynamicCast<JSMediaSession*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaSession", "releaseSession");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaSession::info());
-    auto& impl = castedThis->impl();
-    impl.releaseSession();
+    return BindingCaller<JSMediaSession>::callOperation<jsMediaSessionPrototypeFunctionDeactivateCaller>(state, "deactivate");
+}
+
+static inline JSC::EncodedJSValue jsMediaSessionPrototypeFunctionDeactivateCaller(JSC::ExecState* state, JSMediaSession* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.deactivate();
     return JSValue::encode(jsUndefined());
 }
 
@@ -275,31 +346,32 @@ bool JSMediaSessionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSMediaSessionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaSession = jsCast<JSMediaSession*>(handle.slot()->asCell());
+    auto* jsMediaSession = static_cast<JSMediaSession*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaSession->impl(), jsMediaSession);
+    uncacheWrapper(world, &jsMediaSession->wrapped(), jsMediaSession);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaSession* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaSession>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaSession>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to MediaSession.
-    COMPILE_ASSERT(!__is_polymorphic(MediaSession), MediaSession_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(MediaSession), "MediaSession is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSMediaSession>(globalObject, impl);
+    return createWrapper<MediaSession>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSession& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaSession* JSMediaSession::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaSession*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaSession*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGForeignObjectElement_h
-#define JSSVGForeignObjectElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGForeignObjectElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGForeignObjectElement;
     static JSSVGForeignObjectElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGForeignObjectElement>&& impl)
     {
-        JSSVGForeignObjectElement* ptr = new (NotNull, JSC::allocateCell<JSSVGForeignObjectElement>(globalObject->vm().heap)) JSSVGForeignObjectElement(structure, globalObject, WTF::move(impl));
+        JSSVGForeignObjectElement* ptr = new (NotNull, JSC::allocateCell<JSSVGForeignObjectElement>(globalObject->vm().heap)) JSSVGForeignObjectElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGForeignObjectElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGForeignObjectElement& wrapped() const
     {
-        return static_cast<SVGForeignObjectElement&>(Base::impl());
+        return static_cast<SVGForeignObjectElement&>(Base::wrapped());
     }
 protected:
-    JSSVGForeignObjectElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGForeignObjectElement>&&);
+    JSSVGForeignObjectElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGForeignObjectElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGForeignObjectElement> {
+    using WrapperClass = JSSVGForeignObjectElement;
+    using ToWrappedReturnType = SVGForeignObjectElement*;
+};
 
 } // namespace WebCore
-
-#endif

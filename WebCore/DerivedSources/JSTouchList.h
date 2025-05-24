@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTouchList_h
-#define JSTouchList_h
+#pragma once
 
 #if ENABLE(TOUCH_EVENTS)
 
@@ -29,23 +28,22 @@
 
 namespace WebCore {
 
-class JSTouchList : public JSDOMWrapper {
+class JSTouchList : public JSDOMWrapper<TouchList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<TouchList>;
     static JSTouchList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TouchList>&& impl)
     {
-        JSTouchList* ptr = new (NotNull, JSC::allocateCell<JSTouchList>(globalObject->vm().heap)) JSTouchList(structure, globalObject, WTF::move(impl));
+        JSTouchList* ptr = new (NotNull, JSC::allocateCell<JSTouchList>(globalObject->vm().heap)) JSTouchList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static TouchList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTouchList();
 
     DECLARE_INFO;
 
@@ -55,23 +53,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TouchList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TouchList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSTouchList(JSC::Structure*, JSDOMGlobalObject*, Ref<TouchList>&&);
+    JSTouchList(JSC::Structure*, JSDOMGlobalObject&, Ref<TouchList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTouchListOwner : public JSC::WeakHandleOwner {
@@ -86,13 +74,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TouchList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TouchList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TouchList& impl) { return toJS(exec, globalObject, &impl); }
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TouchList*);
+inline void* wrapperKey(TouchList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TouchList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TouchList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TouchList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TouchList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TouchList> {
+    using WrapperClass = JSTouchList;
+    using ToWrappedReturnType = TouchList*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(TOUCH_EVENTS)
-
-#endif

@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCSessionDescription_h
-#define JSRTCSessionDescription_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "RTCSessionDescription.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCSessionDescription : public JSDOMWrapper {
+class JSRTCSessionDescription : public JSDOMWrapper<RTCSessionDescription> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<RTCSessionDescription>;
     static JSRTCSessionDescription* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCSessionDescription>&& impl)
     {
-        JSRTCSessionDescription* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescription>(globalObject->vm().heap)) JSRTCSessionDescription(structure, globalObject, WTF::move(impl));
+        JSRTCSessionDescription* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescription>(globalObject->vm().heap)) JSRTCSessionDescription(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCSessionDescription* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCSessionDescription();
 
     DECLARE_INFO;
 
@@ -52,21 +51,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    RTCSessionDescription& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCSessionDescription* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSRTCSessionDescription(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCSessionDescription>&&);
+    JSRTCSessionDescription(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCSessionDescription>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCSessionDescriptionOwner : public JSC::WeakHandleOwner {
@@ -81,15 +70,29 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCSessionDescriptio
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCSessionDescription*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCSessionDescription& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCSessionDescription* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCSessionDescription(JSC::ExecState*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCSessionDescription&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCSessionDescription* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCSessionDescription>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCSessionDescription>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCSessionDescription> {
+    using WrapperClass = JSRTCSessionDescription;
+    using ToWrappedReturnType = RTCSessionDescription*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, RTCSessionDescription::SdpType);
+
+template<> std::optional<RTCSessionDescription::SdpType> parseEnumeration<RTCSessionDescription::SdpType>(JSC::ExecState&, JSC::JSValue);
+template<> RTCSessionDescription::SdpType convertEnumeration<RTCSessionDescription::SdpType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<RTCSessionDescription::SdpType>();
+
+template<> RTCSessionDescription::Init convertDictionary<RTCSessionDescription::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

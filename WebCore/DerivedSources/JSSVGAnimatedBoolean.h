@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedBoolean_h
-#define JSSVGAnimatedBoolean_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedBoolean.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedBoolean : public JSDOMWrapper {
+class JSSVGAnimatedBoolean : public JSDOMWrapper<SVGAnimatedBoolean> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedBoolean>;
     static JSSVGAnimatedBoolean* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedBoolean>&& impl)
     {
-        JSSVGAnimatedBoolean* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedBoolean>(globalObject->vm().heap)) JSSVGAnimatedBoolean(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedBoolean* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedBoolean>(globalObject->vm().heap)) JSSVGAnimatedBoolean(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedBoolean* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedBoolean();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedBoolean& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedBoolean* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedBoolean(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedBoolean>&&);
+    JSSVGAnimatedBoolean(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedBoolean>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedBooleanOwner : public JSC::WeakHandleOwner {
@@ -80,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedBoolean*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedBoolean*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedBoolean& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedBoolean* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedBoolean&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedBoolean* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedBoolean>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedBoolean>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedBoolean> {
+    using WrapperClass = JSSVGAnimatedBoolean;
+    using ToWrappedReturnType = SVGAnimatedBoolean*;
+};
 
 } // namespace WebCore
-
-#endif

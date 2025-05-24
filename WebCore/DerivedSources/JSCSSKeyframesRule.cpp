@@ -21,14 +21,11 @@
 #include "config.h"
 #include "JSCSSKeyframesRule.h"
 
-#include "CSSKeyframeRule.h"
-#include "CSSKeyframesRule.h"
-#include "CSSRuleList.h"
-#include "ExceptionCode.h"
 #include "JSCSSKeyframeRule.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
@@ -46,14 +43,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionFindRule(JS
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSKeyframesRuleName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSCSSKeyframesRuleName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsCSSKeyframesRuleCssRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSKeyframesRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSKeyframesRuleName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSKeyframesRuleName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsCSSKeyframesRuleCssRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSKeyframesRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSKeyframesRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSKeyframesRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSKeyframesRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSKeyframesRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRulePrototype>(vm.heap)) JSCSSKeyframesRulePrototype(vm, globalObject, structure);
@@ -76,67 +74,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSKeyframesRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSKeyframesRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSKeyframesRuleConstructor = JSDOMConstructorNotConstructable<JSCSSKeyframesRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSKeyframesRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSKeyframesRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRuleConstructor>(vm.heap)) JSCSSKeyframesRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSCSSKeyframesRuleTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSCSSKeyframesRuleTableValues[] =
+template<> JSValue JSCSSKeyframesRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSCSSKeyframesRuleTable = { 1, 1, true, JSCSSKeyframesRuleTableValues, 0, JSCSSKeyframesRuleTableIndex };
-const ClassInfo JSCSSKeyframesRuleConstructor::s_info = { "CSSKeyframesRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSKeyframesRuleConstructor) };
-
-JSCSSKeyframesRuleConstructor::JSCSSKeyframesRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSCSSKeyframesRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSKeyframesRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSKeyframesRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSKeyframesRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSKeyframesRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSKeyframesRuleConstructor::s_info = { "CSSKeyframesRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSKeyframesRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSKeyframesRulePrototypeTableValues[] =
 {
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSKeyframesRuleName) },
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionInsertRule), (intptr_t) (0) },
-    { "appendRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionAppendRule), (intptr_t) (0) },
-    { "deleteRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionDeleteRule), (intptr_t) (0) },
-    { "findRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionFindRule), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSKeyframesRuleConstructor) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSKeyframesRuleName) } },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSKeyframesRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionInsertRule), (intptr_t) (1) } },
+    { "appendRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionAppendRule), (intptr_t) (1) } },
+    { "deleteRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionDeleteRule), (intptr_t) (1) } },
+    { "findRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSKeyframesRulePrototypeFunctionFindRule), (intptr_t) (1) } },
 };
 
 const ClassInfo JSCSSKeyframesRulePrototype::s_info = { "CSSKeyframesRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSKeyframesRulePrototype) };
@@ -147,188 +111,232 @@ void JSCSSKeyframesRulePrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSCSSKeyframesRulePrototypeTableValues, *this);
 }
 
-const ClassInfo JSCSSKeyframesRule::s_info = { "CSSKeyframesRule", &Base::s_info, &JSCSSKeyframesRuleTable, CREATE_METHOD_TABLE(JSCSSKeyframesRule) };
+const ClassInfo JSCSSKeyframesRule::s_info = { "CSSKeyframesRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSKeyframesRule) };
 
-JSCSSKeyframesRule::JSCSSKeyframesRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSKeyframesRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSCSSKeyframesRule::JSCSSKeyframesRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSKeyframesRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSKeyframesRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSKeyframesRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSKeyframesRulePrototype::create(vm, globalObject, JSCSSKeyframesRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSCSSKeyframesRulePrototype::create(vm, globalObject, JSCSSKeyframesRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSKeyframesRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSKeyframesRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSKeyframesRule>(vm, globalObject);
 }
 
-bool JSCSSKeyframesRule::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSCSSKeyframesRule::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSKeyframesRule*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSCSSKeyframesRule>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<CSSKeyframeRule>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSCSSKeyframesRule, Base>(exec, JSCSSKeyframesRuleTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSCSSKeyframesRule::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSCSSKeyframesRule::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSKeyframesRule*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<CSSKeyframeRule>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsCSSKeyframesRuleName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSCSSKeyframesRule::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSKeyframesRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSKeyframesRule", "name");
-        return throwGetterTypeError(*exec, "CSSKeyframesRule", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.name());
-    return JSValue::encode(result);
+    auto* thisObject = jsCast<JSCSSKeyframesRule*>(object);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-
-EncodedJSValue jsCSSKeyframesRuleCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSKeyframesRule* BindingCaller<JSCSSKeyframesRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSKeyframesRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSKeyframesRule", "cssRules");
-        return throwGetterTypeError(*exec, "CSSKeyframesRule", "cssRules");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSCSSKeyframesRule*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsCSSKeyframesRuleConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSKeyframesRule* BindingCaller<JSCSSKeyframesRule>::castForOperation(ExecState& state)
 {
-    JSCSSKeyframesRule* domObject = jsDynamicCast<JSCSSKeyframesRule*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSKeyframesRule::getConstructor(exec->vm(), domObject->globalObject()));
+    return jsDynamicDowncast<JSCSSKeyframesRule*>(state.thisValue());
 }
 
-void setJSCSSKeyframesRuleName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsCSSKeyframesRuleNameGetter(ExecState&, JSCSSKeyframesRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSKeyframesRuleName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSCSSKeyframesRule>::attribute<jsCSSKeyframesRuleNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsCSSKeyframesRuleNameGetter(ExecState& state, JSCSSKeyframesRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+static inline JSValue jsCSSKeyframesRuleCssRulesGetter(ExecState&, JSCSSKeyframesRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSKeyframesRuleCssRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSKeyframesRule>::attribute<jsCSSKeyframesRuleCssRulesGetter>(state, thisValue, "cssRules");
+}
+
+static inline JSValue jsCSSKeyframesRuleCssRulesGetter(ExecState& state, JSCSSKeyframesRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.cssRules());
+    return result;
+}
+
+EncodedJSValue jsCSSKeyframesRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSKeyframesRulePrototype* domObject = jsDynamicDowncast<JSCSSKeyframesRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSKeyframesRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSKeyframesRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSKeyframesRulePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSKeyframesRule", "name");
-        else
-            throwSetterTypeError(*exec, "CSSKeyframesRule", "name");
-        return;
+    JSCSSKeyframesRulePrototype* domObject = jsDynamicDowncast<JSCSSKeyframesRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setName(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSCSSKeyframesRuleNameFunction(ExecState&, JSCSSKeyframesRule&, JSValue, ThrowScope&);
+
+bool setJSCSSKeyframesRuleName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSCSSKeyframesRule>::setAttribute<setJSCSSKeyframesRuleNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSCSSKeyframesRuleNameFunction(ExecState& state, JSCSSKeyframesRule& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setName(WTFMove(nativeValue));
+    return true;
 }
 
 
-void JSCSSKeyframesRule::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+JSValue JSCSSKeyframesRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    auto* thisObject = jsCast<JSCSSKeyframesRule*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    return getDOMConstructor<JSCSSKeyframesRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSCSSKeyframesRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionInsertRuleCaller(JSC::ExecState*, JSCSSKeyframesRule*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionInsertRule(ExecState* state)
 {
-    return getDOMConstructor<JSCSSKeyframesRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSCSSKeyframesRule>::callOperation<jsCSSKeyframesRulePrototypeFunctionInsertRuleCaller>(state, "insertRule");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionInsertRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionInsertRuleCaller(JSC::ExecState* state, JSCSSKeyframesRule* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSKeyframesRule", "insertRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSKeyframesRule::info());
-    auto& impl = castedThis->impl();
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.insertRule(rule);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rule = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.insertRule(WTFMove(rule));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionAppendRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionAppendRuleCaller(JSC::ExecState*, JSCSSKeyframesRule*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionAppendRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSKeyframesRule", "appendRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSKeyframesRule::info());
-    auto& impl = castedThis->impl();
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.appendRule(rule);
+    return BindingCaller<JSCSSKeyframesRule>::callOperation<jsCSSKeyframesRulePrototypeFunctionAppendRuleCaller>(state, "appendRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionAppendRuleCaller(JSC::ExecState* state, JSCSSKeyframesRule* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rule = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.appendRule(WTFMove(rule));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionDeleteRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState*, JSCSSKeyframesRule*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionDeleteRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSKeyframesRule", "deleteRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSKeyframesRule::info());
-    auto& impl = castedThis->impl();
-    String key = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.deleteRule(key);
+    return BindingCaller<JSCSSKeyframesRule>::callOperation<jsCSSKeyframesRulePrototypeFunctionDeleteRuleCaller>(state, "deleteRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState* state, JSCSSKeyframesRule* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.deleteRule(WTFMove(key));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionFindRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionFindRuleCaller(JSC::ExecState*, JSCSSKeyframesRule*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSKeyframesRulePrototypeFunctionFindRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSKeyframesRule* castedThis = jsDynamicCast<JSCSSKeyframesRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSKeyframesRule", "findRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSKeyframesRule::info());
-    auto& impl = castedThis->impl();
-    String key = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.findRule(key)));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSKeyframesRule>::callOperation<jsCSSKeyframesRulePrototypeFunctionFindRuleCaller>(state, "findRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSKeyframesRulePrototypeFunctionFindRuleCaller(JSC::ExecState* state, JSCSSKeyframesRule* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<CSSKeyframeRule>>>(*state, *castedThis->globalObject(), impl.findRule(WTFMove(key))));
 }
 
 

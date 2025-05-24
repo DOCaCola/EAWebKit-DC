@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLAnchorElement_h
-#define JSHTMLAnchorElement_h
+#pragma once
 
 #include "HTMLAnchorElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLAnchorElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLAnchorElement;
     static JSHTMLAnchorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAnchorElement>&& impl)
     {
-        JSHTMLAnchorElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElement>(globalObject->vm().heap)) JSHTMLAnchorElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAnchorElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElement>(globalObject->vm().heap)) JSHTMLAnchorElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAnchorElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLAnchorElement& wrapped() const
     {
-        return static_cast<HTMLAnchorElement&>(Base::impl());
+        return static_cast<HTMLAnchorElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAnchorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAnchorElement>&&);
+    JSHTMLAnchorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAnchorElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLAnchorElement> {
+    using WrapperClass = JSHTMLAnchorElement;
+    using ToWrappedReturnType = HTMLAnchorElement*;
+};
 
 } // namespace WebCore
-
-#endif

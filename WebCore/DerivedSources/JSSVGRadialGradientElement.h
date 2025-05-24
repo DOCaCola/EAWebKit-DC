@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGRadialGradientElement_h
-#define JSSVGRadialGradientElement_h
+#pragma once
 
 #include "JSSVGGradientElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGRadialGradientElement : public JSSVGGradientElement {
 public:
-    typedef JSSVGGradientElement Base;
+    using Base = JSSVGGradientElement;
+    using DOMWrapped = SVGRadialGradientElement;
     static JSSVGRadialGradientElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGRadialGradientElement>&& impl)
     {
-        JSSVGRadialGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGRadialGradientElement>(globalObject->vm().heap)) JSSVGRadialGradientElement(structure, globalObject, WTF::move(impl));
+        JSSVGRadialGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGRadialGradientElement>(globalObject->vm().heap)) JSSVGRadialGradientElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGRadialGradientElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGRadialGradientElement& wrapped() const
     {
-        return static_cast<SVGRadialGradientElement&>(Base::impl());
+        return static_cast<SVGRadialGradientElement&>(Base::wrapped());
     }
 protected:
-    JSSVGRadialGradientElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGRadialGradientElement>&&);
+    JSSVGRadialGradientElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGRadialGradientElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGRadialGradientElement> {
+    using WrapperClass = JSSVGRadialGradientElement;
+    using ToWrappedReturnType = SVGRadialGradientElement*;
+};
 
 } // namespace WebCore
-
-#endif

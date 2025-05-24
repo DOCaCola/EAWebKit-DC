@@ -1,0 +1,3 @@
+JSMouseEvent.h : UIEvent.idl Event.idl
+UIEvent.idl :
+Event.idl :

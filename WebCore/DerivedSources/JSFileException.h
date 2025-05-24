@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFileException_h
-#define JSFileException_h
+#pragma once
 
 #include "FileException.h"
 #include "JSDOMWrapper.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSFileException : public JSDOMWrapper {
+class JSFileException : public JSDOMWrapper<FileException> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<FileException>;
     static JSFileException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileException>&& impl)
     {
-        JSFileException* ptr = new (NotNull, JSC::allocateCell<JSFileException>(globalObject->vm().heap)) JSFileException(structure, globalObject, WTF::move(impl));
+        JSFileException* ptr = new (NotNull, JSC::allocateCell<JSFileException>(globalObject->vm().heap)) JSFileException(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static FileException* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileException();
 
     DECLARE_INFO;
 
@@ -52,22 +49,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    FileException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileException* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSFileException(JSC::Structure*, JSDOMGlobalObject*, Ref<FileException>&&);
+    JSFileException(JSC::Structure*, JSDOMGlobalObject&, Ref<FileException>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSFileExceptionOwner : public JSC::WeakHandleOwner {
@@ -82,10 +69,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileException*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileException& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(FileException* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileException&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileException* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<FileException>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<FileException>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<FileException> {
+    using WrapperClass = JSFileException;
+    using ToWrappedReturnType = FileException*;
+};
 
 } // namespace WebCore
-
-#endif

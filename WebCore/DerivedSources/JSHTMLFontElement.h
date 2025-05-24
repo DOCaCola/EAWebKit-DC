@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFontElement_h
-#define JSHTMLFontElement_h
+#pragma once
 
 #include "HTMLFontElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLFontElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLFontElement;
     static JSHTMLFontElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFontElement>&& impl)
     {
-        JSHTMLFontElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFontElement>(globalObject->vm().heap)) JSHTMLFontElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFontElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFontElement>(globalObject->vm().heap)) JSHTMLFontElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFontElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLFontElement& wrapped() const
     {
-        return static_cast<HTMLFontElement&>(Base::impl());
+        return static_cast<HTMLFontElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLFontElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFontElement>&&);
+    JSHTMLFontElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFontElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLFontElement> {
+    using WrapperClass = JSHTMLFontElement;
+    using ToWrappedReturnType = HTMLFontElement*;
+};
 
 } // namespace WebCore
-
-#endif

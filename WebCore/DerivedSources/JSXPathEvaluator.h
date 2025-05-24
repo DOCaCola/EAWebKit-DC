@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathEvaluator_h
-#define JSXPathEvaluator_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "XPathEvaluator.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSXPathEvaluator : public JSDOMWrapper {
+class JSXPathEvaluator : public JSDOMWrapper<XPathEvaluator> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<XPathEvaluator>;
     static JSXPathEvaluator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathEvaluator>&& impl)
     {
-        JSXPathEvaluator* ptr = new (NotNull, JSC::allocateCell<JSXPathEvaluator>(globalObject->vm().heap)) JSXPathEvaluator(structure, globalObject, WTF::move(impl));
+        JSXPathEvaluator* ptr = new (NotNull, JSC::allocateCell<JSXPathEvaluator>(globalObject->vm().heap)) JSXPathEvaluator(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static XPathEvaluator* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathEvaluator();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathEvaluator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathEvaluator* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSXPathEvaluator(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathEvaluator>&&);
+    JSXPathEvaluator(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathEvaluator>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSXPathEvaluatorOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathEvaluator*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathEvaluator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathEvaluator& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XPathEvaluator* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathEvaluator&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathEvaluator* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XPathEvaluator>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XPathEvaluator>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XPathEvaluator> {
+    using WrapperClass = JSXPathEvaluator;
+    using ToWrappedReturnType = XPathEvaluator*;
+};
 
 } // namespace WebCore
-
-#endif

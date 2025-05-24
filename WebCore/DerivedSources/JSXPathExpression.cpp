@@ -21,13 +21,13 @@
 #include "config.h"
 #include "JSXPathExpression.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSNode.h"
 #include "JSXPathResult.h"
-#include "XPathExpression.h"
-#include "XPathResult.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -40,11 +40,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsXPathExpressionPrototypeFunctionEvaluate(JSC
 
 // Attributes
 
-JSC::EncodedJSValue jsXPathExpressionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsXPathExpressionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSXPathExpressionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSXPathExpressionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSXPathExpressionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSXPathExpressionPrototype* ptr = new (NotNull, JSC::allocateCell<JSXPathExpressionPrototype>(vm.heap)) JSXPathExpressionPrototype(vm, globalObject, structure);
@@ -67,49 +68,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXPathExpressionConstructor : public DOMConstructorObject {
-private:
-    JSXPathExpressionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSXPathExpressionConstructor = JSDOMConstructorNotConstructable<JSXPathExpression>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSXPathExpressionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXPathExpressionConstructor* ptr = new (NotNull, JSC::allocateCell<JSXPathExpressionConstructor>(vm.heap)) JSXPathExpressionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSXPathExpressionConstructor::s_info = { "XPathExpressionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionConstructor) };
-
-JSXPathExpressionConstructor::JSXPathExpressionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSXPathExpressionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSXPathExpressionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSXPathExpressionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXPathExpression::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXPathExpression::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XPathExpression"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSXPathExpressionConstructor::s_info = { "XPathExpression", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXPathExpressionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExpressionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "evaluate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathExpressionPrototypeFunctionEvaluate), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExpressionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXPathExpressionConstructor) } },
+    { "evaluate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathExpressionPrototypeFunctionEvaluate), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathExpressionPrototype::s_info = { "XPathExpressionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionPrototype) };
@@ -122,10 +103,16 @@ void JSXPathExpressionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathExpression::s_info = { "XPathExpression", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpression) };
 
-JSXPathExpression::JSXPathExpression(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathExpression>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathExpression::JSXPathExpression(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathExpression>&& impl)
+    : JSDOMWrapper<XPathExpression>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSXPathExpression::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSXPathExpression::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -133,7 +120,7 @@ JSObject* JSXPathExpression::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSXPathExpressionPrototype::create(vm, globalObject, JSXPathExpressionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSXPathExpression::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSXPathExpression::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSXPathExpression>(vm, globalObject);
 }
@@ -144,46 +131,59 @@ void JSXPathExpression::destroy(JSC::JSCell* cell)
     thisObject->JSXPathExpression::~JSXPathExpression();
 }
 
-JSXPathExpression::~JSXPathExpression()
+template<> inline JSXPathExpression* BindingCaller<JSXPathExpression>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSXPathExpression*>(state.thisValue());
 }
 
-EncodedJSValue jsXPathExpressionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXPathExpressionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSXPathExpressionPrototype* domObject = jsDynamicCast<JSXPathExpressionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXPathExpression::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSXPathExpressionPrototype* domObject = jsDynamicDowncast<JSXPathExpressionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSXPathExpression::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSXPathExpression::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSXPathExpressionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSXPathExpressionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSXPathExpressionPrototype* domObject = jsDynamicDowncast<JSXPathExpressionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathExpressionPrototypeFunctionEvaluate(ExecState* exec)
+JSValue JSXPathExpression::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSXPathExpression* castedThis = jsDynamicCast<JSXPathExpression*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathExpression", "evaluate");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathExpression::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Node* contextNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    uint16_t type = toUInt16(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    XPathResult* inResult = JSXPathResult::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.evaluate(contextNode, type, inResult, ec)));
+    return getDOMConstructor<JSXPathExpressionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline JSC::EncodedJSValue jsXPathExpressionPrototypeFunctionEvaluateCaller(JSC::ExecState*, JSXPathExpression*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsXPathExpressionPrototypeFunctionEvaluate(ExecState* state)
+{
+    return BindingCaller<JSXPathExpression>::callOperation<jsXPathExpressionPrototypeFunctionEvaluateCaller>(state, "evaluate");
+}
+
+static inline JSC::EncodedJSValue jsXPathExpressionPrototypeFunctionEvaluateCaller(JSC::ExecState* state, JSXPathExpression* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto contextNode = convert<IDLNullable<IDLInterface<Node>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "contextNode", "XPathExpression", "evaluate", "Node"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto type = convert<IDLUnsignedShort>(*state, state->argument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto inResult = convert<IDLNullable<IDLInterface<XPathResult>>>(*state, state->argument(2), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 2, "inResult", "XPathExpression", "evaluate", "XPathResult"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<XPathResult>>(*state, *castedThis->globalObject(), throwScope, impl.evaluate(WTFMove(contextNode), WTFMove(type), WTFMove(inResult))));
 }
 
 bool JSXPathExpressionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -195,31 +195,32 @@ bool JSXPathExpressionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSXPathExpressionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsXPathExpression = jsCast<JSXPathExpression*>(handle.slot()->asCell());
+    auto* jsXPathExpression = static_cast<JSXPathExpression*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathExpression->impl(), jsXPathExpression);
+    uncacheWrapper(world, &jsXPathExpression->wrapped(), jsXPathExpression);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathExpression* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<XPathExpression>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSXPathExpression>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to XPathExpression.
-    COMPILE_ASSERT(!__is_polymorphic(XPathExpression), XPathExpression_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(XPathExpression), "XPathExpression is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSXPathExpression>(globalObject, impl);
+    return createWrapper<XPathExpression>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathExpression& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 XPathExpression* JSXPathExpression::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSXPathExpression*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSXPathExpression*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

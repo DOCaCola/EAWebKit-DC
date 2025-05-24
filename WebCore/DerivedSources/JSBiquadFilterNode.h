@@ -18,29 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSBiquadFilterNode_h
-#define JSBiquadFilterNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
 #include "BiquadFilterNode.h"
 #include "JSAudioNode.h"
+#include "JSDOMConvert.h"
 
 namespace WebCore {
 
 class JSBiquadFilterNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = BiquadFilterNode;
     static JSBiquadFilterNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BiquadFilterNode>&& impl)
     {
-        JSBiquadFilterNode* ptr = new (NotNull, JSC::allocateCell<JSBiquadFilterNode>(globalObject->vm().heap)) JSBiquadFilterNode(structure, globalObject, WTF::move(impl));
+        JSBiquadFilterNode* ptr = new (NotNull, JSC::allocateCell<JSBiquadFilterNode>(globalObject->vm().heap)) JSBiquadFilterNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,33 +49,39 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setType(JSC::ExecState*, JSC::JSValue);
-    BiquadFilterNode& impl() const
+    BiquadFilterNode& wrapped() const
     {
-        return static_cast<BiquadFilterNode&>(Base::impl());
+        return static_cast<BiquadFilterNode&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSBiquadFilterNode(JSC::Structure*, JSDOMGlobalObject*, Ref<BiquadFilterNode>&&);
+    JSBiquadFilterNode(JSC::Structure*, JSDOMGlobalObject&, Ref<BiquadFilterNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BiquadFilterNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, BiquadFilterNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BiquadFilterNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, BiquadFilterNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<BiquadFilterNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<BiquadFilterNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<BiquadFilterNode> {
+    using WrapperClass = JSBiquadFilterNode;
+    using ToWrappedReturnType = BiquadFilterNode*;
+};
+#if ENABLE(WEB_AUDIO)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, BiquadFilterType);
+
+template<> std::optional<BiquadFilterType> parseEnumeration<BiquadFilterType>(JSC::ExecState&, JSC::JSValue);
+template<> BiquadFilterType convertEnumeration<BiquadFilterType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<BiquadFilterType>();
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

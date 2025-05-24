@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMediaElement_h
-#define JSHTMLMediaElement_h
+#pragma once
 
 #if ENABLE(VIDEO)
 
@@ -32,18 +31,18 @@ namespace WebCore {
 
 class WEBCORE_EXPORT JSHTMLMediaElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMediaElement;
     static JSHTMLMediaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMediaElement>&& impl)
     {
-        JSHTMLMediaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMediaElement>(globalObject->vm().heap)) JSHTMLMediaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMediaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMediaElement>(globalObject->vm().heap)) JSHTMLMediaElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLMediaElement* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 
     DECLARE_INFO;
 
@@ -52,25 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setController(JSC::ExecState*, JSC::JSValue);
-    HTMLMediaElement& impl() const
+    HTMLMediaElement& wrapped() const
     {
-        return static_cast<HTMLMediaElement&>(Base::impl());
+        return static_cast<HTMLMediaElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLMediaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMediaElement>&&);
+    JSHTMLMediaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMediaElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSHTMLMediaElementOwner : public JSNodeOwner {
@@ -85,10 +76,17 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLMediaElement*)
     return &owner.get();
 }
 
+inline void* wrapperKey(HTMLMediaElement* wrappableObject)
+{
+    return wrappableObject;
+}
 
+
+template<> struct JSDOMWrapperConverterTraits<HTMLMediaElement> {
+    using WrapperClass = JSHTMLMediaElement;
+    using ToWrappedReturnType = HTMLMediaElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO)
-
-#endif

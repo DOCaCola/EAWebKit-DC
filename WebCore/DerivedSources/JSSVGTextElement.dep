@@ -1,0 +1,8 @@
+JSSVGTextElement.h : SVGTextPositioningElement.idl SVGTextContentElement.idl SVGGraphicsElement.idl SVGElement.idl Element.idl Node.idl EventTarget.idl
+SVGTextPositioningElement.idl :
+SVGTextContentElement.idl :
+SVGGraphicsElement.idl :
+SVGElement.idl :
+Element.idl :
+Node.idl :
+EventTarget.idl :

@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTouchEvent_h
-#define JSTouchEvent_h
+#pragma once
 
 #if ENABLE(TOUCH_EVENTS)
 
+#include "JSDOMConvert.h"
 #include "JSUIEvent.h"
 #include "TouchEvent.h"
 
@@ -30,47 +30,48 @@ namespace WebCore {
 
 class JSTouchEvent : public JSUIEvent {
 public:
-    typedef JSUIEvent Base;
+    using Base = JSUIEvent;
+    using DOMWrapped = TouchEvent;
     static JSTouchEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TouchEvent>&& impl)
     {
-        JSTouchEvent* ptr = new (NotNull, JSC::allocateCell<JSTouchEvent>(globalObject->vm().heap)) JSTouchEvent(structure, globalObject, WTF::move(impl));
+        JSTouchEvent* ptr = new (NotNull, JSC::allocateCell<JSTouchEvent>(globalObject->vm().heap)) JSTouchEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TouchEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    TouchEvent& wrapped() const
     {
-        return static_cast<TouchEvent&>(Base::impl());
+        return static_cast<TouchEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTouchEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TouchEvent>&&);
+    JSTouchEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TouchEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TouchEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TouchEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TouchEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TouchEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TouchEvent> {
+    using WrapperClass = JSTouchEvent;
+    using ToWrappedReturnType = TouchEvent*;
+};
+template<> TouchEvent::Init convertDictionary<TouchEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
 #endif // ENABLE(TOUCH_EVENTS)
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBKeyRange_h
-#define JSIDBKeyRange_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSIDBKeyRange : public JSDOMWrapper {
+class JSIDBKeyRange : public JSDOMWrapper<IDBKeyRange> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<IDBKeyRange>;
     static JSIDBKeyRange* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBKeyRange>&& impl)
     {
-        JSIDBKeyRange* ptr = new (NotNull, JSC::allocateCell<JSIDBKeyRange>(globalObject->vm().heap)) JSIDBKeyRange(structure, globalObject, WTF::move(impl));
+        JSIDBKeyRange* ptr = new (NotNull, JSC::allocateCell<JSIDBKeyRange>(globalObject->vm().heap)) JSIDBKeyRange(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBKeyRange* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBKeyRange();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBKeyRange& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBKeyRange* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSIDBKeyRange(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBKeyRange>&&);
+    JSIDBKeyRange(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBKeyRange>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBKeyRangeOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBKeyRange*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBKeyRange*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBKeyRange& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBKeyRange* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBKeyRange&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBKeyRange* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBKeyRange>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBKeyRange>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBKeyRange> {
+    using WrapperClass = JSIDBKeyRange;
+    using ToWrappedReturnType = IDBKeyRange*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTrackElement_h
-#define JSHTMLTrackElement_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSHTMLTrackElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLTrackElement;
     static JSHTMLTrackElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTrackElement>&& impl)
     {
-        JSHTMLTrackElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTrackElement>(globalObject->vm().heap)) JSHTMLTrackElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTrackElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTrackElement>(globalObject->vm().heap)) JSHTMLTrackElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTrackElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLTrackElement& wrapped() const
     {
-        return static_cast<HTMLTrackElement&>(Base::impl());
+        return static_cast<HTMLTrackElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTrackElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTrackElement>&&);
+    JSHTMLTrackElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTrackElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLTrackElement> {
+    using WrapperClass = JSHTMLTrackElement;
+    using ToWrappedReturnType = HTMLTrackElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

@@ -24,19 +24,13 @@
 
 #include "JSAudioTrack.h"
 
-#include "AudioTrack.h"
-#include "AudioTrackMediaSource.h"
 #include "Element.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSNodeCustom.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
-
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-#include "JSSourceBuffer.h"
-#include "SourceBuffer.h"
-#endif
 
 using namespace JSC;
 
@@ -44,21 +38,20 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsAudioTrackId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioTrackKind(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioTrackKind(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioTrackLabel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioTrackLanguage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioTrackLanguage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-JSC::EncodedJSValue jsAudioTrackSourceBuffer(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
+JSC::EncodedJSValue jsAudioTrackId(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioTrackKind(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioTrackKind(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioTrackLabel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioTrackLanguage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioTrackLanguage(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioTrackConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioTrackConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAudioTrackPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAudioTrackPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAudioTrackPrototype* ptr = new (NotNull, JSC::allocateCell<JSAudioTrackPrototype>(vm.heap)) JSAudioTrackPrototype(vm, globalObject, structure);
@@ -81,35 +74,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
+using JSAudioTrackConstructor = JSDOMConstructorNotConstructable<JSAudioTrack>;
 
-static const struct CompactHashIndex JSAudioTrackTableIndex[4] = {
-    { 0, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSAudioTrackTableValues[] =
+template<> JSValue JSAudioTrackConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "kind", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackKind) },
-    { "language", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackLanguage) },
-};
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
 
-static const HashTable JSAudioTrackTable = { 2, 3, true, JSAudioTrackTableValues, 0, JSAudioTrackTableIndex };
+template<> void JSAudioTrackConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSAudioTrack::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioTrack"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSAudioTrackConstructor::s_info = { "AudioTrack", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioTrackConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioTrackPrototypeTableValues[] =
 {
-    { "id", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "label", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "enabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackEnabled) },
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-    { "sourceBuffer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackSourceBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackConstructor) } },
+    { "id", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kind", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackKind) } },
+    { "label", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "language", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackLanguage) } },
+    { "enabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioTrackEnabled) } },
 };
 
 const ClassInfo JSAudioTrackPrototype::s_info = { "AudioTrackPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioTrackPrototype) };
@@ -120,12 +111,18 @@ void JSAudioTrackPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSAudioTrackPrototypeTableValues, *this);
 }
 
-const ClassInfo JSAudioTrack::s_info = { "AudioTrack", &Base::s_info, &JSAudioTrackTable, CREATE_METHOD_TABLE(JSAudioTrack) };
+const ClassInfo JSAudioTrack::s_info = { "AudioTrack", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioTrack) };
 
-JSAudioTrack::JSAudioTrack(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioTrack>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSAudioTrack::JSAudioTrack(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioTrack>&& impl)
+    : JSDOMWrapper<AudioTrack>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAudioTrack::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAudioTrack::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -133,7 +130,7 @@ JSObject* JSAudioTrack::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSAudioTrackPrototype::create(vm, globalObject, JSAudioTrackPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSAudioTrack::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAudioTrack::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAudioTrack>(vm, globalObject);
 }
@@ -144,155 +141,170 @@ void JSAudioTrack::destroy(JSC::JSCell* cell)
     thisObject->JSAudioTrack::~JSAudioTrack();
 }
 
-JSAudioTrack::~JSAudioTrack()
+template<> inline JSAudioTrack* BindingCaller<JSAudioTrack>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSAudioTrack*>(JSValue::decode(thisValue));
 }
 
-bool JSAudioTrack::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsAudioTrackIdGetter(ExecState&, JSAudioTrack&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioTrackId(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSAudioTrack*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSAudioTrack, Base>(exec, JSAudioTrackTable, thisObject, propertyName, slot);
+    return BindingCaller<JSAudioTrack>::attribute<jsAudioTrackIdGetter>(state, thisValue, "id");
 }
 
-EncodedJSValue jsAudioTrackId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioTrackIdGetter(ExecState& state, JSAudioTrack& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioTrack* castedThis = jsDynamicCast<JSAudioTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioTrack", "id");
-        return throwGetterTypeError(*exec, "AudioTrack", "id");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.id());
+    return result;
 }
 
+static inline JSValue jsAudioTrackKindGetter(ExecState&, JSAudioTrack&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioTrackKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioTrackKind(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioTrack*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioTrack>::attribute<jsAudioTrackKindGetter>(state, thisValue, "kind");
 }
 
-
-EncodedJSValue jsAudioTrackLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioTrackKindGetter(ExecState& state, JSAudioTrack& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioTrack* castedThis = jsDynamicCast<JSAudioTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioTrack", "label");
-        return throwGetterTypeError(*exec, "AudioTrack", "label");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.label());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.kind());
+    return result;
 }
 
+static inline JSValue jsAudioTrackLabelGetter(ExecState&, JSAudioTrack&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioTrackLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioTrackLabel(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioTrack*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.language());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioTrack>::attribute<jsAudioTrackLabelGetter>(state, thisValue, "label");
 }
 
-
-EncodedJSValue jsAudioTrackEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioTrackLabelGetter(ExecState& state, JSAudioTrack& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioTrack* castedThis = jsDynamicCast<JSAudioTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioTrack", "enabled");
-        return throwGetterTypeError(*exec, "AudioTrack", "enabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.enabled());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.label());
+    return result;
 }
 
+static inline JSValue jsAudioTrackLanguageGetter(ExecState&, JSAudioTrack&, ThrowScope& throwScope);
 
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-EncodedJSValue jsAudioTrackSourceBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioTrackLanguage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioTrack* castedThis = jsDynamicCast<JSAudioTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioTrack", "sourceBuffer");
-        return throwGetterTypeError(*exec, "AudioTrack", "sourceBuffer");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(AudioTrackMediaSource::sourceBuffer(&impl)));
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioTrack>::attribute<jsAudioTrackLanguageGetter>(state, thisValue, "language");
 }
 
-#endif
-
-void setJSAudioTrackKind(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsAudioTrackLanguageGetter(ExecState& state, JSAudioTrack& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.language());
+    return result;
+}
+
+static inline JSValue jsAudioTrackEnabledGetter(ExecState&, JSAudioTrack&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioTrackEnabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioTrack>::attribute<jsAudioTrackEnabledGetter>(state, thisValue, "enabled");
+}
+
+static inline JSValue jsAudioTrackEnabledGetter(ExecState& state, JSAudioTrack& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.enabled());
+    return result;
+}
+
+EncodedJSValue jsAudioTrackConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAudioTrackPrototype* domObject = jsDynamicDowncast<JSAudioTrackPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAudioTrack::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAudioTrackConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioTrack*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setKind(exec, value);
-}
-
-
-void setJSAudioTrackLanguage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSAudioTrack*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setLanguage(exec, value);
-}
-
-
-void setJSAudioTrackEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioTrack* castedThis = jsDynamicCast<JSAudioTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioTrack", "enabled");
-        else
-            throwSetterTypeError(*exec, "AudioTrack", "enabled");
-        return;
+    JSAudioTrackPrototype* domObject = jsDynamicDowncast<JSAudioTrackPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setEnabled(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline bool setJSAudioTrackKindFunction(ExecState&, JSAudioTrack&, JSValue, ThrowScope&);
+
+bool setJSAudioTrackKind(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioTrack>::setAttribute<setJSAudioTrackKindFunction>(state, thisValue, encodedValue, "kind");
+}
+
+static inline bool setJSAudioTrackKindFunction(ExecState& state, JSAudioTrack& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    thisObject.setKind(state, value);
+    return true;
+}
+
+
+static inline bool setJSAudioTrackLanguageFunction(ExecState&, JSAudioTrack&, JSValue, ThrowScope&);
+
+bool setJSAudioTrackLanguage(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioTrack>::setAttribute<setJSAudioTrackLanguageFunction>(state, thisValue, encodedValue, "language");
+}
+
+static inline bool setJSAudioTrackLanguageFunction(ExecState& state, JSAudioTrack& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    thisObject.setLanguage(state, value);
+    return true;
+}
+
+
+static inline bool setJSAudioTrackEnabledFunction(ExecState&, JSAudioTrack&, JSValue, ThrowScope&);
+
+bool setJSAudioTrackEnabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioTrack>::setAttribute<setJSAudioTrackEnabledFunction>(state, thisValue, encodedValue, "enabled");
+}
+
+static inline bool setJSAudioTrackEnabledFunction(ExecState& state, JSAudioTrack& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setEnabled(WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSAudioTrack::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSAudioTrackConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
 
 void JSAudioTrack::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
@@ -302,10 +314,18 @@ void JSAudioTrack::visitChildren(JSCell* cell, SlotVisitor& visitor)
     thisObject->visitAdditionalChildren(visitor);
 }
 
+void JSAudioTrack::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSAudioTrack*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
 bool JSAudioTrackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsAudioTrack = jsCast<JSAudioTrack*>(handle.slot()->asCell());
-    Element* element = WTF::getPtr(jsAudioTrack->impl().element());
+    Element* element = WTF::getPtr(jsAudioTrack->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -314,9 +334,9 @@ bool JSAudioTrackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> han
 
 void JSAudioTrackOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsAudioTrack = jsCast<JSAudioTrack*>(handle.slot()->asCell());
+    auto* jsAudioTrack = static_cast<JSAudioTrack*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsAudioTrack->impl(), jsAudioTrack);
+    uncacheWrapper(world, &jsAudioTrack->wrapped(), jsAudioTrack);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -327,15 +347,12 @@ extern "C" { extern void (*const __identifier("??_7AudioTrack@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10AudioTrackE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioTrack* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AudioTrack>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSAudioTrack>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7AudioTrack@WebCore@@6B@"));
 #else
@@ -343,7 +360,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioTrack* 
 #if COMPILER(CLANG)
     // If this fails AudioTrack does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(AudioTrack), AudioTrack_is_not_polymorphic);
+    static_assert(__is_polymorphic(AudioTrack), "AudioTrack is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -352,13 +369,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioTrack* 
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSAudioTrack>(globalObject, impl);
+    return createWrapper<AudioTrack>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioTrack& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 AudioTrack* JSAudioTrack::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSAudioTrack*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSAudioTrack*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

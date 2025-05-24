@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLCanvasElement_h
-#define JSHTMLCanvasElement_h
+#pragma once
 
 #include "HTMLCanvasElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLCanvasElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLCanvasElement;
     static JSHTMLCanvasElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLCanvasElement>&& impl)
     {
-        JSHTMLCanvasElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLCanvasElement>(globalObject->vm().heap)) JSHTMLCanvasElement(structure, globalObject, WTF::move(impl));
+        JSHTMLCanvasElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLCanvasElement>(globalObject->vm().heap)) JSHTMLCanvasElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLCanvasElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,31 +47,28 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
+    static size_t estimatedSize(JSCell*);
 
     // Custom functions
-    JSC::JSValue toDataURL(JSC::ExecState*);
-    JSC::JSValue getContext(JSC::ExecState*);
-    JSC::JSValue probablySupportsContext(JSC::ExecState*);
-    HTMLCanvasElement& impl() const
+    JSC::JSValue getContext(JSC::ExecState&);
+    JSC::JSValue toDataURL(JSC::ExecState&);
+    HTMLCanvasElement& wrapped() const
     {
-        return static_cast<HTMLCanvasElement&>(Base::impl());
+        return static_cast<HTMLCanvasElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLCanvasElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLCanvasElement>&&);
+    JSHTMLCanvasElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLCanvasElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLCanvasElement> {
+    using WrapperClass = JSHTMLCanvasElement;
+    using ToWrappedReturnType = HTMLCanvasElement*;
+};
 
 } // namespace WebCore
-
-#endif

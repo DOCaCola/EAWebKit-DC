@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLAppletElement_h
-#define JSHTMLAppletElement_h
+#pragma once
 
 #include "HTMLAppletElement.h"
 #include "JSHTMLElement.h"
@@ -29,22 +28,21 @@ namespace WebCore {
 
 class JSHTMLAppletElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLAppletElement;
     static JSHTMLAppletElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAppletElement>&& impl)
     {
-        JSHTMLAppletElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAppletElement>(globalObject->vm().heap)) JSHTMLAppletElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAppletElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAppletElement>(globalObject->vm().heap)) JSHTMLAppletElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
-    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
 
     DECLARE_INFO;
 
@@ -55,26 +53,27 @@ public:
 
     static JSC::CallType getCallData(JSC::JSCell*, JSC::CallData&);
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAppletElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLAppletElement& wrapped() const
     {
-        return static_cast<HTMLAppletElement&>(Base::impl());
+        return static_cast<HTMLAppletElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::TypeOfShouldCallGetCallData | Base::StructureFlags;
 protected:
-    JSHTMLAppletElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAppletElement>&&);
+    JSHTMLAppletElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAppletElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
+    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&, bool& putResult);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLAppletElement> {
+    using WrapperClass = JSHTMLAppletElement;
+    using ToWrappedReturnType = HTMLAppletElement*;
+};
 
 } // namespace WebCore
-
-#endif

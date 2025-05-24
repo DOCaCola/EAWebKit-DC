@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMPlugin_h
-#define JSDOMPlugin_h
+#pragma once
 
 #include "DOMPlugin.h"
 #include "JSDOMWrapper.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSDOMPlugin : public JSDOMWrapper {
+class JSDOMPlugin : public JSDOMWrapper<DOMPlugin> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMPlugin>;
     static JSDOMPlugin* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMPlugin>&& impl)
     {
-        JSDOMPlugin* ptr = new (NotNull, JSC::allocateCell<JSDOMPlugin>(globalObject->vm().heap)) JSDOMPlugin(structure, globalObject, WTF::move(impl));
+        JSDOMPlugin* ptr = new (NotNull, JSC::allocateCell<JSDOMPlugin>(globalObject->vm().heap)) JSDOMPlugin(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMPlugin* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMPlugin();
 
     DECLARE_INFO;
 
@@ -53,26 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMPlugin& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMPlugin* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMPlugin(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMPlugin>&&);
+    JSDOMPlugin(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMPlugin>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMPlugin*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMPluginOwner : public JSC::WeakHandleOwner {
@@ -87,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMPlugin*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPlugin*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMPlugin& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMPlugin* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPlugin&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMPlugin* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMPlugin>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMPlugin>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMPlugin> {
+    using WrapperClass = JSDOMPlugin;
+    using ToWrappedReturnType = DOMPlugin*;
+};
 
 } // namespace WebCore
-
-#endif

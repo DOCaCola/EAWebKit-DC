@@ -22,9 +22,10 @@
 #include "JSSQLResultSet.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSQLResultSetRowList.h"
-#include "SQLResultSet.h"
-#include "SQLResultSetRowList.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,13 +34,15 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSQLResultSetRows(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSQLResultSetInsertId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSQLResultSetRowsAffected(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSQLResultSetRows(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSQLResultSetInsertId(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSQLResultSetRowsAffected(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSQLResultSetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSQLResultSetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSQLResultSetPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSQLResultSetPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSQLResultSetPrototype* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSetPrototype>(vm.heap)) JSSQLResultSetPrototype(vm, globalObject, structure);
@@ -62,13 +65,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSSQLResultSetConstructor = JSDOMConstructorNotConstructable<JSSQLResultSet>;
+
+template<> JSValue JSSQLResultSetConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSSQLResultSetConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSSQLResultSet::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SQLResultSet"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSSQLResultSetConstructor::s_info = { "SQLResultSet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLResultSetConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSQLResultSetPrototypeTableValues[] =
 {
-    { "rows", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetInsertId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rowsAffected", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRowsAffected), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSQLResultSetConstructor) } },
+    { "rows", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetInsertId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rowsAffected", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRowsAffected), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSQLResultSetPrototype::s_info = { "SQLResultSetPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLResultSetPrototype) };
@@ -81,10 +102,16 @@ void JSSQLResultSetPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSQLResultSet::s_info = { "SQLResultSet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLResultSet) };
 
-JSSQLResultSet::JSSQLResultSet(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSet>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSQLResultSet::JSSQLResultSet(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SQLResultSet>&& impl)
+    : JSDOMWrapper<SQLResultSet>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSQLResultSet::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSQLResultSet::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -92,7 +119,7 @@ JSObject* JSSQLResultSet::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSQLResultSetPrototype::create(vm, globalObject, JSSQLResultSetPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSQLResultSet::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSQLResultSet::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSQLResultSet>(vm, globalObject);
 }
@@ -103,63 +130,87 @@ void JSSQLResultSet::destroy(JSC::JSCell* cell)
     thisObject->JSSQLResultSet::~JSSQLResultSet();
 }
 
-JSSQLResultSet::~JSSQLResultSet()
+template<> inline JSSQLResultSet* BindingCaller<JSSQLResultSet>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSQLResultSet*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsSQLResultSetRows(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSQLResultSetRowsGetter(ExecState&, JSSQLResultSet&, ThrowScope& throwScope);
+
+EncodedJSValue jsSQLResultSetRows(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSQLResultSet* castedThis = jsDynamicCast<JSSQLResultSet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSQLResultSetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SQLResultSet", "rows");
-        return throwGetterTypeError(*exec, "SQLResultSet", "rows");
+    return BindingCaller<JSSQLResultSet>::attribute<jsSQLResultSetRowsGetter>(state, thisValue, "rows");
+}
+
+static inline JSValue jsSQLResultSetRowsGetter(ExecState& state, JSSQLResultSet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SQLResultSetRowList>>(state, *thisObject.globalObject(), impl.rows());
+    return result;
+}
+
+static inline JSValue jsSQLResultSetInsertIdGetter(ExecState&, JSSQLResultSet&, ThrowScope& throwScope);
+
+EncodedJSValue jsSQLResultSetInsertId(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSQLResultSet>::attribute<jsSQLResultSetInsertIdGetter>(state, thisValue, "insertId");
+}
+
+static inline JSValue jsSQLResultSetInsertIdGetter(ExecState& state, JSSQLResultSet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLongLong>(state, throwScope, impl.insertId());
+    return result;
+}
+
+static inline JSValue jsSQLResultSetRowsAffectedGetter(ExecState&, JSSQLResultSet&, ThrowScope& throwScope);
+
+EncodedJSValue jsSQLResultSetRowsAffected(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSQLResultSet>::attribute<jsSQLResultSetRowsAffectedGetter>(state, thisValue, "rowsAffected");
+}
+
+static inline JSValue jsSQLResultSetRowsAffectedGetter(ExecState& state, JSSQLResultSet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.rowsAffected());
+    return result;
+}
+
+EncodedJSValue jsSQLResultSetConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSQLResultSetPrototype* domObject = jsDynamicDowncast<JSSQLResultSetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSQLResultSet::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSQLResultSetConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSQLResultSetPrototype* domObject = jsDynamicDowncast<JSSQLResultSetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rows()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSQLResultSetInsertId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSQLResultSet::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSQLResultSet* castedThis = jsDynamicCast<JSSQLResultSet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSQLResultSetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SQLResultSet", "insertId");
-        return throwGetterTypeError(*exec, "SQLResultSet", "insertId");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.insertId(ec));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSQLResultSetConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
-
-
-EncodedJSValue jsSQLResultSetRowsAffected(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSQLResultSet* castedThis = jsDynamicCast<JSSQLResultSet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSQLResultSetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SQLResultSet", "rowsAffected");
-        return throwGetterTypeError(*exec, "SQLResultSet", "rowsAffected");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.rowsAffected());
-    return JSValue::encode(result);
-}
-
 
 bool JSSQLResultSetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -170,31 +221,32 @@ bool JSSQLResultSetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSSQLResultSetOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSQLResultSet = jsCast<JSSQLResultSet*>(handle.slot()->asCell());
+    auto* jsSQLResultSet = static_cast<JSSQLResultSet*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSQLResultSet->impl(), jsSQLResultSet);
+    uncacheWrapper(world, &jsSQLResultSet->wrapped(), jsSQLResultSet);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLResultSet* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SQLResultSet>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSQLResultSet>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to SQLResultSet.
-    COMPILE_ASSERT(!__is_polymorphic(SQLResultSet), SQLResultSet_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(SQLResultSet), "SQLResultSet is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSSQLResultSet>(globalObject, impl);
+    return createWrapper<SQLResultSet>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLResultSet& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SQLResultSet* JSSQLResultSet::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSQLResultSet*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSQLResultSet*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

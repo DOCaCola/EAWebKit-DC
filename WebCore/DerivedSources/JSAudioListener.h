@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioListener_h
-#define JSAudioListener_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSAudioListener : public JSDOMWrapper {
+class JSAudioListener : public JSDOMWrapper<AudioListener> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<AudioListener>;
     static JSAudioListener* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioListener>&& impl)
     {
-        JSAudioListener* ptr = new (NotNull, JSC::allocateCell<JSAudioListener>(globalObject->vm().heap)) JSAudioListener(structure, globalObject, WTF::move(impl));
+        JSAudioListener* ptr = new (NotNull, JSC::allocateCell<JSAudioListener>(globalObject->vm().heap)) JSAudioListener(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioListener* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSAudioListener();
 
     DECLARE_INFO;
 
@@ -53,23 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioListener& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioListener* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSAudioListener(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioListener>&&);
+    JSAudioListener(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioListener>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSAudioListenerOwner : public JSC::WeakHandleOwner {
@@ -84,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioListener*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioListener*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioListener& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(AudioListener* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioListener&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioListener* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioListener>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioListener>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<AudioListener> {
+    using WrapperClass = JSAudioListener;
+    using ToWrappedReturnType = AudioListener*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

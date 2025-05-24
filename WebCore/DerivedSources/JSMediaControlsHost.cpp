@@ -24,54 +24,99 @@
 
 #include "JSMediaControlsHost.h"
 
-#include "AudioTrack.h"
-#include "ExceptionCode.h"
-#include "HTMLElement.h"
 #include "JSAudioTrack.h"
 #include "JSAudioTrackList.h"
 #include "JSDOMBinding.h"
 #include "JSHTMLElement.h"
 #include "JSTextTrack.h"
 #include "JSTextTrackList.h"
-#include "MediaControlsHost.h"
-#include "TextTrack.h"
-#include "URL.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
+
+template<> JSString* convertEnumerationToJS(ExecState& state, MediaControlsHost::DeviceType enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("none"),
+        ASCIILiteral("airplay"),
+        ASCIILiteral("tvout"),
+    };
+    static_assert(static_cast<size_t>(MediaControlsHost::DeviceType::None) == 0, "MediaControlsHost::DeviceType::None is not 0 as expected");
+    static_assert(static_cast<size_t>(MediaControlsHost::DeviceType::Airplay) == 1, "MediaControlsHost::DeviceType::Airplay is not 1 as expected");
+    static_assert(static_cast<size_t>(MediaControlsHost::DeviceType::Tvout) == 2, "MediaControlsHost::DeviceType::Tvout is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<MediaControlsHost::DeviceType> parseEnumeration<MediaControlsHost::DeviceType>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "none")
+        return MediaControlsHost::DeviceType::None;
+    if (stringValue == "airplay")
+        return MediaControlsHost::DeviceType::Airplay;
+    if (stringValue == "tvout")
+        return MediaControlsHost::DeviceType::Tvout;
+    return std::nullopt;
+}
+
+template<> MediaControlsHost::DeviceType convertEnumeration<MediaControlsHost::DeviceType>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<MediaControlsHost::DeviceType>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<MediaControlsHost::DeviceType>()
+{
+    return "\"none\", \"airplay\", \"tvout\"";
+}
 
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionDisplayNameForTrack(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSetSelectedTextTrack(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInline(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainer(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionEnteredFullscreen(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionExitedFullscreen(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionGenerateUUID(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatform(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaControlsHostCaptionMenuOffItem(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostCaptionMenuAutomaticItem(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostCaptionDisplayMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostTextTrackContainer(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostAllowsInlineMediaPlayback(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostSupportsFullscreen(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostUserGestureRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostExternalDeviceDisplayName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostExternalDeviceType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaControlsHostControlsDependOnPageScaleFactor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaControlsHostControlsDependOnPageScaleFactor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaControlsHostCaptionMenuOffItem(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostCaptionMenuAutomaticItem(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostCaptionDisplayMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostTextTrackContainer(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostAllowsInlineMediaPlayback(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostSupportsFullscreen(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostIsVideoLayerInline(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostUserGestureRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostIsInMediaDocument(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostExternalDeviceDisplayName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostExternalDeviceType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaControlsHostControlsDependOnPageScaleFactor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaControlsHostControlsDependOnPageScaleFactor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaControlsHostShadowRootCSSText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaControlsHostConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaControlsHostPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaControlsHostPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaControlsHostPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaControlsHostPrototype>(vm.heap)) JSMediaControlsHostPrototype(vm, globalObject, structure);
@@ -98,23 +143,28 @@ private:
 
 static const HashTableValue JSMediaControlsHostPrototypeTableValues[] =
 {
-    { "captionMenuOffItem", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionMenuOffItem), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "captionMenuAutomaticItem", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionMenuAutomaticItem), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "captionDisplayMode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionDisplayMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "textTrackContainer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostTextTrackContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "allowsInlineMediaPlayback", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostAllowsInlineMediaPlayback), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "supportsFullscreen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostSupportsFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "userGestureRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostUserGestureRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalDeviceDisplayName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostExternalDeviceDisplayName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalDeviceType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostExternalDeviceType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "controlsDependOnPageScaleFactor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostControlsDependOnPageScaleFactor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControlsHostControlsDependOnPageScaleFactor) },
-    { "sortedTrackListForMenu", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu), (intptr_t) (1) },
-    { "displayNameForTrack", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionDisplayNameForTrack), (intptr_t) (1) },
-    { "setSelectedTextTrack", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionSetSelectedTextTrack), (intptr_t) (1) },
-    { "updateTextTrackContainer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainer), (intptr_t) (0) },
-    { "enteredFullscreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionEnteredFullscreen), (intptr_t) (0) },
-    { "exitedFullscreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionExitedFullscreen), (intptr_t) (0) },
-    { "generateUUID", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionGenerateUUID), (intptr_t) (0) },
+    { "captionMenuOffItem", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionMenuOffItem), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "captionMenuAutomaticItem", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionMenuAutomaticItem), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "captionDisplayMode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostCaptionDisplayMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "textTrackContainer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostTextTrackContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "allowsInlineMediaPlayback", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostAllowsInlineMediaPlayback), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "supportsFullscreen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostSupportsFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "isVideoLayerInline", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostIsVideoLayerInline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "userGestureRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostUserGestureRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "isInMediaDocument", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostIsInMediaDocument), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalDeviceDisplayName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostExternalDeviceDisplayName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalDeviceType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostExternalDeviceType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "controlsDependOnPageScaleFactor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostControlsDependOnPageScaleFactor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControlsHostControlsDependOnPageScaleFactor) } },
+    { "shadowRootCSSText", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControlsHostShadowRootCSSText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sortedTrackListForMenu", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu), (intptr_t) (1) } },
+    { "displayNameForTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionDisplayNameForTrack), (intptr_t) (1) } },
+    { "setSelectedTextTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionSetSelectedTextTrack), (intptr_t) (1) } },
+    { "setPreparedToReturnVideoLayerToInline", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInline), (intptr_t) (1) } },
+    { "updateTextTrackContainer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainer), (intptr_t) (0) } },
+    { "enteredFullscreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionEnteredFullscreen), (intptr_t) (0) } },
+    { "exitedFullscreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionExitedFullscreen), (intptr_t) (0) } },
+    { "generateUUID", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionGenerateUUID), (intptr_t) (0) } },
+    { "base64StringForIconAndPlatform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatform), (intptr_t) (2) } },
 };
 
 const ClassInfo JSMediaControlsHostPrototype::s_info = { "MediaControlsHostPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaControlsHostPrototype) };
@@ -123,14 +173,30 @@ void JSMediaControlsHostPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSMediaControlsHostPrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().modernMediaControlsEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("base64StringForIconAndPlatform"), strlen("base64StringForIconAndPlatform"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().modernMediaControlsEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("shadowRootCSSText"), strlen("shadowRootCSSText"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSMediaControlsHost::s_info = { "MediaControlsHost", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaControlsHost) };
 
-JSMediaControlsHost::JSMediaControlsHost(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaControlsHost>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaControlsHost::JSMediaControlsHost(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaControlsHost>&& impl)
+    : JSDOMWrapper<MediaControlsHost>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaControlsHost::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaControlsHost::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -138,7 +204,7 @@ JSObject* JSMediaControlsHost::createPrototype(VM& vm, JSGlobalObject* globalObj
     return JSMediaControlsHostPrototype::create(vm, globalObject, JSMediaControlsHostPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMediaControlsHost::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaControlsHost::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaControlsHost>(vm, globalObject);
 }
@@ -149,358 +215,452 @@ void JSMediaControlsHost::destroy(JSC::JSCell* cell)
     thisObject->JSMediaControlsHost::~JSMediaControlsHost();
 }
 
-JSMediaControlsHost::~JSMediaControlsHost()
+template<> inline JSMediaControlsHost* BindingCaller<JSMediaControlsHost>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMediaControlsHost*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsMediaControlsHostCaptionMenuOffItem(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaControlsHost* BindingCaller<JSMediaControlsHost>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "captionMenuOffItem");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "captionMenuOffItem");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.captionMenuOffItem()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSMediaControlsHost*>(state.thisValue());
 }
 
+static inline JSValue jsMediaControlsHostCaptionMenuOffItemGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaControlsHostCaptionMenuAutomaticItem(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControlsHostCaptionMenuOffItem(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "captionMenuAutomaticItem");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "captionMenuAutomaticItem");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.captionMenuAutomaticItem()));
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostCaptionMenuOffItemGetter>(state, thisValue, "captionMenuOffItem");
 }
 
-
-EncodedJSValue jsMediaControlsHostCaptionDisplayMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaControlsHostCaptionMenuOffItemGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "captionDisplayMode");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "captionDisplayMode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.captionDisplayMode());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TextTrack>>(state, *thisObject.globalObject(), impl.captionMenuOffItem());
+    return result;
 }
 
+static inline JSValue jsMediaControlsHostCaptionMenuAutomaticItemGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaControlsHostTextTrackContainer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControlsHostCaptionMenuAutomaticItem(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "textTrackContainer");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "textTrackContainer");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.textTrackContainer()));
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostCaptionMenuAutomaticItemGetter>(state, thisValue, "captionMenuAutomaticItem");
 }
 
-
-EncodedJSValue jsMediaControlsHostAllowsInlineMediaPlayback(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaControlsHostCaptionMenuAutomaticItemGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "allowsInlineMediaPlayback");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "allowsInlineMediaPlayback");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.allowsInlineMediaPlayback());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TextTrack>>(state, *thisObject.globalObject(), impl.captionMenuAutomaticItem());
+    return result;
 }
 
+static inline JSValue jsMediaControlsHostCaptionDisplayModeGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaControlsHostSupportsFullscreen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControlsHostCaptionDisplayMode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "supportsFullscreen");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "supportsFullscreen");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.supportsFullscreen());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostCaptionDisplayModeGetter>(state, thisValue, "captionDisplayMode");
 }
 
-
-EncodedJSValue jsMediaControlsHostUserGestureRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaControlsHostCaptionDisplayModeGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "userGestureRequired");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "userGestureRequired");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.userGestureRequired());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.captionDisplayMode());
+    return result;
 }
 
+static inline JSValue jsMediaControlsHostTextTrackContainerGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaControlsHostExternalDeviceDisplayName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControlsHostTextTrackContainer(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "externalDeviceDisplayName");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "externalDeviceDisplayName");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.externalDeviceDisplayName());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostTextTrackContainerGetter>(state, thisValue, "textTrackContainer");
 }
 
-
-EncodedJSValue jsMediaControlsHostExternalDeviceType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaControlsHostTextTrackContainerGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "externalDeviceType");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "externalDeviceType");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.externalDeviceType());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLElement>>(state, *thisObject.globalObject(), impl.textTrackContainer());
+    return result;
 }
 
+static inline JSValue jsMediaControlsHostAllowsInlineMediaPlaybackGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaControlsHostControlsDependOnPageScaleFactor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControlsHostAllowsInlineMediaPlayback(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaControlsHost", "controlsDependOnPageScaleFactor");
-        return throwGetterTypeError(*exec, "MediaControlsHost", "controlsDependOnPageScaleFactor");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.controlsDependOnPageScaleFactor());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostAllowsInlineMediaPlaybackGetter>(state, thisValue, "allowsInlineMediaPlayback");
 }
 
-
-void setJSMediaControlsHostControlsDependOnPageScaleFactor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsMediaControlsHostAllowsInlineMediaPlaybackGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.allowsInlineMediaPlayback());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostSupportsFullscreenGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostSupportsFullscreen(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostSupportsFullscreenGetter>(state, thisValue, "supportsFullscreen");
+}
+
+static inline JSValue jsMediaControlsHostSupportsFullscreenGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.supportsFullscreen());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostIsVideoLayerInlineGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostIsVideoLayerInline(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostIsVideoLayerInlineGetter>(state, thisValue, "isVideoLayerInline");
+}
+
+static inline JSValue jsMediaControlsHostIsVideoLayerInlineGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.isVideoLayerInline());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostUserGestureRequiredGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostUserGestureRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostUserGestureRequiredGetter>(state, thisValue, "userGestureRequired");
+}
+
+static inline JSValue jsMediaControlsHostUserGestureRequiredGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.userGestureRequired());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostIsInMediaDocumentGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostIsInMediaDocument(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostIsInMediaDocumentGetter>(state, thisValue, "isInMediaDocument");
+}
+
+static inline JSValue jsMediaControlsHostIsInMediaDocumentGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.isInMediaDocument());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostExternalDeviceDisplayNameGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostExternalDeviceDisplayName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostExternalDeviceDisplayNameGetter>(state, thisValue, "externalDeviceDisplayName");
+}
+
+static inline JSValue jsMediaControlsHostExternalDeviceDisplayNameGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.externalDeviceDisplayName());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostExternalDeviceTypeGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostExternalDeviceType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostExternalDeviceTypeGetter>(state, thisValue, "externalDeviceType");
+}
+
+static inline JSValue jsMediaControlsHostExternalDeviceTypeGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<MediaControlsHost::DeviceType>>(state, impl.externalDeviceType());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostControlsDependOnPageScaleFactorGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostControlsDependOnPageScaleFactor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostControlsDependOnPageScaleFactorGetter>(state, thisValue, "controlsDependOnPageScaleFactor");
+}
+
+static inline JSValue jsMediaControlsHostControlsDependOnPageScaleFactorGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.controlsDependOnPageScaleFactor());
+    return result;
+}
+
+static inline JSValue jsMediaControlsHostShadowRootCSSTextGetter(ExecState&, JSMediaControlsHost&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaControlsHostShadowRootCSSText(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaControlsHost>::attribute<jsMediaControlsHostShadowRootCSSTextGetter>(state, thisValue, "shadowRootCSSText");
+}
+
+static inline JSValue jsMediaControlsHostShadowRootCSSTextGetter(ExecState& state, JSMediaControlsHost& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.shadowRootCSSText());
+    return result;
+}
+
+bool setJSMediaControlsHostConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaControlsHostPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaControlsHost", "controlsDependOnPageScaleFactor");
-        else
-            throwSetterTypeError(*exec, "MediaControlsHost", "controlsDependOnPageScaleFactor");
-        return;
+    JSMediaControlsHostPrototype* domObject = jsDynamicDowncast<JSMediaControlsHostPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setControlsDependOnPageScaleFactor(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMediaControlsHostControlsDependOnPageScaleFactorFunction(ExecState&, JSMediaControlsHost&, JSValue, ThrowScope&);
+
+bool setJSMediaControlsHostControlsDependOnPageScaleFactor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaControlsHost>::setAttribute<setJSMediaControlsHostControlsDependOnPageScaleFactorFunction>(state, thisValue, encodedValue, "controlsDependOnPageScaleFactor");
+}
+
+static inline bool setJSMediaControlsHostControlsDependOnPageScaleFactorFunction(ExecState& state, JSMediaControlsHost& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setControlsDependOnPageScaleFactor(WTFMove(nativeValue));
+    return true;
 }
 
 
-static EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1Caller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "sortedTrackListForMenu");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    TextTrackList* trackList = JSTextTrackList::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.sortedTrackListForMenu(trackList));
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1Caller>(state, "sortedTrackListForMenu");
 }
 
-static EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1Caller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "sortedTrackListForMenu");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    AudioTrackList* trackList = JSAudioTrackList::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.sortedTrackListForMenu(trackList));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto trackList = convert<IDLInterface<TextTrackList>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "trackList", "MediaControlsHost", "sortedTrackListForMenu", "TextTrackList"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<TextTrack>>>(*state, *castedThis->globalObject(), impl.sortedTrackListForMenu(*trackList)));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2Caller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSTextTrackList::info())))))
-        return jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1(exec);
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSAudioTrackList::info())))))
-        return jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2(exec);
-    if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2Caller>(state, "sortedTrackListForMenu");
 }
 
-static EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionDisplayNameForTrack1(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2Caller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "displayNameForTrack");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    TextTrack* track = JSTextTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.displayNameForTrack(track));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto trackList = convert<IDLInterface<AudioTrackList>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "trackList", "MediaControlsHost", "sortedTrackListForMenu", "AudioTrackList"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<AudioTrack>>>(*state, *castedThis->globalObject(), impl.sortedTrackListForMenu(*trackList)));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionDisplayNameForTrack2(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "displayNameForTrack");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    AudioTrack* track = JSAudioTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.displayNameForTrack(track));
-    return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSTextTrackList::info()))
+            return jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSAudioTrackList::info()))
+            return jsMediaControlsHostPrototypeFunctionSortedTrackListForMenu2(state);
+    }
+    return argsCount < 1 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionDisplayNameForTrack(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionDisplayNameForTrackCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionDisplayNameForTrack(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSTextTrack::info())))))
-        return jsMediaControlsHostPrototypeFunctionDisplayNameForTrack1(exec);
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSAudioTrack::info())))))
-        return jsMediaControlsHostPrototypeFunctionDisplayNameForTrack2(exec);
-    if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionDisplayNameForTrackCaller>(state, "displayNameForTrack");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSetSelectedTextTrack(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionDisplayNameForTrackCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "setSelectedTextTrack");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    TextTrack* track = JSTextTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setSelectedTextTrack(track);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLNullable<IDLUnion<IDLInterface<TextTrack>, IDLInterface<AudioTrack>>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.displayNameForTrack(WTFMove(track))));
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSetSelectedTextTrackCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSetSelectedTextTrack(ExecState* state)
+{
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionSetSelectedTextTrackCaller>(state, "setSelectedTextTrack");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSetSelectedTextTrackCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLNullable<IDLInterface<TextTrack>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "track", "MediaControlsHost", "setSelectedTextTrack", "TextTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setSelectedTextTrack(WTFMove(track));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainer(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInlineCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInline(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "updateTextTrackContainer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInlineCaller>(state, "setPreparedToReturnVideoLayerToInline");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionSetPreparedToReturnVideoLayerToInlineCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto prepared = convert<IDLBoolean>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setPreparedToReturnVideoLayerToInline(WTFMove(prepared));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainerCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainer(ExecState* state)
+{
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainerCaller>(state, "updateTextTrackContainer");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionUpdateTextTrackContainerCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.updateTextTrackContainer();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionEnteredFullscreen(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionEnteredFullscreenCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionEnteredFullscreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "enteredFullscreen");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionEnteredFullscreenCaller>(state, "enteredFullscreen");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionEnteredFullscreenCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.enteredFullscreen();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionExitedFullscreen(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionExitedFullscreenCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionExitedFullscreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "exitedFullscreen");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionExitedFullscreenCaller>(state, "exitedFullscreen");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionExitedFullscreenCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.exitedFullscreen();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionGenerateUUID(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionGenerateUUIDCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionGenerateUUID(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaControlsHost* castedThis = jsDynamicCast<JSMediaControlsHost*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaControlsHost", "generateUUID");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaControlsHost::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.generateUUID());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionGenerateUUIDCaller>(state, "generateUUID");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionGenerateUUIDCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.generateUUID()));
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatformCaller(JSC::ExecState*, JSMediaControlsHost*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatform(ExecState* state)
+{
+    return BindingCaller<JSMediaControlsHost>::callOperation<jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatformCaller>(state, "base64StringForIconAndPlatform");
+}
+
+static inline JSC::EncodedJSValue jsMediaControlsHostPrototypeFunctionBase64StringForIconAndPlatformCaller(JSC::ExecState* state, JSMediaControlsHost* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto iconName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto platform = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.base64StringForIconAndPlatform(WTFMove(iconName), WTFMove(platform))));
 }
 
 bool JSMediaControlsHostOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -512,31 +672,32 @@ bool JSMediaControlsHostOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unkno
 
 void JSMediaControlsHostOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaControlsHost = jsCast<JSMediaControlsHost*>(handle.slot()->asCell());
+    auto* jsMediaControlsHost = static_cast<JSMediaControlsHost*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaControlsHost->impl(), jsMediaControlsHost);
+    uncacheWrapper(world, &jsMediaControlsHost->wrapped(), jsMediaControlsHost);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaControlsHost* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaControlsHost>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaControlsHost>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to MediaControlsHost.
-    COMPILE_ASSERT(!__is_polymorphic(MediaControlsHost), MediaControlsHost_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(MediaControlsHost), "MediaControlsHost is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSMediaControlsHost>(globalObject, impl);
+    return createWrapper<MediaControlsHost>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaControlsHost& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaControlsHost* JSMediaControlsHost::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaControlsHost*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaControlsHost*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

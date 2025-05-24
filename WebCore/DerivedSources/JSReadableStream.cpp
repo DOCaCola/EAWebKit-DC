@@ -20,23 +20,15 @@
 
 #include "config.h"
 
-#if ENABLE(STREAMS_API)
+#if ENABLE(READABLE_STREAM_API)
 
 #include "JSReadableStream.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "JSDOMPromise.h"
-#include "JSReadableStreamReader.h"
-#include "ReadableStream.h"
-#include "ReadableStreamReader.h"
-#include <bindings/ScriptValue.h>
-#include <runtime/Error.h>
+#include "JSDOMConstructor.h"
+#include "ReadableStreamBuiltins.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
-
-#if ENABLE(STREAMS_API)
-#include "Dictionary.h"
-#endif
 
 using namespace JSC;
 
@@ -44,19 +36,15 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionCancel(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionGetReader(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionPipeTo(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionPipeThrough(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsReadableStreamLocked(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsReadableStreamConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsReadableStreamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSReadableStreamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSReadableStreamPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSReadableStreamPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSReadableStreamPrototype* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamPrototype>(vm.heap)) JSReadableStreamPrototype(vm, globalObject, structure);
@@ -79,77 +67,39 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSReadableStreamConstructor : public DOMConstructorObject {
-private:
-    JSReadableStreamConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSReadableStreamConstructor = JSBuiltinConstructor<JSReadableStream>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSReadableStreamConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSReadableStreamConstructor* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamConstructor>(vm.heap)) JSReadableStreamConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSReadableStream(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSReadableStreamConstructor::constructJSReadableStream(ExecState* exec)
+template<> JSValue JSReadableStreamConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    auto* castedThis = jsCast<JSReadableStreamConstructor*>(exec->callee());
-    Deprecated::ScriptValue source = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    Dictionary strategy = { exec, exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    RefPtr<ReadableStream> object = ReadableStream::create(*exec, source, strategy);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-const ClassInfo JSReadableStreamConstructor::s_info = { "ReadableStreamConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamConstructor) };
-
-JSReadableStreamConstructor::JSReadableStreamConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSReadableStreamConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSReadableStreamConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSReadableStream::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSReadableStream::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ReadableStream"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSReadableStreamConstructor::getConstructData(JSCell*, ConstructData& constructData)
+template<> FunctionExecutable* JSReadableStreamConstructor::initializeExecutable(VM& vm)
 {
-    constructData.native.function = constructJSReadableStream;
-    return ConstructTypeHost;
+    return readableStreamInitializeReadableStreamCodeGenerator(vm);
 }
+
+template<> const ClassInfo JSReadableStreamConstructor::s_info = { "ReadableStream", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSReadableStreamPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "locked", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamLocked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cancel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamPrototypeFunctionCancel), (intptr_t) (0) },
-    { "getReader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamPrototypeFunctionGetReader), (intptr_t) (0) },
-    { "pipeTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamPrototypeFunctionPipeTo), (intptr_t) (2) },
-    { "pipeThrough", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamPrototypeFunctionPipeThrough), (intptr_t) (2) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSReadableStreamConstructor) } },
+    { "locked", DontEnum | ReadOnly | Accessor | Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamLockedCodeGenerator), (intptr_t) (0) } },
+    { "cancel", DontEnum | JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamCancelCodeGenerator), (intptr_t) (0) } },
+    { "getReader", DontEnum | JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamGetReaderCodeGenerator), (intptr_t) (0) } },
+    { "pipeTo", DontEnum | JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamPipeToCodeGenerator), (intptr_t) (1) } },
+    { "pipeThrough", DontEnum | JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamPipeThroughCodeGenerator), (intptr_t) (2) } },
+    { "tee", DontEnum | JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamTeeCodeGenerator), (intptr_t) (0) } },
 };
 
 const ClassInfo JSReadableStreamPrototype::s_info = { "ReadableStreamPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamPrototype) };
@@ -162,10 +112,14 @@ void JSReadableStreamPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSReadableStream::s_info = { "ReadableStream", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStream) };
 
-JSReadableStream::JSReadableStream(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ReadableStream>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSReadableStream::JSReadableStream(Structure* structure, JSDOMGlobalObject& globalObject)
+    : JSDOMObject(structure, globalObject) { }
+
+void JSReadableStream::finishCreation(VM& vm)
 {
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSReadableStream::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -173,7 +127,7 @@ JSObject* JSReadableStream::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSReadableStreamPrototype::create(vm, globalObject, JSReadableStreamPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSReadableStream::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSReadableStream::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSReadableStream>(vm, globalObject);
 }
@@ -184,129 +138,53 @@ void JSReadableStream::destroy(JSC::JSCell* cell)
     thisObject->JSReadableStream::~JSReadableStream();
 }
 
-JSReadableStream::~JSReadableStream()
+template<> inline JSReadableStream* BindingCaller<JSReadableStream>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSReadableStream*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsReadableStreamLocked(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSReadableStream* BindingCaller<JSReadableStream>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSReadableStream* castedThis = jsDynamicCast<JSReadableStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSReadableStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ReadableStream", "locked");
-        return throwGetterTypeError(*exec, "ReadableStream", "locked");
+    return jsDynamicDowncast<JSReadableStream*>(state.thisValue());
+}
+
+EncodedJSValue jsReadableStreamConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSReadableStreamPrototype* domObject = jsDynamicDowncast<JSReadableStreamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSReadableStream::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSReadableStreamConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSReadableStreamPrototype* domObject = jsDynamicDowncast<JSReadableStreamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.locked());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsReadableStreamConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSReadableStream::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSReadableStreamPrototype* domObject = jsDynamicCast<JSReadableStreamPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSReadableStream::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSReadableStreamConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSReadableStream::getConstructor(VM& vm, JSGlobalObject* globalObject)
+void JSReadableStream::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    return getDOMConstructor<JSReadableStreamConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSReadableStream*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
 }
 
-static inline EncodedJSValue jsReadableStreamPrototypeFunctionCancelPromise(ExecState*, JSPromiseDeferred*);
-EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionCancel(ExecState* exec)
-{
-    return JSValue::encode(callPromiseFunction(*exec, jsReadableStreamPrototypeFunctionCancelPromise));
-}
-
-static inline EncodedJSValue jsReadableStreamPrototypeFunctionCancelPromise(ExecState* exec, JSPromiseDeferred* promiseDeferred)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStream* castedThis = jsDynamicCast<JSReadableStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStream", "cancel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStream::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Deprecated::ScriptValue reason = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.cancel(reason, DeferredWrapper(exec, castedThis->globalObject(), promiseDeferred), ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionGetReader(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStream* castedThis = jsDynamicCast<JSReadableStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStream", "getReader");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStream::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getReader(ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionPipeTo(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStream* castedThis = jsDynamicCast<JSReadableStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStream", "pipeTo");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStream::info());
-    return JSValue::encode(castedThis->pipeTo(exec));
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamPrototypeFunctionPipeThrough(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStream* castedThis = jsDynamicCast<JSReadableStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStream", "pipeThrough");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStream::info());
-    return JSValue::encode(castedThis->pipeThrough(exec));
-}
-
-bool JSReadableStreamOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSReadableStreamOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsReadableStream = jsCast<JSReadableStream*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsReadableStream->impl(), jsReadableStream);
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ReadableStream* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSReadableStream>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSReadableStream>(globalObject, impl);
-}
-
-ReadableStream* JSReadableStream::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSReadableStream*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
 
 }
 
-#endif // ENABLE(STREAMS_API)
+#endif // ENABLE(READABLE_STREAM_API)

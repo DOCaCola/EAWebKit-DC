@@ -21,14 +21,15 @@
 #include "config.h"
 #include "JSCSSStyleDeclaration.h"
 
-#include "CSSRule.h"
-#include "CSSStyleDeclaration.h"
-#include "ExceptionCode.h"
+#include "CustomElementReactionQueue.h"
 #include "JSCSSRule.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "URL.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -49,15 +50,16 @@ JSC::EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionIsProper
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSStyleDeclarationCssText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSCSSStyleDeclarationCssText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsCSSStyleDeclarationLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSStyleDeclarationParentRule(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSStyleDeclarationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleDeclarationCssText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSStyleDeclarationCssText(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsCSSStyleDeclarationLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleDeclarationParentRule(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleDeclarationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSStyleDeclarationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSStyleDeclarationPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSStyleDeclarationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSStyleDeclarationPrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleDeclarationPrototype>(vm.heap)) JSCSSStyleDeclarationPrototype(vm, globalObject, structure);
@@ -80,75 +82,39 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSStyleDeclarationConstructor : public DOMConstructorObject {
-private:
-    JSCSSStyleDeclarationConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSStyleDeclarationConstructor = JSDOMConstructorNotConstructable<JSCSSStyleDeclaration>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSStyleDeclarationConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSStyleDeclarationConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleDeclarationConstructor>(vm.heap)) JSCSSStyleDeclarationConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSCSSStyleDeclarationTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSCSSStyleDeclarationTableValues[] =
+template<> JSValue JSCSSStyleDeclarationConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSCSSStyleDeclarationTable = { 2, 3, true, JSCSSStyleDeclarationTableValues, 0, JSCSSStyleDeclarationTableIndex };
-const ClassInfo JSCSSStyleDeclarationConstructor::s_info = { "CSSStyleDeclarationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleDeclarationConstructor) };
-
-JSCSSStyleDeclarationConstructor::JSCSSStyleDeclarationConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSCSSStyleDeclarationConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSStyleDeclarationConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleDeclaration::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleDeclaration::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSStyleDeclaration"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSStyleDeclarationConstructor::s_info = { "CSSStyleDeclaration", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleDeclarationConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSStyleDeclarationPrototypeTableValues[] =
 {
-    { "cssText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleDeclarationCssText) },
-    { "parentRule", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationParentRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "getPropertyValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyValue), (intptr_t) (1) },
-    { "getPropertyCSSValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValue), (intptr_t) (0) },
-    { "removeProperty", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionRemoveProperty), (intptr_t) (0) },
-    { "getPropertyPriority", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriority), (intptr_t) (0) },
-    { "setProperty", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionSetProperty), (intptr_t) (0) },
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionItem), (intptr_t) (0) },
-    { "getPropertyShorthand", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthand), (intptr_t) (0) },
-    { "isPropertyImplicit", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicit), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleDeclarationConstructor) } },
+    { "cssText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleDeclarationCssText) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "parentRule", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleDeclarationParentRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "getPropertyValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyValue), (intptr_t) (1) } },
+    { "getPropertyCSSValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValue), (intptr_t) (1) } },
+    { "removeProperty", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionRemoveProperty), (intptr_t) (1) } },
+    { "getPropertyPriority", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriority), (intptr_t) (1) } },
+    { "setProperty", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionSetProperty), (intptr_t) (2) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionItem), (intptr_t) (1) } },
+    { "getPropertyShorthand", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthand), (intptr_t) (0) } },
+    { "isPropertyImplicit", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicit), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSStyleDeclarationPrototype::s_info = { "CSSStyleDeclarationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleDeclarationPrototype) };
@@ -157,14 +123,21 @@ void JSCSSStyleDeclarationPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSCSSStyleDeclarationPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSCSSStyleDeclaration::s_info = { "CSSStyleDeclaration", &Base::s_info, &JSCSSStyleDeclarationTable, CREATE_METHOD_TABLE(JSCSSStyleDeclaration) };
+const ClassInfo JSCSSStyleDeclaration::s_info = { "CSSStyleDeclaration", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleDeclaration) };
 
-JSCSSStyleDeclaration::JSCSSStyleDeclaration(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleDeclaration>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCSSStyleDeclaration::JSCSSStyleDeclaration(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSStyleDeclaration>&& impl)
+    : JSDOMWrapper<CSSStyleDeclaration>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSStyleDeclaration::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSStyleDeclaration::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -172,7 +145,7 @@ JSObject* JSCSSStyleDeclaration::createPrototype(VM& vm, JSGlobalObject* globalO
     return JSCSSStyleDeclarationPrototype::create(vm, globalObject, JSCSSStyleDeclarationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSCSSStyleDeclaration::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSStyleDeclaration::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSStyleDeclaration>(vm, globalObject);
 }
@@ -183,274 +156,314 @@ void JSCSSStyleDeclaration::destroy(JSC::JSCell* cell)
     thisObject->JSCSSStyleDeclaration::~JSCSSStyleDeclaration();
 }
 
-JSCSSStyleDeclaration::~JSCSSStyleDeclaration()
-{
-    releaseImpl();
-}
-
-bool JSCSSStyleDeclaration::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSCSSStyleDeclaration::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSStyleDeclaration*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSCSSStyleDeclaration>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, 0, toJS<IDLDOMString>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    }
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSCSSStyleDeclaration, Base>(exec, JSCSSStyleDeclarationTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSCSSStyleDeclaration::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSCSSStyleDeclaration::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSStyleDeclaration*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index <= MAX_ARRAY_INDEX) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, 0, toJS<IDLDOMString>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsCSSStyleDeclarationCssText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleDeclarationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleDeclaration", "cssText");
-        return throwGetterTypeError(*exec, "CSSStyleDeclaration", "cssText");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.cssText());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCSSStyleDeclarationLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSCSSStyleDeclaration*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCSSStyleDeclarationParentRule(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleDeclarationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleDeclaration", "parentRule");
-        return throwGetterTypeError(*exec, "CSSStyleDeclaration", "parentRule");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentRule()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCSSStyleDeclarationConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSCSSStyleDeclaration* domObject = jsDynamicCast<JSCSSStyleDeclaration*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSStyleDeclaration::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSCSSStyleDeclaration::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+bool JSCSSStyleDeclaration::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSStyleDeclaration*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
-        return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    bool putResult = false;
+    if (thisObject->putDelegate(state, propertyName, value, slot, putResult))
+        return putResult;
+    return Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSCSSStyleDeclaration::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+bool JSCSSStyleDeclaration::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSCSSStyleDeclaration*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
-        return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    bool putResult = false;
+    if (thisObject->putDelegate(state, propertyName, value, slot, putResult))
+        return putResult;
+    return Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSCSSStyleDeclarationCssText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+template<> inline JSCSSStyleDeclaration* BindingCaller<JSCSSStyleDeclaration>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
+    return jsDynamicDowncast<JSCSSStyleDeclaration*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSCSSStyleDeclaration* BindingCaller<JSCSSStyleDeclaration>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSCSSStyleDeclaration*>(state.thisValue());
+}
+
+static inline JSValue jsCSSStyleDeclarationCssTextGetter(ExecState&, JSCSSStyleDeclaration&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleDeclarationCssText(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::attribute<jsCSSStyleDeclarationCssTextGetter>(state, thisValue, "cssText");
+}
+
+static inline JSValue jsCSSStyleDeclarationCssTextGetter(ExecState& state, JSCSSStyleDeclaration& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.cssText());
+    return result;
+}
+
+static inline JSValue jsCSSStyleDeclarationLengthGetter(ExecState&, JSCSSStyleDeclaration&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleDeclarationLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::attribute<jsCSSStyleDeclarationLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsCSSStyleDeclarationLengthGetter(ExecState& state, JSCSSStyleDeclaration& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+static inline JSValue jsCSSStyleDeclarationParentRuleGetter(ExecState&, JSCSSStyleDeclaration&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleDeclarationParentRule(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::attribute<jsCSSStyleDeclarationParentRuleGetter>(state, thisValue, "parentRule");
+}
+
+static inline JSValue jsCSSStyleDeclarationParentRuleGetter(ExecState& state, JSCSSStyleDeclaration& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<CSSRule>>>(state, *thisObject.globalObject(), impl.parentRule());
+    return result;
+}
+
+EncodedJSValue jsCSSStyleDeclarationConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSStyleDeclarationPrototype* domObject = jsDynamicDowncast<JSCSSStyleDeclarationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSStyleDeclaration::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSStyleDeclarationConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleDeclarationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSStyleDeclaration", "cssText");
-        else
-            throwSetterTypeError(*exec, "CSSStyleDeclaration", "cssText");
-        return;
+    JSCSSStyleDeclarationPrototype* domObject = jsDynamicDowncast<JSCSSStyleDeclarationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setCssText(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSCSSStyleDeclarationCssTextFunction(ExecState&, JSCSSStyleDeclaration&, JSValue, ThrowScope&);
+
+bool setJSCSSStyleDeclarationCssText(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::setAttribute<setJSCSSStyleDeclarationCssTextFunction>(state, thisValue, encodedValue, "cssText");
+}
+
+static inline bool setJSCSSStyleDeclarationCssTextFunction(ExecState& state, JSCSSStyleDeclaration& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setCssText(WTFMove(nativeValue)));
+    return true;
 }
 
 
-JSValue JSCSSStyleDeclaration::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSCSSStyleDeclaration::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSStyleDeclarationConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSStyleDeclarationConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyValue(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyValueCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "getPropertyValue");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.getPropertyValue(propertyName));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionGetPropertyValueCaller>(state, "getPropertyValue");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValue(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyValueCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "getPropertyCSSValue");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    return JSValue::encode(castedThis->getPropertyCSSValue(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto propertyName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.getPropertyValue(WTFMove(propertyName))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionRemoveProperty(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "removeProperty");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.removeProperty(propertyName, ec));
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValueCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValue(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValueCaller>(state, "getPropertyCSSValue");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriority(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValueCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "getPropertyPriority");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getPropertyPriority(propertyName));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->getPropertyCSSValue(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionSetProperty(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionRemovePropertyCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionRemoveProperty(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "setProperty");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String value = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String priority = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setProperty(propertyName, value, priority, ec);
-    setDOMException(exec, ec);
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionRemovePropertyCaller>(state, "removeProperty");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionRemovePropertyCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto propertyName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, throwScope, impl.removeProperty(WTFMove(propertyName))));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriorityCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriority(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriorityCaller>(state, "getPropertyPriority");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriorityCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto propertyName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.getPropertyPriority(WTFMove(propertyName))));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionSetPropertyCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionSetProperty(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionSetPropertyCaller>(state, "setProperty");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionSetPropertyCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto propertyName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto value = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto priority = state->argument(2).isUndefined() ? emptyString() : convert<IDLDOMString>(*state, state->uncheckedArgument(2), StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.setProperty(WTFMove(propertyName), WTFMove(value), WTFMove(priority)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionItemCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.item(index));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionItemCaller>(state, "item");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthand(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionItemCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "getPropertyShorthand");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getPropertyShorthand(propertyName));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.item(WTFMove(index))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicit(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthandCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthand(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleDeclaration* castedThis = jsDynamicCast<JSCSSStyleDeclaration*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleDeclaration", "isPropertyImplicit");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleDeclaration::info());
-    auto& impl = castedThis->impl();
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.isPropertyImplicit(propertyName));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthandCaller>(state, "getPropertyShorthand");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthandCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto propertyName = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.getPropertyShorthand(WTFMove(propertyName))));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicitCaller(JSC::ExecState*, JSCSSStyleDeclaration*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicit(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleDeclaration>::callOperation<jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicitCaller>(state, "isPropertyImplicit");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicitCaller(JSC::ExecState* state, JSCSSStyleDeclaration* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto propertyName = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.isPropertyImplicit(WTFMove(propertyName))));
 }
 
 void JSCSSStyleDeclaration::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -461,33 +474,42 @@ void JSCSSStyleDeclaration::visitChildren(JSCell* cell, SlotVisitor& visitor)
     thisObject->visitAdditionalChildren(visitor);
 }
 
+void JSCSSStyleDeclaration::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSCSSStyleDeclaration*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
 bool JSCSSStyleDeclarationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsCSSStyleDeclaration = jsCast<JSCSSStyleDeclaration*>(handle.slot()->asCell());
-    void* root = WebCore::root(&jsCSSStyleDeclaration->impl());
+    void* root = WebCore::root(&jsCSSStyleDeclaration->wrapped());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSCSSStyleDeclarationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsCSSStyleDeclaration = jsCast<JSCSSStyleDeclaration*>(handle.slot()->asCell());
+    auto* jsCSSStyleDeclaration = static_cast<JSCSSStyleDeclaration*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCSSStyleDeclaration->impl(), jsCSSStyleDeclaration);
+    uncacheWrapper(world, &jsCSSStyleDeclaration->wrapped(), jsCSSStyleDeclaration);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSStyleDeclaration* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CSSStyleDeclaration>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCSSStyleDeclaration>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSCSSStyleDeclaration>(globalObject, impl);
+    return createWrapper<CSSStyleDeclaration>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSStyleDeclaration& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 CSSStyleDeclaration* JSCSSStyleDeclaration::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSCSSStyleDeclaration*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSCSSStyleDeclaration*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

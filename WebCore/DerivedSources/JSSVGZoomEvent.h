@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGZoomEvent_h
-#define JSSVGZoomEvent_h
+#pragma once
 
 #include "JSUIEvent.h"
 #include "SVGElement.h"
@@ -29,42 +28,40 @@ namespace WebCore {
 
 class JSSVGZoomEvent : public JSUIEvent {
 public:
-    typedef JSUIEvent Base;
+    using Base = JSUIEvent;
+    using DOMWrapped = SVGZoomEvent;
     static JSSVGZoomEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGZoomEvent>&& impl)
     {
-        JSSVGZoomEvent* ptr = new (NotNull, JSC::allocateCell<JSSVGZoomEvent>(globalObject->vm().heap)) JSSVGZoomEvent(structure, globalObject, WTF::move(impl));
+        JSSVGZoomEvent* ptr = new (NotNull, JSC::allocateCell<JSSVGZoomEvent>(globalObject->vm().heap)) JSSVGZoomEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGZoomEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGZoomEvent& wrapped() const
     {
-        return static_cast<SVGZoomEvent&>(Base::impl());
+        return static_cast<SVGZoomEvent&>(Base::wrapped());
     }
 protected:
-    JSSVGZoomEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGZoomEvent>&&);
+    JSSVGZoomEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGZoomEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGZoomEvent> {
+    using WrapperClass = JSSVGZoomEvent;
+    using ToWrappedReturnType = SVGZoomEvent*;
+};
 
 } // namespace WebCore
-
-#endif

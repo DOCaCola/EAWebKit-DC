@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTimeRanges_h
-#define JSTimeRanges_h
+#pragma once
 
 #if ENABLE(VIDEO)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSTimeRanges : public JSDOMWrapper {
+class WEBCORE_EXPORT JSTimeRanges : public JSDOMWrapper<TimeRanges> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<TimeRanges>;
     static JSTimeRanges* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TimeRanges>&& impl)
     {
-        JSTimeRanges* ptr = new (NotNull, JSC::allocateCell<JSTimeRanges>(globalObject->vm().heap)) JSTimeRanges(structure, globalObject, WTF::move(impl));
+        JSTimeRanges* ptr = new (NotNull, JSC::allocateCell<JSTimeRanges>(globalObject->vm().heap)) JSTimeRanges(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static TimeRanges* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTimeRanges();
 
     DECLARE_INFO;
 
@@ -53,23 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TimeRanges& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TimeRanges* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSTimeRanges(JSC::Structure*, JSDOMGlobalObject*, Ref<TimeRanges>&&);
+    JSTimeRanges(JSC::Structure*, JSDOMGlobalObject&, Ref<TimeRanges>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTimeRangesOwner : public JSC::WeakHandleOwner {
@@ -84,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TimeRanges*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TimeRanges*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TimeRanges& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(TimeRanges* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TimeRanges&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TimeRanges* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TimeRanges>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TimeRanges>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TimeRanges> {
+    using WrapperClass = JSTimeRanges;
+    using ToWrappedReturnType = TimeRanges*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO)
-
-#endif

@@ -20,15 +20,14 @@
 
 #include "config.h"
 
-#if ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#if ENABLE(VIDEO_TRACK)
 
 #include "JSVTTRegionList.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSVTTRegion.h"
-#include "VTTRegion.h"
-#include "VTTRegionList.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
@@ -44,11 +43,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsVTTRegionListPrototypeFunctionGetRegionById(
 
 // Attributes
 
-JSC::EncodedJSValue jsVTTRegionListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsVTTRegionListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSVTTRegionListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSVTTRegionListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSVTTRegionListPrototype* ptr = new (NotNull, JSC::allocateCell<JSVTTRegionListPrototype>(vm.heap)) JSVTTRegionListPrototype(vm, globalObject, structure);
@@ -71,28 +71,13 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSVTTRegionListTableIndex[4] = {
-    { -1, -1 },
-    { 0, -1 },
-    { -1, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSVTTRegionListTableValues[] =
-{
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSVTTRegionListTable = { 1, 3, true, JSVTTRegionListTableValues, 0, JSVTTRegionListTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSVTTRegionListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsVTTRegionListPrototypeFunctionItem), (intptr_t) (1) },
-    { "getRegionById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsVTTRegionListPrototypeFunctionGetRegionById), (intptr_t) (1) },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsVTTRegionListPrototypeFunctionItem), (intptr_t) (1) } },
+    { "getRegionById", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsVTTRegionListPrototypeFunctionGetRegionById), (intptr_t) (1) } },
 };
 
 const ClassInfo JSVTTRegionListPrototype::s_info = { "VTTRegionListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegionListPrototype) };
@@ -101,14 +86,21 @@ void JSVTTRegionListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSVTTRegionListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSVTTRegionList::s_info = { "VTTRegionList", &Base::s_info, &JSVTTRegionListTable, CREATE_METHOD_TABLE(JSVTTRegionList) };
+const ClassInfo JSVTTRegionList::s_info = { "VTTRegionList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegionList) };
 
-JSVTTRegionList::JSVTTRegionList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTRegionList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSVTTRegionList::JSVTTRegionList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<VTTRegionList>&& impl)
+    : JSDOMWrapper<VTTRegionList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSVTTRegionList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSVTTRegionList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -116,7 +108,7 @@ JSObject* JSVTTRegionList::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSVTTRegionListPrototype::create(vm, globalObject, JSVTTRegionListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSVTTRegionList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSVTTRegionList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSVTTRegionList>(vm, globalObject);
 }
@@ -127,95 +119,117 @@ void JSVTTRegionList::destroy(JSC::JSCell* cell)
     thisObject->JSVTTRegionList::~JSVTTRegionList();
 }
 
-JSVTTRegionList::~JSVTTRegionList()
-{
-    releaseImpl();
-}
-
-bool JSVTTRegionList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSVTTRegionList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSVTTRegionList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSVTTRegionList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<VTTRegion>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSVTTRegionList, Base>(exec, JSVTTRegionListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSVTTRegionList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSVTTRegionList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSVTTRegionList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<VTTRegion>>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsVTTRegionListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSVTTRegionList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-void JSVTTRegionList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSVTTRegionList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSVTTRegionList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-EncodedJSValue JSC_HOST_CALL jsVTTRegionListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSVTTRegionList* BindingCaller<JSVTTRegionList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSVTTRegionList* castedThis = jsDynamicCast<JSVTTRegionList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "VTTRegionList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSVTTRegionList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSVTTRegionList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsVTTRegionListPrototypeFunctionGetRegionById(ExecState* exec)
+template<> inline JSVTTRegionList* BindingCaller<JSVTTRegionList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSVTTRegionList* castedThis = jsDynamicCast<JSVTTRegionList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "VTTRegionList", "getRegionById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSVTTRegionList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String id = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getRegionById(id)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSVTTRegionList*>(state.thisValue());
+}
+
+static inline JSValue jsVTTRegionListLengthGetter(ExecState&, JSVTTRegionList&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSVTTRegionList>::attribute<jsVTTRegionListLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsVTTRegionListLengthGetter(ExecState& state, JSVTTRegionList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+bool setJSVTTRegionListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSVTTRegionListPrototype* domObject = jsDynamicDowncast<JSVTTRegionListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline JSC::EncodedJSValue jsVTTRegionListPrototypeFunctionItemCaller(JSC::ExecState*, JSVTTRegionList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsVTTRegionListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSVTTRegionList>::callOperation<jsVTTRegionListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsVTTRegionListPrototypeFunctionItemCaller(JSC::ExecState* state, JSVTTRegionList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<VTTRegion>>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsVTTRegionListPrototypeFunctionGetRegionByIdCaller(JSC::ExecState*, JSVTTRegionList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsVTTRegionListPrototypeFunctionGetRegionById(ExecState* state)
+{
+    return BindingCaller<JSVTTRegionList>::callOperation<jsVTTRegionListPrototypeFunctionGetRegionByIdCaller>(state, "getRegionById");
+}
+
+static inline JSC::EncodedJSValue jsVTTRegionListPrototypeFunctionGetRegionByIdCaller(JSC::ExecState* state, JSVTTRegionList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto id = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<VTTRegion>>>(*state, *castedThis->globalObject(), impl.getRegionById(WTFMove(id))));
 }
 
 bool JSVTTRegionListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -227,34 +241,35 @@ bool JSVTTRegionListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> 
 
 void JSVTTRegionListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsVTTRegionList = jsCast<JSVTTRegionList*>(handle.slot()->asCell());
+    auto* jsVTTRegionList = static_cast<JSVTTRegionList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsVTTRegionList->impl(), jsVTTRegionList);
+    uncacheWrapper(world, &jsVTTRegionList->wrapped(), jsVTTRegionList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTRegionList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<VTTRegionList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSVTTRegionList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to VTTRegionList.
-    COMPILE_ASSERT(!__is_polymorphic(VTTRegionList), VTTRegionList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(VTTRegionList), "VTTRegionList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSVTTRegionList>(globalObject, impl);
+    return createWrapper<VTTRegionList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTRegionList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 VTTRegionList* JSVTTRegionList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSVTTRegionList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSVTTRegionList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#endif // ENABLE(VIDEO_TRACK)

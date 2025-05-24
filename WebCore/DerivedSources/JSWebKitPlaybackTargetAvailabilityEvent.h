@@ -18,60 +18,60 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitPlaybackTargetAvailabilityEvent_h
-#define JSWebKitPlaybackTargetAvailabilityEvent_h
+#pragma once
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "WebKitPlaybackTargetAvailabilityEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSWebKitPlaybackTargetAvailabilityEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = WebKitPlaybackTargetAvailabilityEvent;
     static JSWebKitPlaybackTargetAvailabilityEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitPlaybackTargetAvailabilityEvent>&& impl)
     {
-        JSWebKitPlaybackTargetAvailabilityEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitPlaybackTargetAvailabilityEvent>(globalObject->vm().heap)) JSWebKitPlaybackTargetAvailabilityEvent(structure, globalObject, WTF::move(impl));
+        JSWebKitPlaybackTargetAvailabilityEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitPlaybackTargetAvailabilityEvent>(globalObject->vm().heap)) JSWebKitPlaybackTargetAvailabilityEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitPlaybackTargetAvailabilityEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WebKitPlaybackTargetAvailabilityEvent& wrapped() const
     {
-        return static_cast<WebKitPlaybackTargetAvailabilityEvent&>(Base::impl());
+        return static_cast<WebKitPlaybackTargetAvailabilityEvent&>(Base::wrapped());
     }
 protected:
-    JSWebKitPlaybackTargetAvailabilityEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitPlaybackTargetAvailabilityEvent>&&);
+    JSWebKitPlaybackTargetAvailabilityEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitPlaybackTargetAvailabilityEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitPlaybackTargetAvailabilityEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitPlaybackTargetAvailabilityEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebKitPlaybackTargetAvailabilityEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebKitPlaybackTargetAvailabilityEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillWebKitPlaybackTargetAvailabilityEventInit(WebKitPlaybackTargetAvailabilityEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<WebKitPlaybackTargetAvailabilityEvent> {
+    using WrapperClass = JSWebKitPlaybackTargetAvailabilityEvent;
+    using ToWrappedReturnType = WebKitPlaybackTargetAvailabilityEvent*;
+};
+template<> WebKitPlaybackTargetAvailabilityEvent::Init convertDictionary<WebKitPlaybackTargetAvailabilityEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WIRELESS_PLAYBACK_TARGET)
-
-#endif

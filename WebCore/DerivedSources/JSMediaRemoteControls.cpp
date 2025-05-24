@@ -24,10 +24,11 @@
 
 #include "JSMediaRemoteControls.h"
 
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
-#include "MediaRemoteControls.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -37,19 +38,20 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaRemoteControlsPreviousTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaRemoteControlsPreviousTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaRemoteControlsNextTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaRemoteControlsNextTrackEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaRemoteControlsOnprevioustrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaRemoteControlsOnprevioustrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaRemoteControlsOnnexttrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaRemoteControlsOnnexttrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaRemoteControlsConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaRemoteControlsPreviousTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaRemoteControlsPreviousTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaRemoteControlsNextTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaRemoteControlsNextTrackEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaRemoteControlsOnprevioustrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaRemoteControlsOnprevioustrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaRemoteControlsOnnexttrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaRemoteControlsOnnexttrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaRemoteControlsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaRemoteControlsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaRemoteControlsPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaRemoteControlsPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaRemoteControlsPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaRemoteControlsPrototype>(vm.heap)) JSMediaRemoteControlsPrototype(vm, globalObject, structure);
@@ -72,71 +74,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaRemoteControlsConstructor : public DOMConstructorObject {
-private:
-    JSMediaRemoteControlsConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSMediaRemoteControlsConstructor = JSDOMConstructor<JSMediaRemoteControls>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaRemoteControlsConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaRemoteControlsConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaRemoteControlsConstructor>(vm.heap)) JSMediaRemoteControlsConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaRemoteControls(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSMediaRemoteControlsConstructor::constructJSMediaRemoteControls(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMediaRemoteControlsConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSMediaRemoteControlsConstructor*>(exec->callee());
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaRemoteControlsConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaRemoteControls");
-    RefPtr<MediaRemoteControls> object = MediaRemoteControls::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "MediaRemoteControls");
+    auto object = MediaRemoteControls::create(*context);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaRemoteControls>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-const ClassInfo JSMediaRemoteControlsConstructor::s_info = { "MediaRemoteControlsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaRemoteControlsConstructor) };
-
-JSMediaRemoteControlsConstructor::JSMediaRemoteControlsConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSMediaRemoteControlsConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSMediaRemoteControlsConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSMediaRemoteControlsConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaRemoteControls::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaRemoteControls::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaRemoteControls"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSMediaRemoteControlsConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaRemoteControls;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaRemoteControlsConstructor::s_info = { "MediaRemoteControls", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaRemoteControlsConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaRemoteControlsPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "previousTrackEnabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsPreviousTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsPreviousTrackEnabled) },
-    { "nextTrackEnabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsNextTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsNextTrackEnabled) },
-    { "onprevioustrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsOnprevioustrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsOnprevioustrack) },
-    { "onnexttrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsOnnexttrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsOnnexttrack) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsConstructor) } },
+    { "previousTrackEnabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsPreviousTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsPreviousTrackEnabled) } },
+    { "nextTrackEnabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsNextTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsNextTrackEnabled) } },
+    { "onprevioustrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsOnprevioustrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsOnprevioustrack) } },
+    { "onnexttrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaRemoteControlsOnnexttrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaRemoteControlsOnnexttrack) } },
 };
 
 const ClassInfo JSMediaRemoteControlsPrototype::s_info = { "MediaRemoteControlsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaRemoteControlsPrototype) };
@@ -149,170 +125,190 @@ void JSMediaRemoteControlsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaRemoteControls::s_info = { "MediaRemoteControls", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaRemoteControls) };
 
-JSMediaRemoteControls::JSMediaRemoteControls(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaRemoteControls>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSMediaRemoteControls::JSMediaRemoteControls(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaRemoteControls>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaRemoteControls::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaRemoteControls::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSMediaRemoteControlsPrototype::create(vm, globalObject, JSMediaRemoteControlsPrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSMediaRemoteControlsPrototype::create(vm, globalObject, JSMediaRemoteControlsPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSMediaRemoteControls::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaRemoteControls::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaRemoteControls>(vm, globalObject);
 }
 
-EncodedJSValue jsMediaRemoteControlsPreviousTrackEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaRemoteControls* BindingCaller<JSMediaRemoteControls>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaRemoteControls", "previousTrackEnabled");
-        return throwGetterTypeError(*exec, "MediaRemoteControls", "previousTrackEnabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.previousTrackEnabled());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsMediaRemoteControlsPreviousTrackEnabledGetter(ExecState&, JSMediaRemoteControls&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaRemoteControlsNextTrackEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaRemoteControlsPreviousTrackEnabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaRemoteControls", "nextTrackEnabled");
-        return throwGetterTypeError(*exec, "MediaRemoteControls", "nextTrackEnabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.nextTrackEnabled());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaRemoteControls>::attribute<jsMediaRemoteControlsPreviousTrackEnabledGetter>(state, thisValue, "previousTrackEnabled");
 }
 
-
-EncodedJSValue jsMediaRemoteControlsOnprevioustrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaRemoteControlsPreviousTrackEnabledGetter(ExecState& state, JSMediaRemoteControls& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaRemoteControls", "onprevioustrack");
-        return throwGetterTypeError(*exec, "MediaRemoteControls", "onprevioustrack");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().previoustrackEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.previousTrackEnabled());
+    return result;
 }
 
+static inline JSValue jsMediaRemoteControlsNextTrackEnabledGetter(ExecState&, JSMediaRemoteControls&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaRemoteControlsOnnexttrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaRemoteControlsNextTrackEnabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaRemoteControls", "onnexttrack");
-        return throwGetterTypeError(*exec, "MediaRemoteControls", "onnexttrack");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().nexttrackEvent));
+    return BindingCaller<JSMediaRemoteControls>::attribute<jsMediaRemoteControlsNextTrackEnabledGetter>(state, thisValue, "nextTrackEnabled");
 }
 
-
-EncodedJSValue jsMediaRemoteControlsConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsMediaRemoteControlsNextTrackEnabledGetter(ExecState& state, JSMediaRemoteControls& thisObject, ThrowScope& throwScope)
 {
-    JSMediaRemoteControlsPrototype* domObject = jsDynamicCast<JSMediaRemoteControlsPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaRemoteControls::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.nextTrackEnabled());
+    return result;
 }
 
-void setJSMediaRemoteControlsPreviousTrackEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsMediaRemoteControlsOnprevioustrackGetter(ExecState&, JSMediaRemoteControls&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaRemoteControlsOnprevioustrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSMediaRemoteControls>::attribute<jsMediaRemoteControlsOnprevioustrackGetter>(state, thisValue, "onprevioustrack");
+}
+
+static inline JSValue jsMediaRemoteControlsOnprevioustrackGetter(ExecState& state, JSMediaRemoteControls& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().previoustrackEvent);
+}
+
+static inline JSValue jsMediaRemoteControlsOnnexttrackGetter(ExecState&, JSMediaRemoteControls&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaRemoteControlsOnnexttrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaRemoteControls>::attribute<jsMediaRemoteControlsOnnexttrackGetter>(state, thisValue, "onnexttrack");
+}
+
+static inline JSValue jsMediaRemoteControlsOnnexttrackGetter(ExecState& state, JSMediaRemoteControls& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().nexttrackEvent);
+}
+
+EncodedJSValue jsMediaRemoteControlsConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaRemoteControlsPrototype* domObject = jsDynamicDowncast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaRemoteControls::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaRemoteControlsConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaRemoteControls", "previousTrackEnabled");
-        else
-            throwSetterTypeError(*exec, "MediaRemoteControls", "previousTrackEnabled");
-        return;
+    JSMediaRemoteControlsPrototype* domObject = jsDynamicDowncast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setPreviousTrackEnabled(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMediaRemoteControlsPreviousTrackEnabledFunction(ExecState&, JSMediaRemoteControls&, JSValue, ThrowScope&);
+
+bool setJSMediaRemoteControlsPreviousTrackEnabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaRemoteControls>::setAttribute<setJSMediaRemoteControlsPreviousTrackEnabledFunction>(state, thisValue, encodedValue, "previousTrackEnabled");
+}
+
+static inline bool setJSMediaRemoteControlsPreviousTrackEnabledFunction(ExecState& state, JSMediaRemoteControls& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setPreviousTrackEnabled(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSMediaRemoteControlsNextTrackEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaRemoteControlsNextTrackEnabledFunction(ExecState&, JSMediaRemoteControls&, JSValue, ThrowScope&);
+
+bool setJSMediaRemoteControlsNextTrackEnabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaRemoteControls", "nextTrackEnabled");
-        else
-            throwSetterTypeError(*exec, "MediaRemoteControls", "nextTrackEnabled");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setNextTrackEnabled(nativeValue);
+    return BindingCaller<JSMediaRemoteControls>::setAttribute<setJSMediaRemoteControlsNextTrackEnabledFunction>(state, thisValue, encodedValue, "nextTrackEnabled");
+}
+
+static inline bool setJSMediaRemoteControlsNextTrackEnabledFunction(ExecState& state, JSMediaRemoteControls& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setNextTrackEnabled(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSMediaRemoteControlsOnprevioustrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaRemoteControlsOnprevioustrackFunction(ExecState&, JSMediaRemoteControls&, JSValue, ThrowScope&);
+
+bool setJSMediaRemoteControlsOnprevioustrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaRemoteControls", "onprevioustrack");
-        else
-            throwSetterTypeError(*exec, "MediaRemoteControls", "onprevioustrack");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().previoustrackEvent, value);
+    return BindingCaller<JSMediaRemoteControls>::setAttribute<setJSMediaRemoteControlsOnprevioustrackFunction>(state, thisValue, encodedValue, "onprevioustrack");
+}
+
+static inline bool setJSMediaRemoteControlsOnprevioustrackFunction(ExecState& state, JSMediaRemoteControls& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().previoustrackEvent, value);
+    return true;
 }
 
 
-void setJSMediaRemoteControlsOnnexttrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaRemoteControlsOnnexttrackFunction(ExecState&, JSMediaRemoteControls&, JSValue, ThrowScope&);
+
+bool setJSMediaRemoteControlsOnnexttrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaRemoteControls* castedThis = jsDynamicCast<JSMediaRemoteControls*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaRemoteControlsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaRemoteControls", "onnexttrack");
-        else
-            throwSetterTypeError(*exec, "MediaRemoteControls", "onnexttrack");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().nexttrackEvent, value);
+    return BindingCaller<JSMediaRemoteControls>::setAttribute<setJSMediaRemoteControlsOnnexttrackFunction>(state, thisValue, encodedValue, "onnexttrack");
+}
+
+static inline bool setJSMediaRemoteControlsOnnexttrackFunction(ExecState& state, JSMediaRemoteControls& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().nexttrackEvent, value);
+    return true;
 }
 
 
-JSValue JSMediaRemoteControls::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSMediaRemoteControls::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMediaRemoteControlsConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMediaRemoteControlsConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 void JSMediaRemoteControls::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -320,7 +316,7 @@ void JSMediaRemoteControls::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSMediaRemoteControls*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -331,15 +327,12 @@ extern "C" { extern void (*const __identifier("??_7MediaRemoteControls@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19MediaRemoteControlsE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaRemoteControls* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaRemoteControls>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaRemoteControls>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaRemoteControls@WebCore@@6B@"));
 #else
@@ -347,7 +340,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaRemoteC
 #if COMPILER(CLANG)
     // If this fails MediaRemoteControls does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(MediaRemoteControls), MediaRemoteControls_is_not_polymorphic);
+    static_assert(__is_polymorphic(MediaRemoteControls), "MediaRemoteControls is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -356,9 +349,20 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaRemoteC
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSMediaRemoteControls>(globalObject, impl);
+    return createWrapper<MediaRemoteControls>(globalObject, WTFMove(impl));
 }
 
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaRemoteControls& impl)
+{
+    return wrap(state, globalObject, impl);
+}
+
+MediaRemoteControls* JSMediaRemoteControls::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSMediaRemoteControls*>(value))
+        return &wrapper->wrapped();
+    return nullptr;
+}
 
 }
 

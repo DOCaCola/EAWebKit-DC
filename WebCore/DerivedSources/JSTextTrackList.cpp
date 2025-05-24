@@ -25,15 +25,14 @@
 #include "JSTextTrackList.h"
 
 #include "Element.h"
-#include "Event.h"
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
-#include "JSEvent.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
 #include "JSNodeCustom.h"
 #include "JSTextTrack.h"
-#include "TextTrack.h"
-#include "TextTrackList.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
@@ -46,24 +45,22 @@ namespace WebCore {
 
 JSC::EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionGetTrackById(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsTextTrackListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTextTrackListOnaddtrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTextTrackListOnaddtrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTextTrackListOnchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTextTrackListOnchange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTextTrackListOnremovetrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSTextTrackListOnremovetrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsTextTrackListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTextTrackListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTextTrackListOnaddtrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTextTrackListOnaddtrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTextTrackListOnchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTextTrackListOnchange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTextTrackListOnremovetrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTextTrackListOnremovetrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsTextTrackListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTextTrackListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSTextTrackListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSTextTrackListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSTextTrackListPrototype* ptr = new (NotNull, JSC::allocateCell<JSTextTrackListPrototype>(vm.heap)) JSTextTrackListPrototype(vm, globalObject, structure);
@@ -86,85 +83,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTextTrackListConstructor : public DOMConstructorObject {
-private:
-    JSTextTrackListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSTextTrackListConstructor = JSDOMConstructorNotConstructable<JSTextTrackList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTextTrackListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTextTrackListConstructor* ptr = new (NotNull, JSC::allocateCell<JSTextTrackListConstructor>(vm.heap)) JSTextTrackListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSTextTrackListTableIndex[17] = {
-    { -1, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 4, -1 },
-    { -1, -1 },
-    { 3, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, 16 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 2, -1 },
-};
-
-
-static const HashTableValue JSTextTrackListTableValues[] =
+template<> JSValue JSTextTrackListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onaddtrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnaddtrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnaddtrack) },
-    { "onchange", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnchange) },
-    { "onremovetrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnremovetrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnremovetrack) },
-};
-
-static const HashTable JSTextTrackListTable = { 5, 15, true, JSTextTrackListTableValues, 0, JSTextTrackListTableIndex };
-const ClassInfo JSTextTrackListConstructor::s_info = { "TextTrackListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackListConstructor) };
-
-JSTextTrackListConstructor::JSTextTrackListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSTextTrackListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSTextTrackListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTextTrackList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTextTrackList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TextTrackList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTextTrackListConstructor::s_info = { "TextTrackList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTextTrackListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionItem), (intptr_t) (1) },
-    { "getTrackById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionGetTrackById), (intptr_t) (1) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onaddtrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnaddtrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnaddtrack) } },
+    { "onchange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnchange) } },
+    { "onremovetrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackListOnremovetrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackListOnremovetrack) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionItem), (intptr_t) (1) } },
+    { "getTrackById", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextTrackListPrototypeFunctionGetTrackById), (intptr_t) (1) } },
 };
 
 const ClassInfo JSTextTrackListPrototype::s_info = { "TextTrackListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackListPrototype) };
@@ -173,253 +118,249 @@ void JSTextTrackListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSTextTrackListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSTextTrackList::s_info = { "TextTrackList", &Base::s_info, &JSTextTrackListTable, CREATE_METHOD_TABLE(JSTextTrackList) };
+const ClassInfo JSTextTrackList::s_info = { "TextTrackList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackList) };
 
-JSTextTrackList::JSTextTrackList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTextTrackList::JSTextTrackList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TextTrackList>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSTextTrackList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSTextTrackList::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSTextTrackListPrototype::create(vm, globalObject, JSTextTrackListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSTextTrackListPrototype::create(vm, globalObject, JSTextTrackListPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSTextTrackList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSTextTrackList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTextTrackList>(vm, globalObject);
 }
 
-void JSTextTrackList::destroy(JSC::JSCell* cell)
-{
-    JSTextTrackList* thisObject = static_cast<JSTextTrackList*>(cell);
-    thisObject->JSTextTrackList::~JSTextTrackList();
-}
-
-JSTextTrackList::~JSTextTrackList()
-{
-    releaseImpl();
-}
-
-bool JSTextTrackList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSTextTrackList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTextTrackList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSTextTrackList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<TextTrack>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSTextTrackList, Base>(exec, JSTextTrackListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSTextTrackList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSTextTrackList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTextTrackList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<TextTrack>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsTextTrackListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsTextTrackListOnaddtrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().addtrackEvent));
-}
-
-
-EncodedJSValue jsTextTrackListOnchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().changeEvent));
-}
-
-
-EncodedJSValue jsTextTrackListOnremovetrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(slotBase);
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().removetrackEvent));
-}
-
-
-EncodedJSValue jsTextTrackListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSTextTrackList* domObject = jsDynamicCast<JSTextTrackList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTextTrackList::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void setJSTextTrackListOnaddtrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().addtrackEvent, value);
-}
-
-
-void setJSTextTrackListOnchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().changeEvent, value);
-}
-
-
-void setJSTextTrackListOnremovetrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTextTrackList*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().removetrackEvent, value);
-}
-
-
-void JSTextTrackList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSTextTrackList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSTextTrackList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSTextTrackList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSTextTrackList* BindingCaller<JSTextTrackList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSTextTrackListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSTextTrackList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSTextTrackList* BindingCaller<JSTextTrackList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTextTrackList* castedThis = jsDynamicCast<JSTextTrackList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSTextTrackList*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionGetTrackById(ExecState* exec)
+static inline JSValue jsTextTrackListLengthGetter(ExecState&, JSTextTrackList&, ThrowScope& throwScope);
+
+EncodedJSValue jsTextTrackListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTextTrackList* castedThis = jsDynamicCast<JSTextTrackList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackList", "getTrackById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String id = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getTrackById(id)));
-    return JSValue::encode(result);
+    return BindingCaller<JSTextTrackList>::attribute<jsTextTrackListLengthGetter>(state, thisValue, "length");
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionAddEventListener(ExecState* exec)
+static inline JSValue jsTextTrackListLengthGetter(ExecState& state, JSTextTrackList& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTextTrackList* castedThis = jsDynamicCast<JSTextTrackList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackList", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackList::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionRemoveEventListener(ExecState* exec)
+static inline JSValue jsTextTrackListOnaddtrackGetter(ExecState&, JSTextTrackList&, ThrowScope& throwScope);
+
+EncodedJSValue jsTextTrackListOnaddtrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTextTrackList* castedThis = jsDynamicCast<JSTextTrackList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackList", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackList::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
+    return BindingCaller<JSTextTrackList>::attribute<jsTextTrackListOnaddtrackGetter>(state, thisValue, "onaddtrack");
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionDispatchEvent(ExecState* exec)
+static inline JSValue jsTextTrackListOnaddtrackGetter(ExecState& state, JSTextTrackList& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTextTrackList* castedThis = jsDynamicCast<JSTextTrackList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackList", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().addtrackEvent);
+}
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline JSValue jsTextTrackListOnchangeGetter(ExecState&, JSTextTrackList&, ThrowScope& throwScope);
+
+EncodedJSValue jsTextTrackListOnchange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTextTrackList>::attribute<jsTextTrackListOnchangeGetter>(state, thisValue, "onchange");
+}
+
+static inline JSValue jsTextTrackListOnchangeGetter(ExecState& state, JSTextTrackList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().changeEvent);
+}
+
+static inline JSValue jsTextTrackListOnremovetrackGetter(ExecState&, JSTextTrackList&, ThrowScope& throwScope);
+
+EncodedJSValue jsTextTrackListOnremovetrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTextTrackList>::attribute<jsTextTrackListOnremovetrackGetter>(state, thisValue, "onremovetrack");
+}
+
+static inline JSValue jsTextTrackListOnremovetrackGetter(ExecState& state, JSTextTrackList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().removetrackEvent);
+}
+
+EncodedJSValue jsTextTrackListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSTextTrackListPrototype* domObject = jsDynamicDowncast<JSTextTrackListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSTextTrackList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSTextTrackListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSTextTrackListPrototype* domObject = jsDynamicDowncast<JSTextTrackListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSTextTrackListOnaddtrackFunction(ExecState&, JSTextTrackList&, JSValue, ThrowScope&);
+
+bool setJSTextTrackListOnaddtrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTextTrackList>::setAttribute<setJSTextTrackListOnaddtrackFunction>(state, thisValue, encodedValue, "onaddtrack");
+}
+
+static inline bool setJSTextTrackListOnaddtrackFunction(ExecState& state, JSTextTrackList& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().addtrackEvent, value);
+    return true;
+}
+
+
+static inline bool setJSTextTrackListOnchangeFunction(ExecState&, JSTextTrackList&, JSValue, ThrowScope&);
+
+bool setJSTextTrackListOnchange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTextTrackList>::setAttribute<setJSTextTrackListOnchangeFunction>(state, thisValue, encodedValue, "onchange");
+}
+
+static inline bool setJSTextTrackListOnchangeFunction(ExecState& state, JSTextTrackList& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().changeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSTextTrackListOnremovetrackFunction(ExecState&, JSTextTrackList&, JSValue, ThrowScope&);
+
+bool setJSTextTrackListOnremovetrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSTextTrackList>::setAttribute<setJSTextTrackListOnremovetrackFunction>(state, thisValue, encodedValue, "onremovetrack");
+}
+
+static inline bool setJSTextTrackListOnremovetrackFunction(ExecState& state, JSTextTrackList& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().removetrackEvent, value);
+    return true;
+}
+
+
+JSValue JSTextTrackList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSTextTrackListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsTextTrackListPrototypeFunctionItemCaller(JSC::ExecState*, JSTextTrackList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSTextTrackList>::callOperation<jsTextTrackListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsTextTrackListPrototypeFunctionItemCaller(JSC::ExecState* state, JSTextTrackList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<TextTrack>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsTextTrackListPrototypeFunctionGetTrackByIdCaller(JSC::ExecState*, JSTextTrackList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTextTrackListPrototypeFunctionGetTrackById(ExecState* state)
+{
+    return BindingCaller<JSTextTrackList>::callOperation<jsTextTrackListPrototypeFunctionGetTrackByIdCaller>(state, "getTrackById");
+}
+
+static inline JSC::EncodedJSValue jsTextTrackListPrototypeFunctionGetTrackByIdCaller(JSC::ExecState* state, JSTextTrackList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto id = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<TextTrack>>(*state, *castedThis->globalObject(), impl.getTrackById(WTFMove(id))));
 }
 
 void JSTextTrackList::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -427,16 +368,24 @@ void JSTextTrackList::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSTextTrackList*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
+void JSTextTrackList::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSTextTrackList*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
     thisObject->visitAdditionalChildren(visitor);
 }
 
 bool JSTextTrackListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsTextTrackList = jsCast<JSTextTrackList*>(handle.slot()->asCell());
-    if (jsTextTrackList->impl().isFiringEventListeners())
+    if (jsTextTrackList->wrapped().isFiringEventListeners())
         return true;
-    Element* element = WTF::getPtr(jsTextTrackList->impl().element());
+    Element* element = WTF::getPtr(jsTextTrackList->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -445,9 +394,9 @@ bool JSTextTrackListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> 
 
 void JSTextTrackListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsTextTrackList = jsCast<JSTextTrackList*>(handle.slot()->asCell());
+    auto* jsTextTrackList = static_cast<JSTextTrackList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTextTrackList->impl(), jsTextTrackList);
+    uncacheWrapper(world, &jsTextTrackList->wrapped(), jsTextTrackList);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -458,15 +407,12 @@ extern "C" { extern void (*const __identifier("??_7TextTrackList@WebCore@@6B@")[
 extern "C" { extern void* _ZTVN7WebCore13TextTrackListE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TextTrackList* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<TextTrackList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSTextTrackList>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7TextTrackList@WebCore@@6B@"));
 #else
@@ -474,7 +420,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TextTrackLis
 #if COMPILER(CLANG)
     // If this fails TextTrackList does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(TextTrackList), TextTrackList_is_not_polymorphic);
+    static_assert(__is_polymorphic(TextTrackList), "TextTrackList is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -483,13 +429,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TextTrackLis
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSTextTrackList>(globalObject, impl);
+    return createWrapper<TextTrackList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrackList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 TextTrackList* JSTextTrackList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSTextTrackList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSTextTrackList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

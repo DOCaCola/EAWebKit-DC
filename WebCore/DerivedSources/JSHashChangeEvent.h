@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHashChangeEvent_h
-#define JSHashChangeEvent_h
+#pragma once
 
 #include "HashChangeEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSHashChangeEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = HashChangeEvent;
     static JSHashChangeEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HashChangeEvent>&& impl)
     {
-        JSHashChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSHashChangeEvent>(globalObject->vm().heap)) JSHashChangeEvent(structure, globalObject, WTF::move(impl));
+        JSHashChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSHashChangeEvent>(globalObject->vm().heap)) JSHashChangeEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HashChangeEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    HashChangeEvent& wrapped() const
     {
-        return static_cast<HashChangeEvent&>(Base::impl());
+        return static_cast<HashChangeEvent&>(Base::wrapped());
     }
 protected:
-    JSHashChangeEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<HashChangeEvent>&&);
+    JSHashChangeEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<HashChangeEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HashChangeEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HashChangeEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<HashChangeEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<HashChangeEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillHashChangeEventInit(HashChangeEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<HashChangeEvent> {
+    using WrapperClass = JSHashChangeEvent;
+    using ToWrappedReturnType = HashChangeEvent*;
+};
+template<> HashChangeEvent::Init convertDictionary<HashChangeEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

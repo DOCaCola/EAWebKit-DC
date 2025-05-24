@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaStream_h
-#define JSMediaStream_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "MediaStream.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMediaStream : public JSDOMWrapper {
+class JSMediaStream : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = MediaStream;
     static JSMediaStream* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStream>&& impl)
     {
-        JSMediaStream* ptr = new (NotNull, JSC::allocateCell<JSMediaStream>(globalObject->vm().heap)) JSMediaStream(structure, globalObject, WTF::move(impl));
+        JSMediaStream* ptr = new (NotNull, JSC::allocateCell<JSMediaStream>(globalObject->vm().heap)) JSMediaStream(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaStream* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSMediaStream();
 
     DECLARE_INFO;
 
@@ -52,43 +49,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaStream& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaStream* m_impl;
-protected:
-    JSMediaStream(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStream>&&);
-
-    void finishCreation(JSC::VM& vm)
+    MediaStream& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<MediaStream&>(Base::wrapped());
     }
+protected:
+    JSMediaStream(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStream>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
-class JSMediaStreamOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStream&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStream* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaStream>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaStream>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaStream> {
+    using WrapperClass = JSMediaStream;
+    using ToWrappedReturnType = MediaStream*;
 };
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaStream*)
-{
-    static NeverDestroyed<JSMediaStreamOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStream*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaStream& impl) { return toJS(exec, globalObject, &impl); }
-
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif

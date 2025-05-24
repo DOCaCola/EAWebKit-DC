@@ -21,13 +21,12 @@
 #include "config.h"
 #include "JSFileReaderSync.h"
 
-#include "ExceptionCode.h"
-#include "FileReaderSync.h"
 #include "JSBlob.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -43,11 +42,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsDataURL
 
 // Attributes
 
-JSC::EncodedJSValue jsFileReaderSyncConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsFileReaderSyncConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSFileReaderSyncConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSFileReaderSyncPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSFileReaderSyncPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSFileReaderSyncPrototype* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSyncPrototype>(vm.heap)) JSFileReaderSyncPrototype(vm, globalObject, structure);
@@ -70,68 +70,43 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSFileReaderSyncConstructor : public DOMConstructorObject {
-private:
-    JSFileReaderSyncConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSFileReaderSyncConstructor = JSDOMConstructor<JSFileReaderSync>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSFileReaderSyncConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSFileReaderSyncConstructor* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSyncConstructor>(vm.heap)) JSFileReaderSyncConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSFileReaderSync(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSFileReaderSyncConstructor::constructJSFileReaderSync(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSFileReaderSyncConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSFileReaderSyncConstructor*>(exec->callee());
-    RefPtr<FileReaderSync> object = FileReaderSync::create();
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSFileReaderSyncConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    auto object = FileReaderSync::create();
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<FileReaderSync>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-const ClassInfo JSFileReaderSyncConstructor::s_info = { "FileReaderSyncConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileReaderSyncConstructor) };
-
-JSFileReaderSyncConstructor::JSFileReaderSyncConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSFileReaderSyncConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSFileReaderSyncConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSFileReaderSyncConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSFileReaderSync::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSFileReaderSync::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("FileReaderSync"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSFileReaderSyncConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSFileReaderSync;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSFileReaderSyncConstructor::s_info = { "FileReaderSync", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileReaderSyncConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSFileReaderSyncPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileReaderSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "readAsArrayBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsArrayBuffer), (intptr_t) (1) },
-    { "readAsBinaryString", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsBinaryString), (intptr_t) (1) },
-    { "readAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsText), (intptr_t) (1) },
-    { "readAsDataURL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsDataURL), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileReaderSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFileReaderSyncConstructor) } },
+    { "readAsArrayBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsArrayBuffer), (intptr_t) (1) } },
+    { "readAsBinaryString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsBinaryString), (intptr_t) (1) } },
+    { "readAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsText), (intptr_t) (1) } },
+    { "readAsDataURL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFileReaderSyncPrototypeFunctionReadAsDataURL), (intptr_t) (1) } },
 };
 
 const ClassInfo JSFileReaderSyncPrototype::s_info = { "FileReaderSyncPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileReaderSyncPrototype) };
@@ -144,10 +119,16 @@ void JSFileReaderSyncPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSFileReaderSync::s_info = { "FileReaderSync", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileReaderSync) };
 
-JSFileReaderSync::JSFileReaderSync(Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileReaderSync>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSFileReaderSync::JSFileReaderSync(Structure* structure, JSDOMGlobalObject& globalObject, Ref<FileReaderSync>&& impl)
+    : JSDOMWrapper<FileReaderSync>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSFileReaderSync::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSFileReaderSync::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -155,7 +136,7 @@ JSObject* JSFileReaderSync::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSFileReaderSyncPrototype::create(vm, globalObject, JSFileReaderSyncPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSFileReaderSync::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSFileReaderSync::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSFileReaderSync>(vm, globalObject);
 }
@@ -166,126 +147,128 @@ void JSFileReaderSync::destroy(JSC::JSCell* cell)
     thisObject->JSFileReaderSync::~JSFileReaderSync();
 }
 
-JSFileReaderSync::~JSFileReaderSync()
+template<> inline JSFileReaderSync* BindingCaller<JSFileReaderSync>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSFileReaderSync*>(state.thisValue());
 }
 
-EncodedJSValue jsFileReaderSyncConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsFileReaderSyncConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSFileReaderSyncPrototype* domObject = jsDynamicCast<JSFileReaderSyncPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSFileReaderSync::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSFileReaderSyncPrototype* domObject = jsDynamicDowncast<JSFileReaderSyncPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSFileReaderSync::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSFileReaderSync::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSFileReaderSyncConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSFileReaderSyncConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsArrayBuffer(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSFileReaderSync* castedThis = jsDynamicCast<JSFileReaderSync*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FileReaderSync", "readAsArrayBuffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSFileReaderSync::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Blob* blob = JSBlob::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.readAsArrayBuffer(scriptContext, blob, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsBinaryString(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSFileReaderSync* castedThis = jsDynamicCast<JSFileReaderSync*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FileReaderSync", "readAsBinaryString");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSFileReaderSync::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Blob* blob = JSBlob::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.readAsBinaryString(scriptContext, blob, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsText(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSFileReaderSync* castedThis = jsDynamicCast<JSFileReaderSync*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FileReaderSync", "readAsText");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSFileReaderSync::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Blob* blob = JSBlob::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = jsStringWithCache(exec, impl.readAsText(scriptContext, blob, ec));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSFileReaderSyncPrototype* domObject = jsDynamicDowncast<JSFileReaderSyncPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-
-    String encoding = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.readAsText(scriptContext, blob, encoding, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsDataURL(ExecState* exec)
+JSValue JSFileReaderSync::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSFileReaderSync* castedThis = jsDynamicCast<JSFileReaderSync*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FileReaderSync", "readAsDataURL");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSFileReaderSync::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Blob* blob = JSBlob::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.readAsDataURL(scriptContext, blob, ec));
+    return getDOMConstructor<JSFileReaderSyncConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsArrayBufferCaller(JSC::ExecState*, JSFileReaderSync*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsArrayBuffer(ExecState* state)
+{
+    return BindingCaller<JSFileReaderSync>::callOperation<jsFileReaderSyncPrototypeFunctionReadAsArrayBufferCaller>(state, "readAsArrayBuffer");
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsArrayBufferCaller(JSC::ExecState* state, JSFileReaderSync* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto blob = convert<IDLInterface<Blob>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "blob", "FileReaderSync", "readAsArrayBuffer", "Blob"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<ArrayBuffer>>(*state, *castedThis->globalObject(), throwScope, impl.readAsArrayBuffer(*context, *blob)));
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsBinaryStringCaller(JSC::ExecState*, JSFileReaderSync*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsBinaryString(ExecState* state)
+{
+    return BindingCaller<JSFileReaderSync>::callOperation<jsFileReaderSyncPrototypeFunctionReadAsBinaryStringCaller>(state, "readAsBinaryString");
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsBinaryStringCaller(JSC::ExecState* state, JSFileReaderSync* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto blob = convert<IDLInterface<Blob>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "blob", "FileReaderSync", "readAsBinaryString", "Blob"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, throwScope, impl.readAsBinaryString(*context, *blob)));
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsTextCaller(JSC::ExecState*, JSFileReaderSync*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsText(ExecState* state)
+{
+    return BindingCaller<JSFileReaderSync>::callOperation<jsFileReaderSyncPrototypeFunctionReadAsTextCaller>(state, "readAsText");
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsTextCaller(JSC::ExecState* state, JSFileReaderSync* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto blob = convert<IDLInterface<Blob>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "blob", "FileReaderSync", "readAsText", "Blob"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto encoding = state->argument(1).isUndefined() ? emptyString() : convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, throwScope, impl.readAsText(*context, *blob, WTFMove(encoding))));
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsDataURLCaller(JSC::ExecState*, JSFileReaderSync*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsFileReaderSyncPrototypeFunctionReadAsDataURL(ExecState* state)
+{
+    return BindingCaller<JSFileReaderSync>::callOperation<jsFileReaderSyncPrototypeFunctionReadAsDataURLCaller>(state, "readAsDataURL");
+}
+
+static inline JSC::EncodedJSValue jsFileReaderSyncPrototypeFunctionReadAsDataURLCaller(JSC::ExecState* state, JSFileReaderSync* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto blob = convert<IDLInterface<Blob>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "blob", "FileReaderSync", "readAsDataURL", "Blob"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLDOMString>(*state, throwScope, impl.readAsDataURL(*context, *blob)));
 }
 
 bool JSFileReaderSyncOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -297,51 +280,32 @@ bool JSFileReaderSyncOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSFileReaderSyncOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsFileReaderSync = jsCast<JSFileReaderSync*>(handle.slot()->asCell());
+    auto* jsFileReaderSync = static_cast<JSFileReaderSync*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsFileReaderSync->impl(), jsFileReaderSync);
+    uncacheWrapper(world, &jsFileReaderSync->wrapped(), jsFileReaderSync);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7FileReaderSync@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore14FileReaderSyncE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, FileReaderSync* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<FileReaderSync>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSFileReaderSync>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7FileReaderSync@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore14FileReaderSyncE[2];
 #if COMPILER(CLANG)
-    // If this fails FileReaderSync does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(FileReaderSync), FileReaderSync_is_not_polymorphic);
+    // If you hit this failure the interface definition has the ImplementationLacksVTable
+    // attribute. You should remove that attribute. If the class has subclasses
+    // that may be passed through this toJS() function you should use the SkipVTableValidation
+    // attribute to FileReaderSync.
+    static_assert(!__is_polymorphic(FileReaderSync), "FileReaderSync is polymorphic but the IDL claims it is not");
 #endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // FileReaderSync has subclasses. If FileReaderSync has subclasses that get passed
-    // to toJS() we currently require FileReaderSync you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSFileReaderSync>(globalObject, impl);
+    return createWrapper<FileReaderSync>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileReaderSync& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 FileReaderSync* JSFileReaderSync::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSFileReaderSync*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSFileReaderSync*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

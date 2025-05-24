@@ -18,10 +18,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCStatsReport_h
-#define JSRTCStatsReport_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSDOMWrapper.h"
 #include "RTCStatsReport.h"
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSRTCStatsReport : public JSDOMWrapper {
+class JSRTCStatsReport : public JSDOMWrapper<RTCStatsReport> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<RTCStatsReport>;
     static JSRTCStatsReport* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCStatsReport>&& impl)
     {
-        JSRTCStatsReport* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsReport>(globalObject->vm().heap)) JSRTCStatsReport(structure, globalObject, WTF::move(impl));
+        JSRTCStatsReport* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsReport>(globalObject->vm().heap)) JSRTCStatsReport(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCStatsReport* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCStatsReport();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCStatsReport& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCStatsReport* m_impl;
 protected:
-    JSRTCStatsReport(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCStatsReport>&&);
+    JSRTCStatsReport(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCStatsReport>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCStatsReportOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCStatsReport*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsReport*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCStatsReport& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCStatsReport* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsReport&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCStatsReport* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCStatsReport>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCStatsReport>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCStatsReport> {
+    using WrapperClass = JSRTCStatsReport;
+    using ToWrappedReturnType = RTCStatsReport*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

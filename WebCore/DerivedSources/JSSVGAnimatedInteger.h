@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedInteger_h
-#define JSSVGAnimatedInteger_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAnimatedInteger.h"
@@ -28,21 +27,20 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedInteger : public JSDOMWrapper {
+class JSSVGAnimatedInteger : public JSDOMWrapper<SVGAnimatedInteger> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGAnimatedInteger>;
     static JSSVGAnimatedInteger* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedInteger>&& impl)
     {
-        JSSVGAnimatedInteger* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedInteger>(globalObject->vm().heap)) JSSVGAnimatedInteger(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedInteger* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedInteger>(globalObject->vm().heap)) JSSVGAnimatedInteger(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedInteger* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedInteger();
 
     DECLARE_INFO;
 
@@ -51,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedInteger& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedInteger* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAnimatedInteger(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedInteger>&&);
+    JSSVGAnimatedInteger(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedInteger>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAnimatedIntegerOwner : public JSC::WeakHandleOwner {
@@ -80,10 +68,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedInteger*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedInteger*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedInteger& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAnimatedInteger* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedInteger&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedInteger* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAnimatedInteger>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAnimatedInteger>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAnimatedInteger> {
+    using WrapperClass = JSSVGAnimatedInteger;
+    using ToWrappedReturnType = SVGAnimatedInteger*;
+};
 
 } // namespace WebCore
-
-#endif

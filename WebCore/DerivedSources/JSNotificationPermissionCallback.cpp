@@ -24,6 +24,7 @@
 
 #include "JSNotificationPermissionCallback.h"
 
+#include "JSDOMConvert.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
 
@@ -34,7 +35,7 @@ namespace WebCore {
 JSNotificationPermissionCallback::JSNotificationPermissionCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : NotificationPermissionCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -48,31 +49,39 @@ JSNotificationPermissionCallback::~JSNotificationPermissionCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
-
-
-// Functions
 
 bool JSNotificationPermissionCallback::handleEvent(const String& permission)
 {
     if (!canInvokeCallback())
         return true;
 
-    Ref<JSNotificationPermissionCallback> protect(*this);
+    Ref<JSNotificationPermissionCallback> protectedThis(*this);
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(jsStringWithCache(exec, permission));
+    args.append(toJS<IDLDOMString>(*state, permission));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
 }
 
+JSC::JSValue toJS(NotificationPermissionCallback& impl)
+{
+    if (!static_cast<JSNotificationPermissionCallback&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSNotificationPermissionCallback&>(impl).callbackData()->callback();
+
 }
+
+} // namespace WebCore
 
 #endif // ENABLE(NOTIFICATIONS)

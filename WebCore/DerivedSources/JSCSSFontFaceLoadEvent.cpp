@@ -24,26 +24,75 @@
 
 #include "JSCSSFontFaceLoadEvent.h"
 
-#include "CSSFontFaceLoadEvent.h"
-#include "CSSFontFaceRule.h"
-#include "DOMError.h"
 #include "JSCSSFontFaceRule.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMError.h"
+#include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> CSSFontFaceLoadEvent::Init convertDictionary<CSSFontFaceLoadEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    CSSFontFaceLoadEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue errorValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "error"));
+    if (!errorValue.isUndefined()) {
+        result.error = convert<IDLNullable<IDLInterface<DOMError>>>(state, errorValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.error = nullptr;
+    JSValue fontfaceValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "fontface"));
+    if (!fontfaceValue.isUndefined()) {
+        result.fontface = convert<IDLNullable<IDLInterface<CSSFontFaceRule>>>(state, fontfaceValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.fontface = nullptr;
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsCSSFontFaceLoadEventFontface(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSFontFaceLoadEventError(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSFontFaceLoadEventFontface(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSFontFaceLoadEventError(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSFontFaceLoadEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSFontFaceLoadEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSFontFaceLoadEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSFontFaceLoadEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSFontFaceLoadEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceLoadEventPrototype>(vm.heap)) JSCSSFontFaceLoadEventPrototype(vm, globalObject, structure);
@@ -66,12 +115,46 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSCSSFontFaceLoadEventConstructor = JSDOMConstructor<JSCSSFontFaceLoadEvent>;
+
+template<> EncodedJSValue JSC_HOST_CALL JSCSSFontFaceLoadEventConstructor::construct(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSCSSFontFaceLoadEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInit = convert<IDLDictionary<CSSFontFaceLoadEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = CSSFontFaceLoadEvent::create(WTFMove(type), WTFMove(eventInit));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<CSSFontFaceLoadEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+template<> JSValue JSCSSFontFaceLoadEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    return JSEvent::getConstructor(vm, &globalObject);
+}
+
+template<> void JSCSSFontFaceLoadEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSCSSFontFaceLoadEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSFontFaceLoadEvent"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSCSSFontFaceLoadEventConstructor::s_info = { "CSSFontFaceLoadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceLoadEventConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSFontFaceLoadEventPrototypeTableValues[] =
 {
-    { "fontface", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventFontface), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "error", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSFontFaceLoadEventConstructor) } },
+    { "fontface", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventFontface), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "error", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSFontFaceLoadEventPrototype::s_info = { "CSSFontFaceLoadEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceLoadEventPrototype) };
@@ -84,54 +167,131 @@ void JSCSSFontFaceLoadEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSFontFaceLoadEvent::s_info = { "CSSFontFaceLoadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceLoadEvent) };
 
-JSCSSFontFaceLoadEvent::JSCSSFontFaceLoadEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSCSSFontFaceLoadEvent::JSCSSFontFaceLoadEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSFontFaceLoadEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSFontFaceLoadEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSFontFaceLoadEventPrototype::create(vm, globalObject, JSCSSFontFaceLoadEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSCSSFontFaceLoadEventPrototype::create(vm, globalObject, JSCSSFontFaceLoadEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSFontFaceLoadEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSFontFaceLoadEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSFontFaceLoadEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSFontFaceLoadEventFontface(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSFontFaceLoadEvent* BindingCaller<JSCSSFontFaceLoadEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSFontFaceLoadEvent* castedThis = jsDynamicCast<JSCSSFontFaceLoadEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSFontFaceLoadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSFontFaceLoadEvent", "fontface");
-        return throwGetterTypeError(*exec, "CSSFontFaceLoadEvent", "fontface");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.fontface()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSCSSFontFaceLoadEvent*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsCSSFontFaceLoadEventFontfaceGetter(ExecState&, JSCSSFontFaceLoadEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsCSSFontFaceLoadEventError(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSFontFaceLoadEventFontface(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSFontFaceLoadEvent* castedThis = jsDynamicCast<JSCSSFontFaceLoadEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSFontFaceLoadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSFontFaceLoadEvent", "error");
-        return throwGetterTypeError(*exec, "CSSFontFaceLoadEvent", "error");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.error()));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSFontFaceLoadEvent>::attribute<jsCSSFontFaceLoadEventFontfaceGetter>(state, thisValue, "fontface");
 }
 
+static inline JSValue jsCSSFontFaceLoadEventFontfaceGetter(ExecState& state, JSCSSFontFaceLoadEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<CSSFontFaceRule>>>(state, *thisObject.globalObject(), impl.fontface());
+    return result;
+}
+
+static inline JSValue jsCSSFontFaceLoadEventErrorGetter(ExecState&, JSCSSFontFaceLoadEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSFontFaceLoadEventError(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSFontFaceLoadEvent>::attribute<jsCSSFontFaceLoadEventErrorGetter>(state, thisValue, "error");
+}
+
+static inline JSValue jsCSSFontFaceLoadEventErrorGetter(ExecState& state, JSCSSFontFaceLoadEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<DOMError>>>(state, *thisObject.globalObject(), impl.error());
+    return result;
+}
+
+EncodedJSValue jsCSSFontFaceLoadEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSFontFaceLoadEventPrototype* domObject = jsDynamicDowncast<JSCSSFontFaceLoadEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSFontFaceLoadEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSFontFaceLoadEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCSSFontFaceLoadEventPrototype* domObject = jsDynamicDowncast<JSCSSFontFaceLoadEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSCSSFontFaceLoadEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSCSSFontFaceLoadEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7CSSFontFaceLoadEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore20CSSFontFaceLoadEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CSSFontFaceLoadEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore20CSSFontFaceLoadEventE[2];
+#if COMPILER(CLANG)
+    // If this fails CSSFontFaceLoadEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(CSSFontFaceLoadEvent), "CSSFontFaceLoadEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // CSSFontFaceLoadEvent has subclasses. If CSSFontFaceLoadEvent has subclasses that get passed
+    // to toJS() we currently require CSSFontFaceLoadEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<CSSFontFaceLoadEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSFontFaceLoadEvent& impl)
+{
+    return wrap(state, globalObject, impl);
+}
 
 
 }

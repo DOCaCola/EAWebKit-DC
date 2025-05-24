@@ -24,12 +24,13 @@
 
 #include "JSTouchList.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSTouch.h"
-#include "Touch.h"
-#include "TouchList.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -43,12 +44,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsTouchListPrototypeFunctionItem(JSC::ExecStat
 
 // Attributes
 
-JSC::EncodedJSValue jsTouchListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTouchListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTouchListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTouchListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSTouchListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSTouchListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSTouchListPrototype* ptr = new (NotNull, JSC::allocateCell<JSTouchListPrototype>(vm.heap)) JSTouchListPrototype(vm, globalObject, structure);
@@ -71,66 +73,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTouchListConstructor : public DOMConstructorObject {
-private:
-    JSTouchListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSTouchListConstructor = JSDOMConstructorNotConstructable<JSTouchList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTouchListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTouchListConstructor* ptr = new (NotNull, JSC::allocateCell<JSTouchListConstructor>(vm.heap)) JSTouchListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSTouchListTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSTouchListTableValues[] =
+template<> JSValue JSTouchListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSTouchListTable = { 2, 3, true, JSTouchListTableValues, 0, JSTouchListTableIndex };
-const ClassInfo JSTouchListConstructor::s_info = { "TouchListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchListConstructor) };
-
-JSTouchListConstructor::JSTouchListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSTouchListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSTouchListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTouchList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTouchList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TouchList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTouchListConstructor::s_info = { "TouchList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTouchListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTouchListPrototypeFunctionItem), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTouchListConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTouchListPrototypeFunctionItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSTouchListPrototype::s_info = { "TouchListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchListPrototype) };
@@ -139,14 +105,21 @@ void JSTouchListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSTouchListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSTouchList::s_info = { "TouchList", &Base::s_info, &JSTouchListTable, CREATE_METHOD_TABLE(JSTouchList) };
+const ClassInfo JSTouchList::s_info = { "TouchList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchList) };
 
-JSTouchList::JSTouchList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TouchList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTouchList::JSTouchList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TouchList>&& impl)
+    : JSDOMWrapper<TouchList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSTouchList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSTouchList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -154,7 +127,7 @@ JSObject* JSTouchList::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSTouchListPrototype::create(vm, globalObject, JSTouchListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSTouchList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSTouchList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTouchList>(vm, globalObject);
 }
@@ -165,94 +138,113 @@ void JSTouchList::destroy(JSC::JSCell* cell)
     thisObject->JSTouchList::~JSTouchList();
 }
 
-JSTouchList::~JSTouchList()
-{
-    releaseImpl();
-}
-
-bool JSTouchList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSTouchList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTouchList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSTouchList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<Touch>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSTouchList, Base>(exec, JSTouchListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSTouchList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSTouchList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTouchList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<Touch>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsTouchListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSTouchList*>(slotBase);
-    JSTouchList* castedThisObject = jsDynamicCast<JSTouchList*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "TouchList", "length");
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsTouchListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSTouchList* domObject = jsDynamicCast<JSTouchList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTouchList::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSTouchList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSTouchList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSTouchList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSTouchList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSTouchList* BindingCaller<JSTouchList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSTouchListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSTouchList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTouchListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSTouchList* BindingCaller<JSTouchList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSTouchList* castedThis = jsDynamicCast<JSTouchList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TouchList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSTouchList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSTouchList*>(state.thisValue());
+}
+
+static inline JSValue jsTouchListLengthGetter(ExecState&, JSTouchList&, ThrowScope& throwScope);
+
+EncodedJSValue jsTouchListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSTouchList>::attribute<jsTouchListLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsTouchListLengthGetter(ExecState& state, JSTouchList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsTouchListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSTouchListPrototype* domObject = jsDynamicDowncast<JSTouchListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSTouchList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSTouchListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSTouchListPrototype* domObject = jsDynamicDowncast<JSTouchListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSTouchList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSTouchListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsTouchListPrototypeFunctionItemCaller(JSC::ExecState*, JSTouchList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsTouchListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSTouchList>::callOperation<jsTouchListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsTouchListPrototypeFunctionItemCaller(JSC::ExecState* state, JSTouchList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Touch>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
 }
 
 bool JSTouchListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -264,31 +256,32 @@ bool JSTouchListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> hand
 
 void JSTouchListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsTouchList = jsCast<JSTouchList*>(handle.slot()->asCell());
+    auto* jsTouchList = static_cast<JSTouchList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTouchList->impl(), jsTouchList);
+    uncacheWrapper(world, &jsTouchList->wrapped(), jsTouchList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TouchList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<TouchList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSTouchList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to TouchList.
-    COMPILE_ASSERT(!__is_polymorphic(TouchList), TouchList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(TouchList), "TouchList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSTouchList>(globalObject, impl);
+    return createWrapper<TouchList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TouchList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 TouchList* JSTouchList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSTouchList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSTouchList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

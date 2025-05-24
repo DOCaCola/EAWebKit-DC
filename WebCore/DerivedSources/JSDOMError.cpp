@@ -21,10 +21,8 @@
 #include "config.h"
 #include "JSDOMError.h"
 
-#include "DOMError.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,11 +31,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMErrorName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMErrorName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMErrorMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMErrorConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMErrorPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMErrorPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMErrorPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMErrorPrototype>(vm.heap)) JSDOMErrorPrototype(vm, globalObject, structure);
@@ -60,25 +60,12 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSDOMErrorTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSDOMErrorTableValues[] =
-{
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMErrorName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDOMErrorTable = { 1, 1, true, JSDOMErrorTableValues, 0, JSDOMErrorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMErrorPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMErrorName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMErrorMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSDOMErrorPrototype::s_info = { "DOMErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMErrorPrototype) };
@@ -89,12 +76,18 @@ void JSDOMErrorPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSDOMErrorPrototypeTableValues, *this);
 }
 
-const ClassInfo JSDOMError::s_info = { "DOMError", &Base::s_info, &JSDOMErrorTable, CREATE_METHOD_TABLE(JSDOMError) };
+const ClassInfo JSDOMError::s_info = { "DOMError", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMError) };
 
-JSDOMError::JSDOMError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMError>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMError::JSDOMError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMError>&& impl)
+    : JSDOMWrapper<DOMError>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMError::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMError::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -102,7 +95,7 @@ JSObject* JSDOMError::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDOMErrorPrototype::create(vm, globalObject, JSDOMErrorPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMError::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMError::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMError>(vm, globalObject);
 }
@@ -113,29 +106,56 @@ void JSDOMError::destroy(JSC::JSCell* cell)
     thisObject->JSDOMError::~JSDOMError();
 }
 
-JSDOMError::~JSDOMError()
+template<> inline JSDOMError* BindingCaller<JSDOMError>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDOMError*>(JSValue::decode(thisValue));
 }
 
-bool JSDOMError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsDOMErrorNameGetter(ExecState&, JSDOMError&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMErrorName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSDOMError*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDOMError, Base>(exec, JSDOMErrorTable, thisObject, propertyName, slot);
+    return BindingCaller<JSDOMError>::attribute<jsDOMErrorNameGetter>(state, thisValue, "name");
 }
 
-EncodedJSValue jsDOMErrorName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDOMErrorNameGetter(ExecState& state, JSDOMError& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDOMError*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
 }
 
+static inline JSValue jsDOMErrorMessageGetter(ExecState&, JSDOMError&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMErrorMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMError>::attribute<jsDOMErrorMessageGetter>(state, thisValue, "message");
+}
+
+static inline JSValue jsDOMErrorMessageGetter(ExecState& state, JSDOMError& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.message());
+    return result;
+}
+
+bool setJSDOMErrorConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMErrorPrototype* domObject = jsDynamicDowncast<JSDOMErrorPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
 
 bool JSDOMErrorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -146,24 +166,25 @@ bool JSDOMErrorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handl
 
 void JSDOMErrorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMError = jsCast<JSDOMError*>(handle.slot()->asCell());
+    auto* jsDOMError = static_cast<JSDOMError*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMError->impl(), jsDOMError);
+    uncacheWrapper(world, &jsDOMError->wrapped(), jsDOMError);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMError* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMError>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMError>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSDOMError>(globalObject, impl);
+    return createWrapper<DOMError>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMError& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMError* JSDOMError::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMError*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMError*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -21,29 +21,94 @@
 #include "config.h"
 #include "JSErrorEvent.h"
 
-#include "ErrorEvent.h"
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> ErrorEvent::Init convertDictionary<ErrorEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ErrorEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue colnoValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "colno"));
+    if (!colnoValue.isUndefined()) {
+        result.colno = convert<IDLUnsignedLong>(state, colnoValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.colno = 0;
+    JSValue errorValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "error"));
+    if (!errorValue.isUndefined()) {
+        result.error = convert<IDLAny>(state, errorValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.error = jsNull();
+    JSValue filenameValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "filename"));
+    if (!filenameValue.isUndefined()) {
+        result.filename = convert<IDLUSVString>(state, filenameValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.filename = emptyString();
+    JSValue linenoValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "lineno"));
+    if (!linenoValue.isUndefined()) {
+        result.lineno = convert<IDLUnsignedLong>(state, linenoValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.lineno = 0;
+    JSValue messageValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "message"));
+    if (!messageValue.isUndefined()) {
+        result.message = convert<IDLDOMString>(state, messageValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.message = emptyString();
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsErrorEventMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsErrorEventFilename(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsErrorEventLineno(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsErrorEventColno(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsErrorEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventFilename(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventLineno(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventColno(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventError(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsErrorEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSErrorEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSErrorEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSErrorEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSErrorEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSErrorEventPrototype>(vm.heap)) JSErrorEventPrototype(vm, globalObject, structure);
@@ -66,128 +131,50 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSErrorEventConstructor : public DOMConstructorObject {
-private:
-    JSErrorEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSErrorEventConstructor = JSDOMConstructor<JSErrorEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSErrorEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSErrorEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSErrorEventConstructor>(vm.heap)) JSErrorEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSErrorEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSErrorEventTableIndex[9] = {
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 3, -1 },
-    { -1, -1 },
-    { 1, 8 },
-    { 0, -1 },
-    { 2, -1 },
-};
-
-
-static const HashTableValue JSErrorEventTableValues[] =
+template<> EncodedJSValue JSC_HOST_CALL JSErrorEventConstructor::construct(ExecState* state)
 {
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "filename", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventFilename), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lineno", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventLineno), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "colno", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventColno), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSErrorEventTable = { 4, 7, true, JSErrorEventTableValues, 0, JSErrorEventTableIndex };
-EncodedJSValue JSC_HOST_CALL JSErrorEventConstructor::constructJSErrorEvent(ExecState* exec)
-{
-    auto* jsConstructor = jsCast<JSErrorEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    ErrorEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillErrorEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<ErrorEvent> event = ErrorEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSErrorEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<ErrorEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = ErrorEvent::create(*state, WTFMove(type), WTFMove(eventInitDict));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<ErrorEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillErrorEventInit(ErrorEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSErrorEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("message", eventInit.message))
-        return false;
-    if (!dictionary.tryGetProperty("filename", eventInit.filename))
-        return false;
-    if (!dictionary.tryGetProperty("lineno", eventInit.lineno))
-        return false;
-    if (!dictionary.tryGetProperty("colno", eventInit.colno))
-        return false;
-    return true;
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSErrorEventConstructor::s_info = { "ErrorEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSErrorEventConstructor) };
-
-JSErrorEventConstructor::JSErrorEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSErrorEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSErrorEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSErrorEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSErrorEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ErrorEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSErrorEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSErrorEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSErrorEventConstructor::s_info = { "ErrorEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSErrorEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSErrorEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSErrorEventConstructor) } },
+    { "message", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "filename", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventFilename), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lineno", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventLineno), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "colno", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventColno), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "error", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsErrorEventError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSErrorEventPrototype::s_info = { "ErrorEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSErrorEventPrototype) };
@@ -198,89 +185,180 @@ void JSErrorEventPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSErrorEventPrototypeTableValues, *this);
 }
 
-const ClassInfo JSErrorEvent::s_info = { "ErrorEvent", &Base::s_info, &JSErrorEventTable, CREATE_METHOD_TABLE(JSErrorEvent) };
+const ClassInfo JSErrorEvent::s_info = { "ErrorEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSErrorEvent) };
 
-JSErrorEvent::JSErrorEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ErrorEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSErrorEvent::JSErrorEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ErrorEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSErrorEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSErrorEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSErrorEventPrototype::create(vm, globalObject, JSErrorEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSErrorEventPrototype::create(vm, globalObject, JSErrorEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSErrorEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSErrorEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSErrorEvent>(vm, globalObject);
 }
 
-bool JSErrorEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSErrorEvent* BindingCaller<JSErrorEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSErrorEvent*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSErrorEvent, Base>(exec, JSErrorEventTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSErrorEvent*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsErrorEventMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsErrorEventMessageGetter(ExecState&, JSErrorEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsErrorEventMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSErrorEvent*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
-    return JSValue::encode(result);
+    return BindingCaller<JSErrorEvent>::attribute<jsErrorEventMessageGetter>(state, thisValue, "message");
 }
 
-
-EncodedJSValue jsErrorEventFilename(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsErrorEventMessageGetter(ExecState& state, JSErrorEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSErrorEvent*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.filename());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.message());
+    return result;
 }
 
+static inline JSValue jsErrorEventFilenameGetter(ExecState&, JSErrorEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsErrorEventLineno(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsErrorEventFilename(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSErrorEvent*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.lineno());
-    return JSValue::encode(result);
+    return BindingCaller<JSErrorEvent>::attribute<jsErrorEventFilenameGetter>(state, thisValue, "filename");
 }
 
-
-EncodedJSValue jsErrorEventColno(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsErrorEventFilenameGetter(ExecState& state, JSErrorEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSErrorEvent*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.colno());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.filename());
+    return result;
 }
 
+static inline JSValue jsErrorEventLinenoGetter(ExecState&, JSErrorEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsErrorEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsErrorEventLineno(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSErrorEventPrototype* domObject = jsDynamicCast<JSErrorEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSErrorEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSErrorEvent>::attribute<jsErrorEventLinenoGetter>(state, thisValue, "lineno");
 }
 
-JSValue JSErrorEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsErrorEventLinenoGetter(ExecState& state, JSErrorEvent& thisObject, ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSErrorEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.lineno());
+    return result;
+}
+
+static inline JSValue jsErrorEventColnoGetter(ExecState&, JSErrorEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsErrorEventColno(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSErrorEvent>::attribute<jsErrorEventColnoGetter>(state, thisValue, "colno");
+}
+
+static inline JSValue jsErrorEventColnoGetter(ExecState& state, JSErrorEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.colno());
+    return result;
+}
+
+static inline JSValue jsErrorEventErrorGetter(ExecState&, JSErrorEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsErrorEventError(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSErrorEvent>::attribute<jsErrorEventErrorGetter>(state, thisValue, "error");
+}
+
+static inline JSValue jsErrorEventErrorGetter(ExecState& state, JSErrorEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLAny>(impl.error(state, *jsCast<JSDOMGlobalObject*>(state.lexicalGlobalObject())));
+    return result;
+}
+
+EncodedJSValue jsErrorEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSErrorEventPrototype* domObject = jsDynamicDowncast<JSErrorEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSErrorEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSErrorEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSErrorEventPrototype* domObject = jsDynamicDowncast<JSErrorEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSErrorEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSErrorEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7ErrorEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore10ErrorEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<ErrorEvent>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7ErrorEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore10ErrorEventE[2];
+#if COMPILER(CLANG)
+    // If this fails ErrorEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(ErrorEvent), "ErrorEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // ErrorEvent has subclasses. If ErrorEvent has subclasses that get passed
+    // to toJS() we currently require ErrorEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<ErrorEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ErrorEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaList_h
-#define JSMediaList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "MediaList.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSMediaList : public JSDOMWrapper {
+class JSMediaList : public JSDOMWrapper<MediaList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaList>;
     static JSMediaList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaList>&& impl)
     {
-        JSMediaList* ptr = new (NotNull, JSC::allocateCell<JSMediaList>(globalObject->vm().heap)) JSMediaList(structure, globalObject, WTF::move(impl));
+        JSMediaList* ptr = new (NotNull, JSC::allocateCell<JSMediaList>(globalObject->vm().heap)) JSMediaList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static MediaList* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT MediaList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMediaList();
 
     DECLARE_INFO;
 
@@ -53,23 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSMediaList(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaList>&&);
+    JSMediaList(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaListOwner : public JSC::WeakHandleOwner {
@@ -84,11 +72,20 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaList> {
+    using WrapperClass = JSMediaList;
+    using ToWrappedReturnType = MediaList*;
+};
 
 } // namespace WebCore
-
-#endif
 #include "JSMediaListCustom.h"

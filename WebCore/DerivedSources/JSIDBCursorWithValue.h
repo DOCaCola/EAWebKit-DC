@@ -18,28 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBCursorWithValue_h
-#define JSIDBCursorWithValue_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
 #include "IDBCursorWithValue.h"
 #include "JSIDBCursor.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
 class JSIDBCursorWithValue : public JSIDBCursor {
 public:
-    typedef JSIDBCursor Base;
+    using Base = JSIDBCursor;
+    using DOMWrapped = IDBCursorWithValue;
     static JSIDBCursorWithValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBCursorWithValue>&& impl)
     {
-        JSIDBCursorWithValue* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorWithValue>(globalObject->vm().heap)) JSIDBCursorWithValue(structure, globalObject, WTF::move(impl));
+        JSIDBCursorWithValue* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorWithValue>(globalObject->vm().heap)) JSIDBCursorWithValue(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +49,45 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBCursorWithValue& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+    void visitAdditionalChildren(JSC::SlotVisitor&);
+
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    IDBCursorWithValue& wrapped() const
     {
-        return static_cast<IDBCursorWithValue&>(Base::impl());
+        return static_cast<IDBCursorWithValue&>(Base::wrapped());
     }
 protected:
-    JSIDBCursorWithValue(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBCursorWithValue>&&);
+    JSIDBCursorWithValue(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBCursorWithValue>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+class JSIDBCursorWithValueOwner : public JSC::WeakHandleOwner {
+public:
+    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
+    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+};
 
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBCursorWithValue*)
+{
+    static NeverDestroyed<JSIDBCursorWithValueOwner> owner;
+    return &owner.get();
+}
+
+inline void* wrapperKey(IDBCursorWithValue* wrappableObject)
+{
+    return wrappableObject;
+}
+
+
+template<> struct JSDOMWrapperConverterTraits<IDBCursorWithValue> {
+    using WrapperClass = JSIDBCursorWithValue;
+    using ToWrappedReturnType = IDBCursorWithValue*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

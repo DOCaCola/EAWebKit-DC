@@ -20,18 +20,16 @@
 
 #include "config.h"
 
-#if ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#if ENABLE(VIDEO_TRACK)
 
 #include "JSVTTRegion.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSTextTrack.h"
-#include "TextTrack.h"
-#include "URL.h"
-#include "VTTRegion.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -40,28 +38,29 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsVTTRegionTrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsVTTRegionId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionRegionAnchorX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionRegionAnchorX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionRegionAnchorY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionRegionAnchorY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionViewportAnchorX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionViewportAnchorX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionViewportAnchorY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionViewportAnchorY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionScroll(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSVTTRegionScroll(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsVTTRegionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsVTTRegionTrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsVTTRegionId(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionId(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionRegionAnchorX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionRegionAnchorX(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionRegionAnchorY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionRegionAnchorY(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionViewportAnchorX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionViewportAnchorX(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionViewportAnchorY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionViewportAnchorY(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionScroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionScroll(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsVTTRegionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSVTTRegionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSVTTRegionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSVTTRegionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSVTTRegionPrototype* ptr = new (NotNull, JSC::allocateCell<JSVTTRegionPrototype>(vm.heap)) JSVTTRegionPrototype(vm, globalObject, structure);
@@ -84,76 +83,51 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSVTTRegionConstructor : public DOMConstructorObject {
-private:
-    JSVTTRegionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSVTTRegionConstructor = JSDOMConstructor<JSVTTRegion>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSVTTRegionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSVTTRegionConstructor* ptr = new (NotNull, JSC::allocateCell<JSVTTRegionConstructor>(vm.heap)) JSVTTRegionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSVTTRegion(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSVTTRegionConstructor::constructJSVTTRegion(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSVTTRegionConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSVTTRegionConstructor*>(exec->callee());
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSVTTRegionConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "VTTRegion");
-    RefPtr<VTTRegion> object = VTTRegion::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "VTTRegion");
+    auto object = VTTRegion::create(*context);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<VTTRegion>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-const ClassInfo JSVTTRegionConstructor::s_info = { "VTTRegionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegionConstructor) };
-
-JSVTTRegionConstructor::JSVTTRegionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSVTTRegionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSVTTRegionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSVTTRegionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSVTTRegion::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSVTTRegion::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("VTTRegion"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSVTTRegionConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSVTTRegion;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSVTTRegionConstructor::s_info = { "VTTRegion", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSVTTRegionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "track", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "id", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionId) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionWidth) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionHeight) },
-    { "regionAnchorX", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionRegionAnchorX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionRegionAnchorX) },
-    { "regionAnchorY", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionRegionAnchorY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionRegionAnchorY) },
-    { "viewportAnchorX", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionViewportAnchorX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionViewportAnchorX) },
-    { "viewportAnchorY", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionViewportAnchorY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionViewportAnchorY) },
-    { "scroll", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionScroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionScroll) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionConstructor) } },
+    { "track", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "id", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionId) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionWidth) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionHeight) } },
+    { "regionAnchorX", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionRegionAnchorX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionRegionAnchorX) } },
+    { "regionAnchorY", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionRegionAnchorY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionRegionAnchorY) } },
+    { "viewportAnchorX", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionViewportAnchorX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionViewportAnchorX) } },
+    { "viewportAnchorY", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionViewportAnchorY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionViewportAnchorY) } },
+    { "scroll", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTRegionScroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTRegionScroll) } },
 };
 
 const ClassInfo JSVTTRegionPrototype::s_info = { "VTTRegionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegionPrototype) };
@@ -166,10 +140,16 @@ void JSVTTRegionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSVTTRegion::s_info = { "VTTRegion", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTRegion) };
 
-JSVTTRegion::JSVTTRegion(Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTRegion>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSVTTRegion::JSVTTRegion(Structure* structure, JSDOMGlobalObject& globalObject, Ref<VTTRegion>&& impl)
+    : JSDOMWrapper<VTTRegion>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSVTTRegion::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSVTTRegion::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -177,7 +157,7 @@ JSObject* JSVTTRegion::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSVTTRegionPrototype::create(vm, globalObject, JSVTTRegionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSVTTRegion::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSVTTRegion::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSVTTRegion>(vm, globalObject);
 }
@@ -188,349 +168,334 @@ void JSVTTRegion::destroy(JSC::JSCell* cell)
     thisObject->JSVTTRegion::~JSVTTRegion();
 }
 
-JSVTTRegion::~JSVTTRegion()
+template<> inline JSVTTRegion* BindingCaller<JSVTTRegion>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSVTTRegion*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsVTTRegionTrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsVTTRegionTrackGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionTrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "track");
-        return throwGetterTypeError(*exec, "VTTRegion", "track");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.track()));
-    return JSValue::encode(result);
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionTrackGetter>(state, thisValue, "track");
 }
 
-
-EncodedJSValue jsVTTRegionId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsVTTRegionTrackGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "id");
-        return throwGetterTypeError(*exec, "VTTRegion", "id");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<TextTrack>>(state, *thisObject.globalObject(), impl.track());
+    return result;
 }
 
+static inline JSValue jsVTTRegionIdGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
 
-EncodedJSValue jsVTTRegionWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTRegionId(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "width");
-        return throwGetterTypeError(*exec, "VTTRegion", "width");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.width());
-    return JSValue::encode(result);
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionIdGetter>(state, thisValue, "id");
 }
 
-
-EncodedJSValue jsVTTRegionHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsVTTRegionIdGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "height");
-        return throwGetterTypeError(*exec, "VTTRegion", "height");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.height());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.id());
+    return result;
 }
 
+static inline JSValue jsVTTRegionWidthGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
 
-EncodedJSValue jsVTTRegionRegionAnchorX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTRegionWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "regionAnchorX");
-        return throwGetterTypeError(*exec, "VTTRegion", "regionAnchorX");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.regionAnchorX());
-    return JSValue::encode(result);
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionWidthGetter>(state, thisValue, "width");
 }
 
-
-EncodedJSValue jsVTTRegionRegionAnchorY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsVTTRegionWidthGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "regionAnchorY");
-        return throwGetterTypeError(*exec, "VTTRegion", "regionAnchorY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.regionAnchorY());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.width());
+    return result;
 }
 
+static inline JSValue jsVTTRegionHeightGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
 
-EncodedJSValue jsVTTRegionViewportAnchorX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTRegionHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "viewportAnchorX");
-        return throwGetterTypeError(*exec, "VTTRegion", "viewportAnchorX");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.viewportAnchorX());
-    return JSValue::encode(result);
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionHeightGetter>(state, thisValue, "height");
 }
 
-
-EncodedJSValue jsVTTRegionViewportAnchorY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsVTTRegionHeightGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "viewportAnchorY");
-        return throwGetterTypeError(*exec, "VTTRegion", "viewportAnchorY");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.viewportAnchorY());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.height());
+    return result;
 }
 
+static inline JSValue jsVTTRegionRegionAnchorXGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
 
-EncodedJSValue jsVTTRegionScroll(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTRegionRegionAnchorX(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTRegion", "scroll");
-        return throwGetterTypeError(*exec, "VTTRegion", "scroll");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.scroll());
-    return JSValue::encode(result);
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionRegionAnchorXGetter>(state, thisValue, "regionAnchorX");
 }
 
-
-EncodedJSValue jsVTTRegionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsVTTRegionRegionAnchorXGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
 {
-    JSVTTRegionPrototype* domObject = jsDynamicCast<JSVTTRegionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSVTTRegion::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.regionAnchorX());
+    return result;
 }
 
-void setJSVTTRegionId(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsVTTRegionRegionAnchorYGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionRegionAnchorY(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionRegionAnchorYGetter>(state, thisValue, "regionAnchorY");
+}
+
+static inline JSValue jsVTTRegionRegionAnchorYGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.regionAnchorY());
+    return result;
+}
+
+static inline JSValue jsVTTRegionViewportAnchorXGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionViewportAnchorX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionViewportAnchorXGetter>(state, thisValue, "viewportAnchorX");
+}
+
+static inline JSValue jsVTTRegionViewportAnchorXGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.viewportAnchorX());
+    return result;
+}
+
+static inline JSValue jsVTTRegionViewportAnchorYGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionViewportAnchorY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionViewportAnchorYGetter>(state, thisValue, "viewportAnchorY");
+}
+
+static inline JSValue jsVTTRegionViewportAnchorYGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.viewportAnchorY());
+    return result;
+}
+
+static inline JSValue jsVTTRegionScrollGetter(ExecState&, JSVTTRegion&, ThrowScope& throwScope);
+
+EncodedJSValue jsVTTRegionScroll(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSVTTRegion>::attribute<jsVTTRegionScrollGetter>(state, thisValue, "scroll");
+}
+
+static inline JSValue jsVTTRegionScrollGetter(ExecState& state, JSVTTRegion& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.scroll());
+    return result;
+}
+
+EncodedJSValue jsVTTRegionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSVTTRegionPrototype* domObject = jsDynamicDowncast<JSVTTRegionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSVTTRegion::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSVTTRegionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "id");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "id");
-        return;
+    JSVTTRegionPrototype* domObject = jsDynamicDowncast<JSVTTRegionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setId(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSVTTRegionIdFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionId(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionIdFunction>(state, thisValue, encodedValue, "id");
+}
+
+static inline bool setJSVTTRegionIdFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setId(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSVTTRegionWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionWidthFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionWidth(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "width");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "width");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setWidth(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionWidthFunction>(state, thisValue, encodedValue, "width");
+}
+
+static inline bool setJSVTTRegionWidthFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setWidth(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionHeightFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionHeight(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "height");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "height");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHeight(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionHeightFunction>(state, thisValue, encodedValue, "height");
+}
+
+static inline bool setJSVTTRegionHeightFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLLong>(state, value, IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setHeight(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionRegionAnchorX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionRegionAnchorXFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionRegionAnchorX(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "regionAnchorX");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "regionAnchorX");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setRegionAnchorX(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionRegionAnchorXFunction>(state, thisValue, encodedValue, "regionAnchorX");
+}
+
+static inline bool setJSVTTRegionRegionAnchorXFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setRegionAnchorX(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionRegionAnchorY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionRegionAnchorYFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionRegionAnchorY(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "regionAnchorY");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "regionAnchorY");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setRegionAnchorY(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionRegionAnchorYFunction>(state, thisValue, encodedValue, "regionAnchorY");
+}
+
+static inline bool setJSVTTRegionRegionAnchorYFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setRegionAnchorY(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionViewportAnchorX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionViewportAnchorXFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionViewportAnchorX(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "viewportAnchorX");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "viewportAnchorX");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setViewportAnchorX(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionViewportAnchorXFunction>(state, thisValue, encodedValue, "viewportAnchorX");
+}
+
+static inline bool setJSVTTRegionViewportAnchorXFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setViewportAnchorX(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionViewportAnchorY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionViewportAnchorYFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionViewportAnchorY(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "viewportAnchorY");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "viewportAnchorY");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setViewportAnchorY(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionViewportAnchorYFunction>(state, thisValue, encodedValue, "viewportAnchorY");
+}
+
+static inline bool setJSVTTRegionViewportAnchorYFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setViewportAnchorY(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void setJSVTTRegionScroll(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSVTTRegionScrollFunction(ExecState&, JSVTTRegion&, JSValue, ThrowScope&);
+
+bool setJSVTTRegionScroll(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSVTTRegion* castedThis = jsDynamicCast<JSVTTRegion*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVTTRegionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTRegion", "scroll");
-        else
-            throwSetterTypeError(*exec, "VTTRegion", "scroll");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setScroll(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSVTTRegion>::setAttribute<setJSVTTRegionScrollFunction>(state, thisValue, encodedValue, "scroll");
+}
+
+static inline bool setJSVTTRegionScrollFunction(ExecState& state, JSVTTRegion& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setScroll(WTFMove(nativeValue)));
+    return true;
 }
 
 
-JSValue JSVTTRegion::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSVTTRegion::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSVTTRegionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSVTTRegionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSVTTRegionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -542,9 +507,9 @@ bool JSVTTRegionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> hand
 
 void JSVTTRegionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsVTTRegion = jsCast<JSVTTRegion*>(handle.slot()->asCell());
+    auto* jsVTTRegion = static_cast<JSVTTRegion*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsVTTRegion->impl(), jsVTTRegion);
+    uncacheWrapper(world, &jsVTTRegion->wrapped(), jsVTTRegion);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -555,15 +520,12 @@ extern "C" { extern void (*const __identifier("??_7VTTRegion@WebCore@@6B@")[])()
 extern "C" { extern void* _ZTVN7WebCore9VTTRegionE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTRegion* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<VTTRegion>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSVTTRegion>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7VTTRegion@WebCore@@6B@"));
 #else
@@ -571,7 +533,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTRegion* i
 #if COMPILER(CLANG)
     // If this fails VTTRegion does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(VTTRegion), VTTRegion_is_not_polymorphic);
+    static_assert(__is_polymorphic(VTTRegion), "VTTRegion is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -580,16 +542,21 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTRegion* i
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSVTTRegion>(globalObject, impl);
+    return createWrapper<VTTRegion>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTRegion& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 VTTRegion* JSVTTRegion::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSVTTRegion*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSVTTRegion*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#endif // ENABLE(VIDEO_TRACK)

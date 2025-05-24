@@ -22,9 +22,10 @@
 #include "JSSVGCircleElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
-#include "SVGCircleElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,15 +34,16 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGCircleElementCx(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCircleElementCy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCircleElementR(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCircleElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCircleElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCircleElementCx(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCircleElementCy(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCircleElementR(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCircleElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCircleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGCircleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGCircleElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGCircleElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGCircleElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGCircleElementPrototype>(vm.heap)) JSSVGCircleElementPrototype(vm, globalObject, structure);
@@ -64,52 +66,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGCircleElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGCircleElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGCircleElementConstructor = JSDOMConstructorNotConstructable<JSSVGCircleElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGCircleElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGCircleElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGCircleElementConstructor>(vm.heap)) JSSVGCircleElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGCircleElementConstructor::s_info = { "SVGCircleElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCircleElementConstructor) };
-
-JSSVGCircleElementConstructor::JSSVGCircleElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGCircleElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGGraphicsElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGCircleElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGCircleElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGCircleElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGCircleElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGCircleElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGCircleElementConstructor::s_info = { "SVGCircleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCircleElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGCircleElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cx", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementCx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementCy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "r", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementR), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGCircleElementConstructor) } },
+    { "cx", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementCx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementCy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "r", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementR), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCircleElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGCircleElementPrototype::s_info = { "SVGCircleElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCircleElementPrototype) };
@@ -122,104 +103,132 @@ void JSSVGCircleElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGCircleElement::s_info = { "SVGCircleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCircleElement) };
 
-JSSVGCircleElement::JSSVGCircleElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGCircleElement>&& impl)
-    : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
+JSSVGCircleElement::JSSVGCircleElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGCircleElement>&& impl)
+    : JSSVGGraphicsElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGCircleElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGCircleElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGCircleElementPrototype::create(vm, globalObject, JSSVGCircleElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::getPrototype(vm, globalObject)));
+    return JSSVGCircleElementPrototype::create(vm, globalObject, JSSVGCircleElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGCircleElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGCircleElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGCircleElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGCircleElementCx(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGCircleElement* BindingCaller<JSSVGCircleElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCircleElement* castedThis = jsDynamicCast<JSSVGCircleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCircleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCircleElement", "cx");
-        return throwGetterTypeError(*exec, "SVGCircleElement", "cx");
+    return jsDynamicDowncast<JSSVGCircleElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGCircleElementCxGetter(ExecState&, JSSVGCircleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCircleElementCx(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCircleElement>::attribute<jsSVGCircleElementCxGetter>(state, thisValue, "cx");
+}
+
+static inline JSValue jsSVGCircleElementCxGetter(ExecState& state, JSSVGCircleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.cxAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCircleElementCyGetter(ExecState&, JSSVGCircleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCircleElementCy(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCircleElement>::attribute<jsSVGCircleElementCyGetter>(state, thisValue, "cy");
+}
+
+static inline JSValue jsSVGCircleElementCyGetter(ExecState& state, JSSVGCircleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.cyAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCircleElementRGetter(ExecState&, JSSVGCircleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCircleElementR(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCircleElement>::attribute<jsSVGCircleElementRGetter>(state, thisValue, "r");
+}
+
+static inline JSValue jsSVGCircleElementRGetter(ExecState& state, JSSVGCircleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.rAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCircleElementExternalResourcesRequiredGetter(ExecState&, JSSVGCircleElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCircleElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCircleElement>::attribute<jsSVGCircleElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGCircleElementExternalResourcesRequiredGetter(ExecState& state, JSSVGCircleElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGCircleElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGCircleElementPrototype* domObject = jsDynamicDowncast<JSSVGCircleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGCircleElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGCircleElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGCircleElementPrototype* domObject = jsDynamicDowncast<JSSVGCircleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.cxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGCircleElementCy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGCircleElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCircleElement* castedThis = jsDynamicCast<JSSVGCircleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCircleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCircleElement", "cy");
-        return throwGetterTypeError(*exec, "SVGCircleElement", "cy");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.cyAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGCircleElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsSVGCircleElementR(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGCircleElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCircleElement* castedThis = jsDynamicCast<JSSVGCircleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCircleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCircleElement", "r");
-        return throwGetterTypeError(*exec, "SVGCircleElement", "r");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.rAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGCircleElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCircleElement* castedThis = jsDynamicCast<JSSVGCircleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCircleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCircleElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGCircleElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGCircleElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGCircleElementPrototype* domObject = jsDynamicCast<JSSVGCircleElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGCircleElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGCircleElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGCircleElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGCircleElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

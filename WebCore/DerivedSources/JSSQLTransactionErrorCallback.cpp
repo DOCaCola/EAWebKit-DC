@@ -21,6 +21,7 @@
 #include "config.h"
 #include "JSSQLTransactionErrorCallback.h"
 
+#include "JSDOMConvert.h"
 #include "JSSQLError.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
@@ -32,7 +33,7 @@ namespace WebCore {
 JSSQLTransactionErrorCallback::JSSQLTransactionErrorCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : SQLTransactionErrorCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -46,29 +47,37 @@ JSSQLTransactionErrorCallback::~JSSQLTransactionErrorCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
-
-
-// Functions
 
 bool JSSQLTransactionErrorCallback::handleEvent(SQLError* error)
 {
     if (!canInvokeCallback())
         return true;
 
-    Ref<JSSQLTransactionErrorCallback> protect(*this);
+    Ref<JSSQLTransactionErrorCallback> protectedThis(*this);
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), error));
+    args.append(toJS<IDLInterface<SQLError>>(*state, *m_data->globalObject(), error));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
 }
 
+JSC::JSValue toJS(SQLTransactionErrorCallback& impl)
+{
+    if (!static_cast<JSSQLTransactionErrorCallback&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSSQLTransactionErrorCallback&>(impl).callbackData()->callback();
+
 }
+
+} // namespace WebCore

@@ -22,9 +22,10 @@
 #include "JSSVGLineElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
-#include "SVGLineElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,16 +34,17 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGLineElementX1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGLineElementY1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGLineElementX2(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGLineElementY2(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGLineElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGLineElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementX1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementY1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementX2(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementY2(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGLineElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGLineElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGLineElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGLineElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGLineElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElementPrototype>(vm.heap)) JSSVGLineElementPrototype(vm, globalObject, structure);
@@ -65,53 +67,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGLineElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGLineElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGLineElementConstructor = JSDOMConstructorNotConstructable<JSSVGLineElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGLineElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGLineElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElementConstructor>(vm.heap)) JSSVGLineElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGLineElementConstructor::s_info = { "SVGLineElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLineElementConstructor) };
-
-JSSVGLineElementConstructor::JSSVGLineElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGLineElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGGraphicsElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGLineElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGLineElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGLineElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGLineElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGLineElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGLineElementConstructor::s_info = { "SVGLineElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLineElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGLineElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementX1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementY1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementX2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementY2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLineElementConstructor) } },
+    { "x1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementX1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementY1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementX2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementY2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLineElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGLineElementPrototype::s_info = { "SVGLineElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLineElementPrototype) };
@@ -124,122 +105,148 @@ void JSSVGLineElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGLineElement::s_info = { "SVGLineElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLineElement) };
 
-JSSVGLineElement::JSSVGLineElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLineElement>&& impl)
-    : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
+JSSVGLineElement::JSSVGLineElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGLineElement>&& impl)
+    : JSSVGGraphicsElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGLineElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGLineElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGLineElementPrototype::create(vm, globalObject, JSSVGLineElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::getPrototype(vm, globalObject)));
+    return JSSVGLineElementPrototype::create(vm, globalObject, JSSVGLineElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGLineElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGLineElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGLineElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGLineElementX1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGLineElement* BindingCaller<JSSVGLineElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGLineElement* castedThis = jsDynamicCast<JSSVGLineElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGLineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLineElement", "x1");
-        return throwGetterTypeError(*exec, "SVGLineElement", "x1");
+    return jsDynamicDowncast<JSSVGLineElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGLineElementX1Getter(ExecState&, JSSVGLineElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGLineElementX1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGLineElement>::attribute<jsSVGLineElementX1Getter>(state, thisValue, "x1");
+}
+
+static inline JSValue jsSVGLineElementX1Getter(ExecState& state, JSSVGLineElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.x1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGLineElementY1Getter(ExecState&, JSSVGLineElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGLineElementY1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGLineElement>::attribute<jsSVGLineElementY1Getter>(state, thisValue, "y1");
+}
+
+static inline JSValue jsSVGLineElementY1Getter(ExecState& state, JSSVGLineElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.y1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGLineElementX2Getter(ExecState&, JSSVGLineElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGLineElementX2(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGLineElement>::attribute<jsSVGLineElementX2Getter>(state, thisValue, "x2");
+}
+
+static inline JSValue jsSVGLineElementX2Getter(ExecState& state, JSSVGLineElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.x2Animated());
+    return result;
+}
+
+static inline JSValue jsSVGLineElementY2Getter(ExecState&, JSSVGLineElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGLineElementY2(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGLineElement>::attribute<jsSVGLineElementY2Getter>(state, thisValue, "y2");
+}
+
+static inline JSValue jsSVGLineElementY2Getter(ExecState& state, JSSVGLineElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.y2Animated());
+    return result;
+}
+
+static inline JSValue jsSVGLineElementExternalResourcesRequiredGetter(ExecState&, JSSVGLineElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGLineElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGLineElement>::attribute<jsSVGLineElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGLineElementExternalResourcesRequiredGetter(ExecState& state, JSSVGLineElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGLineElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGLineElementPrototype* domObject = jsDynamicDowncast<JSSVGLineElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGLineElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGLineElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGLineElementPrototype* domObject = jsDynamicDowncast<JSSVGLineElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.x1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGLineElementY1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGLineElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGLineElement* castedThis = jsDynamicCast<JSSVGLineElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGLineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLineElement", "y1");
-        return throwGetterTypeError(*exec, "SVGLineElement", "y1");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.y1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGLineElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsSVGLineElementX2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGLineElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGLineElement* castedThis = jsDynamicCast<JSSVGLineElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGLineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLineElement", "x2");
-        return throwGetterTypeError(*exec, "SVGLineElement", "x2");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.x2Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGLineElementY2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGLineElement* castedThis = jsDynamicCast<JSSVGLineElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGLineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLineElement", "y2");
-        return throwGetterTypeError(*exec, "SVGLineElement", "y2");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.y2Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGLineElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGLineElement* castedThis = jsDynamicCast<JSSVGLineElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGLineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLineElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGLineElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGLineElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGLineElementPrototype* domObject = jsDynamicCast<JSSVGLineElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGLineElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGLineElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGLineElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGLineElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

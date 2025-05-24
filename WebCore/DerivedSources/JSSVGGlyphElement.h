@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGGlyphElement_h
-#define JSSVGGlyphElement_h
+#pragma once
 
 #if ENABLE(SVG_FONTS)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSSVGGlyphElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGGlyphElement;
     static JSSVGGlyphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGGlyphElement>&& impl)
     {
-        JSSVGGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphElement>(globalObject->vm().heap)) JSSVGGlyphElement(structure, globalObject, WTF::move(impl));
+        JSSVGGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphElement>(globalObject->vm().heap)) JSSVGGlyphElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,26 +49,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGGlyphElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGGlyphElement& wrapped() const
     {
-        return static_cast<SVGGlyphElement&>(Base::impl());
+        return static_cast<SVGGlyphElement&>(Base::wrapped());
     }
 protected:
-    JSSVGGlyphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGGlyphElement>&&);
+    JSSVGGlyphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGGlyphElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGGlyphElement> {
+    using WrapperClass = JSSVGGlyphElement;
+    using ToWrappedReturnType = SVGGlyphElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SVG_FONTS)
-
-#endif

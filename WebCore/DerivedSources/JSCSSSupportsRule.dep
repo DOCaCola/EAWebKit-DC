@@ -1,0 +1,2 @@
+JSCSSSupportsRule.h : CSSRule.idl
+CSSRule.idl :

@@ -131,20 +131,6 @@ private:
 }
 
 namespace WebCore {
-class HTMLBaseFontElement;
-}
-namespace WTF {
-template <typename ArgType>
-class TypeCastTraits<const WebCore::HTMLBaseFontElement, ArgType, false /* isBaseType */> {
-public:
-    static bool isOfType(ArgType& node) { return checkTagName(node); }
-private:
-    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::basefontTag); }
-    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::basefontTag); }
-};
-}
-
-namespace WebCore {
 class HTMLBodyElement;
 }
 namespace WTF {
@@ -197,6 +183,20 @@ public:
 private:
     static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::dlTag); }
     static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::dlTag); }
+};
+}
+
+namespace WebCore {
+class HTMLDataElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLDataElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::dataTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::dataTag); }
 };
 }
 
@@ -663,6 +663,20 @@ private:
 }
 
 namespace WebCore {
+class HTMLPictureElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLPictureElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::pictureTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::pictureTag); }
+};
+}
+
+namespace WebCore {
 class HTMLProgressElement;
 }
 namespace WTF {
@@ -705,6 +719,20 @@ private:
 }
 
 namespace WebCore {
+class HTMLSlotElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLSlotElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::slotTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::slotTag); }
+};
+}
+
+namespace WebCore {
 class HTMLSourceElement;
 }
 namespace WTF {
@@ -713,8 +741,8 @@ class TypeCastTraits<const WebCore::HTMLSourceElement, ArgType, false /* isBaseT
 public:
     static bool isOfType(ArgType& node) { return checkTagName(node); }
 private:
-    static bool checkTagName(const WebCore::HTMLElement& element) { return !element.isHTMLUnknownElement() && element.hasTagName(WebCore::HTMLNames::sourceTag); }
-    static bool checkTagName(const WebCore::Node& node) { return is<WebCore::HTMLElement>(node) && checkTagName(downcast<WebCore::HTMLElement>(node)); }
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::sourceTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::sourceTag); }
 };
 }
 
@@ -827,6 +855,20 @@ public:
 private:
     static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::textareaTag); }
     static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::textareaTag); }
+};
+}
+
+namespace WebCore {
+class HTMLTimeElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLTimeElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::timeTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::timeTag); }
 };
 }
 

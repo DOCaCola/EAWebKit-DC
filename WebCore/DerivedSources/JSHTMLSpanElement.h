@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLSpanElement_h
-#define JSHTMLSpanElement_h
+#pragma once
 
 #include "HTMLSpanElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLSpanElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLSpanElement;
     static JSHTMLSpanElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSpanElement>&& impl)
     {
-        JSHTMLSpanElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSpanElement>(globalObject->vm().heap)) JSHTMLSpanElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSpanElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSpanElement>(globalObject->vm().heap)) JSHTMLSpanElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLSpanElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLSpanElement& wrapped() const
     {
-        return static_cast<HTMLSpanElement&>(Base::impl());
+        return static_cast<HTMLSpanElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLSpanElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSpanElement>&&);
+    JSHTMLSpanElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSpanElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLSpanElement> {
+    using WrapperClass = JSHTMLSpanElement;
+    using ToWrappedReturnType = HTMLSpanElement*;
+};
 
 } // namespace WebCore
-
-#endif

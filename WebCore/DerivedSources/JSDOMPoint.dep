@@ -1,0 +1,2 @@
+JSDOMPoint.h : DOMPointReadOnly.idl
+DOMPointReadOnly.idl :

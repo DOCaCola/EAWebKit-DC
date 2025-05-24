@@ -24,18 +24,17 @@
 
 #include "JSIDBCursor.h"
 
-#include "ExceptionCode.h"
-#include "IDBAny.h"
-#include "IDBCursor.h"
-#include "IDBRequest.h"
 #include "JSDOMBinding.h"
-#include "JSIDBAny.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSIDBCursorDirection.h"
+#include "JSIDBIndex.h"
+#include "JSIDBObjectStore.h"
 #include "JSIDBRequest.h"
-#include "URL.h"
-#include <bindings/ScriptValue.h>
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -46,19 +45,21 @@ namespace WebCore {
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionUpdate(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionAdvance(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionContinue(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionContinuePrimaryKey(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionDelete(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsIDBCursorSource(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBCursorDirection(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBCursorKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBCursorPrimaryKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBCursorConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBCursorSource(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBCursorDirection(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBCursorKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBCursorPrimaryKey(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBCursorConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBCursorConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBCursorPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBCursorPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBCursorPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorPrototype>(vm.heap)) JSIDBCursorPrototype(vm, globalObject, structure);
@@ -81,56 +82,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBCursorConstructor : public DOMConstructorObject {
-private:
-    JSIDBCursorConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBCursorConstructor = JSDOMConstructorNotConstructable<JSIDBCursor>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBCursorConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBCursorConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorConstructor>(vm.heap)) JSIDBCursorConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBCursorConstructor::s_info = { "IDBCursorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorConstructor) };
-
-JSIDBCursorConstructor::JSIDBCursorConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBCursorConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSIDBCursorConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBCursorConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBCursor::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBCursor::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBCursor"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBCursorConstructor::s_info = { "IDBCursor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBCursorPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "source", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "direction", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "key", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "primaryKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorPrimaryKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "update", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionUpdate), (intptr_t) (1) },
-    { "advance", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionAdvance), (intptr_t) (1) },
-    { "continue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionContinue), (intptr_t) (0) },
-    { "delete", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionDelete), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBCursorConstructor) } },
+    { "source", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "direction", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "key", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "primaryKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorPrimaryKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "update", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionUpdate), (intptr_t) (1) } },
+    { "advance", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionAdvance), (intptr_t) (1) } },
+    { "continue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionContinue), (intptr_t) (0) } },
+    { "continuePrimaryKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionContinuePrimaryKey), (intptr_t) (2) } },
+    { "delete", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBCursorPrototypeFunctionDelete), (intptr_t) (0) } },
 };
 
 const ClassInfo JSIDBCursorPrototype::s_info = { "IDBCursorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorPrototype) };
@@ -143,10 +125,16 @@ void JSIDBCursorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBCursor::s_info = { "IDBCursor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursor) };
 
-JSIDBCursor::JSIDBCursor(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBCursor>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBCursor::JSIDBCursor(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBCursor>&& impl)
+    : JSDOMWrapper<IDBCursor>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBCursor::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBCursor::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -154,7 +142,7 @@ JSObject* JSIDBCursor::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSIDBCursorPrototype::create(vm, globalObject, JSIDBCursorPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSIDBCursor::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBCursor::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBCursor>(vm, globalObject);
 }
@@ -165,233 +153,239 @@ void JSIDBCursor::destroy(JSC::JSCell* cell)
     thisObject->JSIDBCursor::~JSIDBCursor();
 }
 
-JSIDBCursor::~JSIDBCursor()
+template<> inline JSIDBCursor* BindingCaller<JSIDBCursor>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSIDBCursor*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsIDBCursorSource(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBCursor* BindingCaller<JSIDBCursor>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBCursorPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBCursor", "source");
-        return throwGetterTypeError(*exec, "IDBCursor", "source");
+    return jsDynamicDowncast<JSIDBCursor*>(state.thisValue());
+}
+
+static inline JSValue jsIDBCursorSourceGetter(ExecState&, JSIDBCursor&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBCursorSource(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBCursor>::attribute<jsIDBCursorSourceGetter>(state, thisValue, "source");
+}
+
+static inline JSValue jsIDBCursorSourceGetter(ExecState& state, JSIDBCursor& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnion<IDLInterface<IDBObjectStore>, IDLInterface<IDBIndex>>>(state, *thisObject.globalObject(), impl.source());
+    return result;
+}
+
+static inline JSValue jsIDBCursorDirectionGetter(ExecState&, JSIDBCursor&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBCursorDirection(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBCursor>::attribute<jsIDBCursorDirectionGetter>(state, thisValue, "direction");
+}
+
+static inline JSValue jsIDBCursorDirectionGetter(ExecState& state, JSIDBCursor& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<IDBCursorDirection>>(state, impl.direction());
+    return result;
+}
+
+static inline JSValue jsIDBCursorKeyGetter(ExecState&, JSIDBCursor&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBCursorKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBCursor>::attribute<jsIDBCursorKeyGetter>(state, thisValue, "key");
+}
+
+static inline JSValue jsIDBCursorKeyGetter(ExecState& state, JSIDBCursor& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLAny>(impl.key());
+    return result;
+}
+
+static inline JSValue jsIDBCursorPrimaryKeyGetter(ExecState&, JSIDBCursor&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBCursorPrimaryKey(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBCursor>::attribute<jsIDBCursorPrimaryKeyGetter>(state, thisValue, "primaryKey");
+}
+
+static inline JSValue jsIDBCursorPrimaryKeyGetter(ExecState& state, JSIDBCursor& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLAny>(impl.primaryKey());
+    return result;
+}
+
+EncodedJSValue jsIDBCursorConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBCursorPrototype* domObject = jsDynamicDowncast<JSIDBCursorPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBCursor::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSIDBCursorConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSIDBCursorPrototype* domObject = jsDynamicDowncast<JSIDBCursorPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.source()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsIDBCursorDirection(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSIDBCursor::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBCursorPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBCursor", "direction");
-        return throwGetterTypeError(*exec, "IDBCursor", "direction");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.direction());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSIDBCursorConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionUpdateCaller(JSC::ExecState*, JSIDBCursor*, JSC::ThrowScope&);
 
-EncodedJSValue jsIDBCursorKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionUpdate(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBCursorPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBCursor", "key");
-        return throwGetterTypeError(*exec, "IDBCursor", "key");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = (impl.key().hasNoValue() ? jsNull() : impl.key().jsValue());
-    return JSValue::encode(result);
+    return BindingCaller<JSIDBCursor>::callOperation<jsIDBCursorPrototypeFunctionUpdateCaller>(state, "update");
 }
 
-
-EncodedJSValue jsIDBCursorPrimaryKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionUpdateCaller(JSC::ExecState* state, JSIDBCursor* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBCursorPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBCursor", "primaryKey");
-        return throwGetterTypeError(*exec, "IDBCursor", "primaryKey");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = (impl.primaryKey().hasNoValue() ? jsNull() : impl.primaryKey().jsValue());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto value = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.update(*state, WTFMove(value))));
 }
 
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionAdvanceCaller(JSC::ExecState*, JSIDBCursor*, JSC::ThrowScope&);
 
-EncodedJSValue jsIDBCursorConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionAdvance(ExecState* state)
 {
-    JSIDBCursorPrototype* domObject = jsDynamicCast<JSIDBCursorPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBCursor::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSIDBCursor>::callOperation<jsIDBCursorPrototypeFunctionAdvanceCaller>(state, "advance");
 }
 
-JSValue JSIDBCursor::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionAdvanceCaller(JSC::ExecState* state, JSIDBCursor* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSIDBCursorConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionUpdate(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBCursor", "update");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBCursor::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Deprecated::ScriptValue value = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.update(exec, value, ec)));
-
-    setDOMException(exec, ec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionAdvance(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBCursor", "advance");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBCursor::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    unsigned count = toUInt32(exec, exec->argument(0), EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.advance(count, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto count = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.advance(WTFMove(count)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionContinue(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionContinueCaller(JSC::ExecState*, JSIDBCursor*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionContinue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBCursor", "continue");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBCursor::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
+    return BindingCaller<JSIDBCursor>::callOperation<jsIDBCursorPrototypeFunctionContinueCaller>(state, "continue");
+}
 
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        impl.continueFunction(scriptContext, ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
-    }
-
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.continueFunction(scriptContext, key, ec);
-    setDOMException(exec, ec);
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionContinueCaller(JSC::ExecState* state, JSIDBCursor* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto key = convert<IDLAny>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.continueFunction(*state, WTFMove(key)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionDelete(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBCursor* castedThis = jsDynamicCast<JSIDBCursor*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBCursor", "delete");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBCursor::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.deleteFunction(scriptContext, ec)));
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionContinuePrimaryKeyCaller(JSC::ExecState*, JSIDBCursor*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionContinuePrimaryKey(ExecState* state)
+{
+    return BindingCaller<JSIDBCursor>::callOperation<jsIDBCursorPrototypeFunctionContinuePrimaryKeyCaller>(state, "continuePrimaryKey");
+}
+
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionContinuePrimaryKeyCaller(JSC::ExecState* state, JSIDBCursor* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto primaryKey = convert<IDLAny>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.continuePrimaryKey(*state, WTFMove(key), WTFMove(primaryKey)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionDeleteCaller(JSC::ExecState*, JSIDBCursor*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsIDBCursorPrototypeFunctionDelete(ExecState* state)
+{
+    return BindingCaller<JSIDBCursor>::callOperation<jsIDBCursorPrototypeFunctionDeleteCaller>(state, "delete");
+}
+
+static inline JSC::EncodedJSValue jsIDBCursorPrototypeFunctionDeleteCaller(JSC::ExecState* state, JSIDBCursor* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.deleteFunction(*state)));
+}
+
+void JSIDBCursor::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSIDBCursor*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
+void JSIDBCursor::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSIDBCursor*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
 }
 
 bool JSIDBCursorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(handle);
+    auto* jsIDBCursor = jsCast<JSIDBCursor*>(handle.slot()->asCell());
+    if (jsIDBCursor->wrapped().hasPendingActivity())
+        return true;
     UNUSED_PARAM(visitor);
     return false;
 }
 
 void JSIDBCursorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBCursor = jsCast<JSIDBCursor*>(handle.slot()->asCell());
+    auto* jsIDBCursor = static_cast<JSIDBCursor*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBCursor->impl(), jsIDBCursor);
-}
-
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7IDBCursor@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore9IDBCursorE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBCursor* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBCursor>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7IDBCursor@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore9IDBCursorE[2];
-#if COMPILER(CLANG)
-    // If this fails IDBCursor does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(IDBCursor), IDBCursor_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // IDBCursor has subclasses. If IDBCursor has subclasses that get passed
-    // to toJS() we currently require IDBCursor you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSIDBCursor>(globalObject, impl);
+    uncacheWrapper(world, &jsIDBCursor->wrapped(), jsIDBCursor);
 }
 
 IDBCursor* JSIDBCursor::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBCursor*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBCursor*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

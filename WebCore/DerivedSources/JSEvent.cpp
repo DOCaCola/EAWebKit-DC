@@ -21,15 +21,16 @@
 #include "config.h"
 #include "JSEvent.h"
 
-#include "Event.h"
-#include "EventTarget.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSEventInit.h"
 #include "JSEventTarget.h"
-#include "URL.h"
+#include "JSNode.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -38,6 +39,7 @@ namespace WebCore {
 
 // Functions
 
+JSC::EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionComposedPath(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopPropagation(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionPreventDefault(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionInitEvent(JSC::ExecState*);
@@ -45,25 +47,27 @@ JSC::EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopImmediatePropagati
 
 // Attributes
 
-JSC::EncodedJSValue jsEventType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventCurrentTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventEventPhase(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventBubbles(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventCancelable(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventTimeStamp(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventDefaultPrevented(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventSrcElement(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventReturnValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSEventReturnValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsEventCancelBubble(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSEventCancelBubble(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsEventClipboardData(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventCurrentTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventEventPhase(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventBubbles(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventCancelable(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventComposed(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventTimeStamp(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventDefaultPrevented(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventIsTrusted(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventSrcElement(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsEventReturnValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSEventReturnValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsEventCancelBubble(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSEventCancelBubble(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSEventPrototype>(vm.heap)) JSEventPrototype(vm, globalObject, structure);
@@ -86,195 +90,144 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSEventConstructor : public DOMConstructorObject {
-private:
-    JSEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSEventConstructor>(vm.heap)) JSEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+using JSEventConstructor = JSDOMConstructor<JSEvent>;
 
 /* Hash table */
 
 static const struct CompactHashIndex JSEventTableIndex[2] = {
-    { -1, -1 },
     { 0, -1 },
+    { -1, -1 },
 };
 
 
 static const HashTableValue JSEventTableValues[] =
 {
-    { "clipboardData", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventClipboardData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "isTrusted", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventIsTrusted), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSEventTable = { 1, 1, true, JSEventTableValues, 0, JSEventTableIndex };
+static const HashTable JSEventTable = { 1, 1, true, JSEventTableValues, JSEventTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSEventConstructorTableValues[] =
 {
-    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CAPTURING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "AT_TARGET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "BUBBLING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "MOUSEDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "MOUSEUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "MOUSEOVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "MOUSEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "MOUSEMOVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "MOUSEDRAG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(32), (intptr_t) (0) },
-    { "CLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(64), (intptr_t) (0) },
-    { "DBLCLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(128), (intptr_t) (0) },
-    { "KEYDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(256), (intptr_t) (0) },
-    { "KEYUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(512), (intptr_t) (0) },
-    { "KEYPRESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1024), (intptr_t) (0) },
-    { "DRAGDROP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2048), (intptr_t) (0) },
-    { "FOCUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4096), (intptr_t) (0) },
-    { "BLUR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8192), (intptr_t) (0) },
-    { "SELECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16384), (intptr_t) (0) },
-    { "CHANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(32768), (intptr_t) (0) },
+    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CAPTURING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "AT_TARGET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "BUBBLING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "MOUSEDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "MOUSEUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "MOUSEOVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "MOUSEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "MOUSEMOVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "MOUSEDRAG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(32) } },
+    { "CLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(64) } },
+    { "DBLCLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(128) } },
+    { "KEYDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(256) } },
+    { "KEYUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(512) } },
+    { "KEYPRESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1024) } },
+    { "DRAGDROP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2048) } },
+    { "FOCUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4096) } },
+    { "BLUR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8192) } },
+    { "SELECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16384) } },
+    { "CHANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(32768) } },
 };
 
+static_assert(Event::NONE == 0, "NONE in Event does not match value from IDL");
+static_assert(Event::CAPTURING_PHASE == 1, "CAPTURING_PHASE in Event does not match value from IDL");
+static_assert(Event::AT_TARGET == 2, "AT_TARGET in Event does not match value from IDL");
+static_assert(Event::BUBBLING_PHASE == 3, "BUBBLING_PHASE in Event does not match value from IDL");
+static_assert(Event::MOUSEDOWN == 1, "MOUSEDOWN in Event does not match value from IDL");
+static_assert(Event::MOUSEUP == 2, "MOUSEUP in Event does not match value from IDL");
+static_assert(Event::MOUSEOVER == 4, "MOUSEOVER in Event does not match value from IDL");
+static_assert(Event::MOUSEOUT == 8, "MOUSEOUT in Event does not match value from IDL");
+static_assert(Event::MOUSEMOVE == 16, "MOUSEMOVE in Event does not match value from IDL");
+static_assert(Event::MOUSEDRAG == 32, "MOUSEDRAG in Event does not match value from IDL");
+static_assert(Event::CLICK == 64, "CLICK in Event does not match value from IDL");
+static_assert(Event::DBLCLICK == 128, "DBLCLICK in Event does not match value from IDL");
+static_assert(Event::KEYDOWN == 256, "KEYDOWN in Event does not match value from IDL");
+static_assert(Event::KEYUP == 512, "KEYUP in Event does not match value from IDL");
+static_assert(Event::KEYPRESS == 1024, "KEYPRESS in Event does not match value from IDL");
+static_assert(Event::DRAGDROP == 2048, "DRAGDROP in Event does not match value from IDL");
+static_assert(Event::FOCUS == 4096, "FOCUS in Event does not match value from IDL");
+static_assert(Event::BLUR == 8192, "BLUR in Event does not match value from IDL");
+static_assert(Event::SELECT == 16384, "SELECT in Event does not match value from IDL");
+static_assert(Event::CHANGE == 32768, "CHANGE in Event does not match value from IDL");
 
-COMPILE_ASSERT(0 == Event::NONE, EventEnumNONEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == Event::CAPTURING_PHASE, EventEnumCAPTURING_PHASEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == Event::AT_TARGET, EventEnumAT_TARGETIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(3 == Event::BUBBLING_PHASE, EventEnumBUBBLING_PHASEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == Event::MOUSEDOWN, EventEnumMOUSEDOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == Event::MOUSEUP, EventEnumMOUSEUPIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(4 == Event::MOUSEOVER, EventEnumMOUSEOVERIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(8 == Event::MOUSEOUT, EventEnumMOUSEOUTIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(16 == Event::MOUSEMOVE, EventEnumMOUSEMOVEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(32 == Event::MOUSEDRAG, EventEnumMOUSEDRAGIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(64 == Event::CLICK, EventEnumCLICKIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(128 == Event::DBLCLICK, EventEnumDBLCLICKIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(256 == Event::KEYDOWN, EventEnumKEYDOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(512 == Event::KEYUP, EventEnumKEYUPIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1024 == Event::KEYPRESS, EventEnumKEYPRESSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2048 == Event::DRAGDROP, EventEnumDRAGDROPIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(4096 == Event::FOCUS, EventEnumFOCUSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(8192 == Event::BLUR, EventEnumBLURIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(16384 == Event::SELECT, EventEnumSELECTIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(32768 == Event::CHANGE, EventEnumCHANGEIsWrongUseDoNotCheckConstants);
-
-EncodedJSValue JSC_HOST_CALL JSEventConstructor::constructJSEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    EventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<Event> event = Event::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<EventInit>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = Event::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<Event>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillEventInit(EventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!dictionary.tryGetProperty("bubbles", eventInit.bubbles))
-        return false;
-    if (!dictionary.tryGetProperty("cancelable", eventInit.cancelable))
-        return false;
-    return true;
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-const ClassInfo JSEventConstructor::s_info = { "EventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventConstructor) };
-
-JSEventConstructor::JSEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Event"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSEventConstructorTableValues, *this);
 }
 
-ConstructType JSEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSEventConstructor::s_info = { "Event", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "target", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "currentTarget", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCurrentTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "eventPhase", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventEventPhase), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "bubbles", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventBubbles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cancelable", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCancelable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "timeStamp", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTimeStamp), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultPrevented", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventDefaultPrevented), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "srcElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventSrcElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "returnValue", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventReturnValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventReturnValue) },
-    { "cancelBubble", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCancelBubble), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventCancelBubble) },
-    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CAPTURING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "AT_TARGET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "BUBBLING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "MOUSEDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "MOUSEUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "MOUSEOVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "MOUSEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "MOUSEMOVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "MOUSEDRAG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(32), (intptr_t) (0) },
-    { "CLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(64), (intptr_t) (0) },
-    { "DBLCLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(128), (intptr_t) (0) },
-    { "KEYDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(256), (intptr_t) (0) },
-    { "KEYUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(512), (intptr_t) (0) },
-    { "KEYPRESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1024), (intptr_t) (0) },
-    { "DRAGDROP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2048), (intptr_t) (0) },
-    { "FOCUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4096), (intptr_t) (0) },
-    { "BLUR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8192), (intptr_t) (0) },
-    { "SELECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16384), (intptr_t) (0) },
-    { "CHANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(32768), (intptr_t) (0) },
-    { "stopPropagation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionStopPropagation), (intptr_t) (0) },
-    { "preventDefault", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionPreventDefault), (intptr_t) (0) },
-    { "initEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionInitEvent), (intptr_t) (0) },
-    { "stopImmediatePropagation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionStopImmediatePropagation), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventConstructor) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "target", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentTarget", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCurrentTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "eventPhase", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventEventPhase), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "bubbles", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventBubbles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cancelable", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCancelable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "composed", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventComposed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "timeStamp", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTimeStamp), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultPrevented", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventDefaultPrevented), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "srcElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventSrcElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "returnValue", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventReturnValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventReturnValue) } },
+    { "cancelBubble", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventCancelBubble), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventCancelBubble) } },
+    { "composedPath", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionComposedPath), (intptr_t) (0) } },
+    { "stopPropagation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionStopPropagation), (intptr_t) (0) } },
+    { "preventDefault", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionPreventDefault), (intptr_t) (0) } },
+    { "initEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionInitEvent), (intptr_t) (3) } },
+    { "stopImmediatePropagation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventPrototypeFunctionStopImmediatePropagation), (intptr_t) (0) } },
+    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CAPTURING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "AT_TARGET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "BUBBLING_PHASE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "MOUSEDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "MOUSEUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "MOUSEOVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "MOUSEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "MOUSEMOVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "MOUSEDRAG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(32) } },
+    { "CLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(64) } },
+    { "DBLCLICK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(128) } },
+    { "KEYDOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(256) } },
+    { "KEYUP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(512) } },
+    { "KEYPRESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1024) } },
+    { "DRAGDROP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2048) } },
+    { "FOCUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4096) } },
+    { "BLUR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8192) } },
+    { "SELECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16384) } },
+    { "CHANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(32768) } },
 };
 
 const ClassInfo JSEventPrototype::s_info = { "EventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventPrototype) };
@@ -283,14 +236,30 @@ void JSEventPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSEventPrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("composedPath"), strlen("composedPath"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("composed"), strlen("composed"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSEvent::s_info = { "Event", &Base::s_info, &JSEventTable, CREATE_METHOD_TABLE(JSEvent) };
 
-JSEvent::JSEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Event>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEvent::JSEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Event>&& impl)
+    : JSDOMWrapper<Event>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -298,7 +267,7 @@ JSObject* JSEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSEventPrototype::create(vm, globalObject, JSEventPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSEvent>(vm, globalObject);
 }
@@ -309,321 +278,374 @@ void JSEvent::destroy(JSC::JSCell* cell)
     thisObject->JSEvent::~JSEvent();
 }
 
-JSEvent::~JSEvent()
+template<> inline JSEvent* BindingCaller<JSEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSEvent*>(JSValue::decode(thisValue));
 }
 
-bool JSEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSEvent* BindingCaller<JSEvent>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSEvent*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSEvent, Base>(exec, JSEventTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSEvent*>(state.thisValue());
 }
 
-EncodedJSValue jsEventType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventTypeGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "type");
-        return throwGetterTypeError(*exec, "Event", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventTypeGetter>(state, thisValue, "type");
 }
 
-
-EncodedJSValue jsEventTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventTypeGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "target");
-        return throwGetterTypeError(*exec, "Event", "target");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.target()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
 }
 
+static inline JSValue jsEventTargetGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventCurrentTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsEventTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "currentTarget");
-        return throwGetterTypeError(*exec, "Event", "currentTarget");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.currentTarget()));
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventTargetGetter>(state, thisValue, "target");
 }
 
-
-EncodedJSValue jsEventEventPhase(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventTargetGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "eventPhase");
-        return throwGetterTypeError(*exec, "Event", "eventPhase");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.eventPhase());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<EventTarget>>(state, *thisObject.globalObject(), impl.target());
+    return result;
 }
 
+static inline JSValue jsEventCurrentTargetGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventBubbles(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsEventCurrentTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "bubbles");
-        return throwGetterTypeError(*exec, "Event", "bubbles");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.bubbles());
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventCurrentTargetGetter>(state, thisValue, "currentTarget");
 }
 
-
-EncodedJSValue jsEventCancelable(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventCurrentTargetGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "cancelable");
-        return throwGetterTypeError(*exec, "Event", "cancelable");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.cancelable());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<EventTarget>>(state, *thisObject.globalObject(), impl.currentTarget());
+    return result;
 }
 
+static inline JSValue jsEventEventPhaseGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventTimeStamp(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsEventEventPhase(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "timeStamp");
-        return throwGetterTypeError(*exec, "Event", "timeStamp");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.timeStamp());
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventEventPhaseGetter>(state, thisValue, "eventPhase");
 }
 
-
-EncodedJSValue jsEventDefaultPrevented(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventEventPhaseGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "defaultPrevented");
-        return throwGetterTypeError(*exec, "Event", "defaultPrevented");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.defaultPrevented());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.eventPhase());
+    return result;
 }
 
+static inline JSValue jsEventBubblesGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventSrcElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsEventBubbles(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "srcElement");
-        return throwGetterTypeError(*exec, "Event", "srcElement");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.srcElement()));
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventBubblesGetter>(state, thisValue, "bubbles");
 }
 
-
-EncodedJSValue jsEventReturnValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventBubblesGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "returnValue");
-        return throwGetterTypeError(*exec, "Event", "returnValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.legacyReturnValue());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.bubbles());
+    return result;
 }
 
+static inline JSValue jsEventCancelableGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventCancelBubble(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsEventCancelable(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Event", "cancelBubble");
-        return throwGetterTypeError(*exec, "Event", "cancelBubble");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.cancelBubble());
-    return JSValue::encode(result);
+    return BindingCaller<JSEvent>::attribute<jsEventCancelableGetter>(state, thisValue, "cancelable");
 }
 
-
-EncodedJSValue jsEventClipboardData(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsEventCancelableGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSEvent*>(slotBase);
-    return JSValue::encode(castedThis->clipboardData(exec));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.cancelable());
+    return result;
 }
 
+static inline JSValue jsEventComposedGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsEventComposed(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSEventPrototype* domObject = jsDynamicCast<JSEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSEvent>::attribute<jsEventComposedGetter>(state, thisValue, "composed");
 }
 
-void setJSEventReturnValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsEventComposedGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.composed());
+    return result;
+}
+
+static inline JSValue jsEventTimeStampGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventTimeStamp(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventTimeStampGetter>(state, thisValue, "timeStamp");
+}
+
+static inline JSValue jsEventTimeStampGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.timeStamp());
+    return result;
+}
+
+static inline JSValue jsEventDefaultPreventedGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventDefaultPrevented(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventDefaultPreventedGetter>(state, thisValue, "defaultPrevented");
+}
+
+static inline JSValue jsEventDefaultPreventedGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.defaultPrevented());
+    return result;
+}
+
+static inline JSValue jsEventIsTrustedGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventIsTrusted(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventIsTrustedGetter>(state, thisValue, "isTrusted");
+}
+
+static inline JSValue jsEventIsTrustedGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.isTrusted());
+    return result;
+}
+
+static inline JSValue jsEventSrcElementGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventSrcElement(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventSrcElementGetter>(state, thisValue, "srcElement");
+}
+
+static inline JSValue jsEventSrcElementGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<EventTarget>>(state, *thisObject.globalObject(), impl.srcElement());
+    return result;
+}
+
+static inline JSValue jsEventReturnValueGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventReturnValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventReturnValueGetter>(state, thisValue, "returnValue");
+}
+
+static inline JSValue jsEventReturnValueGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.legacyReturnValue());
+    return result;
+}
+
+static inline JSValue jsEventCancelBubbleGetter(ExecState&, JSEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsEventCancelBubble(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSEvent>::attribute<jsEventCancelBubbleGetter>(state, thisValue, "cancelBubble");
+}
+
+static inline JSValue jsEventCancelBubbleGetter(ExecState& state, JSEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.cancelBubble());
+    return result;
+}
+
+EncodedJSValue jsEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSEventPrototype* domObject = jsDynamicDowncast<JSEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Event", "returnValue");
-        else
-            throwSetterTypeError(*exec, "Event", "returnValue");
-        return;
+    JSEventPrototype* domObject = jsDynamicDowncast<JSEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLegacyReturnValue(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSEventReturnValueFunction(ExecState&, JSEvent&, JSValue, ThrowScope&);
+
+bool setJSEventReturnValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSEvent>::setAttribute<setJSEventReturnValueFunction>(state, thisValue, encodedValue, "returnValue");
+}
+
+static inline bool setJSEventReturnValueFunction(ExecState& state, JSEvent& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setLegacyReturnValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSEventCancelBubble(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSEventCancelBubbleFunction(ExecState&, JSEvent&, JSValue, ThrowScope&);
+
+bool setJSEventCancelBubble(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSEventPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Event", "cancelBubble");
-        else
-            throwSetterTypeError(*exec, "Event", "cancelBubble");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setCancelBubble(nativeValue);
+    return BindingCaller<JSEvent>::setAttribute<setJSEventCancelBubbleFunction>(state, thisValue, encodedValue, "cancelBubble");
+}
+
+static inline bool setJSEventCancelBubbleFunction(ExecState& state, JSEvent& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setCancelBubble(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopPropagation(ExecState* exec)
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionComposedPathCaller(JSC::ExecState*, JSEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionComposedPath(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Event", "stopPropagation");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEvent::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSEvent>::callOperation<jsEventPrototypeFunctionComposedPathCaller>(state, "composedPath");
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionComposedPathCaller(JSC::ExecState* state, JSEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<Node>>>(*state, *castedThis->globalObject(), impl.composedPath()));
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionStopPropagationCaller(JSC::ExecState*, JSEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopPropagation(ExecState* state)
+{
+    return BindingCaller<JSEvent>::callOperation<jsEventPrototypeFunctionStopPropagationCaller>(state, "stopPropagation");
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionStopPropagationCaller(JSC::ExecState* state, JSEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.stopPropagation();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionPreventDefault(ExecState* exec)
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionPreventDefaultCaller(JSC::ExecState*, JSEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionPreventDefault(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Event", "preventDefault");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEvent::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSEvent>::callOperation<jsEventPrototypeFunctionPreventDefaultCaller>(state, "preventDefault");
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionPreventDefaultCaller(JSC::ExecState* state, JSEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.preventDefault();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionInitEvent(ExecState* exec)
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionInitEventCaller(JSC::ExecState*, JSEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionInitEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Event", "initEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEvent::info());
-    auto& impl = castedThis->impl();
-    String eventTypeArg = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool canBubbleArg = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool cancelableArg = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.initEvent(eventTypeArg, canBubbleArg, cancelableArg);
+    return BindingCaller<JSEvent>::callOperation<jsEventPrototypeFunctionInitEventCaller>(state, "initEvent");
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionInitEventCaller(JSC::ExecState* state, JSEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto bubbles = convert<IDLBoolean>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto cancelable = convert<IDLBoolean>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.initEvent(WTFMove(type), WTFMove(bubbles), WTFMove(cancelable));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopImmediatePropagation(ExecState* exec)
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionStopImmediatePropagationCaller(JSC::ExecState*, JSEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventPrototypeFunctionStopImmediatePropagation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEvent* castedThis = jsDynamicCast<JSEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Event", "stopImmediatePropagation");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEvent::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSEvent>::callOperation<jsEventPrototypeFunctionStopImmediatePropagationCaller>(state, "stopImmediatePropagation");
+}
+
+static inline JSC::EncodedJSValue jsEventPrototypeFunctionStopImmediatePropagationCaller(JSC::ExecState* state, JSEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.stopImmediatePropagation();
     return JSValue::encode(jsUndefined());
 }
@@ -637,15 +659,15 @@ bool JSEventOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, 
 
 void JSEventOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsEvent = jsCast<JSEvent*>(handle.slot()->asCell());
+    auto* jsEvent = static_cast<JSEvent*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEvent->impl(), jsEvent);
+    uncacheWrapper(world, &jsEvent->wrapped(), jsEvent);
 }
 
 Event* JSEvent::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSEvent*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSEvent*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

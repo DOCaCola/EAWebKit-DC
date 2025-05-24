@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMapElement_h
-#define JSHTMLMapElement_h
+#pragma once
 
 #include "HTMLMapElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLMapElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMapElement;
     static JSHTMLMapElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMapElement>&& impl)
     {
-        JSHTMLMapElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMapElement>(globalObject->vm().heap)) JSHTMLMapElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMapElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMapElement>(globalObject->vm().heap)) JSHTMLMapElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMapElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLMapElement& wrapped() const
     {
-        return static_cast<HTMLMapElement&>(Base::impl());
+        return static_cast<HTMLMapElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMapElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMapElement>&&);
+    JSHTMLMapElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMapElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLMapElement> {
+    using WrapperClass = JSHTMLMapElement;
+    using ToWrappedReturnType = HTMLMapElement*;
+};
 
 } // namespace WebCore
-
-#endif

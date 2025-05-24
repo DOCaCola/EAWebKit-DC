@@ -22,10 +22,9 @@
 #include "JSHTMLParagraphElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLParagraphElement.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLParagraphElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLParagraphElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLParagraphElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLParagraphElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLParagraphElementAlign(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLParagraphElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLParagraphElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLParagraphElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLParagraphElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLParagraphElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElementPrototype>(vm.heap)) JSHTMLParagraphElementPrototype(vm, globalObject, structure);
@@ -63,49 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLParagraphElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLParagraphElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLParagraphElementConstructor = JSDOMConstructorNotConstructable<JSHTMLParagraphElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLParagraphElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLParagraphElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElementConstructor>(vm.heap)) JSHTMLParagraphElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLParagraphElementConstructor::s_info = { "HTMLParagraphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementConstructor) };
-
-JSHTMLParagraphElementConstructor::JSHTMLParagraphElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLParagraphElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLParagraphElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLParagraphElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLParagraphElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLParagraphElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLParagraphElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLParagraphElementConstructor::s_info = { "HTMLParagraphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLParagraphElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLParagraphElementAlign) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLParagraphElementConstructor) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLParagraphElementAlign) } },
 };
 
 const ClassInfo JSHTMLParagraphElementPrototype::s_info = { "HTMLParagraphElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementPrototype) };
@@ -118,69 +97,103 @@ void JSHTMLParagraphElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLParagraphElement::s_info = { "HTMLParagraphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElement) };
 
-JSHTMLParagraphElement::JSHTMLParagraphElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLParagraphElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLParagraphElement::JSHTMLParagraphElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLParagraphElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLParagraphElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLParagraphElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLParagraphElementPrototype::create(vm, globalObject, JSHTMLParagraphElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLParagraphElementPrototype::create(vm, globalObject, JSHTMLParagraphElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLParagraphElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLParagraphElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLParagraphElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLParagraphElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLParagraphElement* BindingCaller<JSHTMLParagraphElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLParagraphElement* castedThis = jsDynamicCast<JSHTMLParagraphElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLParagraphElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLParagraphElement", "align");
-        return throwGetterTypeError(*exec, "HTMLParagraphElement", "align");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLParagraphElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLParagraphElementAlignGetter(ExecState&, JSHTMLParagraphElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLParagraphElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLParagraphElementAlign(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLParagraphElementPrototype* domObject = jsDynamicCast<JSHTMLParagraphElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLParagraphElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLParagraphElement>::attribute<jsHTMLParagraphElementAlignGetter>(state, thisValue, "align");
 }
 
-void setJSHTMLParagraphElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLParagraphElementAlignGetter(ExecState& state, JSHTMLParagraphElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::alignAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLParagraphElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLParagraphElementPrototype* domObject = jsDynamicDowncast<JSHTMLParagraphElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLParagraphElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLParagraphElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLParagraphElement* castedThis = jsDynamicCast<JSHTMLParagraphElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLParagraphElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLParagraphElement", "align");
-        else
-            throwSetterTypeError(*exec, "HTMLParagraphElement", "align");
-        return;
+    JSHTMLParagraphElementPrototype* domObject = jsDynamicDowncast<JSHTMLParagraphElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLParagraphElementAlignFunction(ExecState&, JSHTMLParagraphElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLParagraphElementAlign(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLParagraphElement>::setAttribute<setJSHTMLParagraphElementAlignFunction>(state, thisValue, encodedValue, "align");
+}
+
+static inline bool setJSHTMLParagraphElementAlignFunction(ExecState& state, JSHTMLParagraphElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLParagraphElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLParagraphElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLParagraphElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLParagraphElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLParagraphElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLParagraphElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

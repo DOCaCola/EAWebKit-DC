@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimationElement_h
-#define JSSVGAnimationElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGAnimationElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGAnimationElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGAnimationElement;
     static JSSVGAnimationElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimationElement>&& impl)
     {
-        JSSVGAnimationElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimationElement>(globalObject->vm().heap)) JSSVGAnimationElement(structure, globalObject, WTF::move(impl));
+        JSSVGAnimationElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimationElement>(globalObject->vm().heap)) JSSVGAnimationElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimationElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGAnimationElement& wrapped() const
     {
-        return static_cast<SVGAnimationElement&>(Base::impl());
+        return static_cast<SVGAnimationElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAnimationElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimationElement>&&);
+    JSSVGAnimationElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimationElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGAnimationElement> {
+    using WrapperClass = JSSVGAnimationElement;
+    using ToWrappedReturnType = SVGAnimationElement*;
+};
 
 } // namespace WebCore
-
-#endif

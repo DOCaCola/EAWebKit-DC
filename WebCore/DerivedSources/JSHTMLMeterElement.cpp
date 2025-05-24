@@ -24,11 +24,10 @@
 
 #include "JSHTMLMeterElement.h"
 
-#include "HTMLMeterElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSNodeList.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -37,24 +36,25 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLMeterElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementMin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementMin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementMax(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementMax(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementLow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementLow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementHigh(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementHigh(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementOptimum(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLMeterElementOptimum(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLMeterElementLabels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLMeterElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLMeterElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementMin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementMin(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementMax(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementMax(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementLow(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementLow(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementHigh(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementHigh(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementOptimum(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementOptimum(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLMeterElementLabels(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLMeterElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLMeterElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLMeterElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLMeterElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLMeterElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElementPrototype>(vm.heap)) JSHTMLMeterElementPrototype(vm, globalObject, structure);
@@ -77,55 +77,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLMeterElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLMeterElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLMeterElementConstructor = JSDOMConstructorNotConstructable<JSHTMLMeterElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLMeterElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLMeterElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElementConstructor>(vm.heap)) JSHTMLMeterElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLMeterElementConstructor::s_info = { "HTMLMeterElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMeterElementConstructor) };
-
-JSHTMLMeterElementConstructor::JSHTMLMeterElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLMeterElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLMeterElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLMeterElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLMeterElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLMeterElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLMeterElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLMeterElementConstructor::s_info = { "HTMLMeterElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMeterElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLMeterElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementValue) },
-    { "min", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementMin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementMin) },
-    { "max", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementMax), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementMax) },
-    { "low", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementLow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementLow) },
-    { "high", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementHigh), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementHigh) },
-    { "optimum", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementOptimum), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementOptimum) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementConstructor) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementValue) } },
+    { "min", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementMin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementMin) } },
+    { "max", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementMax), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementMax) } },
+    { "low", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementLow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementLow) } },
+    { "high", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementHigh), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementHigh) } },
+    { "optimum", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementOptimum), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMeterElementOptimum) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMeterElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLMeterElementPrototype::s_info = { "HTMLMeterElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMeterElementPrototype) };
@@ -138,283 +117,294 @@ void JSHTMLMeterElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLMeterElement::s_info = { "HTMLMeterElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMeterElement) };
 
-JSHTMLMeterElement::JSHTMLMeterElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMeterElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLMeterElement::JSHTMLMeterElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLMeterElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLMeterElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLMeterElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLMeterElementPrototype::create(vm, globalObject, JSHTMLMeterElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLMeterElementPrototype::create(vm, globalObject, JSHTMLMeterElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLMeterElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLMeterElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLMeterElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLMeterElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLMeterElement* BindingCaller<JSHTMLMeterElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "value");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "value");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.value());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLMeterElementValueGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLMeterElementMin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMeterElementValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "min");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "min");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.min());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementValueGetter>(state, thisValue, "value");
 }
 
-
-EncodedJSValue jsHTMLMeterElementMax(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLMeterElementValueGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "max");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "max");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.max());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.value());
+    return result;
 }
 
+static inline JSValue jsHTMLMeterElementMinGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLMeterElementLow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMeterElementMin(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "low");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "low");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.low());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementMinGetter>(state, thisValue, "min");
 }
 
-
-EncodedJSValue jsHTMLMeterElementHigh(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLMeterElementMinGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "high");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "high");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.high());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.min());
+    return result;
 }
 
+static inline JSValue jsHTMLMeterElementMaxGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLMeterElementOptimum(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMeterElementMax(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "optimum");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "optimum");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.optimum());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementMaxGetter>(state, thisValue, "max");
 }
 
-
-EncodedJSValue jsHTMLMeterElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLMeterElementMaxGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMeterElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLMeterElement", "labels");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.max());
+    return result;
 }
 
+static inline JSValue jsHTMLMeterElementLowGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLMeterElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLMeterElementLow(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLMeterElementPrototype* domObject = jsDynamicCast<JSHTMLMeterElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLMeterElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementLowGetter>(state, thisValue, "low");
 }
 
-void setJSHTMLMeterElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLMeterElementLowGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.low());
+    return result;
+}
+
+static inline JSValue jsHTMLMeterElementHighGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLMeterElementHigh(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementHighGetter>(state, thisValue, "high");
+}
+
+static inline JSValue jsHTMLMeterElementHighGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.high());
+    return result;
+}
+
+static inline JSValue jsHTMLMeterElementOptimumGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLMeterElementOptimum(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementOptimumGetter>(state, thisValue, "optimum");
+}
+
+static inline JSValue jsHTMLMeterElementOptimumGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.optimum());
+    return result;
+}
+
+static inline JSValue jsHTMLMeterElementLabelsGetter(ExecState&, JSHTMLMeterElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLMeterElementLabels(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLMeterElement>::attribute<jsHTMLMeterElementLabelsGetter>(state, thisValue, "labels");
+}
+
+static inline JSValue jsHTMLMeterElementLabelsGetter(ExecState& state, JSHTMLMeterElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<NodeList>>(state, *thisObject.globalObject(), impl.labels());
+    return result;
+}
+
+EncodedJSValue jsHTMLMeterElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLMeterElementPrototype* domObject = jsDynamicDowncast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLMeterElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLMeterElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "value");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "value");
-        return;
+    JSHTMLMeterElementPrototype* domObject = jsDynamicDowncast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setValue(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLMeterElementValueFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSHTMLMeterElementValueFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLMeterElementMin(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLMeterElementMinFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementMin(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "min");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "min");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMin(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementMinFunction>(state, thisValue, encodedValue, "min");
+}
+
+static inline bool setJSHTMLMeterElementMinFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setMin(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLMeterElementMax(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLMeterElementMaxFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementMax(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "max");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "max");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMax(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementMaxFunction>(state, thisValue, encodedValue, "max");
+}
+
+static inline bool setJSHTMLMeterElementMaxFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setMax(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLMeterElementLow(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLMeterElementLowFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementLow(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "low");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "low");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setLow(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementLowFunction>(state, thisValue, encodedValue, "low");
+}
+
+static inline bool setJSHTMLMeterElementLowFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setLow(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLMeterElementHigh(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLMeterElementHighFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementHigh(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "high");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "high");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHigh(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementHighFunction>(state, thisValue, encodedValue, "high");
+}
+
+static inline bool setJSHTMLMeterElementHighFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setHigh(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLMeterElementOptimum(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLMeterElementOptimumFunction(ExecState&, JSHTMLMeterElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLMeterElementOptimum(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLMeterElement* castedThis = jsDynamicCast<JSHTMLMeterElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLMeterElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMeterElement", "optimum");
-        else
-            throwSetterTypeError(*exec, "HTMLMeterElement", "optimum");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setOptimum(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLMeterElement>::setAttribute<setJSHTMLMeterElementOptimumFunction>(state, thisValue, encodedValue, "optimum");
+}
+
+static inline bool setJSHTMLMeterElementOptimumFunction(ExecState& state, JSHTMLMeterElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setOptimum(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLMeterElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLMeterElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLMeterElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLMeterElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLMeterElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLMeterElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

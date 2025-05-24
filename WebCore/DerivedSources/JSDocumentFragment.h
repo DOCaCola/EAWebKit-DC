@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDocumentFragment_h
-#define JSDocumentFragment_h
+#pragma once
 
 #include "DocumentFragment.h"
 #include "JSNode.h"
@@ -28,46 +27,46 @@ namespace WebCore {
 
 class JSDocumentFragment : public JSNode {
 public:
-    typedef JSNode Base;
+    using Base = JSNode;
+    using DOMWrapped = DocumentFragment;
     static JSDocumentFragment* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentFragment>&& impl)
     {
-        JSDocumentFragment* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragment>(globalObject->vm().heap)) JSDocumentFragment(structure, globalObject, WTF::move(impl));
+        JSDocumentFragment* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragment>(globalObject->vm().heap)) JSDocumentFragment(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSDocumentFragmentNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    DocumentFragment& impl() const
+    DocumentFragment& wrapped() const
     {
-        return static_cast<DocumentFragment&>(Base::impl());
+        return static_cast<DocumentFragment&>(Base::wrapped());
     }
 protected:
-    JSDocumentFragment(JSC::Structure*, JSDOMGlobalObject*, Ref<DocumentFragment>&&);
+    JSDocumentFragment(JSC::Structure*, JSDOMGlobalObject&, Ref<DocumentFragment>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DocumentFragment&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DocumentFragment* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DocumentFragment>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DocumentFragment>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<DocumentFragment> {
+    using WrapperClass = JSDocumentFragment;
+    using ToWrappedReturnType = DocumentFragment*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFormControlsCollection_h
-#define JSHTMLFormControlsCollection_h
+#pragma once
 
 #include "HTMLFormControlsCollection.h"
 #include "JSHTMLCollection.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSHTMLFormControlsCollection : public JSHTMLCollection {
 public:
-    typedef JSHTMLCollection Base;
+    using Base = JSHTMLCollection;
+    using DOMWrapped = HTMLFormControlsCollection;
     static JSHTMLFormControlsCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFormControlsCollection>&& impl)
     {
-        JSHTMLFormControlsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormControlsCollection>(globalObject->vm().heap)) JSHTMLFormControlsCollection(structure, globalObject, WTF::move(impl));
+        JSHTMLFormControlsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormControlsCollection>(globalObject->vm().heap)) JSHTMLFormControlsCollection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
 
@@ -50,28 +50,21 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue namedItem(JSC::ExecState*);
-    HTMLFormControlsCollection& impl() const
+    JSC::JSValue namedItem(JSC::ExecState&);
+    HTMLFormControlsCollection& wrapped() const
     {
-        return static_cast<HTMLFormControlsCollection&>(Base::impl());
+        return static_cast<HTMLFormControlsCollection&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLFormControlsCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFormControlsCollection>&&);
+    JSHTMLFormControlsCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFormControlsCollection>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLFormControlsCollection*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSHTMLFormControlsCollectionOwner : public JSC::WeakHandleOwner {
@@ -86,8 +79,15 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLFormControlsColl
     return &owner.get();
 }
 
+inline void* wrapperKey(HTMLFormControlsCollection* wrappableObject)
+{
+    return wrappableObject;
+}
 
+
+template<> struct JSDOMWrapperConverterTraits<HTMLFormControlsCollection> {
+    using WrapperClass = JSHTMLFormControlsCollection;
+    using ToWrappedReturnType = HTMLFormControlsCollection*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -24,21 +24,18 @@
 
 #include "JSIDBIndex.h"
 
-#include "ExceptionCode.h"
-#include "IDBAny.h"
-#include "IDBIndex.h"
-#include "IDBObjectStore.h"
-#include "IDBRequest.h"
 #include "JSDOMBinding.h"
-#include "JSIDBAny.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSIDBCursorDirection.h"
 #include "JSIDBKeyRange.h"
 #include "JSIDBObjectStore.h"
 #include "JSIDBRequest.h"
-#include "URL.h"
-#include <bindings/ScriptValue.h>
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -50,20 +47,24 @@ JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenCursor(JSC::Exe
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenKeyCursor(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGet(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetKey(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetAll(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetAllKeys(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionCount(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsIDBIndexName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBIndexObjectStore(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBIndexKeyPath(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBIndexMultiEntry(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBIndexUnique(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBIndexConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBIndexName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBIndexName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBIndexObjectStore(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBIndexKeyPath(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBIndexMultiEntry(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBIndexUnique(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBIndexConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBIndexConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBIndexPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBIndexPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBIndexPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBIndexPrototype>(vm.heap)) JSIDBIndexPrototype(vm, globalObject, structure);
@@ -86,58 +87,40 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBIndexConstructor : public DOMConstructorObject {
-private:
-    JSIDBIndexConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBIndexConstructor = JSDOMConstructorNotConstructable<JSIDBIndex>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBIndexConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBIndexConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBIndexConstructor>(vm.heap)) JSIDBIndexConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBIndexConstructor::s_info = { "IDBIndexConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBIndexConstructor) };
-
-JSIDBIndexConstructor::JSIDBIndexConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBIndexConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSIDBIndexConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBIndexConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBIndex::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBIndex::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBIndex"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBIndexConstructor::s_info = { "IDBIndex", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBIndexConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBIndexPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "objectStore", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexObjectStore), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "keyPath", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexKeyPath), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "multiEntry", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexMultiEntry), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "unique", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexUnique), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "openCursor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionOpenCursor), (intptr_t) (0) },
-    { "openKeyCursor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionOpenKeyCursor), (intptr_t) (0) },
-    { "get", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGet), (intptr_t) (1) },
-    { "getKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGetKey), (intptr_t) (1) },
-    { "count", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionCount), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBIndexConstructor) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBIndexName) } },
+    { "objectStore", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexObjectStore), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "keyPath", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexKeyPath), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "multiEntry", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexMultiEntry), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "unique", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBIndexUnique), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "openCursor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionOpenCursor), (intptr_t) (0) } },
+    { "openKeyCursor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionOpenKeyCursor), (intptr_t) (0) } },
+    { "get", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGet), (intptr_t) (1) } },
+    { "getKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGetKey), (intptr_t) (1) } },
+    { "getAll", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGetAll), (intptr_t) (0) } },
+    { "getAllKeys", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionGetAllKeys), (intptr_t) (0) } },
+    { "count", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBIndexPrototypeFunctionCount), (intptr_t) (0) } },
 };
 
 const ClassInfo JSIDBIndexPrototype::s_info = { "IDBIndexPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBIndexPrototype) };
@@ -150,10 +133,16 @@ void JSIDBIndexPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBIndex::s_info = { "IDBIndex", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBIndex) };
 
-JSIDBIndex::JSIDBIndex(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBIndex>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBIndex::JSIDBIndex(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBIndex>&& impl)
+    : JSDOMWrapper<IDBIndex>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBIndex::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBIndex::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -161,7 +150,7 @@ JSObject* JSIDBIndex::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSIDBIndexPrototype::create(vm, globalObject, JSIDBIndexPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSIDBIndex::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBIndex::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBIndex>(vm, globalObject);
 }
@@ -172,497 +161,680 @@ void JSIDBIndex::destroy(JSC::JSCell* cell)
     thisObject->JSIDBIndex::~JSIDBIndex();
 }
 
-JSIDBIndex::~JSIDBIndex()
+template<> inline JSIDBIndex* BindingCaller<JSIDBIndex>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSIDBIndex*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsIDBIndexName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBIndex* BindingCaller<JSIDBIndex>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBIndexPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBIndex", "name");
-        return throwGetterTypeError(*exec, "IDBIndex", "name");
+    return jsDynamicDowncast<JSIDBIndex*>(state.thisValue());
+}
+
+static inline JSValue jsIDBIndexNameGetter(ExecState&, JSIDBIndex&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBIndexName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBIndex>::attribute<jsIDBIndexNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsIDBIndexNameGetter(ExecState& state, JSIDBIndex& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+static inline JSValue jsIDBIndexObjectStoreGetter(ExecState&, JSIDBIndex&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBIndexObjectStore(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBIndex>::attribute<jsIDBIndexObjectStoreGetter>(state, thisValue, "objectStore");
+}
+
+static inline JSValue jsIDBIndexObjectStoreGetter(ExecState& state, JSIDBIndex& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<IDBObjectStore>>(state, *thisObject.globalObject(), impl.objectStore());
+    return result;
+}
+
+static inline JSValue jsIDBIndexKeyPathGetter(ExecState&, JSIDBIndex&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBIndexKeyPath(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBIndex>::attribute<jsIDBIndexKeyPathGetter>(state, thisValue, "keyPath");
+}
+
+static inline JSValue jsIDBIndexKeyPathGetter(ExecState& state, JSIDBIndex& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>>(state, *thisObject.globalObject(), impl.keyPath());
+    return result;
+}
+
+static inline JSValue jsIDBIndexMultiEntryGetter(ExecState&, JSIDBIndex&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBIndexMultiEntry(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBIndex>::attribute<jsIDBIndexMultiEntryGetter>(state, thisValue, "multiEntry");
+}
+
+static inline JSValue jsIDBIndexMultiEntryGetter(ExecState& state, JSIDBIndex& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.multiEntry());
+    return result;
+}
+
+static inline JSValue jsIDBIndexUniqueGetter(ExecState&, JSIDBIndex&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBIndexUnique(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBIndex>::attribute<jsIDBIndexUniqueGetter>(state, thisValue, "unique");
+}
+
+static inline JSValue jsIDBIndexUniqueGetter(ExecState& state, JSIDBIndex& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.unique());
+    return result;
+}
+
+EncodedJSValue jsIDBIndexConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBIndexPrototype* domObject = jsDynamicDowncast<JSIDBIndexPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBIndex::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSIDBIndexConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSIDBIndexPrototype* domObject = jsDynamicDowncast<JSIDBIndexPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSIDBIndexNameFunction(ExecState&, JSIDBIndex&, JSValue, ThrowScope&);
+
+bool setJSIDBIndexName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSIDBIndex>::setAttribute<setJSIDBIndexNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSIDBIndexNameFunction(ExecState& state, JSIDBIndex& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setName(WTFMove(nativeValue)));
+    return true;
 }
 
 
-EncodedJSValue jsIDBIndexObjectStore(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSIDBIndex::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBIndexPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBIndex", "objectStore");
-        return throwGetterTypeError(*exec, "IDBIndex", "objectStore");
+    return getDOMConstructor<JSIDBIndexConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionOpenCursor1Caller>(state, "openCursor");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto range = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "range", "IDBIndex", "openCursor", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto directionValue = state->argument(1);
+    IDBCursorDirection direction;
+    if (directionValue.isUndefined())
+        direction = IDBCursorDirection::Next;
+    else {
+        auto optionalValue = parseEnumeration<IDBCursorDirection>(*state, directionValue);
+        RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+        if (UNLIKELY(!optionalValue))
+            return throwArgumentMustBeEnumError(*state, throwScope, 1, "direction", "IDBIndex", "openCursor", expectedEnumerationValues<IDBCursorDirection>());
+        direction = optionalValue.value();
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.objectStore()));
-    return JSValue::encode(result);
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.openCursor(*state, WTFMove(range), direction)));
 }
 
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
 
-EncodedJSValue jsIDBIndexKeyPath(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor2(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBIndexPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBIndex", "keyPath");
-        return throwGetterTypeError(*exec, "IDBIndex", "keyPath");
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionOpenCursor2Caller>(state, "openCursor");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenCursor2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto directionValue = state->argument(1);
+    IDBCursorDirection direction;
+    if (directionValue.isUndefined())
+        direction = IDBCursorDirection::Next;
+    else {
+        auto optionalValue = parseEnumeration<IDBCursorDirection>(*state, directionValue);
+        RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+        if (UNLIKELY(!optionalValue))
+            return throwArgumentMustBeEnumError(*state, throwScope, 1, "direction", "IDBIndex", "openCursor", expectedEnumerationValues<IDBCursorDirection>());
+        direction = optionalValue.value();
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.keyPathAny()));
-    return JSValue::encode(result);
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.openCursor(*state, WTFMove(key), direction)));
 }
 
-
-EncodedJSValue jsIDBIndexMultiEntry(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenCursor(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBIndexPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBIndex", "multiEntry");
-        return throwGetterTypeError(*exec, "IDBIndex", "multiEntry");
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 0) {
+        return jsIDBIndexPrototypeFunctionOpenCursor1(state);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.multiEntry());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsIDBIndexUnique(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBIndexPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBIndex", "unique");
-        return throwGetterTypeError(*exec, "IDBIndex", "unique");
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        return jsIDBIndexPrototypeFunctionOpenCursor2(state);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.unique());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsIDBIndexConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSIDBIndexPrototype* domObject = jsDynamicCast<JSIDBIndexPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBIndex::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSIDBIndex::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSIDBIndexConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenCursor1(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "openCursor");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionOpenCursor1(state);
+        return jsIDBIndexPrototypeFunctionOpenCursor2(state);
     }
+    return throwVMTypeError(state, throwScope);
+}
 
-    IDBKeyRange* range = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, ec)));
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
 
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionOpenKeyCursor1Caller>(state, "openKeyCursor");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto range = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "range", "IDBIndex", "openKeyCursor", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto directionValue = state->argument(1);
+    IDBCursorDirection direction;
+    if (directionValue.isUndefined())
+        direction = IDBCursorDirection::Next;
+    else {
+        auto optionalValue = parseEnumeration<IDBCursorDirection>(*state, directionValue);
+        RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+        if (UNLIKELY(!optionalValue))
+            return throwArgumentMustBeEnumError(*state, throwScope, 1, "direction", "IDBIndex", "openKeyCursor", expectedEnumerationValues<IDBCursorDirection>());
+        direction = optionalValue.value();
     }
-
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, direction, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.openKeyCursor(*state, WTFMove(range), direction)));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenCursor2(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "openCursor");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionOpenKeyCursor2Caller>(state, "openKeyCursor");
+}
 
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionOpenKeyCursor2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto directionValue = state->argument(1);
+    IDBCursorDirection direction;
+    if (directionValue.isUndefined())
+        direction = IDBCursorDirection::Next;
+    else {
+        auto optionalValue = parseEnumeration<IDBCursorDirection>(*state, directionValue);
+        RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+        if (UNLIKELY(!optionalValue))
+            return throwArgumentMustBeEnumError(*state, throwScope, 1, "direction", "IDBIndex", "openKeyCursor", expectedEnumerationValues<IDBCursorDirection>());
+        direction = optionalValue.value();
     }
-
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, direction, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.openKeyCursor(*state, WTFMove(key), direction)));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenCursor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenKeyCursor(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if (argsCount == 0 || (argsCount == 1 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))) || (argsCount == 2 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBIndexPrototypeFunctionOpenCursor1(exec);
-    if (argsCount == 1 || argsCount == 2)
-        return jsIDBIndexPrototypeFunctionOpenCursor2(exec);
-    return throwVMTypeError(exec);
-}
-
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenKeyCursor1(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "openKeyCursor");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openKeyCursor(scriptContext, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 0) {
+        return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
     }
-
-    IDBKeyRange* range = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openKeyCursor(scriptContext, range, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        return jsIDBIndexPrototypeFunctionOpenKeyCursor2(state);
     }
-
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openKeyCursor(scriptContext, range, direction, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenKeyCursor2(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "openKeyCursor");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openKeyCursor(scriptContext, key, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionOpenKeyCursor1(state);
+        return jsIDBIndexPrototypeFunctionOpenKeyCursor2(state);
     }
-
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openKeyCursor(scriptContext, key, direction, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return throwVMTypeError(state, throwScope);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionOpenKeyCursor(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGet1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGet1(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if (argsCount == 0 || (argsCount == 1 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))) || (argsCount == 2 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBIndexPrototypeFunctionOpenKeyCursor1(exec);
-    if (argsCount == 1 || argsCount == 2)
-        return jsIDBIndexPrototypeFunctionOpenKeyCursor2(exec);
-    return throwVMTypeError(exec);
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGet1Caller>(state, "get");
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGet1(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGet1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "get");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    IDBKeyRange* key = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "key", "IDBIndex", "get", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.get(*state, WTFMove(key))));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGet2(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "get");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGet2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGet2(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGet2Caller>(state, "get");
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGet(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGet2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBIndexPrototypeFunctionGet1(exec);
-    if (argsCount == 1)
-        return jsIDBIndexPrototypeFunctionGet2(exec);
-    if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.get(*state, WTFMove(key))));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetKey1(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGet(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "getKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    IDBKeyRange* key = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getKey(scriptContext, key, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetKey2(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "getKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getKey(scriptContext, key, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetKey(ExecState* exec)
-{
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBIndexPrototypeFunctionGetKey1(exec);
-    if (argsCount == 1)
-        return jsIDBIndexPrototypeFunctionGetKey2(exec);
-    if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
-}
-
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionCount1(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "count");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGet1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGet1(state);
+        return jsIDBIndexPrototypeFunctionGet2(state);
     }
-
-    IDBKeyRange* range = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, range, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return argsCount < 1 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionCount2(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBIndex* castedThis = jsDynamicCast<JSIDBIndex*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBIndex", "count");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBIndex::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, key, ec)));
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetKey1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetKey1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetKey1Caller>(state, "getKey");
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionCount(ExecState* exec)
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetKey1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    if (argsCount == 0 || (argsCount == 1 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBIndexPrototypeFunctionCount1(exec);
-    if (argsCount == 1)
-        return jsIDBIndexPrototypeFunctionCount2(exec);
-    return throwVMTypeError(exec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "key", "IDBIndex", "getKey", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getKey(*state, WTFMove(key))));
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetKey2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetKey2(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetKey2Caller>(state, "getKey");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetKey2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getKey(*state, WTFMove(key))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetKey(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGetKey1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGetKey1(state);
+        return jsIDBIndexPrototypeFunctionGetKey2(state);
+    }
+    return argsCount < 1 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAll1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetAll1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetAll1Caller>(state, "getAll");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAll1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto range = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "range", "IDBIndex", "getAll", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto count = state->argument(1).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getAll(*state, WTFMove(range), WTFMove(count))));
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAll2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetAll2(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetAll2Caller>(state, "getAll");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAll2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto count = state->argument(1).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getAll(*state, WTFMove(key), WTFMove(count))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetAll(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 0) {
+        return jsIDBIndexPrototypeFunctionGetAll1(state);
+    }
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        return jsIDBIndexPrototypeFunctionGetAll2(state);
+    }
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGetAll1(state);
+        return jsIDBIndexPrototypeFunctionGetAll2(state);
+    }
+    return throwVMTypeError(state, throwScope);
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetAllKeys1Caller>(state, "getAllKeys");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto range = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "range", "IDBIndex", "getAllKeys", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto count = state->argument(1).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getAllKeys(*state, WTFMove(range), WTFMove(count))));
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys2(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionGetAllKeys2Caller>(state, "getAllKeys");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionGetAllKeys2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto count = state->argument(1).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.getAllKeys(*state, WTFMove(key), WTFMove(count))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionGetAllKeys(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 0) {
+        return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+    }
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        return jsIDBIndexPrototypeFunctionGetAllKeys2(state);
+    }
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionGetAllKeys1(state);
+        return jsIDBIndexPrototypeFunctionGetAllKeys2(state);
+    }
+    return throwVMTypeError(state, throwScope);
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionCount1Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionCount1(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionCount1Caller>(state, "count");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionCount1Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto range = convert<IDLNullable<IDLInterface<IDBKeyRange>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "range", "IDBIndex", "count", "IDBKeyRange"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.count(*state, WTFMove(range))));
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionCount2Caller(JSC::ExecState*, JSIDBIndex*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsIDBIndexPrototypeFunctionCount2(ExecState* state)
+{
+    return BindingCaller<JSIDBIndex>::callOperation<jsIDBIndexPrototypeFunctionCount2Caller>(state, "count");
+}
+
+static inline JSC::EncodedJSValue jsIDBIndexPrototypeFunctionCount2Caller(JSC::ExecState* state, JSIDBIndex* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto key = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.count(*state, WTFMove(key))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsIDBIndexPrototypeFunctionCount(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    if (argsCount == 0) {
+        return jsIDBIndexPrototypeFunctionCount1(state);
+    }
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isUndefined())
+            return jsIDBIndexPrototypeFunctionCount1(state);
+        if (distinguishingArg.isUndefinedOrNull())
+            return jsIDBIndexPrototypeFunctionCount1(state);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSIDBKeyRange::info()))
+            return jsIDBIndexPrototypeFunctionCount1(state);
+        return jsIDBIndexPrototypeFunctionCount2(state);
+    }
+    return throwVMTypeError(state, throwScope);
+}
+
+void JSIDBIndex::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSIDBIndex*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
+}
+
+void JSIDBIndex::visitOutputConstraints(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSIDBIndex*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitOutputConstraints(thisObject, visitor);
+    thisObject->visitAdditionalChildren(visitor);
 }
 
 bool JSIDBIndexOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
+    auto* jsIDBIndex = jsCast<JSIDBIndex*>(handle.slot()->asCell());
+    IDBIndex* root = &jsIDBIndex->wrapped();
+    return visitor.containsOpaqueRoot(root);
 }
 
 void JSIDBIndexOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBIndex = jsCast<JSIDBIndex*>(handle.slot()->asCell());
+    auto* jsIDBIndex = static_cast<JSIDBIndex*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBIndex->impl(), jsIDBIndex);
+    uncacheWrapper(world, &jsIDBIndex->wrapped(), jsIDBIndex);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBIndex* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<IDBIndex>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBIndex>(globalObject, impl))
-        return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to IDBIndex.
-    COMPILE_ASSERT(!__is_polymorphic(IDBIndex), IDBIndex_is_polymorphic_but_idl_claims_not_to_be);
-#endif
-    return createNewWrapper<JSIDBIndex>(globalObject, impl);
+    return createWrapper<IDBIndex>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBIndex& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 IDBIndex* JSIDBIndex::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBIndex*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBIndex*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -20,208 +20,72 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCIceServer.h"
 
-#include "DOMStringList.h"
-#include "JSDOMBinding.h"
-#include "JSDOMStringList.h"
-#include "RTCIceServer.h"
-#include "URL.h"
 #include <runtime/JSArray.h>
-#include <runtime/JSString.h>
-#include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-// Attributes
-
-JSC::EncodedJSValue jsRTCIceServerUrls(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCIceServerUsername(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCIceServerCredential(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-
-class JSRTCIceServerPrototype : public JSC::JSNonFinalObject {
-public:
-    typedef JSC::JSNonFinalObject Base;
-    static JSRTCIceServerPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
-    {
-        JSRTCIceServerPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCIceServerPrototype>(vm.heap)) JSRTCIceServerPrototype(vm, globalObject, structure);
-        ptr->finishCreation(vm);
-        return ptr;
+template<> RTCIceServer convertDictionary<RTCIceServer>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-private:
-    JSRTCIceServerPrototype(JSC::VM& vm, JSC::JSGlobalObject*, JSC::Structure* structure)
-        : JSC::JSNonFinalObject(vm, structure)
-    {
+    RTCIceServer result;
+    JSValue credentialValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "credential"));
+    if (!credentialValue.isUndefined()) {
+        result.credential = convert<IDLDOMString>(state, credentialValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-
-    void finishCreation(JSC::VM&);
-};
-
-/* Hash table for prototype */
-
-static const HashTableValue JSRTCIceServerPrototypeTableValues[] =
-{
-    { "urls", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUrls), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "username", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "credential", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerCredential), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-const ClassInfo JSRTCIceServerPrototype::s_info = { "RTCIceServerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceServerPrototype) };
-
-void JSRTCIceServerPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSRTCIceServerPrototypeTableValues, *this);
-}
-
-const ClassInfo JSRTCIceServer::s_info = { "RTCIceServer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceServer) };
-
-JSRTCIceServer::JSRTCIceServer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceServer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
-
-JSObject* JSRTCIceServer::createPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return JSRTCIceServerPrototype::create(vm, globalObject, JSRTCIceServerPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
-}
-
-JSObject* JSRTCIceServer::getPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMPrototype<JSRTCIceServer>(vm, globalObject);
-}
-
-void JSRTCIceServer::destroy(JSC::JSCell* cell)
-{
-    JSRTCIceServer* thisObject = static_cast<JSRTCIceServer*>(cell);
-    thisObject->JSRTCIceServer::~JSRTCIceServer();
-}
-
-JSRTCIceServer::~JSRTCIceServer()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsRTCIceServerUrls(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "urls");
-        return throwGetterTypeError(*exec, "RTCIceServer", "urls");
+    JSValue urlsValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "urls"));
+    if (!urlsValue.isUndefined()) {
+        result.urls = convert<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, urlsValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else {
+        throwRequiredMemberTypeError(state, throwScope, "urls", "RTCIceServer", "UNION");
+        return { };
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.urls());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsRTCIceServerUsername(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "username");
-        return throwGetterTypeError(*exec, "RTCIceServer", "username");
+    JSValue usernameValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "username"));
+    if (!usernameValue.isUndefined()) {
+        result.username = convert<IDLDOMString>(state, usernameValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.username());
-    return JSValue::encode(result);
+    return result;
 }
 
-
-EncodedJSValue jsRTCIceServerCredential(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const RTCIceServer& dictionary)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "credential");
-        return throwGetterTypeError(*exec, "RTCIceServer", "credential");
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLDOMString::isNullValue(dictionary.credential)) {
+        auto credentialValue = toJS<IDLDOMString>(state, globalObject, IDLDOMString::extractValueFromNullable(dictionary.credential));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "credential"), credentialValue);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.credential());
-    return JSValue::encode(result);
+    auto urlsValue = toJS<IDLUnion<IDLDOMString, IDLSequence<IDLDOMString>>>(state, globalObject, dictionary.urls);
+    result->putDirect(vm, JSC::Identifier::fromString(&vm, "urls"), urlsValue);
+    if (!IDLDOMString::isNullValue(dictionary.username)) {
+        auto usernameValue = toJS<IDLDOMString>(state, globalObject, IDLDOMString::extractValueFromNullable(dictionary.username));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "username"), usernameValue);
+    }
+    return result;
 }
 
+} // namespace WebCore
 
-bool JSRTCIceServerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSRTCIceServerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsRTCIceServer = jsCast<JSRTCIceServer*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCIceServer->impl(), jsRTCIceServer);
-}
-
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7RTCIceServer@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore12RTCIceServerE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCIceServer* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCIceServer>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCIceServer@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore12RTCIceServerE[2];
-#if COMPILER(CLANG)
-    // If this fails RTCIceServer does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCIceServer), RTCIceServer_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // RTCIceServer has subclasses. If RTCIceServer has subclasses that get passed
-    // to toJS() we currently require RTCIceServer you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSRTCIceServer>(globalObject, impl);
-}
-
-RTCIceServer* JSRTCIceServer::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSRTCIceServer*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
-
-}
-
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

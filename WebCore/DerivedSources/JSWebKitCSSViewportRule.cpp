@@ -24,11 +24,10 @@
 
 #include "JSWebKitCSSViewportRule.h"
 
-#include "CSSStyleDeclaration.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSDOMBinding.h"
-#include "StyleProperties.h"
-#include "WebKitCSSViewportRule.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -37,12 +36,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebKitCSSViewportRuleStyle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebKitCSSViewportRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitCSSViewportRuleStyle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitCSSViewportRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebKitCSSViewportRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebKitCSSViewportRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebKitCSSViewportRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebKitCSSViewportRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRulePrototype>(vm.heap)) JSWebKitCSSViewportRulePrototype(vm, globalObject, structure);
@@ -65,49 +65,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitCSSViewportRuleConstructor : public DOMConstructorObject {
-private:
-    JSWebKitCSSViewportRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebKitCSSViewportRuleConstructor = JSDOMConstructorNotConstructable<JSWebKitCSSViewportRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitCSSViewportRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitCSSViewportRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRuleConstructor>(vm.heap)) JSWebKitCSSViewportRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebKitCSSViewportRuleConstructor::s_info = { "WebKitCSSViewportRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSViewportRuleConstructor) };
-
-JSWebKitCSSViewportRuleConstructor::JSWebKitCSSViewportRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebKitCSSViewportRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSWebKitCSSViewportRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebKitCSSViewportRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSViewportRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSViewportRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitCSSViewportRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebKitCSSViewportRuleConstructor::s_info = { "WebKitCSSViewportRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSViewportRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitCSSViewportRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSViewportRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "style", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSViewportRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSViewportRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSViewportRuleConstructor) } },
+    { "style", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSViewportRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitCSSViewportRulePrototype::s_info = { "WebKitCSSViewportRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSViewportRulePrototype) };
@@ -120,49 +99,76 @@ void JSWebKitCSSViewportRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitCSSViewportRule::s_info = { "WebKitCSSViewportRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSViewportRule) };
 
-JSWebKitCSSViewportRule::JSWebKitCSSViewportRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSViewportRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSWebKitCSSViewportRule::JSWebKitCSSViewportRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitCSSViewportRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebKitCSSViewportRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebKitCSSViewportRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWebKitCSSViewportRulePrototype::create(vm, globalObject, JSWebKitCSSViewportRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSWebKitCSSViewportRulePrototype::create(vm, globalObject, JSWebKitCSSViewportRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSWebKitCSSViewportRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebKitCSSViewportRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebKitCSSViewportRule>(vm, globalObject);
 }
 
-EncodedJSValue jsWebKitCSSViewportRuleStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWebKitCSSViewportRule* BindingCaller<JSWebKitCSSViewportRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebKitCSSViewportRule* castedThis = jsDynamicCast<JSWebKitCSSViewportRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebKitCSSViewportRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSViewportRule", "style");
-        return throwGetterTypeError(*exec, "WebKitCSSViewportRule", "style");
+    return jsDynamicDowncast<JSWebKitCSSViewportRule*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsWebKitCSSViewportRuleStyleGetter(ExecState&, JSWebKitCSSViewportRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebKitCSSViewportRuleStyle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebKitCSSViewportRule>::attribute<jsWebKitCSSViewportRuleStyleGetter>(state, thisValue, "style");
+}
+
+static inline JSValue jsWebKitCSSViewportRuleStyleGetter(ExecState& state, JSWebKitCSSViewportRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSStyleDeclaration>>(state, *thisObject.globalObject(), impl.style());
+    return result;
+}
+
+EncodedJSValue jsWebKitCSSViewportRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebKitCSSViewportRulePrototype* domObject = jsDynamicDowncast<JSWebKitCSSViewportRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebKitCSSViewportRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWebKitCSSViewportRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebKitCSSViewportRulePrototype* domObject = jsDynamicDowncast<JSWebKitCSSViewportRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.style()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsWebKitCSSViewportRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSWebKitCSSViewportRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSWebKitCSSViewportRulePrototype* domObject = jsDynamicCast<JSWebKitCSSViewportRulePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitCSSViewportRule::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSWebKitCSSViewportRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSWebKitCSSViewportRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitCSSViewportRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 

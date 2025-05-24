@@ -25,7 +25,6 @@
 #include "JSWebGLCompressedTexturePVRTC.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLCompressedTexturePVRTC.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSWebGLCompressedTexturePVRTCPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLCompressedTexturePVRTCPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLCompressedTexturePVRTCPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLCompressedTexturePVRTCPrototype>(vm.heap)) JSWebGLCompressedTexturePVRTCPrototype(vm, globalObject, structure);
@@ -61,10 +60,10 @@ private:
 
 static const HashTableValue JSWebGLCompressedTexturePVRTCPrototypeTableValues[] =
 {
-    { "COMPRESSED_RGB_PVRTC_4BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C00), (intptr_t) (0) },
-    { "COMPRESSED_RGB_PVRTC_2BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C01), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_PVRTC_4BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C02), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_PVRTC_2BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C03), (intptr_t) (0) },
+    { "COMPRESSED_RGB_PVRTC_4BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C00) } },
+    { "COMPRESSED_RGB_PVRTC_2BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C01) } },
+    { "COMPRESSED_RGBA_PVRTC_4BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C02) } },
+    { "COMPRESSED_RGBA_PVRTC_2BPPV1_IMG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C03) } },
 };
 
 const ClassInfo JSWebGLCompressedTexturePVRTCPrototype::s_info = { "WebGLCompressedTexturePVRTCPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTexturePVRTCPrototype) };
@@ -77,10 +76,16 @@ void JSWebGLCompressedTexturePVRTCPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLCompressedTexturePVRTC::s_info = { "WebGLCompressedTexturePVRTC", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTexturePVRTC) };
 
-JSWebGLCompressedTexturePVRTC::JSWebGLCompressedTexturePVRTC(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTexturePVRTC>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLCompressedTexturePVRTC::JSWebGLCompressedTexturePVRTC(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLCompressedTexturePVRTC>&& impl)
+    : JSDOMWrapper<WebGLCompressedTexturePVRTC>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLCompressedTexturePVRTC::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLCompressedTexturePVRTC::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -88,7 +93,7 @@ JSObject* JSWebGLCompressedTexturePVRTC::createPrototype(VM& vm, JSGlobalObject*
     return JSWebGLCompressedTexturePVRTCPrototype::create(vm, globalObject, JSWebGLCompressedTexturePVRTCPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLCompressedTexturePVRTC::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLCompressedTexturePVRTC::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLCompressedTexturePVRTC>(vm, globalObject);
 }
@@ -99,23 +104,18 @@ void JSWebGLCompressedTexturePVRTC::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLCompressedTexturePVRTC::~JSWebGLCompressedTexturePVRTC();
 }
 
-JSWebGLCompressedTexturePVRTC::~JSWebGLCompressedTexturePVRTC()
-{
-    releaseImpl();
-}
-
 bool JSWebGLCompressedTexturePVRTCOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLCompressedTexturePVRTC = jsCast<JSWebGLCompressedTexturePVRTC*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTexturePVRTC->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTexturePVRTC->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebGLCompressedTexturePVRTCOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLCompressedTexturePVRTC = jsCast<JSWebGLCompressedTexturePVRTC*>(handle.slot()->asCell());
+    auto* jsWebGLCompressedTexturePVRTC = static_cast<JSWebGLCompressedTexturePVRTC*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLCompressedTexturePVRTC->impl(), jsWebGLCompressedTexturePVRTC);
+    uncacheWrapper(world, &jsWebGLCompressedTexturePVRTC->wrapped(), jsWebGLCompressedTexturePVRTC);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -126,15 +126,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLCompressedTexturePVRTC@W
 extern "C" { extern void* _ZTVN7WebCore27WebGLCompressedTexturePVRTCE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTexturePVRTC* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTexturePVRTC>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLCompressedTexturePVRTC>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLCompressedTexturePVRTC@WebCore@@6B@"));
 #else
@@ -142,7 +139,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
 #if COMPILER(CLANG)
     // If this fails WebGLCompressedTexturePVRTC does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLCompressedTexturePVRTC), WebGLCompressedTexturePVRTC_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLCompressedTexturePVRTC), "WebGLCompressedTexturePVRTC is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -151,13 +148,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLCompressedTexturePVRTC>(globalObject, impl);
+    return createWrapper<WebGLCompressedTexturePVRTC>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLCompressedTexturePVRTC& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLCompressedTexturePVRTC* JSWebGLCompressedTexturePVRTC::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLCompressedTexturePVRTC*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLCompressedTexturePVRTC*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

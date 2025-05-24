@@ -1,0 +1,5 @@
+JSCDATASection.h : Text.idl CharacterData.idl Node.idl EventTarget.idl
+Text.idl :
+CharacterData.idl :
+Node.idl :
+EventTarget.idl :

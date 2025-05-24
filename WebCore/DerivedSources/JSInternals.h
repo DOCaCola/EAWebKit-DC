@@ -18,30 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSInternals_h
-#define JSInternals_h
+#pragma once
 
 #include "Internals.h"
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSInternals : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSInternals : public JSDOMWrapper<Internals> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Internals>;
     static JSInternals* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Internals>&& impl)
     {
-        JSInternals* ptr = new (NotNull, JSC::allocateCell<JSInternals>(globalObject->vm().heap)) JSInternals(structure, globalObject, WTF::move(impl));
+        JSInternals* ptr = new (NotNull, JSC::allocateCell<JSInternals>(globalObject->vm().heap)) JSInternals(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Internals* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSInternals();
 
     DECLARE_INFO;
 
@@ -50,20 +49,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Internals& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Internals* m_impl;
 protected:
-    JSInternals(JSC::Structure*, JSDOMGlobalObject*, Ref<Internals>&&);
+    JSInternals(JSC::Structure*, JSDOMGlobalObject&, Ref<Internals>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSInternalsOwner : public JSC::WeakHandleOwner {
@@ -78,10 +67,81 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Internals*)
     return &owner.get();
 }
 
-WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Internals*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Internals& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Internals* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Internals&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Internals* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Internals>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Internals>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Internals> {
+    using WrapperClass = JSInternals;
+    using ToWrappedReturnType = Internals*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::PageOverlayType);
+
+template<> std::optional<Internals::PageOverlayType> parseEnumeration<Internals::PageOverlayType>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::PageOverlayType convertEnumeration<Internals::PageOverlayType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::PageOverlayType>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::CachePolicy);
+
+template<> std::optional<Internals::CachePolicy> parseEnumeration<Internals::CachePolicy>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::CachePolicy convertEnumeration<Internals::CachePolicy>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::CachePolicy>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::ResourceLoadPriority);
+
+template<> std::optional<Internals::ResourceLoadPriority> parseEnumeration<Internals::ResourceLoadPriority>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::ResourceLoadPriority convertEnumeration<Internals::ResourceLoadPriority>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::ResourceLoadPriority>();
+
+#if ENABLE(MEDIA_SESSION)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::MediaSessionInterruptingCategory);
+
+template<> std::optional<Internals::MediaSessionInterruptingCategory> parseEnumeration<Internals::MediaSessionInterruptingCategory>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::MediaSessionInterruptingCategory convertEnumeration<Internals::MediaSessionInterruptingCategory>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::MediaSessionInterruptingCategory>();
+
+#endif
+
+#if ENABLE(MEDIA_SESSION)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::MediaControlEvent);
+
+template<> std::optional<Internals::MediaControlEvent> parseEnumeration<Internals::MediaControlEvent>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::MediaControlEvent convertEnumeration<Internals::MediaControlEvent>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::MediaControlEvent>();
+
+#endif
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::AutoFillButtonType);
+
+template<> std::optional<Internals::AutoFillButtonType> parseEnumeration<Internals::AutoFillButtonType>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::AutoFillButtonType convertEnumeration<Internals::AutoFillButtonType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::AutoFillButtonType>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::UserInterfaceLayoutDirection);
+
+template<> std::optional<Internals::UserInterfaceLayoutDirection> parseEnumeration<Internals::UserInterfaceLayoutDirection>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::UserInterfaceLayoutDirection convertEnumeration<Internals::UserInterfaceLayoutDirection>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::UserInterfaceLayoutDirection>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::BaseWritingDirection);
+
+template<> std::optional<Internals::BaseWritingDirection> parseEnumeration<Internals::BaseWritingDirection>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::BaseWritingDirection convertEnumeration<Internals::BaseWritingDirection>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::BaseWritingDirection>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Internals::EventThrottlingBehavior);
+
+template<> std::optional<Internals::EventThrottlingBehavior> parseEnumeration<Internals::EventThrottlingBehavior>(JSC::ExecState&, JSC::JSValue);
+template<> Internals::EventThrottlingBehavior convertEnumeration<Internals::EventThrottlingBehavior>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Internals::EventThrottlingBehavior>();
 
 
 } // namespace WebCore
-
-#endif

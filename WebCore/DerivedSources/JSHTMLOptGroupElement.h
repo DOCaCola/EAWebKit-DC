@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLOptGroupElement_h
-#define JSHTMLOptGroupElement_h
+#pragma once
 
 #include "HTMLOptGroupElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,18 @@ namespace WebCore {
 
 class JSHTMLOptGroupElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLOptGroupElement;
     static JSHTMLOptGroupElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptGroupElement>&& impl)
     {
-        JSHTMLOptGroupElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElement>(globalObject->vm().heap)) JSHTMLOptGroupElement(structure, globalObject, WTF::move(impl));
+        JSHTMLOptGroupElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElement>(globalObject->vm().heap)) JSHTMLOptGroupElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static HTMLOptGroupElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
 
@@ -46,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLOptGroupElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLOptGroupElement& wrapped() const
     {
-        return static_cast<HTMLOptGroupElement&>(Base::impl());
+        return static_cast<HTMLOptGroupElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLOptGroupElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptGroupElement>&&);
+    JSHTMLOptGroupElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptGroupElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLOptGroupElement> {
+    using WrapperClass = JSHTMLOptGroupElement;
+    using ToWrappedReturnType = HTMLOptGroupElement*;
+};
 
 } // namespace WebCore
-
-#endif

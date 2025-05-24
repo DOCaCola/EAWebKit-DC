@@ -31,6 +31,7 @@
 #include "c_utility.h"
 
 #include "CRuntimeObject.h"
+#include "DOMWindow.h"
 #include "JSDOMBinding.h"
 #include "JSDOMWindow.h"
 #include "NP_jsobject.h"
@@ -73,7 +74,7 @@ void convertValueToNPVariant(ExecState* exec, JSValue value, NPVariant* result)
     VOID_TO_NPVARIANT(*result);
 
     if (value.isString()) {
-        String ustring = value.toString(exec)->value(exec);
+        String ustring = value.toWTFString(exec);
         CString cstring = ustring.utf8();
         NPString string = { (const NPUTF8*)cstring.data(), static_cast<uint32_t>(cstring.length()) };
         NPN_InitializeVariantWithStringCopy(result, &string);

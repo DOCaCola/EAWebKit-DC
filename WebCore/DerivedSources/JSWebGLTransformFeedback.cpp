@@ -25,7 +25,8 @@
 #include "JSWebGLTransformFeedback.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLTransformFeedback.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLTransformFeedbackConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLTransformFeedbackConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLTransformFeedbackConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLTransformFeedbackPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLTransformFeedbackPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLTransformFeedbackPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLTransformFeedbackPrototype>(vm.heap)) JSWebGLTransformFeedbackPrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLTransformFeedbackConstructor : public DOMConstructorObject {
-private:
-    JSWebGLTransformFeedbackConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLTransformFeedbackConstructor = JSDOMConstructorNotConstructable<JSWebGLTransformFeedback>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLTransformFeedbackConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLTransformFeedbackConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLTransformFeedbackConstructor>(vm.heap)) JSWebGLTransformFeedbackConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLTransformFeedbackConstructor::s_info = { "WebGLTransformFeedbackConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTransformFeedbackConstructor) };
-
-JSWebGLTransformFeedbackConstructor::JSWebGLTransformFeedbackConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLTransformFeedbackConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLTransformFeedbackConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLTransformFeedbackConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLTransformFeedback::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLTransformFeedback::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLTransformFeedback"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLTransformFeedbackConstructor::s_info = { "WebGLTransformFeedback", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTransformFeedbackConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLTransformFeedbackPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLTransformFeedbackConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLTransformFeedbackConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLTransformFeedbackConstructor) } },
 };
 
 const ClassInfo JSWebGLTransformFeedbackPrototype::s_info = { "WebGLTransformFeedbackPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTransformFeedbackPrototype) };
@@ -115,10 +97,16 @@ void JSWebGLTransformFeedbackPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLTransformFeedback::s_info = { "WebGLTransformFeedback", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLTransformFeedback) };
 
-JSWebGLTransformFeedback::JSWebGLTransformFeedback(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLTransformFeedback>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLTransformFeedback::JSWebGLTransformFeedback(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLTransformFeedback>&& impl)
+    : JSDOMWrapper<WebGLTransformFeedback>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLTransformFeedback::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLTransformFeedback::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSWebGLTransformFeedback::createPrototype(VM& vm, JSGlobalObject* glob
     return JSWebGLTransformFeedbackPrototype::create(vm, globalObject, JSWebGLTransformFeedbackPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLTransformFeedback::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLTransformFeedback::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLTransformFeedback>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSWebGLTransformFeedback::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLTransformFeedback::~JSWebGLTransformFeedback();
 }
 
-JSWebGLTransformFeedback::~JSWebGLTransformFeedback()
+EncodedJSValue jsWebGLTransformFeedbackConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLTransformFeedbackPrototype* domObject = jsDynamicDowncast<JSWebGLTransformFeedbackPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLTransformFeedback::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsWebGLTransformFeedbackConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSWebGLTransformFeedbackConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSWebGLTransformFeedbackPrototype* domObject = jsDynamicCast<JSWebGLTransformFeedbackPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLTransformFeedback::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLTransformFeedbackPrototype* domObject = jsDynamicDowncast<JSWebGLTransformFeedbackPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSWebGLTransformFeedback::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWebGLTransformFeedback::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLTransformFeedbackConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLTransformFeedbackConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLTransformFeedbackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSWebGLTransformFeedbackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::
 
 void JSWebGLTransformFeedbackOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLTransformFeedback = jsCast<JSWebGLTransformFeedback*>(handle.slot()->asCell());
+    auto* jsWebGLTransformFeedback = static_cast<JSWebGLTransformFeedback*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLTransformFeedback->impl(), jsWebGLTransformFeedback);
+    uncacheWrapper(world, &jsWebGLTransformFeedback->wrapped(), jsWebGLTransformFeedback);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLTransformFeedback@WebCor
 extern "C" { extern void* _ZTVN7WebCore22WebGLTransformFeedbackE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTransformFeedback* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLTransformFeedback>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLTransformFeedback>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLTransformFeedback@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTransfo
 #if COMPILER(CLANG)
     // If this fails WebGLTransformFeedback does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLTransformFeedback), WebGLTransformFeedback_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLTransformFeedback), "WebGLTransformFeedback is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLTransfo
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLTransformFeedback>(globalObject, impl);
+    return createWrapper<WebGLTransformFeedback>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLTransformFeedback& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLTransformFeedback* JSWebGLTransformFeedback::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLTransformFeedback*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLTransformFeedback*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -207,406 +207,406 @@ namespace WebCore {
 
 using namespace SVGNames;
 
-typedef JSDOMWrapper* (*CreateSVGElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<SVGElement>);
+typedef JSDOMObject* (*CreateSVGElementWrapperFunction)(JSDOMGlobalObject*, Ref<SVGElement>&&);
 
-static JSDOMWrapper* createSVGAElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAElement, element.get());
+    return createWrapper<SVGAElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAltGlyphElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAltGlyphElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAltGlyphElement, element.get());
+    return createWrapper<SVGAltGlyphElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAltGlyphDefElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAltGlyphDefElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAltGlyphDefElement, element.get());
+    return createWrapper<SVGAltGlyphDefElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAltGlyphItemElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAltGlyphItemElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAltGlyphItemElement, element.get());
+    return createWrapper<SVGAltGlyphItemElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAnimateElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAnimateElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAnimateElement, element.get());
+    return createWrapper<SVGAnimateElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAnimateColorElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAnimateColorElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAnimateColorElement, element.get());
+    return createWrapper<SVGAnimateColorElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAnimateMotionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAnimateMotionElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAnimateMotionElement, element.get());
+    return createWrapper<SVGAnimateMotionElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGAnimateTransformElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGAnimateTransformElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGAnimateTransformElement, element.get());
+    return createWrapper<SVGAnimateTransformElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGCircleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGCircleElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGCircleElement, element.get());
+    return createWrapper<SVGCircleElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGClipPathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGClipPathElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGClipPathElement, element.get());
+    return createWrapper<SVGClipPathElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGCursorElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGCursorElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGCursorElement, element.get());
+    return createWrapper<SVGCursorElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGDefsElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGDefsElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGDefsElement, element.get());
+    return createWrapper<SVGDefsElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGDescElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGDescElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGDescElement, element.get());
+    return createWrapper<SVGDescElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGEllipseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGEllipseElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGEllipseElement, element.get());
+    return createWrapper<SVGEllipseElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEBlendElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEBlendElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEBlendElement, element.get());
+    return createWrapper<SVGFEBlendElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEColorMatrixElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEColorMatrixElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEColorMatrixElement, element.get());
+    return createWrapper<SVGFEColorMatrixElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEComponentTransferElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEComponentTransferElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEComponentTransferElement, element.get());
+    return createWrapper<SVGFEComponentTransferElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFECompositeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFECompositeElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFECompositeElement, element.get());
+    return createWrapper<SVGFECompositeElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEConvolveMatrixElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEConvolveMatrixElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEConvolveMatrixElement, element.get());
+    return createWrapper<SVGFEConvolveMatrixElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEDiffuseLightingElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEDiffuseLightingElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEDiffuseLightingElement, element.get());
+    return createWrapper<SVGFEDiffuseLightingElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEDisplacementMapElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEDisplacementMapElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEDisplacementMapElement, element.get());
+    return createWrapper<SVGFEDisplacementMapElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEDistantLightElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEDistantLightElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEDistantLightElement, element.get());
+    return createWrapper<SVGFEDistantLightElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEDropShadowElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEDropShadowElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEDropShadowElement, element.get());
+    return createWrapper<SVGFEDropShadowElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEFloodElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEFloodElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEFloodElement, element.get());
+    return createWrapper<SVGFEFloodElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEFuncAElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEFuncAElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEFuncAElement, element.get());
+    return createWrapper<SVGFEFuncAElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEFuncBElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEFuncBElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEFuncBElement, element.get());
+    return createWrapper<SVGFEFuncBElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEFuncGElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEFuncGElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEFuncGElement, element.get());
+    return createWrapper<SVGFEFuncGElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEFuncRElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEFuncRElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEFuncRElement, element.get());
+    return createWrapper<SVGFEFuncRElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEGaussianBlurElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEGaussianBlurElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEGaussianBlurElement, element.get());
+    return createWrapper<SVGFEGaussianBlurElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEImageElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEImageElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEImageElement, element.get());
+    return createWrapper<SVGFEImageElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEMergeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEMergeElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEMergeElement, element.get());
+    return createWrapper<SVGFEMergeElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEMergeNodeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEMergeNodeElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEMergeNodeElement, element.get());
+    return createWrapper<SVGFEMergeNodeElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEMorphologyElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEMorphologyElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEMorphologyElement, element.get());
+    return createWrapper<SVGFEMorphologyElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEOffsetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEOffsetElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEOffsetElement, element.get());
+    return createWrapper<SVGFEOffsetElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFEPointLightElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFEPointLightElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFEPointLightElement, element.get());
+    return createWrapper<SVGFEPointLightElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFESpecularLightingElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFESpecularLightingElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFESpecularLightingElement, element.get());
+    return createWrapper<SVGFESpecularLightingElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFESpotLightElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFESpotLightElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFESpotLightElement, element.get());
+    return createWrapper<SVGFESpotLightElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFETileElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFETileElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFETileElement, element.get());
+    return createWrapper<SVGFETileElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFETurbulenceElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFETurbulenceElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFETurbulenceElement, element.get());
+    return createWrapper<SVGFETurbulenceElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFilterElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFilterElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFilterElement, element.get());
+    return createWrapper<SVGFilterElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontElement, element.get());
+    return createWrapper<SVGFontElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontFaceElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontFaceElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontFaceElement, element.get());
+    return createWrapper<SVGFontFaceElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontFaceFormatElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontFaceFormatElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontFaceFormatElement, element.get());
+    return createWrapper<SVGFontFaceFormatElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontFaceNameElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontFaceNameElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontFaceNameElement, element.get());
+    return createWrapper<SVGFontFaceNameElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontFaceSrcElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontFaceSrcElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontFaceSrcElement, element.get());
+    return createWrapper<SVGFontFaceSrcElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGFontFaceUriElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGFontFaceUriElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGFontFaceUriElement, element.get());
+    return createWrapper<SVGFontFaceUriElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGForeignObjectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGForeignObjectElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGForeignObjectElement, element.get());
+    return createWrapper<SVGForeignObjectElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGGElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGGElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGGElement, element.get());
+    return createWrapper<SVGGElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGGlyphElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGGlyphElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGGlyphElement, element.get());
+    return createWrapper<SVGGlyphElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGGlyphRefElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGGlyphRefElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGGlyphRefElement, element.get());
+    return createWrapper<SVGGlyphRefElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGHKernElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGHKernElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGHKernElement, element.get());
+    return createWrapper<SVGHKernElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGImageElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGImageElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGImageElement, element.get());
+    return createWrapper<SVGImageElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGLineElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGLineElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGLineElement, element.get());
+    return createWrapper<SVGLineElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGLinearGradientElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGLinearGradientElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGLinearGradientElement, element.get());
+    return createWrapper<SVGLinearGradientElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGMarkerElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGMarkerElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGMarkerElement, element.get());
+    return createWrapper<SVGMarkerElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGMaskElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGMaskElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGMaskElement, element.get());
+    return createWrapper<SVGMaskElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGMetadataElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGMetadataElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGMetadataElement, element.get());
+    return createWrapper<SVGMetadataElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGMissingGlyphElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGMissingGlyphElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGMissingGlyphElement, element.get());
+    return createWrapper<SVGMissingGlyphElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGMPathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGMPathElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGMPathElement, element.get());
+    return createWrapper<SVGMPathElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGPathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGPathElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGPathElement, element.get());
+    return createWrapper<SVGPathElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGPatternElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGPatternElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGPatternElement, element.get());
+    return createWrapper<SVGPatternElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGPolygonElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGPolygonElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGPolygonElement, element.get());
+    return createWrapper<SVGPolygonElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGPolylineElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGPolylineElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGPolylineElement, element.get());
+    return createWrapper<SVGPolylineElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGRadialGradientElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGRadialGradientElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGRadialGradientElement, element.get());
+    return createWrapper<SVGRadialGradientElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGRectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGRectElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGRectElement, element.get());
+    return createWrapper<SVGRectElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGScriptElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGScriptElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGScriptElement, element.get());
+    return createWrapper<SVGScriptElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGSetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGSetElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGSetElement, element.get());
+    return createWrapper<SVGSetElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGStopElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGStopElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGStopElement, element.get());
+    return createWrapper<SVGStopElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGStyleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGStyleElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGStyleElement, element.get());
+    return createWrapper<SVGStyleElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGSVGElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGSVGElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGSVGElement, element.get());
+    return createWrapper<SVGSVGElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGSwitchElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGSwitchElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGSwitchElement, element.get());
+    return createWrapper<SVGSwitchElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGSymbolElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGSymbolElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGSymbolElement, element.get());
+    return createWrapper<SVGSymbolElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGTextElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGTextElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGTextElement, element.get());
+    return createWrapper<SVGTextElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGTextPathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGTextPathElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGTextPathElement, element.get());
+    return createWrapper<SVGTextPathElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGTitleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGTitleElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGTitleElement, element.get());
+    return createWrapper<SVGTitleElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGTRefElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGTRefElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGTRefElement, element.get());
+    return createWrapper<SVGTRefElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGTSpanElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGTSpanElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGTSpanElement, element.get());
+    return createWrapper<SVGTSpanElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGUseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGUseElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGUseElement, element.get());
+    return createWrapper<SVGUseElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGViewElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGViewElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGViewElement, element.get());
+    return createWrapper<SVGViewElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createSVGVKernElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+static JSDOMObject* createSVGVKernElementWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, SVGVKernElement, element.get());
+    return createWrapper<SVGVKernElement>(globalObject, WTFMove(element));
 }
 
 
@@ -618,100 +618,100 @@ static NEVER_INLINE void populateSVGWrapperMap(HashMap<AtomicStringImpl*, Create
     };
 
     static const TableEntry table[] = {
-        { aTag, &createSVGAElementWrapper },
-        { altGlyphTag, &createSVGAltGlyphElementWrapper },
-        { altGlyphDefTag, &createSVGAltGlyphDefElementWrapper },
-        { altGlyphItemTag, &createSVGAltGlyphItemElementWrapper },
-        { animateTag, &createSVGAnimateElementWrapper },
-        { animateColorTag, &createSVGAnimateColorElementWrapper },
-        { animateMotionTag, &createSVGAnimateMotionElementWrapper },
-        { animateTransformTag, &createSVGAnimateTransformElementWrapper },
-        { circleTag, &createSVGCircleElementWrapper },
-        { clipPathTag, &createSVGClipPathElementWrapper },
-        { cursorTag, &createSVGCursorElementWrapper },
-        { defsTag, &createSVGDefsElementWrapper },
-        { descTag, &createSVGDescElementWrapper },
-        { ellipseTag, &createSVGEllipseElementWrapper },
-        { feBlendTag, &createSVGFEBlendElementWrapper },
-        { feColorMatrixTag, &createSVGFEColorMatrixElementWrapper },
-        { feComponentTransferTag, &createSVGFEComponentTransferElementWrapper },
-        { feCompositeTag, &createSVGFECompositeElementWrapper },
-        { feConvolveMatrixTag, &createSVGFEConvolveMatrixElementWrapper },
-        { feDiffuseLightingTag, &createSVGFEDiffuseLightingElementWrapper },
-        { feDisplacementMapTag, &createSVGFEDisplacementMapElementWrapper },
-        { feDistantLightTag, &createSVGFEDistantLightElementWrapper },
-        { feDropShadowTag, &createSVGFEDropShadowElementWrapper },
-        { feFloodTag, &createSVGFEFloodElementWrapper },
-        { feFuncATag, &createSVGFEFuncAElementWrapper },
-        { feFuncBTag, &createSVGFEFuncBElementWrapper },
-        { feFuncGTag, &createSVGFEFuncGElementWrapper },
-        { feFuncRTag, &createSVGFEFuncRElementWrapper },
-        { feGaussianBlurTag, &createSVGFEGaussianBlurElementWrapper },
-        { feImageTag, &createSVGFEImageElementWrapper },
-        { feMergeTag, &createSVGFEMergeElementWrapper },
-        { feMergeNodeTag, &createSVGFEMergeNodeElementWrapper },
-        { feMorphologyTag, &createSVGFEMorphologyElementWrapper },
-        { feOffsetTag, &createSVGFEOffsetElementWrapper },
-        { fePointLightTag, &createSVGFEPointLightElementWrapper },
-        { feSpecularLightingTag, &createSVGFESpecularLightingElementWrapper },
-        { feSpotLightTag, &createSVGFESpotLightElementWrapper },
-        { feTileTag, &createSVGFETileElementWrapper },
-        { feTurbulenceTag, &createSVGFETurbulenceElementWrapper },
-        { filterTag, &createSVGFilterElementWrapper },
-        { fontTag, &createSVGFontElementWrapper },
-        { font_faceTag, &createSVGFontFaceElementWrapper },
-        { font_face_formatTag, &createSVGFontFaceFormatElementWrapper },
-        { font_face_nameTag, &createSVGFontFaceNameElementWrapper },
-        { font_face_srcTag, &createSVGFontFaceSrcElementWrapper },
-        { font_face_uriTag, &createSVGFontFaceUriElementWrapper },
-        { foreignObjectTag, &createSVGForeignObjectElementWrapper },
-        { gTag, &createSVGGElementWrapper },
-        { glyphTag, &createSVGGlyphElementWrapper },
-        { glyphRefTag, &createSVGGlyphRefElementWrapper },
-        { hkernTag, &createSVGHKernElementWrapper },
-        { imageTag, &createSVGImageElementWrapper },
-        { lineTag, &createSVGLineElementWrapper },
-        { linearGradientTag, &createSVGLinearGradientElementWrapper },
-        { markerTag, &createSVGMarkerElementWrapper },
-        { maskTag, &createSVGMaskElementWrapper },
-        { metadataTag, &createSVGMetadataElementWrapper },
-        { missing_glyphTag, &createSVGMissingGlyphElementWrapper },
-        { mpathTag, &createSVGMPathElementWrapper },
-        { pathTag, &createSVGPathElementWrapper },
-        { patternTag, &createSVGPatternElementWrapper },
-        { polygonTag, &createSVGPolygonElementWrapper },
-        { polylineTag, &createSVGPolylineElementWrapper },
-        { radialGradientTag, &createSVGRadialGradientElementWrapper },
-        { rectTag, &createSVGRectElementWrapper },
-        { scriptTag, &createSVGScriptElementWrapper },
-        { setTag, &createSVGSetElementWrapper },
-        { stopTag, &createSVGStopElementWrapper },
-        { styleTag, &createSVGStyleElementWrapper },
-        { svgTag, &createSVGSVGElementWrapper },
-        { switchTag, &createSVGSwitchElementWrapper },
-        { symbolTag, &createSVGSymbolElementWrapper },
-        { textTag, &createSVGTextElementWrapper },
-        { textPathTag, &createSVGTextPathElementWrapper },
-        { titleTag, &createSVGTitleElementWrapper },
-        { trefTag, &createSVGTRefElementWrapper },
-        { tspanTag, &createSVGTSpanElementWrapper },
-        { useTag, &createSVGUseElementWrapper },
-        { viewTag, &createSVGViewElementWrapper },
-        { vkernTag, &createSVGVKernElementWrapper },
+        { aTag, createSVGAElementWrapper },
+        { altGlyphTag, createSVGAltGlyphElementWrapper },
+        { altGlyphDefTag, createSVGAltGlyphDefElementWrapper },
+        { altGlyphItemTag, createSVGAltGlyphItemElementWrapper },
+        { animateTag, createSVGAnimateElementWrapper },
+        { animateColorTag, createSVGAnimateColorElementWrapper },
+        { animateMotionTag, createSVGAnimateMotionElementWrapper },
+        { animateTransformTag, createSVGAnimateTransformElementWrapper },
+        { circleTag, createSVGCircleElementWrapper },
+        { clipPathTag, createSVGClipPathElementWrapper },
+        { cursorTag, createSVGCursorElementWrapper },
+        { defsTag, createSVGDefsElementWrapper },
+        { descTag, createSVGDescElementWrapper },
+        { ellipseTag, createSVGEllipseElementWrapper },
+        { feBlendTag, createSVGFEBlendElementWrapper },
+        { feColorMatrixTag, createSVGFEColorMatrixElementWrapper },
+        { feComponentTransferTag, createSVGFEComponentTransferElementWrapper },
+        { feCompositeTag, createSVGFECompositeElementWrapper },
+        { feConvolveMatrixTag, createSVGFEConvolveMatrixElementWrapper },
+        { feDiffuseLightingTag, createSVGFEDiffuseLightingElementWrapper },
+        { feDisplacementMapTag, createSVGFEDisplacementMapElementWrapper },
+        { feDistantLightTag, createSVGFEDistantLightElementWrapper },
+        { feDropShadowTag, createSVGFEDropShadowElementWrapper },
+        { feFloodTag, createSVGFEFloodElementWrapper },
+        { feFuncATag, createSVGFEFuncAElementWrapper },
+        { feFuncBTag, createSVGFEFuncBElementWrapper },
+        { feFuncGTag, createSVGFEFuncGElementWrapper },
+        { feFuncRTag, createSVGFEFuncRElementWrapper },
+        { feGaussianBlurTag, createSVGFEGaussianBlurElementWrapper },
+        { feImageTag, createSVGFEImageElementWrapper },
+        { feMergeTag, createSVGFEMergeElementWrapper },
+        { feMergeNodeTag, createSVGFEMergeNodeElementWrapper },
+        { feMorphologyTag, createSVGFEMorphologyElementWrapper },
+        { feOffsetTag, createSVGFEOffsetElementWrapper },
+        { fePointLightTag, createSVGFEPointLightElementWrapper },
+        { feSpecularLightingTag, createSVGFESpecularLightingElementWrapper },
+        { feSpotLightTag, createSVGFESpotLightElementWrapper },
+        { feTileTag, createSVGFETileElementWrapper },
+        { feTurbulenceTag, createSVGFETurbulenceElementWrapper },
+        { filterTag, createSVGFilterElementWrapper },
+        { fontTag, createSVGFontElementWrapper },
+        { font_faceTag, createSVGFontFaceElementWrapper },
+        { font_face_formatTag, createSVGFontFaceFormatElementWrapper },
+        { font_face_nameTag, createSVGFontFaceNameElementWrapper },
+        { font_face_srcTag, createSVGFontFaceSrcElementWrapper },
+        { font_face_uriTag, createSVGFontFaceUriElementWrapper },
+        { foreignObjectTag, createSVGForeignObjectElementWrapper },
+        { gTag, createSVGGElementWrapper },
+        { glyphTag, createSVGGlyphElementWrapper },
+        { glyphRefTag, createSVGGlyphRefElementWrapper },
+        { hkernTag, createSVGHKernElementWrapper },
+        { imageTag, createSVGImageElementWrapper },
+        { lineTag, createSVGLineElementWrapper },
+        { linearGradientTag, createSVGLinearGradientElementWrapper },
+        { markerTag, createSVGMarkerElementWrapper },
+        { maskTag, createSVGMaskElementWrapper },
+        { metadataTag, createSVGMetadataElementWrapper },
+        { missing_glyphTag, createSVGMissingGlyphElementWrapper },
+        { mpathTag, createSVGMPathElementWrapper },
+        { pathTag, createSVGPathElementWrapper },
+        { patternTag, createSVGPatternElementWrapper },
+        { polygonTag, createSVGPolygonElementWrapper },
+        { polylineTag, createSVGPolylineElementWrapper },
+        { radialGradientTag, createSVGRadialGradientElementWrapper },
+        { rectTag, createSVGRectElementWrapper },
+        { scriptTag, createSVGScriptElementWrapper },
+        { setTag, createSVGSetElementWrapper },
+        { stopTag, createSVGStopElementWrapper },
+        { styleTag, createSVGStyleElementWrapper },
+        { svgTag, createSVGSVGElementWrapper },
+        { switchTag, createSVGSwitchElementWrapper },
+        { symbolTag, createSVGSymbolElementWrapper },
+        { textTag, createSVGTextElementWrapper },
+        { textPathTag, createSVGTextPathElementWrapper },
+        { titleTag, createSVGTitleElementWrapper },
+        { trefTag, createSVGTRefElementWrapper },
+        { tspanTag, createSVGTSpanElementWrapper },
+        { useTag, createSVGUseElementWrapper },
+        { viewTag, createSVGViewElementWrapper },
+        { vkernTag, createSVGVKernElementWrapper },
     };
 
     for (unsigned i = 0; i < WTF_ARRAY_LENGTH(table); ++i)
         map.add(table[i].name.localName().impl(), table[i].function);
 }
 
-JSDOMWrapper* createJSSVGWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<SVGElement> element)
+JSDOMObject* createJSSVGWrapper(JSDOMGlobalObject* globalObject, Ref<SVGElement>&& element)
 {
     static NeverDestroyed<HashMap<AtomicStringImpl*, CreateSVGElementWrapperFunction>> functions;
     if (functions.get().isEmpty())
         populateSVGWrapperMap(functions);
     if (auto function = functions.get().get(element->localName().impl()))
-        return function(globalObject, element);
-    return CREATE_DOM_WRAPPER(globalObject, SVGElement, element.get());
+        return function(globalObject, WTFMove(element));
+    return createWrapper<SVGElement>(globalObject, WTFMove(element));
 }
 
 }

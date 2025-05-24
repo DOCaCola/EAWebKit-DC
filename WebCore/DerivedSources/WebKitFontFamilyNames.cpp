@@ -44,56 +44,22 @@ namespace WebKitFontFamilyNames {
 
 using namespace WTF;
 
-static const LChar cursiveFamilyString8[] = "-webkit-cursive";
-static const LChar fantasyFamilyString8[] = "-webkit-fantasy";
-static const LChar monospaceFamilyString8[] = "-webkit-monospace";
-static const LChar pictographFamilyString8[] = "-webkit-pictograph";
-static const LChar sansSerifFamilyString8[] = "-webkit-sans-serif";
-static const LChar serifFamilyString8[] = "-webkit-serif";
-static const LChar standardFamilyString8[] = "-webkit-standard";
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4307)
+#endif
 
-static StringImpl::StaticASCIILiteral cursiveFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    cursiveFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7063387 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fantasyFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    fantasyFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16384875 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral monospaceFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    17,
-    monospaceFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14315487 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pictographFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    pictographFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7921289 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sansSerifFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    sansSerifFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1961926 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral serifFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    serifFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7070799 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral standardFamilyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    standardFamilyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6994621 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
+static StringImpl::StaticStringImpl cursiveFamilyData("-webkit-cursive");
+static StringImpl::StaticStringImpl fantasyFamilyData("-webkit-fantasy");
+static StringImpl::StaticStringImpl monospaceFamilyData("-webkit-monospace");
+static StringImpl::StaticStringImpl pictographFamilyData("-webkit-pictograph");
+static StringImpl::StaticStringImpl sansSerifFamilyData("-webkit-sans-serif");
+static StringImpl::StaticStringImpl serifFamilyData("-webkit-serif");
+static StringImpl::StaticStringImpl standardFamilyData("-webkit-standard");
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 DEFINE_GLOBAL(AtomicString, cursiveFamily)
 DEFINE_GLOBAL(AtomicString, fantasyFamily)

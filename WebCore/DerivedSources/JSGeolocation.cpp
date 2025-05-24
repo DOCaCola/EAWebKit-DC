@@ -24,9 +24,11 @@
 
 #include "JSGeolocation.h"
 
-#include "ExceptionCode.h"
-#include "Geolocation.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
+#include "JSPositionCallback.h"
+#include "JSPositionErrorCallback.h"
+#include "JSPositionOptions.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -42,7 +44,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionClearWatch(JSC::
 
 class JSGeolocationPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSGeolocationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSGeolocationPrototype* ptr = new (NotNull, JSC::allocateCell<JSGeolocationPrototype>(vm.heap)) JSGeolocationPrototype(vm, globalObject, structure);
@@ -69,9 +71,9 @@ private:
 
 static const HashTableValue JSGeolocationPrototypeTableValues[] =
 {
-    { "getCurrentPosition", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionGetCurrentPosition), (intptr_t) (1) },
-    { "watchPosition", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionWatchPosition), (intptr_t) (1) },
-    { "clearWatch", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionClearWatch), (intptr_t) (1) },
+    { "getCurrentPosition", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionGetCurrentPosition), (intptr_t) (1) } },
+    { "watchPosition", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionWatchPosition), (intptr_t) (1) } },
+    { "clearWatch", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsGeolocationPrototypeFunctionClearWatch), (intptr_t) (1) } },
 };
 
 const ClassInfo JSGeolocationPrototype::s_info = { "GeolocationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGeolocationPrototype) };
@@ -84,10 +86,16 @@ void JSGeolocationPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSGeolocation::s_info = { "Geolocation", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGeolocation) };
 
-JSGeolocation::JSGeolocation(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Geolocation>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSGeolocation::JSGeolocation(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Geolocation>&& impl)
+    : JSDOMWrapper<Geolocation>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSGeolocation::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSGeolocation::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -95,7 +103,7 @@ JSObject* JSGeolocation::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSGeolocationPrototype::create(vm, globalObject, JSGeolocationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSGeolocation::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSGeolocation::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSGeolocation>(vm, globalObject);
 }
@@ -106,52 +114,82 @@ void JSGeolocation::destroy(JSC::JSCell* cell)
     thisObject->JSGeolocation::~JSGeolocation();
 }
 
-JSGeolocation::~JSGeolocation()
+template<> inline JSGeolocation* BindingCaller<JSGeolocation>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSGeolocation*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionGetCurrentPosition(ExecState* exec)
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionGetCurrentPositionCaller(JSC::ExecState*, JSGeolocation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionGetCurrentPosition(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSGeolocation* castedThis = jsDynamicCast<JSGeolocation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Geolocation", "getCurrentPosition");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSGeolocation::info());
-    return JSValue::encode(castedThis->getCurrentPosition(exec));
+    return BindingCaller<JSGeolocation>::callOperation<jsGeolocationPrototypeFunctionGetCurrentPositionCaller>(state, "getCurrentPosition");
 }
 
-EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionWatchPosition(ExecState* exec)
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionGetCurrentPositionCaller(JSC::ExecState* state, JSGeolocation* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSGeolocation* castedThis = jsDynamicCast<JSGeolocation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Geolocation", "watchPosition");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSGeolocation::info());
-    return JSValue::encode(castedThis->watchPosition(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto successCallback = convert<IDLCallbackFunction<JSPositionCallback>>(*state, state->uncheckedArgument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "successCallback", "Geolocation", "getCurrentPosition"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSPositionErrorCallback>>>(*state, state->argument(1), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 1, "errorCallback", "Geolocation", "getCurrentPosition"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = convert<IDLDictionary<PositionOptions>>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.getCurrentPosition(successCallback.releaseNonNull(), WTFMove(errorCallback), WTFMove(options));
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionClearWatch(ExecState* exec)
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionWatchPositionCaller(JSC::ExecState*, JSGeolocation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionWatchPosition(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSGeolocation* castedThis = jsDynamicCast<JSGeolocation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Geolocation", "clearWatch");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSGeolocation::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int watchID = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.clearWatch(watchID);
+    return BindingCaller<JSGeolocation>::callOperation<jsGeolocationPrototypeFunctionWatchPositionCaller>(state, "watchPosition");
+}
+
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionWatchPositionCaller(JSC::ExecState* state, JSGeolocation* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto successCallback = convert<IDLCallbackFunction<JSPositionCallback>>(*state, state->uncheckedArgument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "successCallback", "Geolocation", "watchPosition"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto errorCallback = convert<IDLNullable<IDLCallbackFunction<JSPositionErrorCallback>>>(*state, state->argument(1), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 1, "errorCallback", "Geolocation", "watchPosition"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = convert<IDLDictionary<PositionOptions>>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLLong>(impl.watchPosition(successCallback.releaseNonNull(), WTFMove(errorCallback), WTFMove(options))));
+}
+
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionClearWatchCaller(JSC::ExecState*, JSGeolocation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsGeolocationPrototypeFunctionClearWatch(ExecState* state)
+{
+    return BindingCaller<JSGeolocation>::callOperation<jsGeolocationPrototypeFunctionClearWatchCaller>(state, "clearWatch");
+}
+
+static inline JSC::EncodedJSValue jsGeolocationPrototypeFunctionClearWatchCaller(JSC::ExecState* state, JSGeolocation* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto watchId = convert<IDLLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.clearWatch(WTFMove(watchId));
     return JSValue::encode(jsUndefined());
 }
 
 bool JSGeolocationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsGeolocation = jsCast<JSGeolocation*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsGeolocation->impl().frame());
+    Frame* root = WTF::getPtr(jsGeolocation->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -159,9 +197,9 @@ bool JSGeolocationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSGeolocationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsGeolocation = jsCast<JSGeolocation*>(handle.slot()->asCell());
+    auto* jsGeolocation = static_cast<JSGeolocation*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsGeolocation->impl(), jsGeolocation);
+    uncacheWrapper(world, &jsGeolocation->wrapped(), jsGeolocation);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -172,15 +210,12 @@ extern "C" { extern void (*const __identifier("??_7Geolocation@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11GeolocationE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Geolocation* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Geolocation>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSGeolocation>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Geolocation@WebCore@@6B@"));
 #else
@@ -188,7 +223,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Geolocation*
 #if COMPILER(CLANG)
     // If this fails Geolocation does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Geolocation), Geolocation_is_not_polymorphic);
+    static_assert(__is_polymorphic(Geolocation), "Geolocation is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -197,13 +232,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Geolocation*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSGeolocation>(globalObject, impl);
+    return createWrapper<Geolocation>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Geolocation& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Geolocation* JSGeolocation::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSGeolocation*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSGeolocation*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTextPathElement_h
-#define JSSVGTextPathElement_h
+#pragma once
 
 #include "JSSVGTextContentElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGTextPathElement : public JSSVGTextContentElement {
 public:
-    typedef JSSVGTextContentElement Base;
+    using Base = JSSVGTextContentElement;
+    using DOMWrapped = SVGTextPathElement;
     static JSSVGTextPathElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTextPathElement>&& impl)
     {
-        JSSVGTextPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextPathElement>(globalObject->vm().heap)) JSSVGTextPathElement(structure, globalObject, WTF::move(impl));
+        JSSVGTextPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextPathElement>(globalObject->vm().heap)) JSSVGTextPathElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTextPathElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGTextPathElement& wrapped() const
     {
-        return static_cast<SVGTextPathElement&>(Base::impl());
+        return static_cast<SVGTextPathElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTextPathElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTextPathElement>&&);
+    JSSVGTextPathElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTextPathElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGTextPathElement> {
+    using WrapperClass = JSSVGTextPathElement;
+    using ToWrappedReturnType = SVGTextPathElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -46,3423 +46,523 @@ using namespace WebCore;
 
 WEBCORE_EXPORT DEFINE_GLOBAL(AtomicString, xhtmlNamespaceURI)
 
-static const LChar aString8[] = "a";
-static const LChar abbrString8[] = "abbr";
-static const LChar acceptString8[] = "accept";
-static const LChar accept_charsetString8[] = "accept-charset";
-static const LChar accesskeyString8[] = "accesskey";
-static const LChar acronymString8[] = "acronym";
-static const LChar actionString8[] = "action";
-static const LChar addressString8[] = "address";
-static const LChar alignString8[] = "align";
-static const LChar alinkString8[] = "alink";
-static const LChar allowfullscreenString8[] = "allowfullscreen";
-static const LChar altString8[] = "alt";
-static const LChar appletString8[] = "applet";
-static const LChar archiveString8[] = "archive";
-static const LChar areaString8[] = "area";
-static const LChar aria_activedescendantString8[] = "aria-activedescendant";
-static const LChar aria_atomicString8[] = "aria-atomic";
-static const LChar aria_busyString8[] = "aria-busy";
-static const LChar aria_checkedString8[] = "aria-checked";
-static const LChar aria_controlsString8[] = "aria-controls";
-static const LChar aria_describedbyString8[] = "aria-describedby";
-static const LChar aria_disabledString8[] = "aria-disabled";
-static const LChar aria_dropeffectString8[] = "aria-dropeffect";
-static const LChar aria_expandedString8[] = "aria-expanded";
-static const LChar aria_flowtoString8[] = "aria-flowto";
-static const LChar aria_grabbedString8[] = "aria-grabbed";
-static const LChar aria_haspopupString8[] = "aria-haspopup";
-static const LChar aria_helpString8[] = "aria-help";
-static const LChar aria_hiddenString8[] = "aria-hidden";
-static const LChar aria_invalidString8[] = "aria-invalid";
-static const LChar aria_labelString8[] = "aria-label";
-static const LChar aria_labeledbyString8[] = "aria-labeledby";
-static const LChar aria_labelledbyString8[] = "aria-labelledby";
-static const LChar aria_levelString8[] = "aria-level";
-static const LChar aria_liveString8[] = "aria-live";
-static const LChar aria_multilineString8[] = "aria-multiline";
-static const LChar aria_multiselectableString8[] = "aria-multiselectable";
-static const LChar aria_orientationString8[] = "aria-orientation";
-static const LChar aria_ownsString8[] = "aria-owns";
-static const LChar aria_posinsetString8[] = "aria-posinset";
-static const LChar aria_pressedString8[] = "aria-pressed";
-static const LChar aria_readonlyString8[] = "aria-readonly";
-static const LChar aria_relevantString8[] = "aria-relevant";
-static const LChar aria_requiredString8[] = "aria-required";
-static const LChar aria_roledescriptionString8[] = "aria-roledescription";
-static const LChar aria_selectedString8[] = "aria-selected";
-static const LChar aria_setsizeString8[] = "aria-setsize";
-static const LChar aria_sortString8[] = "aria-sort";
-static const LChar aria_valuemaxString8[] = "aria-valuemax";
-static const LChar aria_valueminString8[] = "aria-valuemin";
-static const LChar aria_valuenowString8[] = "aria-valuenow";
-static const LChar aria_valuetextString8[] = "aria-valuetext";
-static const LChar articleString8[] = "article";
-static const LChar asideString8[] = "aside";
-static const LChar asyncString8[] = "async";
-static const LChar attachmentString8[] = "attachment";
-static const LChar audioString8[] = "audio";
-static const LChar autocapitalizeString8[] = "autocapitalize";
-static const LChar autocompleteString8[] = "autocomplete";
-static const LChar autocorrectString8[] = "autocorrect";
-static const LChar autofocusString8[] = "autofocus";
-static const LChar autoplayString8[] = "autoplay";
-static const LChar autosaveString8[] = "autosave";
-static const LChar axisString8[] = "axis";
-static const LChar bString8[] = "b";
-static const LChar backgroundString8[] = "background";
-static const LChar baseString8[] = "base";
-static const LChar basefontString8[] = "basefont";
-static const LChar bdiString8[] = "bdi";
-static const LChar bdoString8[] = "bdo";
-static const LChar behaviorString8[] = "behavior";
-static const LChar bgcolorString8[] = "bgcolor";
-static const LChar bgpropertiesString8[] = "bgproperties";
-static const LChar bgsoundString8[] = "bgsound";
-static const LChar bigString8[] = "big";
-static const LChar blockquoteString8[] = "blockquote";
-static const LChar bodyString8[] = "body";
-static const LChar borderString8[] = "border";
-static const LChar bordercolorString8[] = "bordercolor";
-static const LChar brString8[] = "br";
-static const LChar buttonString8[] = "button";
-static const LChar canvasString8[] = "canvas";
-static const LChar captionString8[] = "caption";
-static const LChar captureString8[] = "capture";
-static const LChar cellborderString8[] = "cellborder";
-static const LChar cellpaddingString8[] = "cellpadding";
-static const LChar cellspacingString8[] = "cellspacing";
-static const LChar centerString8[] = "center";
-static const LChar challengeString8[] = "challenge";
-static const LChar charString8[] = "char";
-static const LChar charoffString8[] = "charoff";
-static const LChar charsetString8[] = "charset";
-static const LChar checkedString8[] = "checked";
-static const LChar citeString8[] = "cite";
-static const LChar classString8[] = "class";
-static const LChar classidString8[] = "classid";
-static const LChar clearString8[] = "clear";
-static const LChar codeString8[] = "code";
-static const LChar codebaseString8[] = "codebase";
-static const LChar codetypeString8[] = "codetype";
-static const LChar colString8[] = "col";
-static const LChar colgroupString8[] = "colgroup";
-static const LChar colorString8[] = "color";
-static const LChar colsString8[] = "cols";
-static const LChar colspanString8[] = "colspan";
-static const LChar commandString8[] = "command";
-static const LChar compactString8[] = "compact";
-static const LChar compositeString8[] = "composite";
-static const LChar contentString8[] = "content";
-static const LChar contenteditableString8[] = "contenteditable";
-static const LChar controlsString8[] = "controls";
-static const LChar coordsString8[] = "coords";
-static const LChar crossoriginString8[] = "crossorigin";
-static const LChar dataString8[] = "data";
-static const LChar datalistString8[] = "datalist";
-static const LChar datetimeString8[] = "datetime";
-static const LChar ddString8[] = "dd";
-static const LChar declareString8[] = "declare";
-static const LChar defaultString8[] = "default";
-static const LChar deferString8[] = "defer";
-static const LChar delString8[] = "del";
-static const LChar detailsString8[] = "details";
-static const LChar dfnString8[] = "dfn";
-static const LChar dirString8[] = "dir";
-static const LChar directionString8[] = "direction";
-static const LChar dirnameString8[] = "dirname";
-static const LChar disabledString8[] = "disabled";
-static const LChar dispositionString8[] = "disposition";
-static const LChar divString8[] = "div";
-static const LChar dlString8[] = "dl";
-static const LChar downloadString8[] = "download";
-static const LChar draggableString8[] = "draggable";
-static const LChar dtString8[] = "dt";
-static const LChar emString8[] = "em";
-static const LChar embedString8[] = "embed";
-static const LChar enctypeString8[] = "enctype";
-static const LChar endString8[] = "end";
-static const LChar eventString8[] = "event";
-static const LChar expandedString8[] = "expanded";
-static const LChar faceString8[] = "face";
-static const LChar fieldsetString8[] = "fieldset";
-static const LChar figcaptionString8[] = "figcaption";
-static const LChar figureString8[] = "figure";
-static const LChar focusedString8[] = "focused";
-static const LChar fontString8[] = "font";
-static const LChar footerString8[] = "footer";
-static const LChar forString8[] = "for";
-static const LChar formString8[] = "form";
-static const LChar formactionString8[] = "formaction";
-static const LChar formenctypeString8[] = "formenctype";
-static const LChar formmethodString8[] = "formmethod";
-static const LChar formnovalidateString8[] = "formnovalidate";
-static const LChar formtargetString8[] = "formtarget";
-static const LChar frameString8[] = "frame";
-static const LChar frameborderString8[] = "frameborder";
-static const LChar framesetString8[] = "frameset";
-static const LChar h1String8[] = "h1";
-static const LChar h2String8[] = "h2";
-static const LChar h3String8[] = "h3";
-static const LChar h4String8[] = "h4";
-static const LChar h5String8[] = "h5";
-static const LChar h6String8[] = "h6";
-static const LChar headString8[] = "head";
-static const LChar headerString8[] = "header";
-static const LChar headersString8[] = "headers";
-static const LChar heightString8[] = "height";
-static const LChar hgroupString8[] = "hgroup";
-static const LChar hiddenString8[] = "hidden";
-static const LChar highString8[] = "high";
-static const LChar hrString8[] = "hr";
-static const LChar hrefString8[] = "href";
-static const LChar hreflangString8[] = "hreflang";
-static const LChar hspaceString8[] = "hspace";
-static const LChar htmlString8[] = "html";
-static const LChar http_equivString8[] = "http-equiv";
-static const LChar iString8[] = "i";
-static const LChar idString8[] = "id";
-static const LChar iframeString8[] = "iframe";
-static const LChar imageString8[] = "image";
-static const LChar imgString8[] = "img";
-static const LChar incrementalString8[] = "incremental";
-static const LChar indeterminateString8[] = "indeterminate";
-static const LChar inputString8[] = "input";
-static const LChar insString8[] = "ins";
-static const LChar isString8[] = "is";
-static const LChar isindexString8[] = "isindex";
-static const LChar ismapString8[] = "ismap";
-static const LChar itemidString8[] = "itemid";
-static const LChar itempropString8[] = "itemprop";
-static const LChar itemrefString8[] = "itemref";
-static const LChar itemscopeString8[] = "itemscope";
-static const LChar itemtypeString8[] = "itemtype";
-static const LChar kbdString8[] = "kbd";
-static const LChar keygenString8[] = "keygen";
-static const LChar keytypeString8[] = "keytype";
-static const LChar kindString8[] = "kind";
-static const LChar labelString8[] = "label";
-static const LChar langString8[] = "lang";
-static const LChar languageString8[] = "language";
-static const LChar layerString8[] = "layer";
-static const LChar leftmarginString8[] = "leftmargin";
-static const LChar legendString8[] = "legend";
-static const LChar liString8[] = "li";
-static const LChar linkString8[] = "link";
-static const LChar listString8[] = "list";
-static const LChar listingString8[] = "listing";
-static const LChar longdescString8[] = "longdesc";
-static const LChar loopString8[] = "loop";
-static const LChar loopendString8[] = "loopend";
-static const LChar loopstartString8[] = "loopstart";
-static const LChar lowString8[] = "low";
-static const LChar lowsrcString8[] = "lowsrc";
-static const LChar mainString8[] = "main";
-static const LChar manifestString8[] = "manifest";
-static const LChar mapString8[] = "map";
-static const LChar marginheightString8[] = "marginheight";
-static const LChar marginwidthString8[] = "marginwidth";
-static const LChar markString8[] = "mark";
-static const LChar marqueeString8[] = "marquee";
-static const LChar maxString8[] = "max";
-static const LChar maxlengthString8[] = "maxlength";
-static const LChar mayscriptString8[] = "mayscript";
-static const LChar mediaString8[] = "media";
-static const LChar mediagroupString8[] = "mediagroup";
-static const LChar menuString8[] = "menu";
-static const LChar metaString8[] = "meta";
-static const LChar meterString8[] = "meter";
-static const LChar methodString8[] = "method";
-static const LChar minString8[] = "min";
-static const LChar multipleString8[] = "multiple";
-static const LChar mutedString8[] = "muted";
-static const LChar nameString8[] = "name";
-static const LChar navString8[] = "nav";
-static const LChar nobrString8[] = "nobr";
-static const LChar noembedString8[] = "noembed";
-static const LChar noframesString8[] = "noframes";
-static const LChar nohrefString8[] = "nohref";
-static const LChar nolayerString8[] = "nolayer";
-static const LChar nonceString8[] = "nonce";
-static const LChar noresizeString8[] = "noresize";
-static const LChar noscriptString8[] = "noscript";
-static const LChar noshadeString8[] = "noshade";
-static const LChar novalidateString8[] = "novalidate";
-static const LChar nowrapString8[] = "nowrap";
-static const LChar objectString8[] = "object";
-static const LChar olString8[] = "ol";
-static const LChar onabortString8[] = "onabort";
-static const LChar onanimationendString8[] = "onanimationend";
-static const LChar onanimationiterationString8[] = "onanimationiteration";
-static const LChar onanimationstartString8[] = "onanimationstart";
-static const LChar onautocompleteString8[] = "onautocomplete";
-static const LChar onautocompleteerrorString8[] = "onautocompleteerror";
-static const LChar onbeforecopyString8[] = "onbeforecopy";
-static const LChar onbeforecutString8[] = "onbeforecut";
-static const LChar onbeforeloadString8[] = "onbeforeload";
-static const LChar onbeforepasteString8[] = "onbeforepaste";
-static const LChar onbeforeunloadString8[] = "onbeforeunload";
-static const LChar onblurString8[] = "onblur";
-static const LChar oncanplayString8[] = "oncanplay";
-static const LChar oncanplaythroughString8[] = "oncanplaythrough";
-static const LChar onchangeString8[] = "onchange";
-static const LChar onclickString8[] = "onclick";
-static const LChar oncontextmenuString8[] = "oncontextmenu";
-static const LChar oncopyString8[] = "oncopy";
-static const LChar oncutString8[] = "oncut";
-static const LChar ondblclickString8[] = "ondblclick";
-static const LChar ondragString8[] = "ondrag";
-static const LChar ondragendString8[] = "ondragend";
-static const LChar ondragenterString8[] = "ondragenter";
-static const LChar ondragleaveString8[] = "ondragleave";
-static const LChar ondragoverString8[] = "ondragover";
-static const LChar ondragstartString8[] = "ondragstart";
-static const LChar ondropString8[] = "ondrop";
-static const LChar ondurationchangeString8[] = "ondurationchange";
-static const LChar onemptiedString8[] = "onemptied";
-static const LChar onendedString8[] = "onended";
-static const LChar onerrorString8[] = "onerror";
-static const LChar onfocusString8[] = "onfocus";
-static const LChar onfocusinString8[] = "onfocusin";
-static const LChar onfocusoutString8[] = "onfocusout";
-static const LChar ongesturechangeString8[] = "ongesturechange";
-static const LChar ongestureendString8[] = "ongestureend";
-static const LChar ongesturestartString8[] = "ongesturestart";
-static const LChar onhashchangeString8[] = "onhashchange";
-static const LChar oninputString8[] = "oninput";
-static const LChar oninvalidString8[] = "oninvalid";
-static const LChar onkeydownString8[] = "onkeydown";
-static const LChar onkeypressString8[] = "onkeypress";
-static const LChar onkeyupString8[] = "onkeyup";
-static const LChar onloadString8[] = "onload";
-static const LChar onloadeddataString8[] = "onloadeddata";
-static const LChar onloadedmetadataString8[] = "onloadedmetadata";
-static const LChar onloadstartString8[] = "onloadstart";
-static const LChar onmessageString8[] = "onmessage";
-static const LChar onmousedownString8[] = "onmousedown";
-static const LChar onmouseenterString8[] = "onmouseenter";
-static const LChar onmouseleaveString8[] = "onmouseleave";
-static const LChar onmousemoveString8[] = "onmousemove";
-static const LChar onmouseoutString8[] = "onmouseout";
-static const LChar onmouseoverString8[] = "onmouseover";
-static const LChar onmouseupString8[] = "onmouseup";
-static const LChar onmousewheelString8[] = "onmousewheel";
-static const LChar onofflineString8[] = "onoffline";
-static const LChar ononlineString8[] = "ononline";
-static const LChar onorientationchangeString8[] = "onorientationchange";
-static const LChar onpagehideString8[] = "onpagehide";
-static const LChar onpageshowString8[] = "onpageshow";
-static const LChar onpasteString8[] = "onpaste";
-static const LChar onpauseString8[] = "onpause";
-static const LChar onplayString8[] = "onplay";
-static const LChar onplayingString8[] = "onplaying";
-static const LChar onpopstateString8[] = "onpopstate";
-static const LChar onprogressString8[] = "onprogress";
-static const LChar onratechangeString8[] = "onratechange";
-static const LChar onresetString8[] = "onreset";
-static const LChar onresizeString8[] = "onresize";
-static const LChar onscrollString8[] = "onscroll";
-static const LChar onsearchString8[] = "onsearch";
-static const LChar onseekedString8[] = "onseeked";
-static const LChar onseekingString8[] = "onseeking";
-static const LChar onselectString8[] = "onselect";
-static const LChar onselectionchangeString8[] = "onselectionchange";
-static const LChar onselectstartString8[] = "onselectstart";
-static const LChar onstalledString8[] = "onstalled";
-static const LChar onstorageString8[] = "onstorage";
-static const LChar onsubmitString8[] = "onsubmit";
-static const LChar onsuspendString8[] = "onsuspend";
-static const LChar ontimeupdateString8[] = "ontimeupdate";
-static const LChar ontouchcancelString8[] = "ontouchcancel";
-static const LChar ontouchendString8[] = "ontouchend";
-static const LChar ontouchmoveString8[] = "ontouchmove";
-static const LChar ontouchstartString8[] = "ontouchstart";
-static const LChar ontransitionendString8[] = "ontransitionend";
-static const LChar onunloadString8[] = "onunload";
-static const LChar onvolumechangeString8[] = "onvolumechange";
-static const LChar onwaitingString8[] = "onwaiting";
-static const LChar onwebkitanimationendString8[] = "onwebkitanimationend";
-static const LChar onwebkitanimationiterationString8[] = "onwebkitanimationiteration";
-static const LChar onwebkitanimationstartString8[] = "onwebkitanimationstart";
-static const LChar onwebkitbeginfullscreenString8[] = "onwebkitbeginfullscreen";
-static const LChar onwebkitcurrentplaybacktargetiswirelesschangedString8[] = "onwebkitcurrentplaybacktargetiswirelesschanged";
-static const LChar onwebkitendfullscreenString8[] = "onwebkitendfullscreen";
-static const LChar onwebkitfullscreenchangeString8[] = "onwebkitfullscreenchange";
-static const LChar onwebkitfullscreenerrorString8[] = "onwebkitfullscreenerror";
-static const LChar onwebkitkeyaddedString8[] = "onwebkitkeyadded";
-static const LChar onwebkitkeyerrorString8[] = "onwebkitkeyerror";
-static const LChar onwebkitkeymessageString8[] = "onwebkitkeymessage";
-static const LChar onwebkitmouseforcechangedString8[] = "onwebkitmouseforcechanged";
-static const LChar onwebkitmouseforcedownString8[] = "onwebkitmouseforcedown";
-static const LChar onwebkitmouseforceupString8[] = "onwebkitmouseforceup";
-static const LChar onwebkitmouseforcewillbeginString8[] = "onwebkitmouseforcewillbegin";
-static const LChar onwebkitneedkeyString8[] = "onwebkitneedkey";
-static const LChar onwebkitplaybacktargetavailabilitychangedString8[] = "onwebkitplaybacktargetavailabilitychanged";
-static const LChar onwebkitpresentationmodechangedString8[] = "onwebkitpresentationmodechanged";
-static const LChar onwebkitsourcecloseString8[] = "onwebkitsourceclose";
-static const LChar onwebkitsourceendedString8[] = "onwebkitsourceended";
-static const LChar onwebkitsourceopenString8[] = "onwebkitsourceopen";
-static const LChar onwebkitspeechchangeString8[] = "onwebkitspeechchange";
-static const LChar onwebkittransitionendString8[] = "onwebkittransitionend";
-static const LChar onwebkitwillrevealbottomString8[] = "onwebkitwillrevealbottom";
-static const LChar onwebkitwillrevealleftString8[] = "onwebkitwillrevealleft";
-static const LChar onwebkitwillrevealrightString8[] = "onwebkitwillrevealright";
-static const LChar onwebkitwillrevealtopString8[] = "onwebkitwillrevealtop";
-static const LChar onwheelString8[] = "onwheel";
-static const LChar openString8[] = "open";
-static const LChar optgroupString8[] = "optgroup";
-static const LChar optimumString8[] = "optimum";
-static const LChar optionString8[] = "option";
-static const LChar outputString8[] = "output";
-static const LChar pString8[] = "p";
-static const LChar paramString8[] = "param";
-static const LChar patternString8[] = "pattern";
-static const LChar pingString8[] = "ping";
-static const LChar placeholderString8[] = "placeholder";
-static const LChar plaintextString8[] = "plaintext";
-static const LChar playcountString8[] = "playcount";
-static const LChar pluginspageString8[] = "pluginspage";
-static const LChar pluginurlString8[] = "pluginurl";
-static const LChar posterString8[] = "poster";
-static const LChar preString8[] = "pre";
-static const LChar precisionString8[] = "precision";
-static const LChar preloadString8[] = "preload";
-static const LChar primaryString8[] = "primary";
-static const LChar profileString8[] = "profile";
-static const LChar progressString8[] = "progress";
-static const LChar promptString8[] = "prompt";
-static const LChar pseudoString8[] = "pseudo";
-static const LChar qString8[] = "q";
-static const LChar rbString8[] = "rb";
-static const LChar readonlyString8[] = "readonly";
-static const LChar relString8[] = "rel";
-static const LChar requiredString8[] = "required";
-static const LChar resultsString8[] = "results";
-static const LChar revString8[] = "rev";
-static const LChar reversedString8[] = "reversed";
-static const LChar roleString8[] = "role";
-static const LChar rowsString8[] = "rows";
-static const LChar rowspanString8[] = "rowspan";
-static const LChar rpString8[] = "rp";
-static const LChar rtString8[] = "rt";
-static const LChar rtcString8[] = "rtc";
-static const LChar rubyString8[] = "ruby";
-static const LChar rulesString8[] = "rules";
-static const LChar sString8[] = "s";
-static const LChar sampString8[] = "samp";
-static const LChar sandboxString8[] = "sandbox";
-static const LChar schemeString8[] = "scheme";
-static const LChar scopeString8[] = "scope";
-static const LChar scopedString8[] = "scoped";
-static const LChar scriptString8[] = "script";
-static const LChar scrollamountString8[] = "scrollamount";
-static const LChar scrolldelayString8[] = "scrolldelay";
-static const LChar scrollingString8[] = "scrolling";
-static const LChar sectionString8[] = "section";
-static const LChar selectString8[] = "select";
-static const LChar selectedString8[] = "selected";
-static const LChar shapeString8[] = "shape";
-static const LChar sizeString8[] = "size";
-static const LChar sizesString8[] = "sizes";
-static const LChar smallString8[] = "small";
-static const LChar sortableString8[] = "sortable";
-static const LChar sortdirectionString8[] = "sortdirection";
-static const LChar sourceString8[] = "source";
-static const LChar spanString8[] = "span";
-static const LChar spellcheckString8[] = "spellcheck";
-static const LChar srcString8[] = "src";
-static const LChar srcdocString8[] = "srcdoc";
-static const LChar srclangString8[] = "srclang";
-static const LChar srcsetString8[] = "srcset";
-static const LChar standbyString8[] = "standby";
-static const LChar startString8[] = "start";
-static const LChar stepString8[] = "step";
-static const LChar strikeString8[] = "strike";
-static const LChar strongString8[] = "strong";
-static const LChar styleString8[] = "style";
-static const LChar subString8[] = "sub";
-static const LChar subtitleString8[] = "subtitle";
-static const LChar summaryString8[] = "summary";
-static const LChar supString8[] = "sup";
-static const LChar tabindexString8[] = "tabindex";
-static const LChar tableString8[] = "table";
-static const LChar tableborderString8[] = "tableborder";
-static const LChar targetString8[] = "target";
-static const LChar tbodyString8[] = "tbody";
-static const LChar tdString8[] = "td";
-static const LChar templateString8[] = "template";
-static const LChar textString8[] = "text";
-static const LChar textareaString8[] = "textarea";
-static const LChar tfootString8[] = "tfoot";
-static const LChar thString8[] = "th";
-static const LChar theadString8[] = "thead";
-static const LChar timeString8[] = "time";
-static const LChar titleString8[] = "title";
-static const LChar topString8[] = "top";
-static const LChar topmarginString8[] = "topmargin";
-static const LChar trString8[] = "tr";
-static const LChar trackString8[] = "track";
-static const LChar translateString8[] = "translate";
-static const LChar truespeedString8[] = "truespeed";
-static const LChar ttString8[] = "tt";
-static const LChar typeString8[] = "type";
-static const LChar uString8[] = "u";
-static const LChar uiactionsString8[] = "uiactions";
-static const LChar ulString8[] = "ul";
-static const LChar usemapString8[] = "usemap";
-static const LChar valignString8[] = "valign";
-static const LChar valueString8[] = "value";
-static const LChar valuetypeString8[] = "valuetype";
-static const LChar varString8[] = "var";
-static const LChar versionString8[] = "version";
-static const LChar videoString8[] = "video";
-static const LChar vlinkString8[] = "vlink";
-static const LChar vspaceString8[] = "vspace";
-static const LChar wbrString8[] = "wbr";
-static const LChar webkitShadowContentString8[] = "webkitShadowContent";
-static const LChar webkit_playsinlineString8[] = "webkit-playsinline";
-static const LChar webkitairplayString8[] = "x-webkit-airplay";
-static const LChar webkitallowfullscreenString8[] = "webkitallowfullscreen";
-static const LChar webkitattachmentpathString8[] = "webkitattachmentpath";
-static const LChar webkitdropzoneString8[] = "webkitdropzone";
-static const LChar webkitgrammarString8[] = "x-webkit-grammar";
-static const LChar webkitimagemenuString8[] = "x-webkit-imagemenu";
-static const LChar webkitspeechString8[] = "x-webkit-speech";
-static const LChar webkitwirelessvideoplaybackdisabledString8[] = "x-webkit-wirelessvideoplaybackdisabled";
-static const LChar widthString8[] = "width";
-static const LChar wrapString8[] = "wrap";
-static const LChar x_itunes_inherit_uri_query_componentString8[] = "x-itunes-inherit-uri-query-component";
-static const LChar xmpString8[] = "xmp";
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4307)
+#endif
 
-static StringImpl::StaticASCIILiteral aData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    aString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9778235 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral abbrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    abbrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (650525 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral acceptData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    acceptString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4839857 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral accept_charsetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    accept_charsetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5192676 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral accesskeyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    accesskeyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15931860 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral acronymData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    acronymString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5486176 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral actionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    actionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14878034 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral addressData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    addressString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10008206 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral alignData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    alignString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10094397 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral alinkData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    alinkString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2408650 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral allowfullscreenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    allowfullscreenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16375700 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral altData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    altString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15335609 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral appletData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    appletString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7823075 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral archiveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    archiveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13839011 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral areaData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    areaString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7355486 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_activedescendantData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    21,
-    aria_activedescendantString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13338511 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_atomicData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    aria_atomicString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12819054 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_busyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    aria_busyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (75863 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_checkedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    aria_checkedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1517039 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_controlsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_controlsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5490937 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_describedbyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    aria_describedbyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5549123 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_disabledData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_disabledString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1389455 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_dropeffectData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    aria_dropeffectString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6009141 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_expandedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_expandedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6946219 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_flowtoData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    aria_flowtoString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12186959 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_grabbedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    aria_grabbedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5310651 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_haspopupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_haspopupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7196359 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_helpData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    aria_helpString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12225580 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_hiddenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    aria_hiddenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7981896 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_invalidData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    aria_invalidString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3505375 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_labelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    aria_labelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (561329 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_labeledbyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    aria_labeledbyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5436988 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_labelledbyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    aria_labelledbyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5412329 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_levelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    aria_levelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8886396 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_liveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    aria_liveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2064917 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_multilineData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    aria_multilineString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13431022 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_multiselectableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    aria_multiselectableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14347206 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_orientationData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    aria_orientationString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11685540 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_ownsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    aria_ownsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15671106 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_posinsetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_posinsetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14818088 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_pressedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    aria_pressedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8024627 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_readonlyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_readonlyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1588657 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_relevantData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_relevantString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16457375 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_requiredData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_requiredString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10656135 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_roledescriptionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    aria_roledescriptionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14879786 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_selectedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_selectedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16608989 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_setsizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    aria_setsizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13328899 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_sortData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    aria_sortString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15568337 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_valuemaxData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_valuemaxString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15306660 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_valueminData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_valueminString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2814091 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_valuenowData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    aria_valuenowString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10189949 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral aria_valuetextData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    aria_valuetextString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14438832 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral articleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    articleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2968800 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral asideData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    asideString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10128566 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral asyncData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    asyncString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2556481 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral attachmentData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    attachmentString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8331643 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral audioData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    audioString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2129307 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autocapitalizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    autocapitalizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15613526 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autocompleteData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    autocompleteString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14667434 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autocorrectData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    autocorrectString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9366253 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autofocusData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    autofocusString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16282013 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autoplayData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    autoplayString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12002525 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral autosaveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    autosaveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3888087 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral axisData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    axisString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14347904 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    bString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7170995 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral backgroundData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    backgroundString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8107606 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral baseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    baseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4376626 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral basefontData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    basefontString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5439393 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bdiData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    bdiString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14809812 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bdoData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    bdoString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9906743 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral behaviorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    behaviorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11804611 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bgcolorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    bgcolorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11074228 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bgpropertiesData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    bgpropertiesString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15013629 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bgsoundData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    bgsoundString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9424179 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bigData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    bigString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2330122 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral blockquoteData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    blockquoteString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6047050 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bodyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    bodyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4862692 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral borderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    borderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4389816 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral bordercolorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    bordercolorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12757423 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral brData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    brString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5574895 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral buttonData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    buttonString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (679691 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral canvasData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    canvasString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10973550 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral captionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    captionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2437650 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral captureData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    captureString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9991654 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral cellborderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    cellborderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8324519 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral cellpaddingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    cellpaddingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3763331 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral cellspacingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    cellspacingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7849745 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral centerData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    centerString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (909285 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral challengeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    challengeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12755365 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral charData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    charString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12296599 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral charoffData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    charoffString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5577617 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral charsetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    charsetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14273970 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral checkedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    checkedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10213523 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral citeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    citeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3704129 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral classData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    classString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1023741 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral classidData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    classidString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1789995 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral clearData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    clearString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12832795 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral codeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    codeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11588001 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral codebaseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    codebaseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3375722 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral codetypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    codetypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7482920 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    colString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12850806 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colgroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    colgroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3733719 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    colorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2734929 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    colsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4921975 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral colspanData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    colspanString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9715319 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral commandData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    commandString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2099501 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral compactData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    compactString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (369367 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral compositeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    compositeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9206665 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral contentData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    contentString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6894765 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral contenteditableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    contenteditableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1577657 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral controlsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    controlsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3696819 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral coordsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    coordsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14288829 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral crossoriginData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    crossoriginString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15142862 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dataData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    dataString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5273875 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral datalistData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    datalistString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7058973 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral datetimeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    datetimeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12167257 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ddData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    ddString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16480447 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral declareData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    declareString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13440114 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral defaultData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    defaultString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6674383 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral deferData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    deferString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13832204 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral delData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    delString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2501459 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral detailsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    detailsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4653180 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dfnData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    dfnString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5168569 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dirData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    dirString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5122803 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral directionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    directionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16092904 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dirnameData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    dirnameString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9899348 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral disabledData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    disabledString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12237545 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dispositionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    dispositionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8748813 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral divData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    divString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9762591 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dlData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    dlString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5117854 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral downloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    downloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1050544 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral draggableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    draggableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9281278 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral dtData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    dtString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8177126 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral emData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    emString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2724661 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral embedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    embedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (855371 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral enctypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    enctypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11388071 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral endData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    endString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1590106 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral eventData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    eventString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4205160 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral expandedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    expandedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13934961 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral faceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    faceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12427611 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fieldsetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    fieldsetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (37097 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral figcaptionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    figcaptionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13388641 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral figureData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    figureString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13776479 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral focusedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    focusedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6735095 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral fontData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    fontString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4588695 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral footerData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    footerString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13359933 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral forData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    forString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4145292 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    formString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10060301 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formactionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    formactionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12667227 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formenctypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    formenctypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6334991 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formmethodData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    formmethodString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7653832 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formnovalidateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    formnovalidateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5722173 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral formtargetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    formtargetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15594141 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral frameData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    frameString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3408403 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral frameborderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    frameborderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6035536 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral framesetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    framesetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11229107 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h1Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h1String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3953979 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h2Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h2String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9378819 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h3Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h3String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1803164 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h4Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h4String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15343268 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h5Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h5String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8065295 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral h6Data = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    h6String8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9566891 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral headData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    headString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11457121 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral headerData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    headerString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5896178 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral headersData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    headersString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2627673 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral heightData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    heightString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6697833 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hgroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    hgroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8927907 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hiddenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    hiddenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12930326 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral highData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    highString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11748844 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    hrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7182703 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hrefData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    hrefString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5797448 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hreflangData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    hreflangString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12582042 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral hspaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    hspaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4182216 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral htmlData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    htmlString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7123128 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral http_equivData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    http_equivString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12415310 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral iData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    iString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16149244 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral idData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    idString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6145549 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral iframeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    iframeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16643553 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral imageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    imageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10287573 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral imgData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    imgString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11398162 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral incrementalData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    incrementalString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9277578 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral indeterminateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    indeterminateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10969764 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral inputData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    inputString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10365436 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral insData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    insString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (939786 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral isData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    isString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15617733 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral isindexData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    isindexString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8380254 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ismapData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    ismapString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6887213 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral itemidData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    itemidString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12624379 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral itempropData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    itempropString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6187843 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral itemrefData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    itemrefString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2718931 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral itemscopeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    itemscopeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (247653 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral itemtypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    itemtypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16502055 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral kbdData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    kbdString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8554610 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral keygenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    keygenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5603105 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral keytypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    keytypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13164152 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral kindData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    kindString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7022868 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral labelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    labelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15092473 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral langData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    langString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3702417 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral languageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    languageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4109061 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral layerData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    layerString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16475212 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral leftmarginData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    leftmarginString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10359506 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral legendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    legendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16417202 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral liData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    liString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11097939 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral linkData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    linkString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7010491 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral listData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    listString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15078159 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral listingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    listingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15674586 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral longdescData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    longdescString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2363416 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral loopData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    loopString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12741482 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral loopendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    loopendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (987820 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral loopstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    loopstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15595454 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral lowData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    lowString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9523344 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral lowsrcData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    lowsrcString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8943146 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mainData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    mainString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13501767 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral manifestData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    manifestString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3853375 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mapData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    mapString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16519384 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral marginheightData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    marginheightString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14117911 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral marginwidthData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    marginwidthString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5458369 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral markData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    markString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16508213 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral marqueeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    marqueeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1416619 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral maxData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    maxString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3449166 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral maxlengthData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    maxlengthString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5985164 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mayscriptData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    mayscriptString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9718095 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mediaData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    mediaString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13905581 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mediagroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    mediagroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13605962 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral menuData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    menuString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13428288 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral metaData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    metaString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14067019 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral meterData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    meterString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5815470 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral methodData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    methodString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14679268 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral minData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    minString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2196278 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral multipleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    multipleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6185486 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral mutedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    mutedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11680767 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nameData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    nameString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8774809 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral navData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    navString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15269619 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nobrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    nobrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (419763 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noembedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    noembedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11476379 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noframesData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    noframesString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13751064 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nohrefData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    nohrefString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2672291 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nolayerData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    nolayerString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10430133 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nonceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    nonceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12597381 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noresizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    noresizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11098542 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noscriptData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    noscriptString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10168152 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral noshadeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    noshadeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12172860 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral novalidateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    novalidateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5146510 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral nowrapData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    nowrapString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15804466 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral objectData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    objectString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6907086 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral olData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    olString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6672076 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onabortData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onabortString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9017557 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onanimationendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    onanimationendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15950082 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onanimationiterationData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    onanimationiterationString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6837014 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onanimationstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    onanimationstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3893294 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onautocompleteData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    onautocompleteString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6917578 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onautocompleteerrorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    19,
-    onautocompleteerrorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8480614 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onbeforecopyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onbeforecopyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10445229 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onbeforecutData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    onbeforecutString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7604779 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onbeforeloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onbeforeloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7335060 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onbeforepasteData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    onbeforepasteString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10932396 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onbeforeunloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    onbeforeunloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10408067 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onblurData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    onblurString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10264279 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oncanplayData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    oncanplayString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11894364 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oncanplaythroughData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    oncanplaythroughString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9632525 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1588214 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onclickData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onclickString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (668060 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oncontextmenuData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    oncontextmenuString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10957436 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oncopyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    oncopyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3498124 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oncutData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    oncutString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (530518 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondblclickData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    ondblclickString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9484479 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    ondragString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7755023 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    ondragendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12737756 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragenterData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    ondragenterString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7625423 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragleaveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    ondragleaveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2163828 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragoverData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    ondragoverString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7621126 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondragstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    ondragstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7563418 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondropData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    ondropString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5167850 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ondurationchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    ondurationchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3875418 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onemptiedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onemptiedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7216733 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onendedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onendedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4168741 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onerrorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onerrorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2658286 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onfocusData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onfocusString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11484753 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onfocusinData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onfocusinString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2970475 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onfocusoutData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onfocusoutString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4459422 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ongesturechangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    ongesturechangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7555791 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ongestureendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    ongestureendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8989227 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ongesturestartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    ongesturestartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3806451 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onhashchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onhashchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (897163 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oninputData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    oninputString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7945347 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral oninvalidData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    oninvalidString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15155464 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onkeydownData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onkeydownString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (917683 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onkeypressData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onkeypressString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10628960 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onkeyupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onkeyupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7098679 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    onloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1245164 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onloadeddataData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onloadeddataString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6667087 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onloadedmetadataData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    onloadedmetadataString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11435152 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onloadstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    onloadstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11661007 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmessageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onmessageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15511252 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmousedownData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    onmousedownString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10902312 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmouseenterData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onmouseenterString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12011136 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmouseleaveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onmouseleaveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9750696 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmousemoveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    onmousemoveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13128910 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmouseoutData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onmouseoutString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3672358 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmouseoverData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    onmouseoverString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5456314 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmouseupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onmouseupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8932826 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onmousewheelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onmousewheelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8230218 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onofflineData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onofflineString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8780424 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ononlineData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    ononlineString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6361718 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onorientationchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    19,
-    onorientationchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4305565 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onpagehideData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onpagehideString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11684100 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onpageshowData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onpageshowString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2047001 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onpasteData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onpasteString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8282984 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onpauseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onpauseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9216789 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onplayData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    onplayString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4469333 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onplayingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onplayingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6622660 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onpopstateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onpopstateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5473424 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onprogressData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    onprogressString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11307581 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onratechangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    onratechangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8724969 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onresetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onresetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (871509 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onresizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onresizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6999701 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onscrollData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onscrollString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11456051 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onsearchData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onsearchString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13779639 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onseekedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onseekedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15270585 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onseekingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onseekingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1397795 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onselectData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onselectString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10837779 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onselectionchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    17,
-    onselectionchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2738107 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onselectstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    onselectstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4928924 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onstalledData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onstalledString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (366130 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onstorageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onstorageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3472742 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onsubmitData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onsubmitString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10895898 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onsuspendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onsuspendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3306534 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontimeupdateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    ontimeupdateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15260240 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontouchcancelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    ontouchcancelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11977340 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontouchendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    ontouchendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14649050 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontouchmoveData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    ontouchmoveString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3062696 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontouchstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    ontouchstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15650339 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ontransitionendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    ontransitionendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14486006 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onunloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    onunloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (265474 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onvolumechangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    onvolumechangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1227173 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwaitingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    onwaitingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14930497 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitanimationendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    onwebkitanimationendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4247475 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitanimationiterationData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    26,
-    onwebkitanimationiterationString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2350168 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitanimationstartData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    22,
-    onwebkitanimationstartString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1438902 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitbeginfullscreenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    23,
-    onwebkitbeginfullscreenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (174128 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitcurrentplaybacktargetiswirelesschangedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    46,
-    onwebkitcurrentplaybacktargetiswirelesschangedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10713877 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitendfullscreenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    21,
-    onwebkitendfullscreenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14862164 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitfullscreenchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    24,
-    onwebkitfullscreenchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4583393 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitfullscreenerrorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    23,
-    onwebkitfullscreenerrorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16488541 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitkeyaddedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    onwebkitkeyaddedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5334111 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitkeyerrorData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    onwebkitkeyerrorString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11199297 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitkeymessageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    onwebkitkeymessageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13202216 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitmouseforcechangedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    25,
-    onwebkitmouseforcechangedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7336884 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitmouseforcedownData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    22,
-    onwebkitmouseforcedownString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15344714 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitmouseforceupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    onwebkitmouseforceupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10502839 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitmouseforcewillbeginData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    27,
-    onwebkitmouseforcewillbeginString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6235288 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitneedkeyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    onwebkitneedkeyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (859938 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitplaybacktargetavailabilitychangedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    41,
-    onwebkitplaybacktargetavailabilitychangedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11789228 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitpresentationmodechangedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    31,
-    onwebkitpresentationmodechangedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12526186 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitsourcecloseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    19,
-    onwebkitsourcecloseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10042583 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitsourceendedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    19,
-    onwebkitsourceendedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12655944 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitsourceopenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    onwebkitsourceopenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11118609 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitspeechchangeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    onwebkitspeechchangeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13223170 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkittransitionendData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    21,
-    onwebkittransitionendString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3568476 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitwillrevealbottomData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    24,
-    onwebkitwillrevealbottomString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13958886 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitwillrevealleftData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    22,
-    onwebkitwillrevealleftString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8876896 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitwillrevealrightData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    23,
-    onwebkitwillrevealrightString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6458016 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwebkitwillrevealtopData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    21,
-    onwebkitwillrevealtopString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2021325 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral onwheelData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    onwheelString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3280514 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral openData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    openString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13703631 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral optgroupData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    optgroupString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10180907 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral optimumData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    optimumString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3350287 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral optionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    optionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2998548 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral outputData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    outputString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15319621 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    pString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (587733 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral paramData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    paramString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15210019 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral patternData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    patternString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16283150 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    pingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9193756 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral placeholderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    placeholderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6132349 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral plaintextData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    plaintextString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2551274 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral playcountData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    playcountString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16731673 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pluginspageData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    pluginspageString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13244573 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pluginurlData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    pluginurlString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13481259 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral posterData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    posterString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2570443 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral preData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    preString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16061734 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral precisionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    precisionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2942017 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral preloadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    preloadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11887554 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral primaryData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    primaryString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (421132 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral profileData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    profileString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10479533 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral progressData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    progressString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11461517 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral promptData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    promptString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3532635 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral pseudoData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    pseudoString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6923620 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral qData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    qString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12607837 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rbData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    rbString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4749743 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral readonlyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    readonlyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4471832 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral relData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    relString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8963158 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral requiredData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    requiredString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4894573 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral resultsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    resultsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (972036 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral revData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    revString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12217053 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral reversedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    reversedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15723650 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral roleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    roleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16084934 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rowsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    rowsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11770835 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rowspanData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    rowspanString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13630419 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rpData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    rpString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4502666 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rtData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    rtString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8494892 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rtcData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    rtcString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4350543 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rubyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    rubyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12793227 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral rulesData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    rulesString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8604373 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    sString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11249530 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sampData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    sampString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3617274 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sandboxData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    sandboxString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3448190 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral schemeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    schemeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3952063 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scopeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    scopeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5624816 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scopedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    scopedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8814668 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scriptData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    scriptString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7137273 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scrollamountData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    12,
-    scrollamountString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8309213 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scrolldelayData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    scrolldelayString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15755012 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral scrollingData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    scrollingString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4321742 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sectionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    sectionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8056235 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral selectData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    selectString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (210571 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral selectedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    selectedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15762609 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral shapeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    shapeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15210140 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sizeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    sizeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12715024 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sizesData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    sizesString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6795010 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral smallData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    smallString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14362904 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sortableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    sortableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6619850 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sortdirectionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    13,
-    sortdirectionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7163200 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral sourceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    sourceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (341674 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral spanData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    spanString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11168892 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral spellcheckData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    10,
-    spellcheckString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4108424 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral srcData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    srcString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11517827 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral srcdocData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    srcdocString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15297056 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral srclangData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    srclangString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13402710 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral srcsetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    srcsetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6236095 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral standbyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    standbyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8394231 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral startData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    startString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1021290 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral stepData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    stepString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5337026 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral strikeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    strikeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15072495 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral strongData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    strongString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13282129 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral styleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    styleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10993676 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral subData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    subString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (15782866 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral subtitleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    subtitleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7201705 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral summaryData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    summaryString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1148260 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral supData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    supString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8741418 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tabindexData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    tabindexString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10415591 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tableData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    tableString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8181317 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tableborderData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    11,
-    tableborderString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4105225 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral targetData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    targetString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1752822 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tbodyData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    tbodyString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14028375 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tdData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    tdString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10309076 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral templateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    templateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12693000 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral textData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    textString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2784654 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral textareaData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    8,
-    textareaString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10510497 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral tfootData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    tfootString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13009441 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral thData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    thString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3915297 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral theadData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    theadString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13349519 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral timeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    timeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3114886 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral titleData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    titleString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (2337488 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral topData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    topString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (14467303 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral topmarginData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    topmarginString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10843382 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral trData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    trString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16624306 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral trackData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    trackString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10988706 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral translateData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    translateString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9982484 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral truespeedData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    truespeedString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (11732619 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ttData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    ttString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9170852 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral typeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    typeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1916283 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral uData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    1,
-    uString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (13317144 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral uiactionsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    uiactionsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (6617010 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral ulData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    2,
-    ulString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12324505 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral usemapData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    usemapString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16643238 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral valignData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    valignString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8345445 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral valueData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    valueString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10871467 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral valuetypeData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    9,
-    valuetypeString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4808367 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral varData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    varString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9573901 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral versionData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    7,
-    versionString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8128447 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral videoData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    videoString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (16765639 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral vlinkData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    vlinkString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12743618 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral vspaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    6,
-    vspaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9862276 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral wbrData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    wbrString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8290101 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitShadowContentData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    19,
-    webkitShadowContentString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (10370147 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkit_playsinlineData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    webkit_playsinlineString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3816786 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitairplayData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    webkitairplayString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9236166 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitallowfullscreenData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    21,
-    webkitallowfullscreenString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (1373167 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitattachmentpathData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    20,
-    webkitattachmentpathString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3991055 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitdropzoneData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    14,
-    webkitdropzoneString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (5315147 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitgrammarData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    16,
-    webkitgrammarString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3776340 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitimagemenuData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    18,
-    webkitimagemenuString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (9722112 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitspeechData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    15,
-    webkitspeechString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7275232 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral webkitwirelessvideoplaybackdisabledData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    38,
-    webkitwirelessvideoplaybackdisabledString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (625505 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral widthData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    widthString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (12902275 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral wrapData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    wrapString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (7601899 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral x_itunes_inherit_uri_query_componentData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    36,
-    x_itunes_inherit_uri_query_componentString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4236377 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral xmpData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    3,
-    xmpString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (8764488 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
+static StringImpl::StaticStringImpl aData("a");
+static StringImpl::StaticStringImpl abbrData("abbr");
+static StringImpl::StaticStringImpl acceptData("accept");
+static StringImpl::StaticStringImpl accept_charsetData("accept-charset");
+static StringImpl::StaticStringImpl accesskeyData("accesskey");
+static StringImpl::StaticStringImpl acronymData("acronym");
+static StringImpl::StaticStringImpl actionData("action");
+static StringImpl::StaticStringImpl addressData("address");
+static StringImpl::StaticStringImpl alignData("align");
+static StringImpl::StaticStringImpl alinkData("alink");
+static StringImpl::StaticStringImpl allowfullscreenData("allowfullscreen");
+static StringImpl::StaticStringImpl altData("alt");
+static StringImpl::StaticStringImpl appletData("applet");
+static StringImpl::StaticStringImpl archiveData("archive");
+static StringImpl::StaticStringImpl areaData("area");
+static StringImpl::StaticStringImpl aria_activedescendantData("aria-activedescendant");
+static StringImpl::StaticStringImpl aria_atomicData("aria-atomic");
+static StringImpl::StaticStringImpl aria_busyData("aria-busy");
+static StringImpl::StaticStringImpl aria_checkedData("aria-checked");
+static StringImpl::StaticStringImpl aria_colcountData("aria-colcount");
+static StringImpl::StaticStringImpl aria_colindexData("aria-colindex");
+static StringImpl::StaticStringImpl aria_colspanData("aria-colspan");
+static StringImpl::StaticStringImpl aria_controlsData("aria-controls");
+static StringImpl::StaticStringImpl aria_currentData("aria-current");
+static StringImpl::StaticStringImpl aria_describedbyData("aria-describedby");
+static StringImpl::StaticStringImpl aria_disabledData("aria-disabled");
+static StringImpl::StaticStringImpl aria_dropeffectData("aria-dropeffect");
+static StringImpl::StaticStringImpl aria_expandedData("aria-expanded");
+static StringImpl::StaticStringImpl aria_flowtoData("aria-flowto");
+static StringImpl::StaticStringImpl aria_grabbedData("aria-grabbed");
+static StringImpl::StaticStringImpl aria_haspopupData("aria-haspopup");
+static StringImpl::StaticStringImpl aria_helpData("aria-help");
+static StringImpl::StaticStringImpl aria_hiddenData("aria-hidden");
+static StringImpl::StaticStringImpl aria_invalidData("aria-invalid");
+static StringImpl::StaticStringImpl aria_labelData("aria-label");
+static StringImpl::StaticStringImpl aria_labeledbyData("aria-labeledby");
+static StringImpl::StaticStringImpl aria_labelledbyData("aria-labelledby");
+static StringImpl::StaticStringImpl aria_levelData("aria-level");
+static StringImpl::StaticStringImpl aria_liveData("aria-live");
+static StringImpl::StaticStringImpl aria_modalData("aria-modal");
+static StringImpl::StaticStringImpl aria_multilineData("aria-multiline");
+static StringImpl::StaticStringImpl aria_multiselectableData("aria-multiselectable");
+static StringImpl::StaticStringImpl aria_orientationData("aria-orientation");
+static StringImpl::StaticStringImpl aria_ownsData("aria-owns");
+static StringImpl::StaticStringImpl aria_placeholderData("aria-placeholder");
+static StringImpl::StaticStringImpl aria_posinsetData("aria-posinset");
+static StringImpl::StaticStringImpl aria_pressedData("aria-pressed");
+static StringImpl::StaticStringImpl aria_readonlyData("aria-readonly");
+static StringImpl::StaticStringImpl aria_relevantData("aria-relevant");
+static StringImpl::StaticStringImpl aria_requiredData("aria-required");
+static StringImpl::StaticStringImpl aria_roledescriptionData("aria-roledescription");
+static StringImpl::StaticStringImpl aria_rowcountData("aria-rowcount");
+static StringImpl::StaticStringImpl aria_rowindexData("aria-rowindex");
+static StringImpl::StaticStringImpl aria_rowspanData("aria-rowspan");
+static StringImpl::StaticStringImpl aria_selectedData("aria-selected");
+static StringImpl::StaticStringImpl aria_setsizeData("aria-setsize");
+static StringImpl::StaticStringImpl aria_sortData("aria-sort");
+static StringImpl::StaticStringImpl aria_valuemaxData("aria-valuemax");
+static StringImpl::StaticStringImpl aria_valueminData("aria-valuemin");
+static StringImpl::StaticStringImpl aria_valuenowData("aria-valuenow");
+static StringImpl::StaticStringImpl aria_valuetextData("aria-valuetext");
+static StringImpl::StaticStringImpl articleData("article");
+static StringImpl::StaticStringImpl asData("as");
+static StringImpl::StaticStringImpl asideData("aside");
+static StringImpl::StaticStringImpl asyncData("async");
+static StringImpl::StaticStringImpl attachmentData("attachment");
+static StringImpl::StaticStringImpl audioData("audio");
+static StringImpl::StaticStringImpl autocapitalizeData("autocapitalize");
+static StringImpl::StaticStringImpl autocompleteData("autocomplete");
+static StringImpl::StaticStringImpl autocorrectData("autocorrect");
+static StringImpl::StaticStringImpl autofocusData("autofocus");
+static StringImpl::StaticStringImpl autoplayData("autoplay");
+static StringImpl::StaticStringImpl autosaveData("autosave");
+static StringImpl::StaticStringImpl axisData("axis");
+static StringImpl::StaticStringImpl bData("b");
+static StringImpl::StaticStringImpl backgroundData("background");
+static StringImpl::StaticStringImpl baseData("base");
+static StringImpl::StaticStringImpl basefontData("basefont");
+static StringImpl::StaticStringImpl bdiData("bdi");
+static StringImpl::StaticStringImpl bdoData("bdo");
+static StringImpl::StaticStringImpl behaviorData("behavior");
+static StringImpl::StaticStringImpl bgcolorData("bgcolor");
+static StringImpl::StaticStringImpl bgpropertiesData("bgproperties");
+static StringImpl::StaticStringImpl bgsoundData("bgsound");
+static StringImpl::StaticStringImpl bigData("big");
+static StringImpl::StaticStringImpl blockquoteData("blockquote");
+static StringImpl::StaticStringImpl bodyData("body");
+static StringImpl::StaticStringImpl borderData("border");
+static StringImpl::StaticStringImpl bordercolorData("bordercolor");
+static StringImpl::StaticStringImpl brData("br");
+static StringImpl::StaticStringImpl buttonData("button");
+static StringImpl::StaticStringImpl canvasData("canvas");
+static StringImpl::StaticStringImpl captionData("caption");
+static StringImpl::StaticStringImpl captureData("capture");
+static StringImpl::StaticStringImpl cellborderData("cellborder");
+static StringImpl::StaticStringImpl cellpaddingData("cellpadding");
+static StringImpl::StaticStringImpl cellspacingData("cellspacing");
+static StringImpl::StaticStringImpl centerData("center");
+static StringImpl::StaticStringImpl challengeData("challenge");
+static StringImpl::StaticStringImpl charData("char");
+static StringImpl::StaticStringImpl charoffData("charoff");
+static StringImpl::StaticStringImpl charsetData("charset");
+static StringImpl::StaticStringImpl checkedData("checked");
+static StringImpl::StaticStringImpl citeData("cite");
+static StringImpl::StaticStringImpl classData("class");
+static StringImpl::StaticStringImpl classidData("classid");
+static StringImpl::StaticStringImpl clearData("clear");
+static StringImpl::StaticStringImpl codeData("code");
+static StringImpl::StaticStringImpl codebaseData("codebase");
+static StringImpl::StaticStringImpl codetypeData("codetype");
+static StringImpl::StaticStringImpl colData("col");
+static StringImpl::StaticStringImpl colgroupData("colgroup");
+static StringImpl::StaticStringImpl colorData("color");
+static StringImpl::StaticStringImpl colsData("cols");
+static StringImpl::StaticStringImpl colspanData("colspan");
+static StringImpl::StaticStringImpl commandData("command");
+static StringImpl::StaticStringImpl compactData("compact");
+static StringImpl::StaticStringImpl compositeData("composite");
+static StringImpl::StaticStringImpl contentData("content");
+static StringImpl::StaticStringImpl contenteditableData("contenteditable");
+static StringImpl::StaticStringImpl controlsData("controls");
+static StringImpl::StaticStringImpl coordsData("coords");
+static StringImpl::StaticStringImpl crossoriginData("crossorigin");
+static StringImpl::StaticStringImpl dataData("data");
+static StringImpl::StaticStringImpl datalistData("datalist");
+static StringImpl::StaticStringImpl datetimeData("datetime");
+static StringImpl::StaticStringImpl ddData("dd");
+static StringImpl::StaticStringImpl declareData("declare");
+static StringImpl::StaticStringImpl defaultData("default");
+static StringImpl::StaticStringImpl deferData("defer");
+static StringImpl::StaticStringImpl delData("del");
+static StringImpl::StaticStringImpl detailsData("details");
+static StringImpl::StaticStringImpl dfnData("dfn");
+static StringImpl::StaticStringImpl dirData("dir");
+static StringImpl::StaticStringImpl directionData("direction");
+static StringImpl::StaticStringImpl dirnameData("dirname");
+static StringImpl::StaticStringImpl disabledData("disabled");
+static StringImpl::StaticStringImpl dispositionData("disposition");
+static StringImpl::StaticStringImpl divData("div");
+static StringImpl::StaticStringImpl dlData("dl");
+static StringImpl::StaticStringImpl downloadData("download");
+static StringImpl::StaticStringImpl draggableData("draggable");
+static StringImpl::StaticStringImpl dtData("dt");
+static StringImpl::StaticStringImpl emData("em");
+static StringImpl::StaticStringImpl embedData("embed");
+static StringImpl::StaticStringImpl enctypeData("enctype");
+static StringImpl::StaticStringImpl endData("end");
+static StringImpl::StaticStringImpl eventData("event");
+static StringImpl::StaticStringImpl expandedData("expanded");
+static StringImpl::StaticStringImpl faceData("face");
+static StringImpl::StaticStringImpl fieldsetData("fieldset");
+static StringImpl::StaticStringImpl figcaptionData("figcaption");
+static StringImpl::StaticStringImpl figureData("figure");
+static StringImpl::StaticStringImpl focusedData("focused");
+static StringImpl::StaticStringImpl fontData("font");
+static StringImpl::StaticStringImpl footerData("footer");
+static StringImpl::StaticStringImpl forData("for");
+static StringImpl::StaticStringImpl formData("form");
+static StringImpl::StaticStringImpl formactionData("formaction");
+static StringImpl::StaticStringImpl formenctypeData("formenctype");
+static StringImpl::StaticStringImpl formmethodData("formmethod");
+static StringImpl::StaticStringImpl formnovalidateData("formnovalidate");
+static StringImpl::StaticStringImpl formtargetData("formtarget");
+static StringImpl::StaticStringImpl frameData("frame");
+static StringImpl::StaticStringImpl frameborderData("frameborder");
+static StringImpl::StaticStringImpl framesetData("frameset");
+static StringImpl::StaticStringImpl h1Data("h1");
+static StringImpl::StaticStringImpl h2Data("h2");
+static StringImpl::StaticStringImpl h3Data("h3");
+static StringImpl::StaticStringImpl h4Data("h4");
+static StringImpl::StaticStringImpl h5Data("h5");
+static StringImpl::StaticStringImpl h6Data("h6");
+static StringImpl::StaticStringImpl headData("head");
+static StringImpl::StaticStringImpl headerData("header");
+static StringImpl::StaticStringImpl headersData("headers");
+static StringImpl::StaticStringImpl heightData("height");
+static StringImpl::StaticStringImpl hgroupData("hgroup");
+static StringImpl::StaticStringImpl hiddenData("hidden");
+static StringImpl::StaticStringImpl highData("high");
+static StringImpl::StaticStringImpl hrData("hr");
+static StringImpl::StaticStringImpl hrefData("href");
+static StringImpl::StaticStringImpl hreflangData("hreflang");
+static StringImpl::StaticStringImpl hspaceData("hspace");
+static StringImpl::StaticStringImpl htmlData("html");
+static StringImpl::StaticStringImpl http_equivData("http-equiv");
+static StringImpl::StaticStringImpl iData("i");
+static StringImpl::StaticStringImpl idData("id");
+static StringImpl::StaticStringImpl iframeData("iframe");
+static StringImpl::StaticStringImpl imageData("image");
+static StringImpl::StaticStringImpl imgData("img");
+static StringImpl::StaticStringImpl incrementalData("incremental");
+static StringImpl::StaticStringImpl indeterminateData("indeterminate");
+static StringImpl::StaticStringImpl inputData("input");
+static StringImpl::StaticStringImpl insData("ins");
+static StringImpl::StaticStringImpl isData("is");
+static StringImpl::StaticStringImpl ismapData("ismap");
+static StringImpl::StaticStringImpl itemidData("itemid");
+static StringImpl::StaticStringImpl itempropData("itemprop");
+static StringImpl::StaticStringImpl itemrefData("itemref");
+static StringImpl::StaticStringImpl itemscopeData("itemscope");
+static StringImpl::StaticStringImpl itemtypeData("itemtype");
+static StringImpl::StaticStringImpl kbdData("kbd");
+static StringImpl::StaticStringImpl keygenData("keygen");
+static StringImpl::StaticStringImpl keytypeData("keytype");
+static StringImpl::StaticStringImpl kindData("kind");
+static StringImpl::StaticStringImpl labelData("label");
+static StringImpl::StaticStringImpl langData("lang");
+static StringImpl::StaticStringImpl languageData("language");
+static StringImpl::StaticStringImpl layerData("layer");
+static StringImpl::StaticStringImpl leftmarginData("leftmargin");
+static StringImpl::StaticStringImpl legendData("legend");
+static StringImpl::StaticStringImpl liData("li");
+static StringImpl::StaticStringImpl linkData("link");
+static StringImpl::StaticStringImpl listData("list");
+static StringImpl::StaticStringImpl listingData("listing");
+static StringImpl::StaticStringImpl longdescData("longdesc");
+static StringImpl::StaticStringImpl loopData("loop");
+static StringImpl::StaticStringImpl loopendData("loopend");
+static StringImpl::StaticStringImpl loopstartData("loopstart");
+static StringImpl::StaticStringImpl lowData("low");
+static StringImpl::StaticStringImpl lowsrcData("lowsrc");
+static StringImpl::StaticStringImpl mainData("main");
+static StringImpl::StaticStringImpl manifestData("manifest");
+static StringImpl::StaticStringImpl mapData("map");
+static StringImpl::StaticStringImpl marginheightData("marginheight");
+static StringImpl::StaticStringImpl marginwidthData("marginwidth");
+static StringImpl::StaticStringImpl markData("mark");
+static StringImpl::StaticStringImpl marqueeData("marquee");
+static StringImpl::StaticStringImpl maxData("max");
+static StringImpl::StaticStringImpl maxlengthData("maxlength");
+static StringImpl::StaticStringImpl mayscriptData("mayscript");
+static StringImpl::StaticStringImpl mediaData("media");
+static StringImpl::StaticStringImpl mediagroupData("mediagroup");
+static StringImpl::StaticStringImpl menuData("menu");
+static StringImpl::StaticStringImpl metaData("meta");
+static StringImpl::StaticStringImpl meterData("meter");
+static StringImpl::StaticStringImpl methodData("method");
+static StringImpl::StaticStringImpl minData("min");
+static StringImpl::StaticStringImpl minlengthData("minlength");
+static StringImpl::StaticStringImpl multipleData("multiple");
+static StringImpl::StaticStringImpl mutedData("muted");
+static StringImpl::StaticStringImpl nameData("name");
+static StringImpl::StaticStringImpl navData("nav");
+static StringImpl::StaticStringImpl nobrData("nobr");
+static StringImpl::StaticStringImpl noembedData("noembed");
+static StringImpl::StaticStringImpl noframesData("noframes");
+static StringImpl::StaticStringImpl nohrefData("nohref");
+static StringImpl::StaticStringImpl nolayerData("nolayer");
+static StringImpl::StaticStringImpl nomoduleData("nomodule");
+static StringImpl::StaticStringImpl nonceData("nonce");
+static StringImpl::StaticStringImpl noresizeData("noresize");
+static StringImpl::StaticStringImpl noscriptData("noscript");
+static StringImpl::StaticStringImpl noshadeData("noshade");
+static StringImpl::StaticStringImpl novalidateData("novalidate");
+static StringImpl::StaticStringImpl nowrapData("nowrap");
+static StringImpl::StaticStringImpl objectData("object");
+static StringImpl::StaticStringImpl olData("ol");
+static StringImpl::StaticStringImpl onabortData("onabort");
+static StringImpl::StaticStringImpl onanimationendData("onanimationend");
+static StringImpl::StaticStringImpl onanimationiterationData("onanimationiteration");
+static StringImpl::StaticStringImpl onanimationstartData("onanimationstart");
+static StringImpl::StaticStringImpl onautocompleteData("onautocomplete");
+static StringImpl::StaticStringImpl onautocompleteerrorData("onautocompleteerror");
+static StringImpl::StaticStringImpl onbeforecopyData("onbeforecopy");
+static StringImpl::StaticStringImpl onbeforecutData("onbeforecut");
+static StringImpl::StaticStringImpl onbeforeinputData("onbeforeinput");
+static StringImpl::StaticStringImpl onbeforeloadData("onbeforeload");
+static StringImpl::StaticStringImpl onbeforepasteData("onbeforepaste");
+static StringImpl::StaticStringImpl onbeforeunloadData("onbeforeunload");
+static StringImpl::StaticStringImpl onblurData("onblur");
+static StringImpl::StaticStringImpl oncanplayData("oncanplay");
+static StringImpl::StaticStringImpl oncanplaythroughData("oncanplaythrough");
+static StringImpl::StaticStringImpl onchangeData("onchange");
+static StringImpl::StaticStringImpl onclickData("onclick");
+static StringImpl::StaticStringImpl oncontextmenuData("oncontextmenu");
+static StringImpl::StaticStringImpl oncopyData("oncopy");
+static StringImpl::StaticStringImpl oncutData("oncut");
+static StringImpl::StaticStringImpl ondblclickData("ondblclick");
+static StringImpl::StaticStringImpl ondragData("ondrag");
+static StringImpl::StaticStringImpl ondragendData("ondragend");
+static StringImpl::StaticStringImpl ondragenterData("ondragenter");
+static StringImpl::StaticStringImpl ondragleaveData("ondragleave");
+static StringImpl::StaticStringImpl ondragoverData("ondragover");
+static StringImpl::StaticStringImpl ondragstartData("ondragstart");
+static StringImpl::StaticStringImpl ondropData("ondrop");
+static StringImpl::StaticStringImpl ondurationchangeData("ondurationchange");
+static StringImpl::StaticStringImpl onemptiedData("onemptied");
+static StringImpl::StaticStringImpl onendedData("onended");
+static StringImpl::StaticStringImpl onerrorData("onerror");
+static StringImpl::StaticStringImpl onfocusData("onfocus");
+static StringImpl::StaticStringImpl onfocusinData("onfocusin");
+static StringImpl::StaticStringImpl onfocusoutData("onfocusout");
+static StringImpl::StaticStringImpl ongesturechangeData("ongesturechange");
+static StringImpl::StaticStringImpl ongestureendData("ongestureend");
+static StringImpl::StaticStringImpl ongesturestartData("ongesturestart");
+static StringImpl::StaticStringImpl onhashchangeData("onhashchange");
+static StringImpl::StaticStringImpl oninputData("oninput");
+static StringImpl::StaticStringImpl oninvalidData("oninvalid");
+static StringImpl::StaticStringImpl onkeydownData("onkeydown");
+static StringImpl::StaticStringImpl onkeypressData("onkeypress");
+static StringImpl::StaticStringImpl onkeyupData("onkeyup");
+static StringImpl::StaticStringImpl onlanguagechangeData("onlanguagechange");
+static StringImpl::StaticStringImpl onloadData("onload");
+static StringImpl::StaticStringImpl onloadeddataData("onloadeddata");
+static StringImpl::StaticStringImpl onloadedmetadataData("onloadedmetadata");
+static StringImpl::StaticStringImpl onloadstartData("onloadstart");
+static StringImpl::StaticStringImpl onmessageData("onmessage");
+static StringImpl::StaticStringImpl onmousedownData("onmousedown");
+static StringImpl::StaticStringImpl onmouseenterData("onmouseenter");
+static StringImpl::StaticStringImpl onmouseleaveData("onmouseleave");
+static StringImpl::StaticStringImpl onmousemoveData("onmousemove");
+static StringImpl::StaticStringImpl onmouseoutData("onmouseout");
+static StringImpl::StaticStringImpl onmouseoverData("onmouseover");
+static StringImpl::StaticStringImpl onmouseupData("onmouseup");
+static StringImpl::StaticStringImpl onmousewheelData("onmousewheel");
+static StringImpl::StaticStringImpl onofflineData("onoffline");
+static StringImpl::StaticStringImpl ononlineData("ononline");
+static StringImpl::StaticStringImpl onorientationchangeData("onorientationchange");
+static StringImpl::StaticStringImpl onpagehideData("onpagehide");
+static StringImpl::StaticStringImpl onpageshowData("onpageshow");
+static StringImpl::StaticStringImpl onpasteData("onpaste");
+static StringImpl::StaticStringImpl onpauseData("onpause");
+static StringImpl::StaticStringImpl onplayData("onplay");
+static StringImpl::StaticStringImpl onplayingData("onplaying");
+static StringImpl::StaticStringImpl onpopstateData("onpopstate");
+static StringImpl::StaticStringImpl onprogressData("onprogress");
+static StringImpl::StaticStringImpl onratechangeData("onratechange");
+static StringImpl::StaticStringImpl onresetData("onreset");
+static StringImpl::StaticStringImpl onresizeData("onresize");
+static StringImpl::StaticStringImpl onscrollData("onscroll");
+static StringImpl::StaticStringImpl onsearchData("onsearch");
+static StringImpl::StaticStringImpl onseekedData("onseeked");
+static StringImpl::StaticStringImpl onseekingData("onseeking");
+static StringImpl::StaticStringImpl onselectData("onselect");
+static StringImpl::StaticStringImpl onselectionchangeData("onselectionchange");
+static StringImpl::StaticStringImpl onselectstartData("onselectstart");
+static StringImpl::StaticStringImpl onstalledData("onstalled");
+static StringImpl::StaticStringImpl onstorageData("onstorage");
+static StringImpl::StaticStringImpl onsubmitData("onsubmit");
+static StringImpl::StaticStringImpl onsuspendData("onsuspend");
+static StringImpl::StaticStringImpl ontimeupdateData("ontimeupdate");
+static StringImpl::StaticStringImpl ontoggleData("ontoggle");
+static StringImpl::StaticStringImpl ontouchcancelData("ontouchcancel");
+static StringImpl::StaticStringImpl ontouchendData("ontouchend");
+static StringImpl::StaticStringImpl ontouchforcechangeData("ontouchforcechange");
+static StringImpl::StaticStringImpl ontouchmoveData("ontouchmove");
+static StringImpl::StaticStringImpl ontouchstartData("ontouchstart");
+static StringImpl::StaticStringImpl ontransitionendData("ontransitionend");
+static StringImpl::StaticStringImpl onunloadData("onunload");
+static StringImpl::StaticStringImpl onvolumechangeData("onvolumechange");
+static StringImpl::StaticStringImpl onwaitingData("onwaiting");
+static StringImpl::StaticStringImpl onwebkitanimationendData("onwebkitanimationend");
+static StringImpl::StaticStringImpl onwebkitanimationiterationData("onwebkitanimationiteration");
+static StringImpl::StaticStringImpl onwebkitanimationstartData("onwebkitanimationstart");
+static StringImpl::StaticStringImpl onwebkitbeginfullscreenData("onwebkitbeginfullscreen");
+static StringImpl::StaticStringImpl onwebkitcurrentplaybacktargetiswirelesschangedData("onwebkitcurrentplaybacktargetiswirelesschanged");
+static StringImpl::StaticStringImpl onwebkitendfullscreenData("onwebkitendfullscreen");
+static StringImpl::StaticStringImpl onwebkitfullscreenchangeData("onwebkitfullscreenchange");
+static StringImpl::StaticStringImpl onwebkitfullscreenerrorData("onwebkitfullscreenerror");
+static StringImpl::StaticStringImpl onwebkitkeyaddedData("onwebkitkeyadded");
+static StringImpl::StaticStringImpl onwebkitkeyerrorData("onwebkitkeyerror");
+static StringImpl::StaticStringImpl onwebkitkeymessageData("onwebkitkeymessage");
+static StringImpl::StaticStringImpl onwebkitmouseforcechangedData("onwebkitmouseforcechanged");
+static StringImpl::StaticStringImpl onwebkitmouseforcedownData("onwebkitmouseforcedown");
+static StringImpl::StaticStringImpl onwebkitmouseforceupData("onwebkitmouseforceup");
+static StringImpl::StaticStringImpl onwebkitmouseforcewillbeginData("onwebkitmouseforcewillbegin");
+static StringImpl::StaticStringImpl onwebkitneedkeyData("onwebkitneedkey");
+static StringImpl::StaticStringImpl onwebkitplaybacktargetavailabilitychangedData("onwebkitplaybacktargetavailabilitychanged");
+static StringImpl::StaticStringImpl onwebkitpresentationmodechangedData("onwebkitpresentationmodechanged");
+static StringImpl::StaticStringImpl onwebkitsourcecloseData("onwebkitsourceclose");
+static StringImpl::StaticStringImpl onwebkitsourceendedData("onwebkitsourceended");
+static StringImpl::StaticStringImpl onwebkitsourceopenData("onwebkitsourceopen");
+static StringImpl::StaticStringImpl onwebkitspeechchangeData("onwebkitspeechchange");
+static StringImpl::StaticStringImpl onwebkittransitionendData("onwebkittransitionend");
+static StringImpl::StaticStringImpl onwebkitwillrevealbottomData("onwebkitwillrevealbottom");
+static StringImpl::StaticStringImpl onwebkitwillrevealleftData("onwebkitwillrevealleft");
+static StringImpl::StaticStringImpl onwebkitwillrevealrightData("onwebkitwillrevealright");
+static StringImpl::StaticStringImpl onwebkitwillrevealtopData("onwebkitwillrevealtop");
+static StringImpl::StaticStringImpl onwheelData("onwheel");
+static StringImpl::StaticStringImpl openData("open");
+static StringImpl::StaticStringImpl optgroupData("optgroup");
+static StringImpl::StaticStringImpl optimumData("optimum");
+static StringImpl::StaticStringImpl optionData("option");
+static StringImpl::StaticStringImpl outputData("output");
+static StringImpl::StaticStringImpl pData("p");
+static StringImpl::StaticStringImpl paramData("param");
+static StringImpl::StaticStringImpl patternData("pattern");
+static StringImpl::StaticStringImpl pictureData("picture");
+static StringImpl::StaticStringImpl pingData("ping");
+static StringImpl::StaticStringImpl placeholderData("placeholder");
+static StringImpl::StaticStringImpl plaintextData("plaintext");
+static StringImpl::StaticStringImpl playcountData("playcount");
+static StringImpl::StaticStringImpl playsinlineData("playsinline");
+static StringImpl::StaticStringImpl pluginspageData("pluginspage");
+static StringImpl::StaticStringImpl pluginurlData("pluginurl");
+static StringImpl::StaticStringImpl posterData("poster");
+static StringImpl::StaticStringImpl preData("pre");
+static StringImpl::StaticStringImpl precisionData("precision");
+static StringImpl::StaticStringImpl preloadData("preload");
+static StringImpl::StaticStringImpl primaryData("primary");
+static StringImpl::StaticStringImpl profileData("profile");
+static StringImpl::StaticStringImpl progressData("progress");
+static StringImpl::StaticStringImpl promptData("prompt");
+static StringImpl::StaticStringImpl pseudoData("pseudo");
+static StringImpl::StaticStringImpl qData("q");
+static StringImpl::StaticStringImpl rbData("rb");
+static StringImpl::StaticStringImpl readonlyData("readonly");
+static StringImpl::StaticStringImpl relData("rel");
+static StringImpl::StaticStringImpl requiredData("required");
+static StringImpl::StaticStringImpl resultsData("results");
+static StringImpl::StaticStringImpl revData("rev");
+static StringImpl::StaticStringImpl reversedData("reversed");
+static StringImpl::StaticStringImpl roleData("role");
+static StringImpl::StaticStringImpl rowsData("rows");
+static StringImpl::StaticStringImpl rowspanData("rowspan");
+static StringImpl::StaticStringImpl rpData("rp");
+static StringImpl::StaticStringImpl rtData("rt");
+static StringImpl::StaticStringImpl rtcData("rtc");
+static StringImpl::StaticStringImpl rubyData("ruby");
+static StringImpl::StaticStringImpl rulesData("rules");
+static StringImpl::StaticStringImpl sData("s");
+static StringImpl::StaticStringImpl sampData("samp");
+static StringImpl::StaticStringImpl sandboxData("sandbox");
+static StringImpl::StaticStringImpl schemeData("scheme");
+static StringImpl::StaticStringImpl scopeData("scope");
+static StringImpl::StaticStringImpl scopedData("scoped");
+static StringImpl::StaticStringImpl scriptData("script");
+static StringImpl::StaticStringImpl scrollamountData("scrollamount");
+static StringImpl::StaticStringImpl scrolldelayData("scrolldelay");
+static StringImpl::StaticStringImpl scrollingData("scrolling");
+static StringImpl::StaticStringImpl sectionData("section");
+static StringImpl::StaticStringImpl selectData("select");
+static StringImpl::StaticStringImpl selectedData("selected");
+static StringImpl::StaticStringImpl shapeData("shape");
+static StringImpl::StaticStringImpl sizeData("size");
+static StringImpl::StaticStringImpl sizesData("sizes");
+static StringImpl::StaticStringImpl slotData("slot");
+static StringImpl::StaticStringImpl smallData("small");
+static StringImpl::StaticStringImpl sortableData("sortable");
+static StringImpl::StaticStringImpl sortdirectionData("sortdirection");
+static StringImpl::StaticStringImpl sourceData("source");
+static StringImpl::StaticStringImpl spanData("span");
+static StringImpl::StaticStringImpl spellcheckData("spellcheck");
+static StringImpl::StaticStringImpl srcData("src");
+static StringImpl::StaticStringImpl srcdocData("srcdoc");
+static StringImpl::StaticStringImpl srclangData("srclang");
+static StringImpl::StaticStringImpl srcsetData("srcset");
+static StringImpl::StaticStringImpl standbyData("standby");
+static StringImpl::StaticStringImpl startData("start");
+static StringImpl::StaticStringImpl stepData("step");
+static StringImpl::StaticStringImpl strikeData("strike");
+static StringImpl::StaticStringImpl strongData("strong");
+static StringImpl::StaticStringImpl styleData("style");
+static StringImpl::StaticStringImpl subData("sub");
+static StringImpl::StaticStringImpl subtitleData("subtitle");
+static StringImpl::StaticStringImpl summaryData("summary");
+static StringImpl::StaticStringImpl supData("sup");
+static StringImpl::StaticStringImpl tabindexData("tabindex");
+static StringImpl::StaticStringImpl tableData("table");
+static StringImpl::StaticStringImpl tableborderData("tableborder");
+static StringImpl::StaticStringImpl targetData("target");
+static StringImpl::StaticStringImpl tbodyData("tbody");
+static StringImpl::StaticStringImpl tdData("td");
+static StringImpl::StaticStringImpl templateData("template");
+static StringImpl::StaticStringImpl textData("text");
+static StringImpl::StaticStringImpl textareaData("textarea");
+static StringImpl::StaticStringImpl tfootData("tfoot");
+static StringImpl::StaticStringImpl thData("th");
+static StringImpl::StaticStringImpl theadData("thead");
+static StringImpl::StaticStringImpl timeData("time");
+static StringImpl::StaticStringImpl titleData("title");
+static StringImpl::StaticStringImpl topData("top");
+static StringImpl::StaticStringImpl topmarginData("topmargin");
+static StringImpl::StaticStringImpl trData("tr");
+static StringImpl::StaticStringImpl trackData("track");
+static StringImpl::StaticStringImpl translateData("translate");
+static StringImpl::StaticStringImpl truespeedData("truespeed");
+static StringImpl::StaticStringImpl ttData("tt");
+static StringImpl::StaticStringImpl typeData("type");
+static StringImpl::StaticStringImpl uData("u");
+static StringImpl::StaticStringImpl uiactionsData("uiactions");
+static StringImpl::StaticStringImpl ulData("ul");
+static StringImpl::StaticStringImpl usemapData("usemap");
+static StringImpl::StaticStringImpl valignData("valign");
+static StringImpl::StaticStringImpl valueData("value");
+static StringImpl::StaticStringImpl valuetypeData("valuetype");
+static StringImpl::StaticStringImpl varData("var");
+static StringImpl::StaticStringImpl versionData("version");
+static StringImpl::StaticStringImpl videoData("video");
+static StringImpl::StaticStringImpl vlinkData("vlink");
+static StringImpl::StaticStringImpl vspaceData("vspace");
+static StringImpl::StaticStringImpl wbrData("wbr");
+static StringImpl::StaticStringImpl webkit_playsinlineData("webkit-playsinline");
+static StringImpl::StaticStringImpl webkitairplayData("x-webkit-airplay");
+static StringImpl::StaticStringImpl webkitallowfullscreenData("webkitallowfullscreen");
+static StringImpl::StaticStringImpl webkitattachmentpathData("webkitattachmentpath");
+static StringImpl::StaticStringImpl webkitdropzoneData("webkitdropzone");
+static StringImpl::StaticStringImpl webkitgrammarData("x-webkit-grammar");
+static StringImpl::StaticStringImpl webkitimagemenuData("x-webkit-imagemenu");
+static StringImpl::StaticStringImpl webkitspeechData("x-webkit-speech");
+static StringImpl::StaticStringImpl webkitwirelessvideoplaybackdisabledData("x-webkit-wirelessvideoplaybackdisabled");
+static StringImpl::StaticStringImpl widthData("width");
+static StringImpl::StaticStringImpl wrapData("wrap");
+static StringImpl::StaticStringImpl x_apple_data_detectorsData("x-apple-data-detectors");
+static StringImpl::StaticStringImpl x_apple_data_detectors_resultData("x-apple-data-detectors-result");
+static StringImpl::StaticStringImpl x_apple_data_detectors_typeData("x-apple-data-detectors-type");
+static StringImpl::StaticStringImpl x_itunes_inherit_uri_query_componentData("x-itunes-inherit-uri-query-component");
+static StringImpl::StaticStringImpl xmpData("xmp");
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 // Tags
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, aTag)
@@ -3494,6 +594,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, codeTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, colTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, colgroupTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, commandTag)
+WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, dataTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, datalistTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, ddTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, delTag)
@@ -3530,7 +631,6 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, imageTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, imgTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, inputTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, insTag)
-WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, isindexTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, kbdTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, keygenTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, labelTag)
@@ -3559,6 +659,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, optionTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, outputTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, pTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, paramTag)
+WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, pictureTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, plaintextTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, preTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, progressTag)
@@ -3573,6 +674,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sampTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, scriptTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sectionTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, selectTag)
+WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, slotTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, smallTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sourceTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, spanTag)
@@ -3600,7 +702,6 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, ulTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, varTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, videoTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, wbrTag)
-WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, webkitShadowContentTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, xmpTag)
 
 
@@ -3636,6 +737,7 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&colTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&colgroupTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&commandTag),
+        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&dataTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&datalistTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&ddTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&delTag),
@@ -3672,7 +774,6 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&imgTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&inputTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&insTag),
-        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&isindexTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&kbdTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&keygenTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&labelTag),
@@ -3701,6 +802,7 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&outputTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&pTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&paramTag),
+        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&pictureTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&plaintextTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&preTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&progressTag),
@@ -3715,6 +817,7 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&scriptTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&sectionTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&selectTag),
+        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&slotTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&smallTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&sourceTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&spanTag),
@@ -3742,7 +845,6 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&varTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&videoTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&wbrTag),
-        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&webkitShadowContentTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&xmpTag),
     };
     return HTMLTags;
@@ -3763,7 +865,11 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_activedescendantAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_atomicAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_busyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_checkedAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colcountAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colindexAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colspanAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_controlsAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_currentAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_describedbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_disabledAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_dropeffectAttr)
@@ -3779,16 +885,21 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_labeledbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_labelledbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_levelAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_liveAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_modalAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_multilineAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_multiselectableAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_orientationAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_ownsAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_placeholderAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_posinsetAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_pressedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_readonlyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_relevantAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_requiredAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_roledescriptionAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowcountAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowindexAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowspanAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_selectedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_setsizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_sortAttr)
@@ -3796,6 +907,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_valuemaxAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_valueminAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_valuenowAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_valuetextAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, asAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, asyncAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, autocapitalizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, autocompleteAttr)
@@ -3905,10 +1017,12 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, mediaAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, mediagroupAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, methodAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, minAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, minlengthAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, multipleAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, mutedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, nameAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, nohrefAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, nomoduleAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, nonceAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, noresizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, noshadeAttr)
@@ -3923,6 +1037,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onautocompleteAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onautocompleteerrorAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforecopyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforecutAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforeinputAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforeloadAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforepasteAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeforeunloadAttr)
@@ -3958,6 +1073,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, oninvalidAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onkeydownAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onkeypressAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onkeyupAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onlanguagechangeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onloadAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onloadeddataAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onloadedmetadataAttr)
@@ -3997,8 +1113,10 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onstorageAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onsubmitAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onsuspendAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontimeupdateAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontoggleAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontouchcancelAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontouchendAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontouchforcechangeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontouchmoveAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontouchstartAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, ontransitionendAttr)
@@ -4039,6 +1157,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, patternAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, pingAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, placeholderAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, playcountAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, playsinlineAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, pluginspageAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, pluginurlAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, posterAttr)
@@ -4071,6 +1190,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, selectedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, shapeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sizesAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, slotAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sortableAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sortdirectionAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, spanAttr)
@@ -4114,6 +1234,9 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, webkitspeechAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, webkitwirelessvideoplaybackdisabledAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, widthAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, wrapAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, x_apple_data_detectorsAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, x_apple_data_detectors_resultAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, x_apple_data_detectors_typeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, x_itunes_inherit_uri_query_componentAttr)
 
 
@@ -4134,7 +1257,11 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_atomicAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_busyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_checkedAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colcountAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colindexAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colspanAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_controlsAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_currentAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_describedbyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_disabledAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_dropeffectAttr),
@@ -4150,16 +1277,21 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_labelledbyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_levelAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_liveAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_modalAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_multilineAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_multiselectableAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_orientationAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_ownsAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_placeholderAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_posinsetAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_pressedAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_readonlyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_relevantAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_requiredAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_roledescriptionAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowcountAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowindexAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowspanAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_selectedAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_setsizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_sortAttr),
@@ -4167,6 +1299,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_valueminAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_valuenowAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_valuetextAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&asAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&asyncAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&autocapitalizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&autocompleteAttr),
@@ -4276,10 +1409,12 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&mediagroupAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&methodAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&minAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&minlengthAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&multipleAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&mutedAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&nameAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&nohrefAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&nomoduleAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&nonceAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&noresizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&noshadeAttr),
@@ -4294,6 +1429,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&onautocompleteerrorAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onbeforecopyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onbeforecutAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&onbeforeinputAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onbeforeloadAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onbeforepasteAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onbeforeunloadAttr),
@@ -4329,6 +1465,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&onkeydownAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onkeypressAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onkeyupAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&onlanguagechangeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onloadAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onloadeddataAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onloadedmetadataAttr),
@@ -4368,8 +1505,10 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&onsubmitAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onsuspendAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontimeupdateAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&ontoggleAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontouchcancelAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontouchendAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&ontouchforcechangeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontouchmoveAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontouchstartAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&ontransitionendAttr),
@@ -4410,6 +1549,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&pingAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&placeholderAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&playcountAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&playsinlineAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&pluginspageAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&pluginurlAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&posterAttr),
@@ -4442,6 +1582,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&shapeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sizesAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&slotAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sortableAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sortdirectionAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&spanAttr),
@@ -4485,6 +1626,9 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&webkitwirelessvideoplaybackdisabledAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&widthAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&wrapAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&x_apple_data_detectorsAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&x_apple_data_detectors_resultAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&x_apple_data_detectors_typeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&x_itunes_inherit_uri_query_componentAttr),
     };
     return HTMLAttrs;
@@ -4525,7 +1669,11 @@ void init()
     reinterpret_cast<StringImpl*>(&aria_atomicData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_busyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_checkedData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colcountData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colindexData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colspanData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_controlsData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_currentData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_describedbyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_disabledData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_dropeffectData)->assertHashIsCorrect();
@@ -4541,16 +1689,21 @@ void init()
     reinterpret_cast<StringImpl*>(&aria_labelledbyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_levelData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_liveData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_modalData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_multilineData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_multiselectableData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_orientationData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_ownsData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_placeholderData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_posinsetData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_pressedData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_readonlyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_relevantData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_requiredData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_roledescriptionData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowcountData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowindexData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowspanData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_selectedData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_setsizeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_sortData)->assertHashIsCorrect();
@@ -4559,6 +1712,7 @@ void init()
     reinterpret_cast<StringImpl*>(&aria_valuenowData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_valuetextData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&articleData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&asData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&asideData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&asyncData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&attachmentData)->assertHashIsCorrect();
@@ -4691,7 +1845,6 @@ void init()
     reinterpret_cast<StringImpl*>(&inputData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&insData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&isData)->assertHashIsCorrect();
-    reinterpret_cast<StringImpl*>(&isindexData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ismapData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&itemidData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&itempropData)->assertHashIsCorrect();
@@ -4735,6 +1888,7 @@ void init()
     reinterpret_cast<StringImpl*>(&meterData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&methodData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&minData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&minlengthData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&multipleData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&mutedData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&nameData)->assertHashIsCorrect();
@@ -4744,6 +1898,7 @@ void init()
     reinterpret_cast<StringImpl*>(&noframesData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&nohrefData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&nolayerData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&nomoduleData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&nonceData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&noresizeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&noscriptData)->assertHashIsCorrect();
@@ -4760,6 +1915,7 @@ void init()
     reinterpret_cast<StringImpl*>(&onautocompleteerrorData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onbeforecopyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onbeforecutData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&onbeforeinputData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onbeforeloadData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onbeforepasteData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onbeforeunloadData)->assertHashIsCorrect();
@@ -4795,6 +1951,7 @@ void init()
     reinterpret_cast<StringImpl*>(&onkeydownData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onkeypressData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onkeyupData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&onlanguagechangeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onloadData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onloadeddataData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onloadedmetadataData)->assertHashIsCorrect();
@@ -4834,8 +1991,10 @@ void init()
     reinterpret_cast<StringImpl*>(&onsubmitData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onsuspendData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontimeupdateData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&ontoggleData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontouchcancelData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontouchendData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&ontouchforcechangeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontouchmoveData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontouchstartData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&ontransitionendData)->assertHashIsCorrect();
@@ -4878,10 +2037,12 @@ void init()
     reinterpret_cast<StringImpl*>(&pData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&paramData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&patternData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&pictureData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&pingData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&placeholderData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&plaintextData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&playcountData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&playsinlineData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&pluginspageData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&pluginurlData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&posterData)->assertHashIsCorrect();
@@ -4925,6 +2086,7 @@ void init()
     reinterpret_cast<StringImpl*>(&shapeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sizeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sizesData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&slotData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&smallData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sortableData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sortdirectionData)->assertHashIsCorrect();
@@ -4980,7 +2142,6 @@ void init()
     reinterpret_cast<StringImpl*>(&vlinkData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&vspaceData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&wbrData)->assertHashIsCorrect();
-    reinterpret_cast<StringImpl*>(&webkitShadowContentData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&webkit_playsinlineData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&webkitairplayData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&webkitallowfullscreenData)->assertHashIsCorrect();
@@ -4992,6 +2153,9 @@ void init()
     reinterpret_cast<StringImpl*>(&webkitwirelessvideoplaybackdisabledData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&widthData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&wrapData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&x_apple_data_detectorsData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&x_apple_data_detectors_resultData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&x_apple_data_detectors_typeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&x_itunes_inherit_uri_query_componentData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&xmpData)->assertHashIsCorrect();
 #endif // NDEBUG
@@ -5032,6 +2196,7 @@ void init()
         { (void*)&colTag, *reinterpret_cast<StringImpl*>(&colData) },
         { (void*)&colgroupTag, *reinterpret_cast<StringImpl*>(&colgroupData) },
         { (void*)&commandTag, *reinterpret_cast<StringImpl*>(&commandData) },
+        { (void*)&dataTag, *reinterpret_cast<StringImpl*>(&dataData) },
         { (void*)&datalistTag, *reinterpret_cast<StringImpl*>(&datalistData) },
         { (void*)&ddTag, *reinterpret_cast<StringImpl*>(&ddData) },
         { (void*)&delTag, *reinterpret_cast<StringImpl*>(&delData) },
@@ -5068,7 +2233,6 @@ void init()
         { (void*)&imgTag, *reinterpret_cast<StringImpl*>(&imgData) },
         { (void*)&inputTag, *reinterpret_cast<StringImpl*>(&inputData) },
         { (void*)&insTag, *reinterpret_cast<StringImpl*>(&insData) },
-        { (void*)&isindexTag, *reinterpret_cast<StringImpl*>(&isindexData) },
         { (void*)&kbdTag, *reinterpret_cast<StringImpl*>(&kbdData) },
         { (void*)&keygenTag, *reinterpret_cast<StringImpl*>(&keygenData) },
         { (void*)&labelTag, *reinterpret_cast<StringImpl*>(&labelData) },
@@ -5097,6 +2261,7 @@ void init()
         { (void*)&outputTag, *reinterpret_cast<StringImpl*>(&outputData) },
         { (void*)&pTag, *reinterpret_cast<StringImpl*>(&pData) },
         { (void*)&paramTag, *reinterpret_cast<StringImpl*>(&paramData) },
+        { (void*)&pictureTag, *reinterpret_cast<StringImpl*>(&pictureData) },
         { (void*)&plaintextTag, *reinterpret_cast<StringImpl*>(&plaintextData) },
         { (void*)&preTag, *reinterpret_cast<StringImpl*>(&preData) },
         { (void*)&progressTag, *reinterpret_cast<StringImpl*>(&progressData) },
@@ -5111,6 +2276,7 @@ void init()
         { (void*)&scriptTag, *reinterpret_cast<StringImpl*>(&scriptData) },
         { (void*)&sectionTag, *reinterpret_cast<StringImpl*>(&sectionData) },
         { (void*)&selectTag, *reinterpret_cast<StringImpl*>(&selectData) },
+        { (void*)&slotTag, *reinterpret_cast<StringImpl*>(&slotData) },
         { (void*)&smallTag, *reinterpret_cast<StringImpl*>(&smallData) },
         { (void*)&sourceTag, *reinterpret_cast<StringImpl*>(&sourceData) },
         { (void*)&spanTag, *reinterpret_cast<StringImpl*>(&spanData) },
@@ -5138,7 +2304,6 @@ void init()
         { (void*)&varTag, *reinterpret_cast<StringImpl*>(&varData) },
         { (void*)&videoTag, *reinterpret_cast<StringImpl*>(&videoData) },
         { (void*)&wbrTag, *reinterpret_cast<StringImpl*>(&wbrData) },
-        { (void*)&webkitShadowContentTag, *reinterpret_cast<StringImpl*>(&webkitShadowContentData) },
         { (void*)&xmpTag, *reinterpret_cast<StringImpl*>(&xmpData) },
     };
 
@@ -5165,7 +2330,11 @@ void init()
         { (void*)&aria_atomicAttr, *reinterpret_cast<StringImpl*>(&aria_atomicData) },
         { (void*)&aria_busyAttr, *reinterpret_cast<StringImpl*>(&aria_busyData) },
         { (void*)&aria_checkedAttr, *reinterpret_cast<StringImpl*>(&aria_checkedData) },
+        { (void*)&aria_colcountAttr, *reinterpret_cast<StringImpl*>(&aria_colcountData) },
+        { (void*)&aria_colindexAttr, *reinterpret_cast<StringImpl*>(&aria_colindexData) },
+        { (void*)&aria_colspanAttr, *reinterpret_cast<StringImpl*>(&aria_colspanData) },
         { (void*)&aria_controlsAttr, *reinterpret_cast<StringImpl*>(&aria_controlsData) },
+        { (void*)&aria_currentAttr, *reinterpret_cast<StringImpl*>(&aria_currentData) },
         { (void*)&aria_describedbyAttr, *reinterpret_cast<StringImpl*>(&aria_describedbyData) },
         { (void*)&aria_disabledAttr, *reinterpret_cast<StringImpl*>(&aria_disabledData) },
         { (void*)&aria_dropeffectAttr, *reinterpret_cast<StringImpl*>(&aria_dropeffectData) },
@@ -5181,16 +2350,21 @@ void init()
         { (void*)&aria_labelledbyAttr, *reinterpret_cast<StringImpl*>(&aria_labelledbyData) },
         { (void*)&aria_levelAttr, *reinterpret_cast<StringImpl*>(&aria_levelData) },
         { (void*)&aria_liveAttr, *reinterpret_cast<StringImpl*>(&aria_liveData) },
+        { (void*)&aria_modalAttr, *reinterpret_cast<StringImpl*>(&aria_modalData) },
         { (void*)&aria_multilineAttr, *reinterpret_cast<StringImpl*>(&aria_multilineData) },
         { (void*)&aria_multiselectableAttr, *reinterpret_cast<StringImpl*>(&aria_multiselectableData) },
         { (void*)&aria_orientationAttr, *reinterpret_cast<StringImpl*>(&aria_orientationData) },
         { (void*)&aria_ownsAttr, *reinterpret_cast<StringImpl*>(&aria_ownsData) },
+        { (void*)&aria_placeholderAttr, *reinterpret_cast<StringImpl*>(&aria_placeholderData) },
         { (void*)&aria_posinsetAttr, *reinterpret_cast<StringImpl*>(&aria_posinsetData) },
         { (void*)&aria_pressedAttr, *reinterpret_cast<StringImpl*>(&aria_pressedData) },
         { (void*)&aria_readonlyAttr, *reinterpret_cast<StringImpl*>(&aria_readonlyData) },
         { (void*)&aria_relevantAttr, *reinterpret_cast<StringImpl*>(&aria_relevantData) },
         { (void*)&aria_requiredAttr, *reinterpret_cast<StringImpl*>(&aria_requiredData) },
         { (void*)&aria_roledescriptionAttr, *reinterpret_cast<StringImpl*>(&aria_roledescriptionData) },
+        { (void*)&aria_rowcountAttr, *reinterpret_cast<StringImpl*>(&aria_rowcountData) },
+        { (void*)&aria_rowindexAttr, *reinterpret_cast<StringImpl*>(&aria_rowindexData) },
+        { (void*)&aria_rowspanAttr, *reinterpret_cast<StringImpl*>(&aria_rowspanData) },
         { (void*)&aria_selectedAttr, *reinterpret_cast<StringImpl*>(&aria_selectedData) },
         { (void*)&aria_setsizeAttr, *reinterpret_cast<StringImpl*>(&aria_setsizeData) },
         { (void*)&aria_sortAttr, *reinterpret_cast<StringImpl*>(&aria_sortData) },
@@ -5198,6 +2372,7 @@ void init()
         { (void*)&aria_valueminAttr, *reinterpret_cast<StringImpl*>(&aria_valueminData) },
         { (void*)&aria_valuenowAttr, *reinterpret_cast<StringImpl*>(&aria_valuenowData) },
         { (void*)&aria_valuetextAttr, *reinterpret_cast<StringImpl*>(&aria_valuetextData) },
+        { (void*)&asAttr, *reinterpret_cast<StringImpl*>(&asData) },
         { (void*)&asyncAttr, *reinterpret_cast<StringImpl*>(&asyncData) },
         { (void*)&autocapitalizeAttr, *reinterpret_cast<StringImpl*>(&autocapitalizeData) },
         { (void*)&autocompleteAttr, *reinterpret_cast<StringImpl*>(&autocompleteData) },
@@ -5307,10 +2482,12 @@ void init()
         { (void*)&mediagroupAttr, *reinterpret_cast<StringImpl*>(&mediagroupData) },
         { (void*)&methodAttr, *reinterpret_cast<StringImpl*>(&methodData) },
         { (void*)&minAttr, *reinterpret_cast<StringImpl*>(&minData) },
+        { (void*)&minlengthAttr, *reinterpret_cast<StringImpl*>(&minlengthData) },
         { (void*)&multipleAttr, *reinterpret_cast<StringImpl*>(&multipleData) },
         { (void*)&mutedAttr, *reinterpret_cast<StringImpl*>(&mutedData) },
         { (void*)&nameAttr, *reinterpret_cast<StringImpl*>(&nameData) },
         { (void*)&nohrefAttr, *reinterpret_cast<StringImpl*>(&nohrefData) },
+        { (void*)&nomoduleAttr, *reinterpret_cast<StringImpl*>(&nomoduleData) },
         { (void*)&nonceAttr, *reinterpret_cast<StringImpl*>(&nonceData) },
         { (void*)&noresizeAttr, *reinterpret_cast<StringImpl*>(&noresizeData) },
         { (void*)&noshadeAttr, *reinterpret_cast<StringImpl*>(&noshadeData) },
@@ -5325,6 +2502,7 @@ void init()
         { (void*)&onautocompleteerrorAttr, *reinterpret_cast<StringImpl*>(&onautocompleteerrorData) },
         { (void*)&onbeforecopyAttr, *reinterpret_cast<StringImpl*>(&onbeforecopyData) },
         { (void*)&onbeforecutAttr, *reinterpret_cast<StringImpl*>(&onbeforecutData) },
+        { (void*)&onbeforeinputAttr, *reinterpret_cast<StringImpl*>(&onbeforeinputData) },
         { (void*)&onbeforeloadAttr, *reinterpret_cast<StringImpl*>(&onbeforeloadData) },
         { (void*)&onbeforepasteAttr, *reinterpret_cast<StringImpl*>(&onbeforepasteData) },
         { (void*)&onbeforeunloadAttr, *reinterpret_cast<StringImpl*>(&onbeforeunloadData) },
@@ -5360,6 +2538,7 @@ void init()
         { (void*)&onkeydownAttr, *reinterpret_cast<StringImpl*>(&onkeydownData) },
         { (void*)&onkeypressAttr, *reinterpret_cast<StringImpl*>(&onkeypressData) },
         { (void*)&onkeyupAttr, *reinterpret_cast<StringImpl*>(&onkeyupData) },
+        { (void*)&onlanguagechangeAttr, *reinterpret_cast<StringImpl*>(&onlanguagechangeData) },
         { (void*)&onloadAttr, *reinterpret_cast<StringImpl*>(&onloadData) },
         { (void*)&onloadeddataAttr, *reinterpret_cast<StringImpl*>(&onloadeddataData) },
         { (void*)&onloadedmetadataAttr, *reinterpret_cast<StringImpl*>(&onloadedmetadataData) },
@@ -5399,8 +2578,10 @@ void init()
         { (void*)&onsubmitAttr, *reinterpret_cast<StringImpl*>(&onsubmitData) },
         { (void*)&onsuspendAttr, *reinterpret_cast<StringImpl*>(&onsuspendData) },
         { (void*)&ontimeupdateAttr, *reinterpret_cast<StringImpl*>(&ontimeupdateData) },
+        { (void*)&ontoggleAttr, *reinterpret_cast<StringImpl*>(&ontoggleData) },
         { (void*)&ontouchcancelAttr, *reinterpret_cast<StringImpl*>(&ontouchcancelData) },
         { (void*)&ontouchendAttr, *reinterpret_cast<StringImpl*>(&ontouchendData) },
+        { (void*)&ontouchforcechangeAttr, *reinterpret_cast<StringImpl*>(&ontouchforcechangeData) },
         { (void*)&ontouchmoveAttr, *reinterpret_cast<StringImpl*>(&ontouchmoveData) },
         { (void*)&ontouchstartAttr, *reinterpret_cast<StringImpl*>(&ontouchstartData) },
         { (void*)&ontransitionendAttr, *reinterpret_cast<StringImpl*>(&ontransitionendData) },
@@ -5441,6 +2622,7 @@ void init()
         { (void*)&pingAttr, *reinterpret_cast<StringImpl*>(&pingData) },
         { (void*)&placeholderAttr, *reinterpret_cast<StringImpl*>(&placeholderData) },
         { (void*)&playcountAttr, *reinterpret_cast<StringImpl*>(&playcountData) },
+        { (void*)&playsinlineAttr, *reinterpret_cast<StringImpl*>(&playsinlineData) },
         { (void*)&pluginspageAttr, *reinterpret_cast<StringImpl*>(&pluginspageData) },
         { (void*)&pluginurlAttr, *reinterpret_cast<StringImpl*>(&pluginurlData) },
         { (void*)&posterAttr, *reinterpret_cast<StringImpl*>(&posterData) },
@@ -5473,6 +2655,7 @@ void init()
         { (void*)&shapeAttr, *reinterpret_cast<StringImpl*>(&shapeData) },
         { (void*)&sizeAttr, *reinterpret_cast<StringImpl*>(&sizeData) },
         { (void*)&sizesAttr, *reinterpret_cast<StringImpl*>(&sizesData) },
+        { (void*)&slotAttr, *reinterpret_cast<StringImpl*>(&slotData) },
         { (void*)&sortableAttr, *reinterpret_cast<StringImpl*>(&sortableData) },
         { (void*)&sortdirectionAttr, *reinterpret_cast<StringImpl*>(&sortdirectionData) },
         { (void*)&spanAttr, *reinterpret_cast<StringImpl*>(&spanData) },
@@ -5516,6 +2699,9 @@ void init()
         { (void*)&webkitwirelessvideoplaybackdisabledAttr, *reinterpret_cast<StringImpl*>(&webkitwirelessvideoplaybackdisabledData) },
         { (void*)&widthAttr, *reinterpret_cast<StringImpl*>(&widthData) },
         { (void*)&wrapAttr, *reinterpret_cast<StringImpl*>(&wrapData) },
+        { (void*)&x_apple_data_detectorsAttr, *reinterpret_cast<StringImpl*>(&x_apple_data_detectorsData) },
+        { (void*)&x_apple_data_detectors_resultAttr, *reinterpret_cast<StringImpl*>(&x_apple_data_detectors_resultData) },
+        { (void*)&x_apple_data_detectors_typeAttr, *reinterpret_cast<StringImpl*>(&x_apple_data_detectors_typeData) },
         { (void*)&x_itunes_inherit_uri_query_componentAttr, *reinterpret_cast<StringImpl*>(&x_itunes_inherit_uri_query_componentData) },
     };
 

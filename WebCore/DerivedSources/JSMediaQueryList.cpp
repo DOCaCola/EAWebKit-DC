@@ -21,13 +21,10 @@
 #include "config.h"
 #include "JSMediaQueryList.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSMediaQueryListListener.h"
-#include "MediaQueryList.h"
-#include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -41,12 +38,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsMediaQueryListPrototypeFunctionRemoveListene
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaQueryListMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaQueryListMatches(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaQueryListMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaQueryListMatches(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaQueryListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaQueryListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaQueryListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaQueryListPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaQueryListPrototype>(vm.heap)) JSMediaQueryListPrototype(vm, globalObject, structure);
@@ -69,29 +67,14 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSMediaQueryListTableIndex[4] = {
-    { -1, -1 },
-    { 0, -1 },
-    { 1, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSMediaQueryListTableValues[] =
-{
-    { "media", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaQueryListMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "matches", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaQueryListMatches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSMediaQueryListTable = { 2, 3, true, JSMediaQueryListTableValues, 0, JSMediaQueryListTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaQueryListPrototypeTableValues[] =
 {
-    { "addListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaQueryListPrototypeFunctionAddListener), (intptr_t) (0) },
-    { "removeListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaQueryListPrototypeFunctionRemoveListener), (intptr_t) (0) },
+    { "media", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaQueryListMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "matches", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaQueryListMatches), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "addListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaQueryListPrototypeFunctionAddListener), (intptr_t) (0) } },
+    { "removeListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaQueryListPrototypeFunctionRemoveListener), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaQueryListPrototype::s_info = { "MediaQueryListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaQueryListPrototype) };
@@ -102,12 +85,18 @@ void JSMediaQueryListPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSMediaQueryListPrototypeTableValues, *this);
 }
 
-const ClassInfo JSMediaQueryList::s_info = { "MediaQueryList", &Base::s_info, &JSMediaQueryListTable, CREATE_METHOD_TABLE(JSMediaQueryList) };
+const ClassInfo JSMediaQueryList::s_info = { "MediaQueryList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaQueryList) };
 
-JSMediaQueryList::JSMediaQueryList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaQueryList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaQueryList::JSMediaQueryList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaQueryList>&& impl)
+    : JSDOMWrapper<MediaQueryList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaQueryList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaQueryList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -115,7 +104,7 @@ JSObject* JSMediaQueryList::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSMediaQueryListPrototype::create(vm, globalObject, JSMediaQueryListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMediaQueryList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaQueryList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaQueryList>(vm, globalObject);
 }
@@ -126,75 +115,95 @@ void JSMediaQueryList::destroy(JSC::JSCell* cell)
     thisObject->JSMediaQueryList::~JSMediaQueryList();
 }
 
-JSMediaQueryList::~JSMediaQueryList()
+template<> inline JSMediaQueryList* BindingCaller<JSMediaQueryList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMediaQueryList*>(JSValue::decode(thisValue));
 }
 
-bool JSMediaQueryList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSMediaQueryList* BindingCaller<JSMediaQueryList>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSMediaQueryList*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSMediaQueryList, Base>(exec, JSMediaQueryListTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSMediaQueryList*>(state.thisValue());
 }
 
-EncodedJSValue jsMediaQueryListMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaQueryListMediaGetter(ExecState&, JSMediaQueryList&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaQueryListMedia(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMediaQueryList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.media());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaQueryList>::attribute<jsMediaQueryListMediaGetter>(state, thisValue, "media");
 }
 
-
-EncodedJSValue jsMediaQueryListMatches(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaQueryListMediaGetter(ExecState& state, JSMediaQueryList& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMediaQueryList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.matches());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.media());
+    return result;
 }
 
+static inline JSValue jsMediaQueryListMatchesGetter(ExecState&, JSMediaQueryList&, ThrowScope& throwScope);
 
-EncodedJSValue JSC_HOST_CALL jsMediaQueryListPrototypeFunctionAddListener(ExecState* exec)
+EncodedJSValue jsMediaQueryListMatches(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaQueryList* castedThis = jsDynamicCast<JSMediaQueryList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaQueryList", "addListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaQueryList::info());
-    auto& impl = castedThis->impl();
-    RefPtr<MediaQueryListListener> listener;
-    if (!exec->argument(0).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(0).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 0, "listener", "MediaQueryList", "addListener");
-        listener = JSMediaQueryListListener::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
+    return BindingCaller<JSMediaQueryList>::attribute<jsMediaQueryListMatchesGetter>(state, thisValue, "matches");
+}
+
+static inline JSValue jsMediaQueryListMatchesGetter(ExecState& state, JSMediaQueryList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.matches());
+    return result;
+}
+
+bool setJSMediaQueryListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSMediaQueryListPrototype* domObject = jsDynamicDowncast<JSMediaQueryListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    impl.addListener(listener);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline JSC::EncodedJSValue jsMediaQueryListPrototypeFunctionAddListenerCaller(JSC::ExecState*, JSMediaQueryList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaQueryListPrototypeFunctionAddListener(ExecState* state)
+{
+    return BindingCaller<JSMediaQueryList>::callOperation<jsMediaQueryListPrototypeFunctionAddListenerCaller>(state, "addListener");
+}
+
+static inline JSC::EncodedJSValue jsMediaQueryListPrototypeFunctionAddListenerCaller(JSC::ExecState* state, JSMediaQueryList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto listener = convert<IDLNullable<IDLCallbackFunction<JSMediaQueryListListener>>>(*state, state->argument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "listener", "MediaQueryList", "addListener"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.addListener(WTFMove(listener));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaQueryListPrototypeFunctionRemoveListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaQueryListPrototypeFunctionRemoveListenerCaller(JSC::ExecState*, JSMediaQueryList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaQueryListPrototypeFunctionRemoveListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaQueryList* castedThis = jsDynamicCast<JSMediaQueryList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaQueryList", "removeListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaQueryList::info());
-    auto& impl = castedThis->impl();
-    RefPtr<MediaQueryListListener> listener;
-    if (!exec->argument(0).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(0).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 0, "listener", "MediaQueryList", "removeListener");
-        listener = JSMediaQueryListListener::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    }
-    impl.removeListener(listener);
+    return BindingCaller<JSMediaQueryList>::callOperation<jsMediaQueryListPrototypeFunctionRemoveListenerCaller>(state, "removeListener");
+}
+
+static inline JSC::EncodedJSValue jsMediaQueryListPrototypeFunctionRemoveListenerCaller(JSC::ExecState* state, JSMediaQueryList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto listener = convert<IDLNullable<IDLCallbackFunction<JSMediaQueryListListener>>>(*state, state->argument(0), *castedThis->globalObject(), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "listener", "MediaQueryList", "removeListener"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.removeListener(WTFMove(listener));
     return JSValue::encode(jsUndefined());
 }
 
@@ -207,31 +216,32 @@ bool JSMediaQueryListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSMediaQueryListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaQueryList = jsCast<JSMediaQueryList*>(handle.slot()->asCell());
+    auto* jsMediaQueryList = static_cast<JSMediaQueryList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaQueryList->impl(), jsMediaQueryList);
+    uncacheWrapper(world, &jsMediaQueryList->wrapped(), jsMediaQueryList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaQueryList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaQueryList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaQueryList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to MediaQueryList.
-    COMPILE_ASSERT(!__is_polymorphic(MediaQueryList), MediaQueryList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(MediaQueryList), "MediaQueryList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSMediaQueryList>(globalObject, impl);
+    return createWrapper<MediaQueryList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaQueryList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaQueryList* JSMediaQueryList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaQueryList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaQueryList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

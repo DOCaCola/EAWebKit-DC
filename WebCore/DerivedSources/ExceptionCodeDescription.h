@@ -25,26 +25,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ExceptionCodeDescription_h
-#define ExceptionCodeDescription_h
+#pragma once
 
 namespace WebCore {
 
-typedef int ExceptionCode;
+using ExceptionCode = int;
 
 enum ExceptionType {
     DOMCoreExceptionType,
-    EventExceptionType,
     FileExceptionType,
-    RangeExceptionType,
     SQLExceptionType,
     SVGExceptionType,
-    XMLHttpRequestExceptionType,
     XPathExceptionType,
+#if ENABLE(INDEXED_DATABASE)
+    IDBDatabaseExceptionType,
+#endif
 };
 
 struct ExceptionCodeDescription {
-    explicit ExceptionCodeDescription(ExceptionCode);
+    WEBCORE_EXPORT explicit ExceptionCodeDescription(ExceptionCode);
 
     // |typeName| has spaces and is suitable for use in exception
     // description strings; maximum length is 10 characters.
@@ -66,5 +65,3 @@ struct ExceptionCodeDescription {
 };
 
 } // namespace WebCore
-
-#endif // ExceptionCodeDescription_h

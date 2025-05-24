@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDatabase_h
-#define JSDatabase_h
+#pragma once
 
 #include "Database.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDatabase : public JSDOMWrapper {
+class JSDatabase : public JSDOMWrapper<Database> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Database>;
     static JSDatabase* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Database>&& impl)
     {
-        JSDatabase* ptr = new (NotNull, JSC::allocateCell<JSDatabase>(globalObject->vm().heap)) JSDatabase(structure, globalObject, WTF::move(impl));
+        JSDatabase* ptr = new (NotNull, JSC::allocateCell<JSDatabase>(globalObject->vm().heap)) JSDatabase(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Database* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDatabase();
 
     DECLARE_INFO;
 
@@ -50,20 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Database& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Database* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDatabase(JSC::Structure*, JSDOMGlobalObject*, Ref<Database>&&);
+    JSDatabase(JSC::Structure*, JSDOMGlobalObject&, Ref<Database>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDatabaseOwner : public JSC::WeakHandleOwner {
@@ -78,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Database*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Database*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Database& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Database* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Database&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Database* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Database>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Database>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Database> {
+    using WrapperClass = JSDatabase;
+    using ToWrappedReturnType = Database*;
+};
 
 } // namespace WebCore
-
-#endif

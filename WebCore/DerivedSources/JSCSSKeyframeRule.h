@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSKeyframeRule_h
-#define JSCSSKeyframeRule_h
+#pragma once
 
 #include "CSSKeyframeRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSKeyframeRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSKeyframeRule;
     static JSCSSKeyframeRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSKeyframeRule>&& impl)
     {
-        JSCSSKeyframeRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframeRule>(globalObject->vm().heap)) JSCSSKeyframeRule(structure, globalObject, WTF::move(impl));
+        JSCSSKeyframeRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframeRule>(globalObject->vm().heap)) JSCSSKeyframeRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSKeyframeRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSKeyframeRule& wrapped() const
     {
-        return static_cast<CSSKeyframeRule&>(Base::impl());
+        return static_cast<CSSKeyframeRule&>(Base::wrapped());
     }
 protected:
-    JSCSSKeyframeRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSKeyframeRule>&&);
+    JSCSSKeyframeRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSKeyframeRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSKeyframeRule> {
+    using WrapperClass = JSCSSKeyframeRule;
+    using ToWrappedReturnType = CSSKeyframeRule*;
+};
 
 } // namespace WebCore
-
-#endif

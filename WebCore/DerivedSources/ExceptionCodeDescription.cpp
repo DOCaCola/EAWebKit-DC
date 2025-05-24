@@ -30,12 +30,9 @@
 
 #include "ExceptionCode.h"
 #include "DOMCoreException.h"
-#include "EventException.h"
 #include "FileException.h"
-#include "RangeException.h"
 #include "SQLException.h"
 #include "SVGException.h"
-#include "XMLHttpRequestException.h"
 #include "XPathException.h"
 #if ENABLE(INDEXED_DATABASE)
 #include "IDBDatabaseException.h"
@@ -46,17 +43,11 @@ namespace WebCore {
 ExceptionCodeDescription::ExceptionCodeDescription(ExceptionCode ec)
 {
     ASSERT(ec);
-    if (EventException::initializeDescription(ec, this))
-        return;
     if (FileException::initializeDescription(ec, this))
-        return;
-    if (RangeException::initializeDescription(ec, this))
         return;
     if (SQLException::initializeDescription(ec, this))
         return;
     if (SVGException::initializeDescription(ec, this))
-        return;
-    if (XMLHttpRequestException::initializeDescription(ec, this))
         return;
     if (XPathException::initializeDescription(ec, this))
         return;

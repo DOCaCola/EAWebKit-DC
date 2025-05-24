@@ -1,0 +1,2 @@
+JSCSSNamespaceRule.h : CSSRule.idl
+CSSRule.idl :

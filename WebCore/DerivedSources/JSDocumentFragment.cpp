@@ -21,19 +21,23 @@
 #include "config.h"
 #include "JSDocumentFragment.h"
 
+#include "CustomElementReactionQueue.h"
+#include "DOMJITAbstractHeapRepository.h"
+#include "DOMJITCheckDOM.h"
+#include "DOMJITIDLType.h"
+#include "DOMJITIDLTypeFilter.h"
 #include "Document.h"
-#include "DocumentFragment.h"
-#include "Element.h"
-#include "ExceptionCode.h"
-#include "HTMLCollection.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSElement.h"
 #include "JSHTMLCollection.h"
 #include "JSNodeList.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
+#include <interpreter/FrameTracers.h>
 #include <runtime/Error.h>
+#include <runtime/ObjectConstructor.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -42,6 +46,7 @@ namespace WebCore {
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionGetElementById(JSC::ExecState*);
+JSC::EncodedJSValue JIT_OPERATION unsafeJsDocumentFragmentPrototypeFunctionGetElementById(JSC::ExecState*, JSDocumentFragment*, DOMJIT::IDLJSArgumentType<IDLDOMString>);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionPrepend(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionAppend(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelector(JSC::ExecState*);
@@ -49,15 +54,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelect
 
 // Attributes
 
-JSC::EncodedJSValue jsDocumentFragmentChildren(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDocumentFragmentFirstElementChild(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDocumentFragmentLastElementChild(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDocumentFragmentChildElementCount(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDocumentFragmentConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDocumentFragmentChildren(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDocumentFragmentFirstElementChild(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDocumentFragmentLastElementChild(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDocumentFragmentChildElementCount(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDocumentFragmentConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDocumentFragmentConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+
+#if ENABLE(JIT)
+static const JSC::DOMJIT::Signature DOMJITSignatureForDocumentFragmentGetElementById((uintptr_t)unsafeJsDocumentFragmentPrototypeFunctionGetElementById, DOMJIT::checkDOM<DocumentFragment>, JSDocumentFragment::info(), JSC::DOMJIT::Effect::forRead(DOMJIT::AbstractHeapRepository::DOM), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Element>>>::value, DOMJIT::IDLArgumentTypeFilter<IDLDOMString>::value);
+#else
+static const JSC::DOMJIT::Signature DOMJITSignatureForDocumentFragmentGetElementById((uintptr_t)unsafeJsDocumentFragmentPrototypeFunctionGetElementById, nullptr, JSDocumentFragment::info(), JSC::DOMJIT::Effect::forRead(DOMJIT::AbstractHeapRepository::DOM), DOMJIT::IDLResultTypeFilter<IDLNullable<IDLInterface<Element>>>::value, DOMJIT::IDLArgumentTypeFilter<IDLDOMString>::value);
+#endif
 
 class JSDocumentFragmentPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDocumentFragmentPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDocumentFragmentPrototype* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragmentPrototype>(vm.heap)) JSDocumentFragmentPrototype(vm, globalObject, structure);
@@ -80,77 +92,52 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDocumentFragmentConstructor : public DOMConstructorObject {
-private:
-    JSDocumentFragmentConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDocumentFragmentConstructor = JSDOMConstructor<JSDocumentFragment>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDocumentFragmentConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDocumentFragmentConstructor* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragmentConstructor>(vm.heap)) JSDocumentFragmentConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDocumentFragment(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSDocumentFragmentConstructor::constructJSDocumentFragment(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSDocumentFragmentConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDocumentFragmentConstructor*>(exec->callee());
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSDocumentFragmentConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "DocumentFragment");
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "DocumentFragment");
+    ASSERT(context->isDocument());
     auto& document = downcast<Document>(*context);
-    RefPtr<DocumentFragment> object = DocumentFragment::create(document);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    auto object = DocumentFragment::create(document);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<DocumentFragment>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-const ClassInfo JSDocumentFragmentConstructor::s_info = { "DocumentFragmentConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentFragmentConstructor) };
-
-JSDocumentFragmentConstructor::JSDocumentFragmentConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSDocumentFragmentConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSNode::getConstructor(vm, &globalObject);
 }
 
-void JSDocumentFragmentConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDocumentFragmentConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDocumentFragment::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDocumentFragment::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DocumentFragment"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSDocumentFragmentConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDocumentFragment;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDocumentFragmentConstructor::s_info = { "DocumentFragment", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentFragmentConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDocumentFragmentPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "children", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentChildren), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "firstElementChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentFirstElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastElementChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentLastElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "childElementCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentChildElementCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "getElementById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionGetElementById), (intptr_t) (0) },
-    { "prepend", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionPrepend), (intptr_t) (1) },
-    { "append", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionAppend), (intptr_t) (1) },
-    { "querySelector", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionQuerySelector), (intptr_t) (1) },
-    { "querySelectorAll", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionQuerySelectorAll), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentFragmentConstructor) } },
+    { "children", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentChildren), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "firstElementChild", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentFirstElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastElementChild", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentLastElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "childElementCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFragmentChildElementCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "getElementById", JSC::Function | DOMJITFunction, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionGetElementById), (intptr_t) static_cast<const JSC::DOMJIT::Signature*>(&DOMJITSignatureForDocumentFragmentGetElementById) } },
+    { "prepend", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionPrepend), (intptr_t) (0) } },
+    { "append", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionAppend), (intptr_t) (0) } },
+    { "querySelector", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionQuerySelector), (intptr_t) (1) } },
+    { "querySelectorAll", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentFragmentPrototypeFunctionQuerySelectorAll), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDocumentFragmentPrototype::s_info = { "DocumentFragmentPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentFragmentPrototype) };
@@ -159,181 +146,253 @@ void JSDocumentFragmentPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSDocumentFragmentPrototypeTableValues, *this);
+    JSObject& unscopables = *constructEmptyObject(globalObject()->globalExec(), globalObject()->nullPrototypeObjectStructure());
+    unscopables.putDirect(vm, Identifier::fromString(&vm, "prepend"), jsBoolean(true));
+    unscopables.putDirect(vm, Identifier::fromString(&vm, "append"), jsBoolean(true));
+    putDirectWithoutTransition(vm, vm.propertyNames->unscopablesSymbol, &unscopables, DontEnum | ReadOnly);
 }
 
 const ClassInfo JSDocumentFragment::s_info = { "DocumentFragment", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentFragment) };
 
-JSDocumentFragment::JSDocumentFragment(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentFragment>&& impl)
-    : JSNode(structure, globalObject, WTF::move(impl))
+JSDocumentFragment::JSDocumentFragment(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DocumentFragment>&& impl)
+    : JSNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDocumentFragment::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDocumentFragment::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSDocumentFragmentPrototype::create(vm, globalObject, JSDocumentFragmentPrototype::createStructure(vm, globalObject, JSNode::getPrototype(vm, globalObject)));
+    return JSDocumentFragmentPrototype::create(vm, globalObject, JSDocumentFragmentPrototype::createStructure(vm, globalObject, JSNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSDocumentFragment::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDocumentFragment::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDocumentFragment>(vm, globalObject);
 }
 
-EncodedJSValue jsDocumentFragmentChildren(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSDocumentFragment* BindingCaller<JSDocumentFragment>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentFragmentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentFragment", "children");
-        return throwGetterTypeError(*exec, "DocumentFragment", "children");
+    return jsDynamicDowncast<JSDocumentFragment*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSDocumentFragment* BindingCaller<JSDocumentFragment>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSDocumentFragment*>(state.thisValue());
+}
+
+static inline JSValue jsDocumentFragmentChildrenGetter(ExecState&, JSDocumentFragment&, ThrowScope& throwScope);
+
+EncodedJSValue jsDocumentFragmentChildren(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDocumentFragment>::attribute<jsDocumentFragmentChildrenGetter>(state, thisValue, "children");
+}
+
+static inline JSValue jsDocumentFragmentChildrenGetter(ExecState& state, JSDocumentFragment& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLCollection>>(state, *thisObject.globalObject(), impl.children());
+    return result;
+}
+
+static inline JSValue jsDocumentFragmentFirstElementChildGetter(ExecState&, JSDocumentFragment&, ThrowScope& throwScope);
+
+EncodedJSValue jsDocumentFragmentFirstElementChild(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDocumentFragment>::attribute<jsDocumentFragmentFirstElementChildGetter>(state, thisValue, "firstElementChild");
+}
+
+static inline JSValue jsDocumentFragmentFirstElementChildGetter(ExecState& state, JSDocumentFragment& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<Element>>(state, *thisObject.globalObject(), impl.firstElementChild());
+    return result;
+}
+
+static inline JSValue jsDocumentFragmentLastElementChildGetter(ExecState&, JSDocumentFragment&, ThrowScope& throwScope);
+
+EncodedJSValue jsDocumentFragmentLastElementChild(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDocumentFragment>::attribute<jsDocumentFragmentLastElementChildGetter>(state, thisValue, "lastElementChild");
+}
+
+static inline JSValue jsDocumentFragmentLastElementChildGetter(ExecState& state, JSDocumentFragment& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<Element>>(state, *thisObject.globalObject(), impl.lastElementChild());
+    return result;
+}
+
+static inline JSValue jsDocumentFragmentChildElementCountGetter(ExecState&, JSDocumentFragment&, ThrowScope& throwScope);
+
+EncodedJSValue jsDocumentFragmentChildElementCount(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDocumentFragment>::attribute<jsDocumentFragmentChildElementCountGetter>(state, thisValue, "childElementCount");
+}
+
+static inline JSValue jsDocumentFragmentChildElementCountGetter(ExecState& state, JSDocumentFragment& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.childElementCount());
+    return result;
+}
+
+EncodedJSValue jsDocumentFragmentConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDocumentFragmentPrototype* domObject = jsDynamicDowncast<JSDocumentFragmentPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDocumentFragment::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDocumentFragmentConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDocumentFragmentPrototype* domObject = jsDynamicDowncast<JSDocumentFragmentPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.children()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsDocumentFragmentFirstElementChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSDocumentFragment::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentFragmentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentFragment", "firstElementChild");
-        return throwGetterTypeError(*exec, "DocumentFragment", "firstElementChild");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.firstElementChild()));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSDocumentFragmentConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionGetElementByIdCaller(JSC::ExecState*, JSDocumentFragment*, JSC::ThrowScope&);
 
-EncodedJSValue jsDocumentFragmentLastElementChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionGetElementById(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentFragmentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentFragment", "lastElementChild");
-        return throwGetterTypeError(*exec, "DocumentFragment", "lastElementChild");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.lastElementChild()));
-    return JSValue::encode(result);
+    return BindingCaller<JSDocumentFragment>::callOperation<jsDocumentFragmentPrototypeFunctionGetElementByIdCaller>(state, "getElementById");
 }
 
-
-EncodedJSValue jsDocumentFragmentChildElementCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionGetElementByIdCaller(JSC::ExecState* state, JSDocumentFragment* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentFragmentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentFragment", "childElementCount");
-        return throwGetterTypeError(*exec, "DocumentFragment", "childElementCount");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.childElementCount());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto elementId = AtomicString(state->uncheckedArgument(0).toString(state)->toExistingAtomicString(state));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Element>>>(*state, *castedThis->globalObject(), impl.getElementById(WTFMove(elementId))));
 }
 
-
-EncodedJSValue jsDocumentFragmentConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSC::EncodedJSValue JIT_OPERATION unsafeJsDocumentFragmentPrototypeFunctionGetElementById(JSC::ExecState* state, JSDocumentFragment* castedThis, DOMJIT::IDLJSArgumentType<IDLDOMString> encodedElementId)
 {
-    JSDocumentFragmentPrototype* domObject = jsDynamicCast<JSDocumentFragmentPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDocumentFragment::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(state);
+    VM& vm = state->vm();
+    JSC::NativeCallFrameTracer tracer(&vm, state);
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto elementId = AtomicString(encodedElementId->toExistingAtomicString(state));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<Element>>>(*state, *castedThis->globalObject(), impl.getElementById(WTFMove(elementId))));
 }
 
-JSValue JSDocumentFragment::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionPrependCaller(JSC::ExecState*, JSDocumentFragment*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionPrepend(ExecState* state)
 {
-    return getDOMConstructor<JSDocumentFragmentConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDocumentFragment>::callOperation<jsDocumentFragmentPrototypeFunctionPrependCaller>(state, "prepend");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionGetElementById(ExecState* exec)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionPrependCaller(JSC::ExecState* state, JSDocumentFragment* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentFragment", "getElementById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentFragment::info());
-    auto& impl = castedThis->impl();
-    AtomicString elementId = exec->argument(0).toString(exec)->toExistingAtomicString(exec).get();
-    if (elementId.isNull())
-        return JSValue::encode(jsNull());
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementById(elementId)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto nodes = convertVariadicArguments<IDLUnion<IDLInterface<Node>, IDLDOMString>>(*state, 0);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.prepend(WTFMove(nodes.arguments.value())));
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionPrepend(ExecState* exec)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionAppendCaller(JSC::ExecState*, JSDocumentFragment*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionAppend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentFragment", "prepend");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentFragment::info());
-    return JSValue::encode(castedThis->prepend(exec));
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDocumentFragment>::callOperation<jsDocumentFragmentPrototypeFunctionAppendCaller>(state, "append");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionAppend(ExecState* exec)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionAppendCaller(JSC::ExecState* state, JSDocumentFragment* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentFragment", "append");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentFragment::info());
-    return JSValue::encode(castedThis->append(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto nodes = convertVariadicArguments<IDLUnion<IDLInterface<Node>, IDLDOMString>>(*state, 0);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.append(WTFMove(nodes.arguments.value())));
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelector(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentFragment", "querySelector");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentFragment::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String selectors = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.querySelector(selectors, ec)));
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionQuerySelectorCaller(JSC::ExecState*, JSDocumentFragment*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelector(ExecState* state)
+{
+    return BindingCaller<JSDocumentFragment>::callOperation<jsDocumentFragmentPrototypeFunctionQuerySelectorCaller>(state, "querySelector");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelectorAll(ExecState* exec)
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionQuerySelectorCaller(JSC::ExecState* state, JSDocumentFragment* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDocumentFragment* castedThis = jsDynamicCast<JSDocumentFragment*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentFragment", "querySelectorAll");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentFragment::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String selectors = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.querySelectorAll(selectors, ec)));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto selectors = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Element>>(*state, *castedThis->globalObject(), throwScope, impl.querySelector(WTFMove(selectors))));
+}
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionQuerySelectorAllCaller(JSC::ExecState*, JSDocumentFragment*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDocumentFragmentPrototypeFunctionQuerySelectorAll(ExecState* state)
+{
+    return BindingCaller<JSDocumentFragment>::callOperation<jsDocumentFragmentPrototypeFunctionQuerySelectorAllCaller>(state, "querySelectorAll");
+}
+
+static inline JSC::EncodedJSValue jsDocumentFragmentPrototypeFunctionQuerySelectorAllCaller(JSC::ExecState* state, JSDocumentFragment* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto selectors = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<NodeList>>(*state, *castedThis->globalObject(), throwScope, impl.querySelectorAll(WTFMove(selectors))));
+}
+
+void JSDocumentFragment::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSDocumentFragment*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

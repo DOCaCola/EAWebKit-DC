@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSValidityState_h
-#define JSValidityState_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "ValidityState.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSValidityState : public JSDOMWrapper {
+class JSValidityState : public JSDOMWrapper<ValidityState> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<ValidityState>;
     static JSValidityState* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ValidityState>&& impl)
     {
-        JSValidityState* ptr = new (NotNull, JSC::allocateCell<JSValidityState>(globalObject->vm().heap)) JSValidityState(structure, globalObject, WTF::move(impl));
+        JSValidityState* ptr = new (NotNull, JSC::allocateCell<JSValidityState>(globalObject->vm().heap)) JSValidityState(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static ValidityState* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSValidityState();
 
     DECLARE_INFO;
 
@@ -50,20 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    ValidityState& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ValidityState* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSValidityState(JSC::Structure*, JSDOMGlobalObject*, Ref<ValidityState>&&);
+    JSValidityState(JSC::Structure*, JSDOMGlobalObject&, Ref<ValidityState>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSValidityStateOwner : public JSC::WeakHandleOwner {
@@ -78,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ValidityState*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ValidityState*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ValidityState& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(ValidityState* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ValidityState&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ValidityState* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ValidityState>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ValidityState>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<ValidityState> {
+    using WrapperClass = JSValidityState;
+    using ToWrappedReturnType = ValidityState*;
+};
 
 } // namespace WebCore
-
-#endif

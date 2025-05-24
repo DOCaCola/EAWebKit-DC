@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaQueryListListener_h
-#define JSMediaQueryListListener_h
+#pragma once
 
 #include "ActiveDOMCallback.h"
 #include "JSCallbackData.h"
@@ -38,18 +37,20 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSMediaQueryListListener();
+    JSCallbackDataStrong* callbackData() { return m_data; }
     virtual bool operator==(const MediaQueryListListener&) const;
 
 
     // Functions
-    virtual bool queryChanged(MediaQueryList* list);
+    virtual bool handleEvent(MediaQueryList* list);
 
 private:
-    JSMediaQueryListListener(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSMediaQueryListListener(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
 
-} // namespace WebCore
+JSC::JSValue toJS(MediaQueryListListener&);
+inline JSC::JSValue toJS(MediaQueryListListener* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
-#endif
+} // namespace WebCore

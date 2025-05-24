@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLDrawBuffers_h
-#define JSWebGLDrawBuffers_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLDrawBuffers : public JSDOMWrapper {
+class JSWebGLDrawBuffers : public JSDOMWrapper<WebGLDrawBuffers> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLDrawBuffers>;
     static JSWebGLDrawBuffers* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDrawBuffers>&& impl)
     {
-        JSWebGLDrawBuffers* ptr = new (NotNull, JSC::allocateCell<JSWebGLDrawBuffers>(globalObject->vm().heap)) JSWebGLDrawBuffers(structure, globalObject, WTF::move(impl));
+        JSWebGLDrawBuffers* ptr = new (NotNull, JSC::allocateCell<JSWebGLDrawBuffers>(globalObject->vm().heap)) JSWebGLDrawBuffers(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDrawBuffers* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDrawBuffers();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDrawBuffers& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDrawBuffers* m_impl;
 protected:
-    JSWebGLDrawBuffers(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDrawBuffers>&&);
+    JSWebGLDrawBuffers(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDrawBuffers>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLDrawBuffersOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDrawBuffers*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDrawBuffers*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDrawBuffers& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLDrawBuffers* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDrawBuffers&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDrawBuffers* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLDrawBuffers>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLDrawBuffers>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLDrawBuffers> {
+    using WrapperClass = JSWebGLDrawBuffers;
+    using ToWrappedReturnType = WebGLDrawBuffers*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLOutputElement_h
-#define JSHTMLOutputElement_h
+#pragma once
 
 #include "HTMLOutputElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLOutputElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLOutputElement;
     static JSHTMLOutputElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOutputElement>&& impl)
     {
-        JSHTMLOutputElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOutputElement>(globalObject->vm().heap)) JSHTMLOutputElement(structure, globalObject, WTF::move(impl));
+        JSHTMLOutputElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOutputElement>(globalObject->vm().heap)) JSHTMLOutputElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLOutputElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLOutputElement& wrapped() const
     {
-        return static_cast<HTMLOutputElement&>(Base::impl());
+        return static_cast<HTMLOutputElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLOutputElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOutputElement>&&);
+    JSHTMLOutputElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOutputElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLOutputElement> {
+    using WrapperClass = JSHTMLOutputElement;
+    using ToWrappedReturnType = HTMLOutputElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -21,11 +21,13 @@
 #include "config.h"
 #include "JSWorker.h"
 
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
-#include "Worker.h"
 #include <runtime/Error.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,20 +36,21 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionPostMessage(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionTerminate(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionPostMessage(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsWorkerOnmessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerOnmessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWorkerOnmessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWorkerOnmessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWorkerOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWorkerConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWorkerPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWorkerPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWorkerPrototype* ptr = new (NotNull, JSC::allocateCell<JSWorkerPrototype>(vm.heap)) JSWorkerPrototype(vm, globalObject, structure);
@@ -70,59 +73,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWorkerConstructor : public DOMConstructorObject {
-private:
-    JSWorkerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWorkerConstructor = JSDOMConstructor<JSWorker>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWorkerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWorkerConstructor* ptr = new (NotNull, JSC::allocateCell<JSWorkerConstructor>(vm.heap)) JSWorkerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSWorkerConstructor::s_info = { "WorkerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerConstructor) };
-
-JSWorkerConstructor::JSWorkerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSC::EncodedJSValue JSC_HOST_CALL JSWorkerConstructor::construct(JSC::ExecState* exec)
 {
+    ASSERT(exec);
+    return constructJSWorker(*exec);
 }
 
-void JSWorkerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSWorkerConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWorker::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    return JSEventTarget::getConstructor(vm, &globalObject);
+}
+
+template<> void JSWorkerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSWorker::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Worker"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSWorkerConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWorker;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSWorkerConstructor::s_info = { "Worker", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWorkerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onmessage", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerOnmessage) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerOnerror) },
-    { "postMessage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerPrototypeFunctionPostMessage), (intptr_t) (1) },
-    { "terminate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerPrototypeFunctionTerminate), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerConstructor) } },
+    { "onmessage", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerOnmessage) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerOnerror) } },
+    { "terminate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerPrototypeFunctionTerminate), (intptr_t) (0) } },
+    { "postMessage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerPrototypeFunctionPostMessage), (intptr_t) (1) } },
 };
 
 const ClassInfo JSWorkerPrototype::s_info = { "WorkerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerPrototype) };
@@ -135,126 +116,179 @@ void JSWorkerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWorker::s_info = { "Worker", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorker) };
 
-JSWorker::JSWorker(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Worker>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSWorker::JSWorker(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Worker>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWorker::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWorker::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWorkerPrototype::create(vm, globalObject, JSWorkerPrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSWorkerPrototype::create(vm, globalObject, JSWorkerPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSWorker::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWorker::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWorker>(vm, globalObject);
 }
 
-EncodedJSValue jsWorkerOnmessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWorker* BindingCaller<JSWorker>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWorkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Worker", "onmessage");
-        return throwGetterTypeError(*exec, "Worker", "onmessage");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().messageEvent));
+    return jsDynamicDowncast<JSWorker*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsWorkerOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWorker* BindingCaller<JSWorker>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWorkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Worker", "onerror");
-        return throwGetterTypeError(*exec, "Worker", "onerror");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    return jsDynamicDowncast<JSWorker*>(state.thisValue());
 }
 
+static inline JSValue jsWorkerOnmessageGetter(ExecState&, JSWorker&, ThrowScope& throwScope);
 
-EncodedJSValue jsWorkerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWorkerOnmessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSWorkerPrototype* domObject = jsDynamicCast<JSWorkerPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWorker::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSWorker>::attribute<jsWorkerOnmessageGetter>(state, thisValue, "onmessage");
 }
 
-void setJSWorkerOnmessage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsWorkerOnmessageGetter(ExecState& state, JSWorker& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().messageEvent);
+}
+
+static inline JSValue jsWorkerOnerrorGetter(ExecState&, JSWorker&, ThrowScope& throwScope);
+
+EncodedJSValue jsWorkerOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWorker>::attribute<jsWorkerOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsWorkerOnerrorGetter(ExecState& state, JSWorker& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+EncodedJSValue jsWorkerConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWorkerPrototype* domObject = jsDynamicDowncast<JSWorkerPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWorker::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWorkerConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWorkerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Worker", "onmessage");
-        else
-            throwSetterTypeError(*exec, "Worker", "onmessage");
-        return;
+    JSWorkerPrototype* domObject = jsDynamicDowncast<JSWorkerPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().messageEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSWorkerOnmessageFunction(ExecState&, JSWorker&, JSValue, ThrowScope&);
+
+bool setJSWorkerOnmessage(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSWorker>::setAttribute<setJSWorkerOnmessageFunction>(state, thisValue, encodedValue, "onmessage");
+}
+
+static inline bool setJSWorkerOnmessageFunction(ExecState& state, JSWorker& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().messageEvent, value);
+    return true;
 }
 
 
-void setJSWorkerOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSWorkerOnerrorFunction(ExecState&, JSWorker&, JSValue, ThrowScope&);
+
+bool setJSWorkerOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWorkerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Worker", "onerror");
-        else
-            throwSetterTypeError(*exec, "Worker", "onerror");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    return BindingCaller<JSWorker>::setAttribute<setJSWorkerOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSWorkerOnerrorFunction(ExecState& state, JSWorker& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
 }
 
 
-JSValue JSWorker::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWorker::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWorkerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWorkerConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionPostMessage(ExecState* exec)
+static inline JSC::EncodedJSValue jsWorkerPrototypeFunctionTerminateCaller(JSC::ExecState*, JSWorker*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionTerminate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Worker", "postMessage");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorker::info());
-    return JSValue::encode(castedThis->postMessage(exec));
+    return BindingCaller<JSWorker>::callOperation<jsWorkerPrototypeFunctionTerminateCaller>(state, "terminate");
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionTerminate(ExecState* exec)
+static inline JSC::EncodedJSValue jsWorkerPrototypeFunctionTerminateCaller(JSC::ExecState* state, JSWorker* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWorker* castedThis = jsDynamicCast<JSWorker*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Worker", "terminate");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorker::info());
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.terminate();
     return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsWorkerPrototypeFunctionPostMessageCaller(JSC::ExecState*, JSWorker*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWorkerPrototypeFunctionPostMessage(ExecState* state)
+{
+    return BindingCaller<JSWorker>::callOperation<jsWorkerPrototypeFunctionPostMessageCaller>(state, "postMessage");
+}
+
+static inline JSC::EncodedJSValue jsWorkerPrototypeFunctionPostMessageCaller(JSC::ExecState* state, JSWorker* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto message = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto transfer = state->argument(1).isUndefined() ? Converter<IDLSequence<IDLObject>>::ReturnType{ } : convert<IDLSequence<IDLObject>>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.postMessage(*state, WTFMove(message), WTFMove(transfer)));
+    return JSValue::encode(jsUndefined());
+}
+
+void JSWorker::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSWorker*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSWorkerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWorker = jsCast<JSWorker*>(handle.slot()->asCell());
-    if (jsWorker->impl().hasPendingActivity())
+    if (jsWorker->wrapped().hasPendingActivity())
         return true;
-    if (jsWorker->impl().isFiringEventListeners())
+    if (jsWorker->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -262,9 +296,9 @@ bool JSWorkerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle,
 
 void JSWorkerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWorker = jsCast<JSWorker*>(handle.slot()->asCell());
+    auto* jsWorker = static_cast<JSWorker*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWorker->impl(), jsWorker);
+    uncacheWrapper(world, &jsWorker->wrapped(), jsWorker);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -275,15 +309,12 @@ extern "C" { extern void (*const __identifier("??_7Worker@WebCore@@6B@")[])(); }
 extern "C" { extern void* _ZTVN7WebCore6WorkerE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Worker* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Worker>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWorker>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Worker@WebCore@@6B@"));
 #else
@@ -291,7 +322,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Worker* impl
 #if COMPILER(CLANG)
     // If this fails Worker does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Worker), Worker_is_not_polymorphic);
+    static_assert(__is_polymorphic(Worker), "Worker is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -300,13 +331,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Worker* impl
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWorker>(globalObject, impl);
+    return createWrapper<Worker>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Worker& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Worker* JSWorker::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWorker*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWorker*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFrameSetElement_h
-#define JSHTMLFrameSetElement_h
+#pragma once
 
 #include "HTMLFrameSetElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLFrameSetElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLFrameSetElement;
     static JSHTMLFrameSetElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFrameSetElement>&& impl)
     {
-        JSHTMLFrameSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElement>(globalObject->vm().heap)) JSHTMLFrameSetElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFrameSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElement>(globalObject->vm().heap)) JSHTMLFrameSetElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
 
@@ -48,29 +48,26 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFrameSetElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLFrameSetElement& wrapped() const
     {
-        return static_cast<HTMLFrameSetElement&>(Base::impl());
+        return static_cast<HTMLFrameSetElement&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLFrameSetElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFrameSetElement>&&);
+    JSHTMLFrameSetElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFrameSetElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLFrameSetElement*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLFrameSetElement> {
+    using WrapperClass = JSHTMLFrameSetElement;
+    using ToWrappedReturnType = HTMLFrameSetElement*;
+};
 
 } // namespace WebCore
-
-#endif

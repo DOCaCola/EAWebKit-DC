@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDataListElement_h
-#define JSHTMLDataListElement_h
+#pragma once
 
 #if ENABLE(DATALIST_ELEMENT)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSHTMLDataListElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLDataListElement;
     static JSHTMLDataListElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDataListElement>&& impl)
     {
-        JSHTMLDataListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElement>(globalObject->vm().heap)) JSHTMLDataListElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDataListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElement>(globalObject->vm().heap)) JSHTMLDataListElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLDataListElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLDataListElement& wrapped() const
     {
-        return static_cast<HTMLDataListElement&>(Base::impl());
+        return static_cast<HTMLDataListElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDataListElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDataListElement>&&);
+    JSHTMLDataListElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDataListElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLDataListElement> {
+    using WrapperClass = JSHTMLDataListElement;
+    using ToWrappedReturnType = HTMLDataListElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(DATALIST_ELEMENT)
-
-#endif

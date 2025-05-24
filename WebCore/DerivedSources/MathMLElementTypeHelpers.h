@@ -33,6 +33,20 @@
 #include "MathMLNames.h"
 
 namespace WebCore {
+class MathMLFractionElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::MathMLFractionElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::MathMLElement& element) { return element.hasTagName(WebCore::MathMLNames::mfracTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::MathMLNames::mfracTag); }
+};
+}
+
+namespace WebCore {
 class MathMLMathElement;
 }
 namespace WTF {
@@ -57,6 +71,48 @@ public:
 private:
     static bool checkTagName(const WebCore::MathMLElement& element) { return element.hasTagName(WebCore::MathMLNames::mencloseTag); }
     static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::MathMLNames::mencloseTag); }
+};
+}
+
+namespace WebCore {
+class MathMLOperatorElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::MathMLOperatorElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::MathMLElement& element) { return element.hasTagName(WebCore::MathMLNames::moTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::MathMLNames::moTag); }
+};
+}
+
+namespace WebCore {
+class MathMLPaddedElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::MathMLPaddedElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::MathMLElement& element) { return element.hasTagName(WebCore::MathMLNames::mpaddedTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::MathMLNames::mpaddedTag); }
+};
+}
+
+namespace WebCore {
+class MathMLSpaceElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::MathMLSpaceElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::MathMLElement& element) { return element.hasTagName(WebCore::MathMLNames::mspaceTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::MathMLNames::mspaceTag); }
 };
 }
 

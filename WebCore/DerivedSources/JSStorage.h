@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStorage_h
-#define JSStorage_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "Storage.h"
@@ -27,26 +26,24 @@
 
 namespace WebCore {
 
-class JSStorage : public JSDOMWrapper {
+class JSStorage : public JSDOMWrapper<Storage> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Storage>;
     static JSStorage* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Storage>&& impl)
     {
-        JSStorage* ptr = new (NotNull, JSC::allocateCell<JSStorage>(globalObject->vm().heap)) JSStorage(structure, globalObject, WTF::move(impl));
+        JSStorage* ptr = new (NotNull, JSC::allocateCell<JSStorage>(globalObject->vm().heap)) JSStorage(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Storage* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
-    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     static void destroy(JSC::JSCell*);
-    ~JSStorage();
 
     DECLARE_INFO;
 
@@ -58,26 +55,14 @@ public:
     static bool deleteProperty(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName);
     static bool deletePropertyByIndex(JSC::JSCell*, JSC::ExecState*, unsigned);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Storage& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Storage* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSStorage(JSC::Structure*, JSDOMGlobalObject*, Ref<Storage>&&);
+    JSStorage(JSC::Structure*, JSDOMGlobalObject&, Ref<Storage>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, Storage*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
+    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&, bool& putResult);
 };
 
 class JSStorageOwner : public JSC::WeakHandleOwner {
@@ -92,10 +77,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Storage*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Storage*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Storage& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Storage* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Storage&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Storage* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Storage>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Storage>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Storage> {
+    using WrapperClass = JSStorage;
+    using ToWrappedReturnType = Storage*;
+};
 
 } // namespace WebCore
-
-#endif

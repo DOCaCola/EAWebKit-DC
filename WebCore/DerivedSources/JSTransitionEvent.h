@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTransitionEvent_h
-#define JSTransitionEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "TransitionEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSTransitionEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = TransitionEvent;
     static JSTransitionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TransitionEvent>&& impl)
     {
-        JSTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSTransitionEvent>(globalObject->vm().heap)) JSTransitionEvent(structure, globalObject, WTF::move(impl));
+        JSTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSTransitionEvent>(globalObject->vm().heap)) JSTransitionEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TransitionEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    TransitionEvent& wrapped() const
     {
-        return static_cast<TransitionEvent&>(Base::impl());
+        return static_cast<TransitionEvent&>(Base::wrapped());
     }
 protected:
-    JSTransitionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TransitionEvent>&&);
+    JSTransitionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TransitionEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TransitionEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TransitionEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TransitionEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TransitionEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillTransitionEventInit(TransitionEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<TransitionEvent> {
+    using WrapperClass = JSTransitionEvent;
+    using ToWrappedReturnType = TransitionEvent*;
+};
+template<> TransitionEvent::Init convertDictionary<TransitionEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

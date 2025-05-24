@@ -18,74 +18,19 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCIceServer_h
-#define JSRTCIceServer_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
 #include "RTCIceServer.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCIceServer : public JSDOMWrapper {
-public:
-    typedef JSDOMWrapper Base;
-    static JSRTCIceServer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceServer>&& impl)
-    {
-        JSRTCIceServer* ptr = new (NotNull, JSC::allocateCell<JSRTCIceServer>(globalObject->vm().heap)) JSRTCIceServer(structure, globalObject, WTF::move(impl));
-        ptr->finishCreation(globalObject->vm());
-        return ptr;
-    }
+template<> RTCIceServer convertDictionary<RTCIceServer>(JSC::ExecState&, JSC::JSValue);
 
-    static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static RTCIceServer* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSRTCIceServer();
-
-    DECLARE_INFO;
-
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-
-    RTCIceServer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCIceServer* m_impl;
-protected:
-    JSRTCIceServer(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceServer>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-};
-
-class JSRTCIceServerOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCIceServer*)
-{
-    static NeverDestroyed<JSRTCIceServerOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCIceServer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCIceServer& impl) { return toJS(exec, globalObject, &impl); }
-
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const RTCIceServer&);
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLUniformLocation_h
-#define JSWebGLUniformLocation_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLUniformLocation : public JSDOMWrapper {
+class JSWebGLUniformLocation : public JSDOMWrapper<WebGLUniformLocation> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLUniformLocation>;
     static JSWebGLUniformLocation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLUniformLocation>&& impl)
     {
-        JSWebGLUniformLocation* ptr = new (NotNull, JSC::allocateCell<JSWebGLUniformLocation>(globalObject->vm().heap)) JSWebGLUniformLocation(structure, globalObject, WTF::move(impl));
+        JSWebGLUniformLocation* ptr = new (NotNull, JSC::allocateCell<JSWebGLUniformLocation>(globalObject->vm().heap)) JSWebGLUniformLocation(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLUniformLocation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLUniformLocation();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLUniformLocation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLUniformLocation* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLUniformLocation(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLUniformLocation>&&);
+    JSWebGLUniformLocation(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLUniformLocation>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLUniformLocationOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLUniformLocation
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLUniformLocation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLUniformLocation& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLUniformLocation* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLUniformLocation&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLUniformLocation* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLUniformLocation>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLUniformLocation>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLUniformLocation> {
+    using WrapperClass = JSWebGLUniformLocation;
+    using ToWrappedReturnType = WebGLUniformLocation*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

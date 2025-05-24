@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf --key-positions='*' -m 10 -s 2 --output-file=SelectorPseudoClassAndCompatibilityElementMap.cpp SelectorPseudoClassAndCompatibilityElementMap.gperf  */
+/* C++ code produced by gperf version 3.0.1 */
+/* Command-line: C:/GnuWin32/bin/gperf.exe --key-positions='*' -m 10 -s 2 --output-file=SelectorPseudoClassAndCompatibilityElementMap.cpp SelectorPseudoClassAndCompatibilityElementMap.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -31,7 +31,7 @@
 #line 2 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
 
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -60,6 +60,8 @@
 #include "config.h"
 #include "SelectorPseudoTypeMap.h"
 
+#include "CSSParserSelector.h"
+
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
@@ -76,14 +78,14 @@ struct SelectorPseudoClassOrCompatibilityPseudoElementEntry {
 
 enum
   {
-    TOTAL_KEYWORDS = 66,
+    TOTAL_KEYWORDS = 69,
     MIN_WORD_LENGTH = 3,
     MAX_WORD_LENGTH = 40,
-    MIN_HASH_VALUE = 4,
-    MAX_HASH_VALUE = 163
+    MIN_HASH_VALUE = 6,
+    MAX_HASH_VALUE = 217
   };
 
-/* maximum key range = 160, duplicates = 0 */
+/* maximum key range = 212, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
@@ -143,32 +145,32 @@ SelectorPseudoClassAndCompatibilityElementMapHash::hash (register const char *st
 {
   static const unsigned char asso_values[] =
     {
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-       23, 164, 164, 164, 164,   0, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164,   0,  26,   7,   3,   1,
-        0,  37,   3,   0, 164,   6,   0,  21,   0,   0,
-        4,   3,   0,   0,   0,  20,  48,   3, 164,   2,
-        0, 164, 164, 164, 164, 164, 164,   0,  26,   7,
-        3,   1,   0,  37,   3,   0, 164,   6,   0,  21,
-        0,   0,   4,   3,   0,   0,   0,  20,  48,   3,
-      164,   2,   0, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
-      164, 164, 164, 164, 164, 164
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218,   1, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218,   3,  36,   5,   4,   2,
+        4,  32,   6,   1, 218,   5,   3,  43,   1,   1,
+        8,   8,   1,   1,   1,   5,  63,   2, 218,  10,
+        2, 218, 218, 218, 218, 218, 218,   3,  36,   5,
+        4,   2,   4,  32,   6,   1, 218,   5,   3,  43,
+        1,   1,   8,   8,   1,   1,   1,   5,  63,   2,
+      218,  10,   2, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
+      218, 218, 218, 218, 218, 218
     };
   register int hval = len;
 
@@ -304,165 +306,189 @@ static const struct SelectorPseudoClassOrCompatibilityPseudoElementEntry wordlis
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 113 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 104 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"not", {CSSSelector::PseudoClassNot, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 118 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"root", {CSSSelector::PseudoClassRoot, CSSSelector::PseudoElementUnknown}},
-#line 116 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"start", {CSSSelector::PseudoClassStart, CSSSelector::PseudoElementUnknown}},
-#line 69 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"after", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementAfter}},
-#line 81 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+#line 79 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"dir", {CSSSelector::PseudoClassDir, CSSSelector::PseudoElementUnknown}},
+#line 84 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"end", {CSSSelector::PseudoClassEnd, CSSSelector::PseudoElementUnknown}},
-#line 127 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+#line 117 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"role", {CSSSelector::PseudoClassRole, CSSSelector::PseudoElementUnknown}},
+#line 121 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"start", {CSSSelector::PseudoClassStart, CSSSelector::PseudoElementUnknown}},
+#line 92 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"host", {CSSSelector::PseudoClassHost, CSSSelector::PseudoElementUnknown}},
+#line 101 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"link", {CSSSelector::PseudoClassLink, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 71 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"after", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementAfter}},
+#line 132 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"past", {CSSSelector::PseudoClassPast, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 96 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"link", {CSSSelector::PseudoClassLink, CSSSelector::PseudoElementUnknown}},
-#line 84 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"first-line", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementFirstLine}},
-#line 106 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"optional", {CSSSelector::PseudoClassOptional, CSSSelector::PseudoElementUnknown}},
-#line 87 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"horizontal", {CSSSelector::PseudoClassHorizontal, CSSSelector::PseudoElementUnknown}},
-#line 83 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"first-letter", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementFirstLetter}},
-#line 109 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"read-only", {CSSSelector::PseudoClassReadOnly, CSSSelector::PseudoElementUnknown}},
-#line 70 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"any-link", {CSSSelector::PseudoClassAnyLink, CSSSelector::PseudoElementUnknown}},
-#line 114 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 89 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"focus", {CSSSelector::PseudoClassFocus, CSSSelector::PseudoElementUnknown}},
+#line 119 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"scope", {CSSSelector::PseudoClassScope, CSSSelector::PseudoElementUnknown}},
-#line 110 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 131 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"future", {CSSSelector::PseudoClassFuture, CSSSelector::PseudoElementUnknown}},
+#line 78 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"defined", {CSSSelector::PseudoClassDefined, CSSSelector::PseudoElementUnknown}},
+#line 87 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"first-line", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementFirstLine}},
+#line 111 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"optional", {CSSSelector::PseudoClassOptional, CSSSelector::PseudoElementUnknown}},
+#line 115 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"read-write", {CSSSelector::PseudoClassReadWrite, CSSSelector::PseudoElementUnknown}},
-#line 95 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"last-of-type", {CSSSelector::PseudoClassLastOfType, CSSSelector::PseudoElementUnknown}},
-#line 85 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"first-of-type", {CSSSelector::PseudoClassFirstOfType, CSSSelector::PseudoElementUnknown}},
+#line 77 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"default", {CSSSelector::PseudoClassDefault, CSSSelector::PseudoElementUnknown}},
+#line 91 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"horizontal", {CSSSelector::PseudoClassHorizontal, CSSSelector::PseudoElementUnknown}},
+#line 86 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"first-letter", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementFirstLetter}},
+#line 116 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"required", {CSSSelector::PseudoClassRequired, CSSSelector::PseudoElementUnknown}},
+#line 72 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"any-link", {CSSSelector::PseudoClassAnyLink, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 114 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"read-only", {CSSSelector::PseudoClassReadOnly, CSSSelector::PseudoElementUnknown}},
+#line 74 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"checked", {CSSSelector::PseudoClassChecked, CSSSelector::PseudoElementUnknown}},
 #line 105 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"nth-child", {CSSSelector::PseudoClassNthChild, CSSSelector::PseudoElementUnknown}},
+#line 99 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"last-child", {CSSSelector::PseudoClassLastChild, CSSSelector::PseudoElementUnknown}},
+#line 85 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"first-child", {CSSSelector::PseudoClassFirstChild, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 90 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"focus-within", {CSSSelector::PseudoClassFocusWithin, CSSSelector::PseudoElementUnknown}},
+#line 75 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"corner-present", {CSSSelector::PseudoClassCornerPresent, CSSSelector::PseudoElementUnknown}},
+#line 98 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"lang", {CSSSelector::PseudoClassLang, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 109 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"only-child", {CSSSelector::PseudoClassOnlyChild, CSSSelector::PseudoElementUnknown}},
+#line 122 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"target", {CSSSelector::PseudoClassTarget, CSSSelector::PseudoElementUnknown}},
+#line 108 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"nth-of-type", {CSSSelector::PseudoClassNthOfType, CSSSelector::PseudoElementUnknown}},
+#line 100 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"last-of-type", {CSSSelector::PseudoClassLastOfType, CSSSelector::PseudoElementUnknown}},
+#line 88 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"first-of-type", {CSSSelector::PseudoClassFirstOfType, CSSSelector::PseudoElementUnknown}},
+#line 94 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"in-range", {CSSSelector::PseudoClassInRange, CSSSelector::PseudoElementUnknown}},
+#line 106 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"nth-last-child", {CSSSelector::PseudoClassNthLastChild, CSSSelector::PseudoElementUnknown}},
+#line 73 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"before", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementBefore}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 110 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"only-of-type", {CSSSelector::PseudoClassOnlyOfType, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 94 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"last-child", {CSSSelector::PseudoClassLastChild, CSSSelector::PseudoElementUnknown}},
-#line 82 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"first-child", {CSSSelector::PseudoClassFirstChild, CSSSelector::PseudoElementUnknown}},
-#line 104 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"only-child", {CSSSelector::PseudoClassOnlyChild, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 99 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"not(", {CSSSelector::PseudoClassNot, CSSSelector::PseudoElementUnknown}},
-#line 73 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"corner-present", {CSSSelector::PseudoClassCornerPresent, CSSSelector::PseudoElementUnknown}},
-#line 112 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"role(", {CSSSelector::PseudoClassRole, CSSSelector::PseudoElementUnknown}},
-#line 76 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"dir(", {CSSSelector::PseudoClassDir, CSSSelector::PseudoElementUnknown}},
-#line 75 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"default", {CSSSelector::PseudoClassDefault, CSSSelector::PseudoElementUnknown}},
-#line 86 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"focus", {CSSSelector::PseudoClassFocus, CSSSelector::PseudoElementUnknown}},
-#line 79 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"empty", {CSSSelector::PseudoClassEmpty, CSSSelector::PseudoElementUnknown}},
-#line 71 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"before", {CSSSelector::PseudoClassUnknown, CSSSelector::PseudoElementBefore}},
-#line 72 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"checked", {CSSSelector::PseudoClassChecked, CSSSelector::PseudoElementUnknown}},
-#line 111 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"required", {CSSSelector::PseudoClassRequired, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 80 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"enabled", {CSSSelector::PseudoClassEnabled, CSSSelector::PseudoElementUnknown}},
-#line 90 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"increment", {CSSSelector::PseudoClassIncrement, CSSSelector::PseudoElementUnknown}},
-#line 91 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"indeterminate", {CSSSelector::PseudoClassIndeterminate, CSSSelector::PseudoElementUnknown}},
-#line 77 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"disabled", {CSSSelector::PseudoClassDisabled, CSSSelector::PseudoElementUnknown}},
-#line 108 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"placeholder-shown", {CSSSelector::PseudoClassPlaceholderShown, CSSSelector::PseudoElementUnknown}},
-#line 74 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"decrement", {CSSSelector::PseudoClassDecrement, CSSSelector::PseudoElementUnknown}},
-#line 117 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"target", {CSSSelector::PseudoClassTarget, CSSSelector::PseudoElementUnknown}},
 #line 103 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"nth-of-type(", {CSSSelector::PseudoClassNthOfType, CSSSelector::PseudoElementUnknown}},
-#line 89 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"in-range", {CSSSelector::PseudoClassInRange, CSSSelector::PseudoElementUnknown}},
-#line 126 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"future", {CSSSelector::PseudoClassFuture, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 100 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"nth-child(", {CSSSelector::PseudoClassNthChild, CSSSelector::PseudoElementUnknown}},
-#line 102 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"nth-last-of-type(", {CSSSelector::PseudoClassNthLastOfType, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 101 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"nth-last-child(", {CSSSelector::PseudoClassNthLastChild, CSSSelector::PseudoElementUnknown}},
-#line 98 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"no-button", {CSSSelector::PseudoClassNoButton, CSSSelector::PseudoElementUnknown}},
-#line 118 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"valid", {CSSSelector::PseudoClassValid, CSSSelector::PseudoElementUnknown}},
-#line 88 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"hover", {CSSSelector::PseudoClassHover, CSSSelector::PseudoElementUnknown}},
-#line 92 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"invalid", {CSSSelector::PseudoClassInvalid, CSSSelector::PseudoElementUnknown}},
-#line 120 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"visited", {CSSSelector::PseudoClassVisited, CSSSelector::PseudoElementUnknown}},
-#line 64 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"-webkit-any-link", {CSSSelector::PseudoClassAnyLinkDeprecated, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 68 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"active", {CSSSelector::PseudoClassActive, CSSSelector::PseudoElementUnknown}},
-#line 97 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"matches(", {CSSSelector::PseudoClassMatches, CSSSelector::PseudoElementUnknown}},
-#line 119 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"vertical", {CSSSelector::PseudoClassVertical, CSSSelector::PseudoElementUnknown}},
-#line 93 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"lang(", {CSSSelector::PseudoClassLang, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 83 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"enabled", {CSSSelector::PseudoClassEnabled, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
 #line 107 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"nth-last-of-type", {CSSSelector::PseudoClassNthLastOfType, CSSSelector::PseudoElementUnknown}},
+#line 80 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"disabled", {CSSSelector::PseudoClassDisabled, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 112 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"out-of-range", {CSSSelector::PseudoClassOutOfRange, CSSSelector::PseudoElementUnknown}},
+#line 95 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"increment", {CSSSelector::PseudoClassIncrement, CSSSelector::PseudoElementUnknown}},
+#line 113 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"placeholder-shown", {CSSSelector::PseudoClassPlaceholderShown, CSSSelector::PseudoElementUnknown}},
+#line 102 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"matches", {CSSSelector::PseudoClassMatches, CSSSelector::PseudoElementUnknown}},
+#line 82 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"empty", {CSSSelector::PseudoClassEmpty, CSSSelector::PseudoElementUnknown}},
+#line 76 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"decrement", {CSSSelector::PseudoClassDecrement, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
 #line 65 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"-webkit-autofill", {CSSSelector::PseudoClassAutofill, CSSSelector::PseudoElementUnknown}},
-#line 63 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"-webkit-any(", {CSSSelector::PseudoClassAny, CSSSelector::PseudoElementUnknown}},
+    {"-webkit-any", {CSSSelector::PseudoClassAny, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 96 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"indeterminate", {CSSSelector::PseudoClassIndeterminate, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 121 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"window-inactive", {CSSSelector::PseudoClassWindowInactive, CSSSelector::PseudoElementUnknown}},
-#line 62 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"-khtml-drag", {CSSSelector::PseudoClassDrag, CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 93 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"hover", {CSSSelector::PseudoClassHover, CSSSelector::PseudoElementUnknown}},
 #line 123 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"-webkit-full-screen", {CSSSelector::PseudoClassFullScreen, CSSSelector::PseudoElementUnknown}},
+    {"valid", {CSSSelector::PseudoClassValid, CSSSelector::PseudoElementUnknown}},
+#line 125 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"visited", {CSSSelector::PseudoClassVisited, CSSSelector::PseudoElementUnknown}},
+#line 70 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"active", {CSSSelector::PseudoClassActive, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 97 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"invalid", {CSSSelector::PseudoClassInvalid, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 67 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"-webkit-autofill", {CSSSelector::PseudoClassAutofill, CSSSelector::PseudoElementUnknown}},
+#line 124 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"vertical", {CSSSelector::PseudoClassVertical, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
 #line 66 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"-webkit-any-link", {CSSSelector::PseudoClassAnyLinkDeprecated, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 128 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"-webkit-full-screen", {CSSSelector::PseudoClassFullScreen, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 120 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"single-button", {CSSSelector::PseudoClassSingleButton, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 68 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"-webkit-drag", {CSSSelector::PseudoClassDrag, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 126 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"window-inactive", {CSSSelector::PseudoClassWindowInactive, CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 81 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"double-button", {CSSSelector::PseudoClassDoubleButton, CSSSelector::PseudoElementUnknown}},
+#line 64 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"-khtml-drag", {CSSSelector::PseudoClassDrag, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 115 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"single-button", {CSSSelector::PseudoClassSingleButton, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 124 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+#line 129 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"-webkit-full-screen-ancestor", {CSSSelector::PseudoClassFullScreenAncestor, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
@@ -471,8 +497,6 @@ static const struct SelectorPseudoClassOrCompatibilityPseudoElementEntry wordlis
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 78 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
-    {"double-button", {CSSSelector::PseudoClassDoubleButton, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
@@ -508,9 +532,31 @@ static const struct SelectorPseudoClassOrCompatibilityPseudoElementEntry wordlis
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 125 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 130 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"-webkit-full-screen-document", {CSSSelector::PseudoClassFullScreenDocument, CSSSelector::PseudoElementUnknown}},
-#line 67 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 69 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"-webkit-full-page-media", {CSSSelector::PseudoClassFullPageMedia, CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
@@ -528,7 +574,20 @@ static const struct SelectorPseudoClassOrCompatibilityPseudoElementEntry wordlis
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
     {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
-#line 122 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+    {"",{CSSSelector::PseudoClassUnknown,CSSSelector::PseudoElementUnknown}},
+#line 127 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
     {"-webkit-animating-full-screen-transition", {CSSSelector::PseudoClassAnimatingFullScreenTransition, CSSSelector::PseudoElementUnknown}}
   };
 
@@ -549,7 +608,7 @@ SelectorPseudoClassAndCompatibilityElementMapHash::in_word_set (register const c
     }
   return 0;
 }
-#line 128 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
+#line 133 "SelectorPseudoClassAndCompatibilityElementMap.gperf"
 
 
 static inline const SelectorPseudoClassOrCompatibilityPseudoElementEntry* parsePseudoClassAndCompatibilityElementString(const LChar* characters, unsigned length)
@@ -574,7 +633,7 @@ static inline const SelectorPseudoClassOrCompatibilityPseudoElementEntry* parseP
     return parsePseudoClassAndCompatibilityElementString(buffer, length);
 }
 
-PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const CSSParserString& pseudoTypeString)
+PseudoClassOrCompatibilityPseudoElement parsePseudoClassAndCompatibilityElementString(const StringView& pseudoTypeString)
 {
     const SelectorPseudoClassOrCompatibilityPseudoElementEntry* entry;
     if (pseudoTypeString.is8Bit())

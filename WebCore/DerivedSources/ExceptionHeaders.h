@@ -30,18 +30,12 @@
 
 #include "DOMCoreException.h"
 #include "JSDOMCoreException.h"
-#include "EventException.h"
-#include "JSEventException.h"
 #include "FileException.h"
 #include "JSFileException.h"
-#include "RangeException.h"
-#include "JSRangeException.h"
 #include "SQLException.h"
 #include "JSSQLException.h"
 #include "SVGException.h"
 #include "JSSVGException.h"
-#include "XMLHttpRequestException.h"
-#include "JSXMLHttpRequestException.h"
 #include "XPathException.h"
 #include "JSXPathException.h"
 

@@ -18,26 +18,27 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSElement_h
-#define JSElement_h
+#pragma once
 
 #include "Element.h"
+#include "JSDOMConvert.h"
 #include "JSNode.h"
 
 namespace WebCore {
 
 class WEBCORE_EXPORT JSElement : public JSNode {
 public:
-    typedef JSNode Base;
+    using Base = JSNode;
+    using DOMWrapped = Element;
     static JSElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Element>&& impl)
     {
-        JSElement* ptr = new (NotNull, JSC::allocateCell<JSElement>(globalObject->vm().heap)) JSElement(structure, globalObject, WTF::move(impl));
+        JSElement* ptr = new (NotNull, JSC::allocateCell<JSElement>(globalObject->vm().heap)) JSElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Element* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,33 +48,30 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue before(JSC::ExecState*);
-    JSC::JSValue after(JSC::ExecState*);
-    JSC::JSValue replaceWith(JSC::ExecState*);
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    Element& impl() const
+    Element& wrapped() const
     {
-        return static_cast<Element&>(Base::impl());
+        return static_cast<Element&>(Base::wrapped());
     }
 protected:
-    JSElement(JSC::Structure*, JSDOMGlobalObject*, Ref<Element>&&);
+    JSElement(JSC::Structure*, JSDOMGlobalObject&, Ref<Element>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Element*);
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Element&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Element* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Element>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Element>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Element> {
+    using WrapperClass = JSElement;
+    using ToWrappedReturnType = Element*;
+};
+template<> Element::ShadowRootInit convertDictionary<Element::ShadowRootInit>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif
 #include "JSElementCustom.h"

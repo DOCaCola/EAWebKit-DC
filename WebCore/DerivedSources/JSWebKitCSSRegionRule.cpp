@@ -24,10 +24,10 @@
 
 #include "JSWebKitCSSRegionRule.h"
 
-#include "CSSRuleList.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
-#include "WebKitCSSRegionRule.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,12 +36,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebKitCSSRegionRuleCssRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebKitCSSRegionRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitCSSRegionRuleCssRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebKitCSSRegionRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebKitCSSRegionRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebKitCSSRegionRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebKitCSSRegionRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebKitCSSRegionRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRulePrototype>(vm.heap)) JSWebKitCSSRegionRulePrototype(vm, globalObject, structure);
@@ -64,49 +65,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitCSSRegionRuleConstructor : public DOMConstructorObject {
-private:
-    JSWebKitCSSRegionRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebKitCSSRegionRuleConstructor = JSDOMConstructorNotConstructable<JSWebKitCSSRegionRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitCSSRegionRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitCSSRegionRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRuleConstructor>(vm.heap)) JSWebKitCSSRegionRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebKitCSSRegionRuleConstructor::s_info = { "WebKitCSSRegionRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSRegionRuleConstructor) };
-
-JSWebKitCSSRegionRuleConstructor::JSWebKitCSSRegionRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebKitCSSRegionRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSWebKitCSSRegionRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebKitCSSRegionRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSRegionRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSRegionRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitCSSRegionRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebKitCSSRegionRuleConstructor::s_info = { "WebKitCSSRegionRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSRegionRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitCSSRegionRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSRegionRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSRegionRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSRegionRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSRegionRuleConstructor) } },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSRegionRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitCSSRegionRulePrototype::s_info = { "WebKitCSSRegionRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSRegionRulePrototype) };
@@ -119,49 +99,76 @@ void JSWebKitCSSRegionRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitCSSRegionRule::s_info = { "WebKitCSSRegionRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSRegionRule) };
 
-JSWebKitCSSRegionRule::JSWebKitCSSRegionRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSRegionRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSWebKitCSSRegionRule::JSWebKitCSSRegionRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitCSSRegionRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebKitCSSRegionRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebKitCSSRegionRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWebKitCSSRegionRulePrototype::create(vm, globalObject, JSWebKitCSSRegionRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSWebKitCSSRegionRulePrototype::create(vm, globalObject, JSWebKitCSSRegionRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSWebKitCSSRegionRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebKitCSSRegionRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebKitCSSRegionRule>(vm, globalObject);
 }
 
-EncodedJSValue jsWebKitCSSRegionRuleCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWebKitCSSRegionRule* BindingCaller<JSWebKitCSSRegionRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebKitCSSRegionRule* castedThis = jsDynamicCast<JSWebKitCSSRegionRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebKitCSSRegionRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSRegionRule", "cssRules");
-        return throwGetterTypeError(*exec, "WebKitCSSRegionRule", "cssRules");
+    return jsDynamicDowncast<JSWebKitCSSRegionRule*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsWebKitCSSRegionRuleCssRulesGetter(ExecState&, JSWebKitCSSRegionRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebKitCSSRegionRuleCssRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebKitCSSRegionRule>::attribute<jsWebKitCSSRegionRuleCssRulesGetter>(state, thisValue, "cssRules");
+}
+
+static inline JSValue jsWebKitCSSRegionRuleCssRulesGetter(ExecState& state, JSWebKitCSSRegionRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.cssRules());
+    return result;
+}
+
+EncodedJSValue jsWebKitCSSRegionRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebKitCSSRegionRulePrototype* domObject = jsDynamicDowncast<JSWebKitCSSRegionRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebKitCSSRegionRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWebKitCSSRegionRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebKitCSSRegionRulePrototype* domObject = jsDynamicDowncast<JSWebKitCSSRegionRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsWebKitCSSRegionRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSWebKitCSSRegionRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSWebKitCSSRegionRulePrototype* domObject = jsDynamicCast<JSWebKitCSSRegionRulePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitCSSRegionRule::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSWebKitCSSRegionRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSWebKitCSSRegionRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitCSSRegionRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -20,16 +20,13 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCStatsResponse.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSRTCStatsReport.h"
-#include "RTCStatsReport.h"
-#include "RTCStatsResponse.h"
-#include "wtf/text/AtomicString.h"
 #include <runtime/Error.h>
 #include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
@@ -45,7 +42,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsRTCStatsResponsePrototypeFunctionNamedItem(J
 
 class JSRTCStatsResponsePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCStatsResponsePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCStatsResponsePrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsResponsePrototype>(vm.heap)) JSRTCStatsResponsePrototype(vm, globalObject, structure);
@@ -68,26 +65,12 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSRTCStatsResponseTableIndex[2] = {
-    { -1, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSRTCStatsResponseTableValues[] =
-{
-    { 0, 0, NoIntrinsic, 0, 0 }
-};
-
-static const HashTable JSRTCStatsResponseTable = { 0, 1, false, JSRTCStatsResponseTableValues, 0, JSRTCStatsResponseTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSRTCStatsResponsePrototypeTableValues[] =
 {
-    { "result", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCStatsResponsePrototypeFunctionResult), (intptr_t) (0) },
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCStatsResponsePrototypeFunctionNamedItem), (intptr_t) (0) },
+    { "result", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCStatsResponsePrototypeFunctionResult), (intptr_t) (0) } },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCStatsResponsePrototypeFunctionNamedItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSRTCStatsResponsePrototype::s_info = { "RTCStatsResponsePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCStatsResponsePrototype) };
@@ -98,12 +81,18 @@ void JSRTCStatsResponsePrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSRTCStatsResponsePrototypeTableValues, *this);
 }
 
-const ClassInfo JSRTCStatsResponse::s_info = { "RTCStatsResponse", &Base::s_info, &JSRTCStatsResponseTable, CREATE_METHOD_TABLE(JSRTCStatsResponse) };
+const ClassInfo JSRTCStatsResponse::s_info = { "RTCStatsResponse", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCStatsResponse) };
 
-JSRTCStatsResponse::JSRTCStatsResponse(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCStatsResponse>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCStatsResponse::JSRTCStatsResponse(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCStatsResponse>&& impl)
+    : JSDOMWrapper<RTCStatsResponse>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCStatsResponse::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCStatsResponse::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -111,7 +100,7 @@ JSObject* JSRTCStatsResponse::createPrototype(VM& vm, JSGlobalObject* globalObje
     return JSRTCStatsResponsePrototype::create(vm, globalObject, JSRTCStatsResponsePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSRTCStatsResponse::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCStatsResponse::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCStatsResponse>(vm, globalObject);
 }
@@ -122,64 +111,87 @@ void JSRTCStatsResponse::destroy(JSC::JSCell* cell)
     thisObject->JSRTCStatsResponse::~JSRTCStatsResponse();
 }
 
-JSRTCStatsResponse::~JSRTCStatsResponse()
-{
-    releaseImpl();
-}
-
-bool JSRTCStatsResponse::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSRTCStatsResponse::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSRTCStatsResponse*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSRTCStatsResponse>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
+    JSValue proto = thisObject->getPrototypeDirect();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (thisObject->classInfo() == info() && !propertyName.isSymbol()) {
+        auto item = thisObject->wrapped().namedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLInterface<RTCStatsReport>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<RTCStatsReport>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return getStaticValueSlot<JSRTCStatsResponse, Base>(exec, JSRTCStatsResponseTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSRTCStatsResponse::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSRTCStatsResponse::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSRTCStatsResponse*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->classInfo() == info()) {
+        auto item = thisObject->wrapped().namedItem(propertyNameToAtomicString(propertyName));
+        if (!IDLNullable<IDLInterface<RTCStatsReport>>::isNullValue(item)) {
+            slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLInterface<RTCStatsReport>>>(*state, *thisObject->globalObject(), item));
+            return true;
+        }
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCStatsResponsePrototypeFunctionResult(ExecState* exec)
+void JSRTCStatsResponse::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCStatsResponse* castedThis = jsDynamicCast<JSRTCStatsResponse*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCStatsResponse", "result");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCStatsResponse::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.result());
-    return JSValue::encode(result);
+    auto* thisObject = jsCast<JSRTCStatsResponse*>(object);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+        propertyNames.add(Identifier::fromString(state, propertyName));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCStatsResponsePrototypeFunctionNamedItem(ExecState* exec)
+template<> inline JSRTCStatsResponse* BindingCaller<JSRTCStatsResponse>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCStatsResponse* castedThis = jsDynamicCast<JSRTCStatsResponse*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCStatsResponse", "namedItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCStatsResponse::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSRTCStatsResponse*>(state.thisValue());
+}
+
+static inline JSC::EncodedJSValue jsRTCStatsResponsePrototypeFunctionResultCaller(JSC::ExecState*, JSRTCStatsResponse*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCStatsResponsePrototypeFunctionResult(ExecState* state)
+{
+    return BindingCaller<JSRTCStatsResponse>::callOperation<jsRTCStatsResponsePrototypeFunctionResultCaller>(state, "result");
+}
+
+static inline JSC::EncodedJSValue jsRTCStatsResponsePrototypeFunctionResultCaller(JSC::ExecState* state, JSRTCStatsResponse* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<RTCStatsReport>>>(*state, *castedThis->globalObject(), impl.result()));
+}
+
+static inline JSC::EncodedJSValue jsRTCStatsResponsePrototypeFunctionNamedItemCaller(JSC::ExecState*, JSRTCStatsResponse*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCStatsResponsePrototypeFunctionNamedItem(ExecState* state)
+{
+    return BindingCaller<JSRTCStatsResponse>::callOperation<jsRTCStatsResponsePrototypeFunctionNamedItemCaller>(state, "namedItem");
+}
+
+static inline JSC::EncodedJSValue jsRTCStatsResponsePrototypeFunctionNamedItemCaller(JSC::ExecState* state, JSRTCStatsResponse* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLInterface<RTCStatsReport>>>(*state, *castedThis->globalObject(), impl.namedItem(WTFMove(name))));
 }
 
 bool JSRTCStatsResponseOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -191,9 +203,9 @@ bool JSRTCStatsResponseOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknow
 
 void JSRTCStatsResponseOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsRTCStatsResponse = jsCast<JSRTCStatsResponse*>(handle.slot()->asCell());
+    auto* jsRTCStatsResponse = static_cast<JSRTCStatsResponse*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCStatsResponse->impl(), jsRTCStatsResponse);
+    uncacheWrapper(world, &jsRTCStatsResponse->wrapped(), jsRTCStatsResponse);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -204,15 +216,12 @@ extern "C" { extern void (*const __identifier("??_7RTCStatsResponse@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16RTCStatsResponseE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCStatsResponse* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<RTCStatsResponse>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCStatsResponse>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCStatsResponse@WebCore@@6B@"));
 #else
@@ -220,7 +229,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCStatsResp
 #if COMPILER(CLANG)
     // If this fails RTCStatsResponse does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCStatsResponse), RTCStatsResponse_is_not_polymorphic);
+    static_assert(__is_polymorphic(RTCStatsResponse), "RTCStatsResponse is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -229,16 +238,21 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCStatsResp
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSRTCStatsResponse>(globalObject, impl);
+    return createWrapper<RTCStatsResponse>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCStatsResponse& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 RTCStatsResponse* JSRTCStatsResponse::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSRTCStatsResponse*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSRTCStatsResponse*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

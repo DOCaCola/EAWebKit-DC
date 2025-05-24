@@ -18,77 +18,19 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCryptoKeyPair_h
-#define JSCryptoKeyPair_h
+#pragma once
 
 #if ENABLE(SUBTLE_CRYPTO)
 
 #include "CryptoKeyPair.h"
-#include "JSDOMWrapper.h"
-#include <wtf/NeverDestroyed.h>
+#include "JSDOMConvert.h"
 
 namespace WebCore {
 
-class JSCryptoKeyPair : public JSDOMWrapper {
-public:
-    typedef JSDOMWrapper Base;
-    static JSCryptoKeyPair* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKeyPair>&& impl)
-    {
-        JSCryptoKeyPair* ptr = new (NotNull, JSC::allocateCell<JSCryptoKeyPair>(globalObject->vm().heap)) JSCryptoKeyPair(structure, globalObject, WTF::move(impl));
-        ptr->finishCreation(globalObject->vm());
-        return ptr;
-    }
+template<> CryptoKeyPair convertDictionary<CryptoKeyPair>(JSC::ExecState&, JSC::JSValue);
 
-    static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static CryptoKeyPair* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSCryptoKeyPair();
-
-    DECLARE_INFO;
-
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-
-    static void visitChildren(JSCell*, JSC::SlotVisitor&);
-    void visitAdditionalChildren(JSC::SlotVisitor&);
-
-    CryptoKeyPair& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CryptoKeyPair* m_impl;
-protected:
-    JSCryptoKeyPair(JSC::Structure*, JSDOMGlobalObject*, Ref<CryptoKeyPair>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-};
-
-class JSCryptoKeyPairOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CryptoKeyPair*)
-{
-    static NeverDestroyed<JSCryptoKeyPairOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CryptoKeyPair*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CryptoKeyPair& impl) { return toJS(exec, globalObject, &impl); }
-
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const CryptoKeyPair&);
 
 } // namespace WebCore
 
 #endif // ENABLE(SUBTLE_CRYPTO)
-
-#endif

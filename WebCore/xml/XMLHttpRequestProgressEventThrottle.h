@@ -24,13 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XMLHttpRequestProgressEventThrottle_h
-#define XMLHttpRequestProgressEventThrottle_h
+#pragma once
 
 #include "Timer.h"
-#include "wtf/PassRefPtr.h"
-#include "wtf/Vector.h"
 #include <wtf/Forward.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
@@ -50,7 +48,7 @@ public:
     virtual ~XMLHttpRequestProgressEventThrottle();
 
     void dispatchThrottledProgressEvent(bool lengthComputable, unsigned long long loaded, unsigned long long total);
-    void dispatchReadyStateChangeEvent(PassRefPtr<Event>, ProgressEventAction = DoNotFlushProgressEvent);
+    void dispatchReadyStateChangeEvent(Event&, ProgressEventAction = DoNotFlushProgressEvent);
     void dispatchProgressEvent(const AtomicString&);
 
     void suspend();
@@ -59,10 +57,10 @@ public:
 private:
     static const double minimumProgressEventDispatchingIntervalInSeconds;
 
-    virtual void fired();
+    void fired() override;
     void dispatchDeferredEvents();
     void flushProgressEvent();
-    void dispatchEvent(PassRefPtr<Event>);
+    void dispatchEvent(Event&);
 
     bool hasEventToDispatch() const;
 
@@ -76,10 +74,8 @@ private:
 
     bool m_deferEvents;
     RefPtr<Event> m_deferredProgressEvent;
-    Vector<RefPtr<Event>> m_deferredEvents;
+    Vector<Ref<Event>> m_deferredEvents;
     Timer m_dispatchDeferredEventsTimer;
 };
 
 } // namespace WebCore
-
-#endif // XMLHttpRequestProgressEventThrottle_h

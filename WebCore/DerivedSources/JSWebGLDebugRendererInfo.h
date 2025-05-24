@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLDebugRendererInfo_h
-#define JSWebGLDebugRendererInfo_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLDebugRendererInfo : public JSDOMWrapper {
+class JSWebGLDebugRendererInfo : public JSDOMWrapper<WebGLDebugRendererInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLDebugRendererInfo>;
     static JSWebGLDebugRendererInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDebugRendererInfo>&& impl)
     {
-        JSWebGLDebugRendererInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugRendererInfo>(globalObject->vm().heap)) JSWebGLDebugRendererInfo(structure, globalObject, WTF::move(impl));
+        JSWebGLDebugRendererInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugRendererInfo>(globalObject->vm().heap)) JSWebGLDebugRendererInfo(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDebugRendererInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDebugRendererInfo();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDebugRendererInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDebugRendererInfo* m_impl;
 protected:
-    JSWebGLDebugRendererInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDebugRendererInfo>&&);
+    JSWebGLDebugRendererInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDebugRendererInfo>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLDebugRendererInfoOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDebugRendererIn
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugRendererInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLDebugRendererInfo* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugRendererInfo&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLDebugRendererInfo>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLDebugRendererInfo>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLDebugRendererInfo> {
+    using WrapperClass = JSWebGLDebugRendererInfo;
+    using ToWrappedReturnType = WebGLDebugRendererInfo*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

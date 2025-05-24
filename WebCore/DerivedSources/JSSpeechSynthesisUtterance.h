@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSpeechSynthesisUtterance_h
-#define JSSpeechSynthesisUtterance_h
+#pragma once
 
 #if ENABLE(SPEECH_SYNTHESIS)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "SpeechSynthesisUtterance.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSpeechSynthesisUtterance : public JSDOMWrapper {
+class JSSpeechSynthesisUtterance : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = SpeechSynthesisUtterance;
     static JSSpeechSynthesisUtterance* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesisUtterance>&& impl)
     {
-        JSSpeechSynthesisUtterance* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisUtterance>(globalObject->vm().heap)) JSSpeechSynthesisUtterance(structure, globalObject, WTF::move(impl));
+        JSSpeechSynthesisUtterance* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisUtterance>(globalObject->vm().heap)) JSSpeechSynthesisUtterance(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SpeechSynthesisUtterance* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSSpeechSynthesisUtterance();
 
     DECLARE_INFO;
 
@@ -52,43 +49,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    SpeechSynthesisUtterance& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SpeechSynthesisUtterance* m_impl;
-protected:
-    JSSpeechSynthesisUtterance(JSC::Structure*, JSDOMGlobalObject*, Ref<SpeechSynthesisUtterance>&&);
-
-    void finishCreation(JSC::VM& vm)
+    SpeechSynthesisUtterance& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<SpeechSynthesisUtterance&>(Base::wrapped());
     }
+protected:
+    JSSpeechSynthesisUtterance(JSC::Structure*, JSDOMGlobalObject&, Ref<SpeechSynthesisUtterance>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
-class JSSpeechSynthesisUtteranceOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SpeechSynthesisUtterance&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SpeechSynthesisUtterance* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SpeechSynthesisUtterance>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SpeechSynthesisUtterance>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SpeechSynthesisUtterance> {
+    using WrapperClass = JSSpeechSynthesisUtterance;
+    using ToWrappedReturnType = SpeechSynthesisUtterance*;
 };
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SpeechSynthesisUtterance*)
-{
-    static NeverDestroyed<JSSpeechSynthesisUtteranceOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SpeechSynthesisUtterance*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SpeechSynthesisUtterance& impl) { return toJS(exec, globalObject, &impl); }
-
 
 } // namespace WebCore
 
 #endif // ENABLE(SPEECH_SYNTHESIS)
-
-#endif

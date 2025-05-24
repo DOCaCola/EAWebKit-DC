@@ -24,39 +24,80 @@
 
 #include "JSIDBRequest.h"
 
-#include "DOMError.h"
-#include "IDBAny.h"
-#include "IDBRequest.h"
-#include "IDBTransaction.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMError.h"
 #include "JSEventListener.h"
-#include "JSIDBAny.h"
+#include "JSIDBCursor.h"
+#include "JSIDBDatabase.h"
+#include "JSIDBIndex.h"
+#include "JSIDBObjectStore.h"
 #include "JSIDBTransaction.h"
-#include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, IDBRequest::ReadyState enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("pending"),
+        ASCIILiteral("done"),
+    };
+    static_assert(static_cast<size_t>(IDBRequest::ReadyState::Pending) == 0, "IDBRequest::ReadyState::Pending is not 0 as expected");
+    static_assert(static_cast<size_t>(IDBRequest::ReadyState::Done) == 1, "IDBRequest::ReadyState::Done is not 1 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<IDBRequest::ReadyState> parseEnumeration<IDBRequest::ReadyState>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "pending")
+        return IDBRequest::ReadyState::Pending;
+    if (stringValue == "done")
+        return IDBRequest::ReadyState::Done;
+    return std::nullopt;
+}
+
+template<> IDBRequest::ReadyState convertEnumeration<IDBRequest::ReadyState>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<IDBRequest::ReadyState>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<IDBRequest::ReadyState>()
+{
+    return "\"pending\", \"done\"";
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsIDBRequestResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBRequestError(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBRequestSource(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBRequestTransaction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBRequestReadyState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsIDBRequestOnsuccess(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBRequestOnsuccess(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBRequestOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSIDBRequestOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsIDBRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestError(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestSource(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestTransaction(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestReadyState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBRequestOnsuccess(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBRequestOnsuccess(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBRequestOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBRequestOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsIDBRequestConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBRequestConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBRequestPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBRequestPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBRequestPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBRequestPrototype>(vm.heap)) JSIDBRequestPrototype(vm, globalObject, structure);
@@ -79,55 +120,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBRequestConstructor : public DOMConstructorObject {
-private:
-    JSIDBRequestConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBRequestConstructor = JSDOMConstructorNotConstructable<JSIDBRequest>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBRequestConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBRequestConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBRequestConstructor>(vm.heap)) JSIDBRequestConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBRequestConstructor::s_info = { "IDBRequestConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBRequestConstructor) };
-
-JSIDBRequestConstructor::JSIDBRequestConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBRequestConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSIDBRequestConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBRequestConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBRequest::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBRequest::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBRequest"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBRequestConstructor::s_info = { "IDBRequest", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBRequestConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBRequestPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "error", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "source", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "transaction", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestTransaction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onsuccess", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestOnsuccess), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBRequestOnsuccess) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBRequestOnerror) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBRequestConstructor) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "error", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "source", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "transaction", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestTransaction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onsuccess", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestOnsuccess), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBRequestOnsuccess) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBRequestOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBRequestOnerror) } },
 };
 
 const ClassInfo JSIDBRequestPrototype::s_info = { "IDBRequestPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBRequestPrototype) };
@@ -140,185 +160,200 @@ void JSIDBRequestPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBRequest::s_info = { "IDBRequest", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBRequest) };
 
-JSIDBRequest::JSIDBRequest(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBRequest>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSIDBRequest::JSIDBRequest(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBRequest>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBRequest::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBRequest::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSIDBRequestPrototype::create(vm, globalObject, JSIDBRequestPrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSIDBRequestPrototype::create(vm, globalObject, JSIDBRequestPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSIDBRequest::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBRequest::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBRequest>(vm, globalObject);
 }
 
-EncodedJSValue jsIDBRequestResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSIDBRequest* BindingCaller<JSIDBRequest>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "result");
-        return throwGetterTypeError(*exec, "IDBRequest", "result");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.result(ec)));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSIDBRequest*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsIDBRequestResultGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBRequestError(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBRequestResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "error");
-        return throwGetterTypeError(*exec, "IDBRequest", "error");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.error(ec)));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestResultGetter>(state, thisValue, "result");
 }
 
-
-EncodedJSValue jsIDBRequestSource(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsIDBRequestResultGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "source");
-        return throwGetterTypeError(*exec, "IDBRequest", "source");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.source()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnion<IDLInterface<IDBCursor>, IDLInterface<IDBDatabase>, IDLAny>>>(state, *thisObject.globalObject(), throwScope, impl.result());
+    return result;
 }
 
+static inline JSValue jsIDBRequestErrorGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBRequestTransaction(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBRequestError(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "transaction");
-        return throwGetterTypeError(*exec, "IDBRequest", "transaction");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.transaction()));
-    return JSValue::encode(result);
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestErrorGetter>(state, thisValue, "error");
 }
 
-
-EncodedJSValue jsIDBRequestReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsIDBRequestErrorGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "readyState");
-        return throwGetterTypeError(*exec, "IDBRequest", "readyState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.readyState());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<DOMError>>>(state, *thisObject.globalObject(), throwScope, impl.error());
+    return result;
 }
 
+static inline JSValue jsIDBRequestSourceGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBRequestOnsuccess(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBRequestSource(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "onsuccess");
-        return throwGetterTypeError(*exec, "IDBRequest", "onsuccess");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().successEvent));
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestSourceGetter>(state, thisValue, "source");
 }
 
-
-EncodedJSValue jsIDBRequestOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsIDBRequestSourceGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBRequest", "onerror");
-        return throwGetterTypeError(*exec, "IDBRequest", "onerror");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnion<IDLInterface<IDBObjectStore>, IDLInterface<IDBIndex>, IDLInterface<IDBCursor>>>>(state, *thisObject.globalObject(), impl.source());
+    return result;
 }
 
+static inline JSValue jsIDBRequestTransactionGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
 
-EncodedJSValue jsIDBRequestConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBRequestTransaction(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSIDBRequestPrototype* domObject = jsDynamicCast<JSIDBRequestPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBRequest::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestTransactionGetter>(state, thisValue, "transaction");
 }
 
-void setJSIDBRequestOnsuccess(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsIDBRequestTransactionGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<IDBTransaction>>(state, *thisObject.globalObject(), impl.transaction());
+    return result;
+}
+
+static inline JSValue jsIDBRequestReadyStateGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBRequestReadyState(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestReadyStateGetter>(state, thisValue, "readyState");
+}
+
+static inline JSValue jsIDBRequestReadyStateGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<IDBRequest::ReadyState>>(state, impl.readyState());
+    return result;
+}
+
+static inline JSValue jsIDBRequestOnsuccessGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBRequestOnsuccess(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestOnsuccessGetter>(state, thisValue, "onsuccess");
+}
+
+static inline JSValue jsIDBRequestOnsuccessGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().successEvent);
+}
+
+static inline JSValue jsIDBRequestOnerrorGetter(ExecState&, JSIDBRequest&, ThrowScope& throwScope);
+
+EncodedJSValue jsIDBRequestOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSIDBRequest>::attribute<jsIDBRequestOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsIDBRequestOnerrorGetter(ExecState& state, JSIDBRequest& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+EncodedJSValue jsIDBRequestConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBRequestPrototype* domObject = jsDynamicDowncast<JSIDBRequestPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBRequest::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSIDBRequestConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBRequest", "onsuccess");
-        else
-            throwSetterTypeError(*exec, "IDBRequest", "onsuccess");
-        return;
+    JSIDBRequestPrototype* domObject = jsDynamicDowncast<JSIDBRequestPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().successEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSIDBRequestOnsuccessFunction(ExecState&, JSIDBRequest&, JSValue, ThrowScope&);
+
+bool setJSIDBRequestOnsuccess(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSIDBRequest>::setAttribute<setJSIDBRequestOnsuccessFunction>(state, thisValue, encodedValue, "onsuccess");
+}
+
+static inline bool setJSIDBRequestOnsuccessFunction(ExecState& state, JSIDBRequest& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().successEvent, value);
+    return true;
 }
 
 
-void setJSIDBRequestOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSIDBRequestOnerrorFunction(ExecState&, JSIDBRequest&, JSValue, ThrowScope&);
+
+bool setJSIDBRequestOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSIDBRequest* castedThis = jsDynamicCast<JSIDBRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSIDBRequestPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "IDBRequest", "onerror");
-        else
-            throwSetterTypeError(*exec, "IDBRequest", "onerror");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    return BindingCaller<JSIDBRequest>::setAttribute<setJSIDBRequestOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSIDBRequestOnerrorFunction(ExecState& state, JSIDBRequest& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
 }
 
 
-JSValue JSIDBRequest::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSIDBRequest::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBRequestConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBRequestConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 void JSIDBRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -326,67 +361,41 @@ void JSIDBRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSIDBRequest*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSIDBRequestOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsIDBRequest = jsCast<JSIDBRequest*>(handle.slot()->asCell());
-    if (jsIDBRequest->impl().hasPendingActivity())
+    if (jsIDBRequest->wrapped().hasPendingActivity())
         return true;
-    if (jsIDBRequest->impl().isFiringEventListeners())
+    if (jsIDBRequest->wrapped().isFiringEventListeners())
         return true;
-    UNUSED_PARAM(visitor);
-    return false;
+    IDBRequest* root = &jsIDBRequest->wrapped();
+    return visitor.containsOpaqueRoot(root);
 }
 
 void JSIDBRequestOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBRequest = jsCast<JSIDBRequest*>(handle.slot()->asCell());
+    auto* jsIDBRequest = static_cast<JSIDBRequest*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBRequest->impl(), jsIDBRequest);
+    uncacheWrapper(world, &jsIDBRequest->wrapped(), jsIDBRequest);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7IDBRequest@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore10IDBRequestE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBRequest* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<IDBRequest>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBRequest>(globalObject, impl))
-        return result;
+    return createWrapper<IDBRequest>(globalObject, WTFMove(impl));
+}
 
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7IDBRequest@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore10IDBRequestE[2];
-#if COMPILER(CLANG)
-    // If this fails IDBRequest does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(IDBRequest), IDBRequest_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // IDBRequest has subclasses. If IDBRequest has subclasses that get passed
-    // to toJS() we currently require IDBRequest you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSIDBRequest>(globalObject, impl);
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBRequest& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 IDBRequest* JSIDBRequest::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBRequest*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBRequest*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

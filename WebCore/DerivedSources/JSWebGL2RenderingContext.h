@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGL2RenderingContext_h
-#define JSWebGL2RenderingContext_h
+#pragma once
 
 #if ENABLE(WEBGL2)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSWebGL2RenderingContext : public JSWebGLRenderingContextBase {
 public:
-    typedef JSWebGLRenderingContextBase Base;
+    using Base = JSWebGLRenderingContextBase;
+    using DOMWrapped = WebGL2RenderingContext;
     static JSWebGL2RenderingContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGL2RenderingContext>&& impl)
     {
-        JSWebGL2RenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGL2RenderingContext>(globalObject->vm().heap)) JSWebGL2RenderingContext(structure, globalObject, WTF::move(impl));
+        JSWebGL2RenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGL2RenderingContext>(globalObject->vm().heap)) JSWebGL2RenderingContext(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,38 +48,32 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-
-    // Custom functions
-    JSC::JSValue getInternalformatParameter(JSC::ExecState*);
-    JSC::JSValue getQueryParameter(JSC::ExecState*);
-    JSC::JSValue getSamplerParameter(JSC::ExecState*);
-    JSC::JSValue getSyncParameter(JSC::ExecState*);
-    JSC::JSValue getIndexedParameter(JSC::ExecState*);
-    JSC::JSValue getActiveUniformBlockParameter(JSC::ExecState*);
-    JSC::JSValue getActiveUniformBlockName(JSC::ExecState*);
-    WebGL2RenderingContext& impl() const
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    WebGL2RenderingContext& wrapped() const
     {
-        return static_cast<WebGL2RenderingContext&>(Base::impl());
+        return static_cast<WebGL2RenderingContext&>(Base::wrapped());
     }
 protected:
-    JSWebGL2RenderingContext(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGL2RenderingContext>&&);
+    JSWebGL2RenderingContext(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGL2RenderingContext>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGL2RenderingContext&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGL2RenderingContext* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGL2RenderingContext>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGL2RenderingContext>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<WebGL2RenderingContext> {
+    using WrapperClass = JSWebGL2RenderingContext;
+    using ToWrappedReturnType = WebGL2RenderingContext*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL2)
-
-#endif

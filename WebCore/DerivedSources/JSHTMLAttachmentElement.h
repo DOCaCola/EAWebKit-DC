@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLAttachmentElement_h
-#define JSHTMLAttachmentElement_h
+#pragma once
 
 #if ENABLE(ATTACHMENT_ELEMENT)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSHTMLAttachmentElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLAttachmentElement;
     static JSHTMLAttachmentElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAttachmentElement>&& impl)
     {
-        JSHTMLAttachmentElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElement>(globalObject->vm().heap)) JSHTMLAttachmentElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAttachmentElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElement>(globalObject->vm().heap)) JSHTMLAttachmentElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAttachmentElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLAttachmentElement& wrapped() const
     {
-        return static_cast<HTMLAttachmentElement&>(Base::impl());
+        return static_cast<HTMLAttachmentElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAttachmentElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAttachmentElement>&&);
+    JSHTMLAttachmentElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAttachmentElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLAttachmentElement> {
+    using WrapperClass = JSHTMLAttachmentElement;
+    using ToWrappedReturnType = HTMLAttachmentElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(ATTACHMENT_ELEMENT)
-
-#endif

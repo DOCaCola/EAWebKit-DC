@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMCoreException_h
-#define JSDOMCoreException_h
+#pragma once
 
 #include "DOMCoreException.h"
 #include "JSDOMWrapper.h"
@@ -28,22 +27,20 @@
 
 namespace WebCore {
 
-class JSDOMCoreException : public JSDOMWrapper {
+class JSDOMCoreException : public JSDOMWrapper<DOMCoreException> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMCoreException>;
     static JSDOMCoreException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMCoreException>&& impl)
     {
-        JSDOMCoreException* ptr = new (NotNull, JSC::allocateCell<JSDOMCoreException>(globalObject->vm().heap)) JSDOMCoreException(structure, globalObject, WTF::move(impl));
+        JSDOMCoreException* ptr = new (NotNull, JSC::allocateCell<JSDOMCoreException>(globalObject->vm().heap)) JSDOMCoreException(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMCoreException* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMCoreException();
 
     DECLARE_INFO;
 
@@ -52,23 +49,13 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMCoreException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMCoreException* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSDOMCoreException(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMCoreException>&&);
+    JSDOMCoreException(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMCoreException>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMCoreExceptionOwner : public JSC::WeakHandleOwner {
@@ -83,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMCoreException*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMCoreException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMCoreException& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMCoreException* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMCoreException&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMCoreException* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMCoreException>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMCoreException>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMCoreException> {
+    using WrapperClass = JSDOMCoreException;
+    using ToWrappedReturnType = DOMCoreException*;
+};
 
 } // namespace WebCore
-
-#endif

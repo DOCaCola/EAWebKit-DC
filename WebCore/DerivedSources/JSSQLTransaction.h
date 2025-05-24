@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSQLTransaction_h
-#define JSSQLTransaction_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SQLTransaction.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSSQLTransaction : public JSDOMWrapper {
+class JSSQLTransaction : public JSDOMWrapper<SQLTransaction> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SQLTransaction>;
     static JSSQLTransaction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLTransaction>&& impl)
     {
-        JSSQLTransaction* ptr = new (NotNull, JSC::allocateCell<JSSQLTransaction>(globalObject->vm().heap)) JSSQLTransaction(structure, globalObject, WTF::move(impl));
+        JSSQLTransaction* ptr = new (NotNull, JSC::allocateCell<JSSQLTransaction>(globalObject->vm().heap)) JSSQLTransaction(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLTransaction* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSQLTransaction();
 
     DECLARE_INFO;
 
@@ -50,23 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-
-    // Custom functions
-    JSC::JSValue executeSql(JSC::ExecState*);
-    SQLTransaction& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLTransaction* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSQLTransaction(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLTransaction>&&);
+    JSSQLTransaction(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLTransaction>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSQLTransactionOwner : public JSC::WeakHandleOwner {
@@ -81,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLTransaction*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLTransaction*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLTransaction& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SQLTransaction* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLTransaction&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLTransaction* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SQLTransaction>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SQLTransaction>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SQLTransaction> {
+    using WrapperClass = JSSQLTransaction;
+    using ToWrappedReturnType = SQLTransaction*;
+};
 
 } // namespace WebCore
-
-#endif

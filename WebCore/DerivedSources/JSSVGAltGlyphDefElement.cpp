@@ -25,7 +25,7 @@
 #include "JSSVGAltGlyphDefElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGAltGlyphDefElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGAltGlyphDefElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAltGlyphDefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGAltGlyphDefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGAltGlyphDefElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGAltGlyphDefElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGAltGlyphDefElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphDefElementPrototype>(vm.heap)) JSSVGAltGlyphDefElementPrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAltGlyphDefElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGAltGlyphDefElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGAltGlyphDefElementConstructor = JSDOMConstructorNotConstructable<JSSVGAltGlyphDefElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAltGlyphDefElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAltGlyphDefElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphDefElementConstructor>(vm.heap)) JSSVGAltGlyphDefElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAltGlyphDefElementConstructor::s_info = { "SVGAltGlyphDefElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphDefElementConstructor) };
-
-JSSVGAltGlyphDefElementConstructor::JSSVGAltGlyphDefElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGAltGlyphDefElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGAltGlyphDefElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGAltGlyphDefElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAltGlyphDefElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAltGlyphDefElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAltGlyphDefElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAltGlyphDefElementConstructor::s_info = { "SVGAltGlyphDefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphDefElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAltGlyphDefElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphDefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphDefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAltGlyphDefElementConstructor) } },
 };
 
 const ClassInfo JSSVGAltGlyphDefElementPrototype::s_info = { "SVGAltGlyphDefElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphDefElementPrototype) };
@@ -115,32 +95,63 @@ void JSSVGAltGlyphDefElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAltGlyphDefElement::s_info = { "SVGAltGlyphDefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphDefElement) };
 
-JSSVGAltGlyphDefElement::JSSVGAltGlyphDefElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAltGlyphDefElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGAltGlyphDefElement::JSSVGAltGlyphDefElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAltGlyphDefElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGAltGlyphDefElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGAltGlyphDefElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGAltGlyphDefElementPrototype::create(vm, globalObject, JSSVGAltGlyphDefElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGAltGlyphDefElementPrototype::create(vm, globalObject, JSSVGAltGlyphDefElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGAltGlyphDefElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGAltGlyphDefElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGAltGlyphDefElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGAltGlyphDefElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAltGlyphDefElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGAltGlyphDefElementPrototype* domObject = jsDynamicCast<JSSVGAltGlyphDefElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAltGlyphDefElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGAltGlyphDefElementPrototype* domObject = jsDynamicDowncast<JSSVGAltGlyphDefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGAltGlyphDefElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGAltGlyphDefElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGAltGlyphDefElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGAltGlyphDefElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGAltGlyphDefElementPrototype* domObject = jsDynamicDowncast<JSSVGAltGlyphDefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGAltGlyphDefElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGAltGlyphDefElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGAltGlyphDefElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGAltGlyphDefElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

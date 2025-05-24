@@ -24,8 +24,8 @@
 
 #include "JSChannelSplitterNode.h"
 
-#include "ChannelSplitterNode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsChannelSplitterNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsChannelSplitterNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSChannelSplitterNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSChannelSplitterNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSChannelSplitterNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSChannelSplitterNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNodePrototype>(vm.heap)) JSChannelSplitterNodePrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSChannelSplitterNodeConstructor : public DOMConstructorObject {
-private:
-    JSChannelSplitterNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSChannelSplitterNodeConstructor = JSDOMConstructorNotConstructable<JSChannelSplitterNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSChannelSplitterNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSChannelSplitterNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNodeConstructor>(vm.heap)) JSChannelSplitterNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSChannelSplitterNodeConstructor::s_info = { "ChannelSplitterNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelSplitterNodeConstructor) };
-
-JSChannelSplitterNodeConstructor::JSChannelSplitterNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSChannelSplitterNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSChannelSplitterNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSChannelSplitterNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSChannelSplitterNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSChannelSplitterNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ChannelSplitterNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSChannelSplitterNodeConstructor::s_info = { "ChannelSplitterNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelSplitterNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSChannelSplitterNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsChannelSplitterNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsChannelSplitterNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSChannelSplitterNodeConstructor) } },
 };
 
 const ClassInfo JSChannelSplitterNodePrototype::s_info = { "ChannelSplitterNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelSplitterNodePrototype) };
@@ -115,32 +95,63 @@ void JSChannelSplitterNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSChannelSplitterNode::s_info = { "ChannelSplitterNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelSplitterNode) };
 
-JSChannelSplitterNode::JSChannelSplitterNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelSplitterNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSChannelSplitterNode::JSChannelSplitterNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ChannelSplitterNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSChannelSplitterNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSChannelSplitterNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSChannelSplitterNodePrototype::create(vm, globalObject, JSChannelSplitterNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSChannelSplitterNodePrototype::create(vm, globalObject, JSChannelSplitterNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSChannelSplitterNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSChannelSplitterNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSChannelSplitterNode>(vm, globalObject);
 }
 
-EncodedJSValue jsChannelSplitterNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsChannelSplitterNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSChannelSplitterNodePrototype* domObject = jsDynamicCast<JSChannelSplitterNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSChannelSplitterNode::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSChannelSplitterNodePrototype* domObject = jsDynamicDowncast<JSChannelSplitterNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSChannelSplitterNode::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSChannelSplitterNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSChannelSplitterNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSChannelSplitterNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSChannelSplitterNodePrototype* domObject = jsDynamicDowncast<JSChannelSplitterNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSChannelSplitterNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSChannelSplitterNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSChannelSplitterNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSChannelSplitterNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -151,15 +162,12 @@ extern "C" { extern void (*const __identifier("??_7ChannelSplitterNode@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19ChannelSplitterNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ChannelSplitterNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<ChannelSplitterNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSChannelSplitterNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7ChannelSplitterNode@WebCore@@6B@"));
 #else
@@ -167,7 +175,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ChannelSplit
 #if COMPILER(CLANG)
     // If this fails ChannelSplitterNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(ChannelSplitterNode), ChannelSplitterNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(ChannelSplitterNode), "ChannelSplitterNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -176,7 +184,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ChannelSplit
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSChannelSplitterNode>(globalObject, impl);
+    return createWrapper<ChannelSplitterNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ChannelSplitterNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSHTMLUnknownElement.h"
 
-#include "HTMLUnknownElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,11 +31,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLUnknownElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLUnknownElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLUnknownElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLUnknownElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLUnknownElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLUnknownElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElementPrototype>(vm.heap)) JSHTMLUnknownElementPrototype(vm, globalObject, structure);
@@ -58,48 +59,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLUnknownElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLUnknownElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLUnknownElementConstructor = JSDOMConstructorNotConstructable<JSHTMLUnknownElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLUnknownElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLUnknownElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElementConstructor>(vm.heap)) JSHTMLUnknownElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLUnknownElementConstructor::s_info = { "HTMLUnknownElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLUnknownElementConstructor) };
-
-JSHTMLUnknownElementConstructor::JSHTMLUnknownElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLUnknownElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLUnknownElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLUnknownElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLUnknownElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLUnknownElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLUnknownElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLUnknownElementConstructor::s_info = { "HTMLUnknownElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLUnknownElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLUnknownElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLUnknownElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLUnknownElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLUnknownElementConstructor) } },
 };
 
 const ClassInfo JSHTMLUnknownElementPrototype::s_info = { "HTMLUnknownElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLUnknownElementPrototype) };
@@ -112,32 +92,63 @@ void JSHTMLUnknownElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLUnknownElement::s_info = { "HTMLUnknownElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLUnknownElement) };
 
-JSHTMLUnknownElement::JSHTMLUnknownElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLUnknownElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLUnknownElement::JSHTMLUnknownElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLUnknownElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLUnknownElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLUnknownElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLUnknownElementPrototype::create(vm, globalObject, JSHTMLUnknownElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLUnknownElementPrototype::create(vm, globalObject, JSHTMLUnknownElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLUnknownElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLUnknownElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLUnknownElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLUnknownElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLUnknownElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLUnknownElementPrototype* domObject = jsDynamicCast<JSHTMLUnknownElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLUnknownElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLUnknownElementPrototype* domObject = jsDynamicDowncast<JSHTMLUnknownElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLUnknownElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSHTMLUnknownElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSHTMLUnknownElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLUnknownElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLUnknownElementPrototype* domObject = jsDynamicDowncast<JSHTMLUnknownElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSHTMLUnknownElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLUnknownElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLUnknownElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLUnknownElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

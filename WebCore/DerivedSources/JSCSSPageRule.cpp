@@ -21,12 +21,10 @@
 #include "config.h"
 #include "JSCSSPageRule.h"
 
-#include "CSSPageRule.h"
-#include "CSSStyleDeclaration.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSDOMBinding.h"
-#include "StyleProperties.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -35,14 +33,15 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSPageRuleSelectorText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSCSSPageRuleSelectorText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsCSSPageRuleStyle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSPageRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSPageRuleSelectorText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSPageRuleSelectorText(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsCSSPageRuleStyle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSPageRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSPageRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSPageRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSPageRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSPageRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRulePrototype>(vm.heap)) JSCSSPageRulePrototype(vm, globalObject, structure);
@@ -65,50 +64,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSPageRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSPageRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSPageRuleConstructor = JSDOMConstructorNotConstructable<JSCSSPageRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSPageRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSPageRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRuleConstructor>(vm.heap)) JSCSSPageRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSPageRuleConstructor::s_info = { "CSSPageRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPageRuleConstructor) };
-
-JSCSSPageRuleConstructor::JSCSSPageRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCSSPageRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSCSSPageRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSPageRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSPageRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSPageRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSPageRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSPageRuleConstructor::s_info = { "CSSPageRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPageRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSPageRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectorText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleSelectorText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSPageRuleSelectorText) },
-    { "style", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSPageRuleConstructor) } },
+    { "selectorText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleSelectorText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSPageRuleSelectorText) } },
+    { "style", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPageRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSPageRulePrototype::s_info = { "CSSPageRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPageRulePrototype) };
@@ -121,86 +99,111 @@ void JSCSSPageRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSPageRule::s_info = { "CSSPageRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPageRule) };
 
-JSCSSPageRule::JSCSSPageRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSPageRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSCSSPageRule::JSCSSPageRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSPageRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSPageRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSPageRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSPageRulePrototype::create(vm, globalObject, JSCSSPageRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSCSSPageRulePrototype::create(vm, globalObject, JSCSSPageRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSPageRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSPageRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSPageRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSPageRuleSelectorText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSPageRule* BindingCaller<JSCSSPageRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSPageRule* castedThis = jsDynamicCast<JSCSSPageRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSPageRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSPageRule", "selectorText");
-        return throwGetterTypeError(*exec, "CSSPageRule", "selectorText");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.selectorText());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSCSSPageRule*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsCSSPageRuleSelectorTextGetter(ExecState&, JSCSSPageRule&, ThrowScope& throwScope);
 
-EncodedJSValue jsCSSPageRuleStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSPageRuleSelectorText(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSPageRule* castedThis = jsDynamicCast<JSCSSPageRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSPageRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSPageRule", "style");
-        return throwGetterTypeError(*exec, "CSSPageRule", "style");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.style()));
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSPageRule>::attribute<jsCSSPageRuleSelectorTextGetter>(state, thisValue, "selectorText");
 }
 
-
-EncodedJSValue jsCSSPageRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsCSSPageRuleSelectorTextGetter(ExecState& state, JSCSSPageRule& thisObject, ThrowScope& throwScope)
 {
-    JSCSSPageRulePrototype* domObject = jsDynamicCast<JSCSSPageRulePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSPageRule::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.selectorText());
+    return result;
 }
 
-void setJSCSSPageRuleSelectorText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsCSSPageRuleStyleGetter(ExecState&, JSCSSPageRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSPageRuleStyle(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSCSSPageRule>::attribute<jsCSSPageRuleStyleGetter>(state, thisValue, "style");
+}
+
+static inline JSValue jsCSSPageRuleStyleGetter(ExecState& state, JSCSSPageRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSStyleDeclaration>>(state, *thisObject.globalObject(), impl.style());
+    return result;
+}
+
+EncodedJSValue jsCSSPageRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSPageRulePrototype* domObject = jsDynamicDowncast<JSCSSPageRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSPageRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSPageRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSCSSPageRule* castedThis = jsDynamicCast<JSCSSPageRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSPageRulePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSPageRule", "selectorText");
-        else
-            throwSetterTypeError(*exec, "CSSPageRule", "selectorText");
-        return;
+    JSCSSPageRulePrototype* domObject = jsDynamicDowncast<JSCSSPageRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSelectorText(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSCSSPageRuleSelectorTextFunction(ExecState&, JSCSSPageRule&, JSValue, ThrowScope&);
+
+bool setJSCSSPageRuleSelectorText(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSCSSPageRule>::setAttribute<setJSCSSPageRuleSelectorTextFunction>(state, thisValue, encodedValue, "selectorText");
+}
+
+static inline bool setJSCSSPageRuleSelectorTextFunction(ExecState& state, JSCSSPageRule& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLDOMString>>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setSelectorText(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSCSSPageRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSCSSPageRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSPageRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSPageRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 

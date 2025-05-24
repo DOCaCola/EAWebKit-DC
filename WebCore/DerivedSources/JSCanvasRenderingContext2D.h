@@ -18,27 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCanvasRenderingContext2D_h
-#define JSCanvasRenderingContext2D_h
+#pragma once
 
 #include "CanvasRenderingContext2D.h"
-#include "JSCanvasRenderingContext.h"
+#include "JSDOMConvert.h"
+#include "JSDOMWrapper.h"
+#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSCanvasRenderingContext2D : public JSCanvasRenderingContext {
+class JSCanvasRenderingContext2D : public JSDOMWrapper<CanvasRenderingContext2D> {
 public:
-    typedef JSCanvasRenderingContext Base;
+    using Base = JSDOMWrapper<CanvasRenderingContext2D>;
     static JSCanvasRenderingContext2D* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasRenderingContext2D>&& impl)
     {
-        JSCanvasRenderingContext2D* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext2D>(globalObject->vm().heap)) JSCanvasRenderingContext2D(structure, globalObject, WTF::move(impl));
+        JSCanvasRenderingContext2D* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext2D>(globalObject->vm().heap)) JSCanvasRenderingContext2D(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static CanvasRenderingContext2D* toWrapped(JSC::JSValue);
+    static void destroy(JSC::JSCell*);
 
     DECLARE_INFO;
 
@@ -47,34 +49,55 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+    void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    // Custom attributes
-    JSC::JSValue webkitLineDash(JSC::ExecState*) const;
-    void setWebkitLineDash(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue strokeStyle(JSC::ExecState*) const;
-    void setStrokeStyle(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue fillStyle(JSC::ExecState*) const;
-    void setFillStyle(JSC::ExecState*, JSC::JSValue);
-    CanvasRenderingContext2D& impl() const
-    {
-        return static_cast<CanvasRenderingContext2D&>(Base::impl());
-    }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSCanvasRenderingContext2D(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasRenderingContext2D>&&);
+    JSCanvasRenderingContext2D(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasRenderingContext2D>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+class JSCanvasRenderingContext2DOwner : public JSC::WeakHandleOwner {
+public:
+    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
+    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+};
+
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasRenderingContext2D*)
+{
+    static NeverDestroyed<JSCanvasRenderingContext2DOwner> owner;
+    return &owner.get();
+}
+
+inline void* wrapperKey(CanvasRenderingContext2D* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasRenderingContext2D&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasRenderingContext2D* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CanvasRenderingContext2D>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CanvasRenderingContext2D>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<CanvasRenderingContext2D> {
+    using WrapperClass = JSCanvasRenderingContext2D;
+    using ToWrappedReturnType = CanvasRenderingContext2D*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, CanvasRenderingContext2D::ImageSmoothingQuality);
+
+template<> std::optional<CanvasRenderingContext2D::ImageSmoothingQuality> parseEnumeration<CanvasRenderingContext2D::ImageSmoothingQuality>(JSC::ExecState&, JSC::JSValue);
+template<> CanvasRenderingContext2D::ImageSmoothingQuality convertEnumeration<CanvasRenderingContext2D::ImageSmoothingQuality>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<CanvasRenderingContext2D::ImageSmoothingQuality>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, CanvasRenderingContext2D::WindingRule);
+
+template<> std::optional<CanvasRenderingContext2D::WindingRule> parseEnumeration<CanvasRenderingContext2D::WindingRule>(JSC::ExecState&, JSC::JSValue);
+template<> CanvasRenderingContext2D::WindingRule convertEnumeration<CanvasRenderingContext2D::WindingRule>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<CanvasRenderingContext2D::WindingRule>();
 
 
 } // namespace WebCore
-
-#endif

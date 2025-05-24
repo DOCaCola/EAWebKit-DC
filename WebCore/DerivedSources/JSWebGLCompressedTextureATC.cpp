@@ -25,7 +25,6 @@
 #include "JSWebGLCompressedTextureATC.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLCompressedTextureATC.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSWebGLCompressedTextureATCPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLCompressedTextureATCPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLCompressedTextureATCPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLCompressedTextureATCPrototype>(vm.heap)) JSWebGLCompressedTextureATCPrototype(vm, globalObject, structure);
@@ -61,9 +60,9 @@ private:
 
 static const HashTableValue JSWebGLCompressedTextureATCPrototypeTableValues[] =
 {
-    { "COMPRESSED_RGB_ATC_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C92), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C93), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x87EE), (intptr_t) (0) },
+    { "COMPRESSED_RGB_ATC_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C92) } },
+    { "COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C93) } },
+    { "COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x87EE) } },
 };
 
 const ClassInfo JSWebGLCompressedTextureATCPrototype::s_info = { "WebGLCompressedTextureATCPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureATCPrototype) };
@@ -76,10 +75,16 @@ void JSWebGLCompressedTextureATCPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLCompressedTextureATC::s_info = { "WebGLCompressedTextureATC", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureATC) };
 
-JSWebGLCompressedTextureATC::JSWebGLCompressedTextureATC(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTextureATC>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLCompressedTextureATC::JSWebGLCompressedTextureATC(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLCompressedTextureATC>&& impl)
+    : JSDOMWrapper<WebGLCompressedTextureATC>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLCompressedTextureATC::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLCompressedTextureATC::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -87,7 +92,7 @@ JSObject* JSWebGLCompressedTextureATC::createPrototype(VM& vm, JSGlobalObject* g
     return JSWebGLCompressedTextureATCPrototype::create(vm, globalObject, JSWebGLCompressedTextureATCPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLCompressedTextureATC::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLCompressedTextureATC::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLCompressedTextureATC>(vm, globalObject);
 }
@@ -98,23 +103,18 @@ void JSWebGLCompressedTextureATC::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLCompressedTextureATC::~JSWebGLCompressedTextureATC();
 }
 
-JSWebGLCompressedTextureATC::~JSWebGLCompressedTextureATC()
-{
-    releaseImpl();
-}
-
 bool JSWebGLCompressedTextureATCOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLCompressedTextureATC = jsCast<JSWebGLCompressedTextureATC*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureATC->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureATC->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebGLCompressedTextureATCOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLCompressedTextureATC = jsCast<JSWebGLCompressedTextureATC*>(handle.slot()->asCell());
+    auto* jsWebGLCompressedTextureATC = static_cast<JSWebGLCompressedTextureATC*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLCompressedTextureATC->impl(), jsWebGLCompressedTextureATC);
+    uncacheWrapper(world, &jsWebGLCompressedTextureATC->wrapped(), jsWebGLCompressedTextureATC);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -125,15 +125,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLCompressedTextureATC@Web
 extern "C" { extern void* _ZTVN7WebCore25WebGLCompressedTextureATCE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTextureATC* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTextureATC>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLCompressedTextureATC>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLCompressedTextureATC@WebCore@@6B@"));
 #else
@@ -141,7 +138,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
 #if COMPILER(CLANG)
     // If this fails WebGLCompressedTextureATC does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLCompressedTextureATC), WebGLCompressedTextureATC_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLCompressedTextureATC), "WebGLCompressedTextureATC is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -150,13 +147,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLCompressedTextureATC>(globalObject, impl);
+    return createWrapper<WebGLCompressedTextureATC>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLCompressedTextureATC& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLCompressedTextureATC* JSWebGLCompressedTextureATC::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLCompressedTextureATC*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLCompressedTextureATC*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

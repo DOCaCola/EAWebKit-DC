@@ -18,10 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDetailsElement_h
-#define JSHTMLDetailsElement_h
-
-#if ENABLE(DETAILS_ELEMENT)
+#pragma once
 
 #include "HTMLDetailsElement.h"
 #include "JSHTMLElement.h"
@@ -30,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLDetailsElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLDetailsElement;
     static JSHTMLDetailsElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDetailsElement>&& impl)
     {
-        JSHTMLDetailsElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDetailsElement>(globalObject->vm().heap)) JSHTMLDetailsElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDetailsElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDetailsElement>(globalObject->vm().heap)) JSHTMLDetailsElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,25 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    HTMLDetailsElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLDetailsElement& wrapped() const
     {
-        return static_cast<HTMLDetailsElement&>(Base::impl());
+        return static_cast<HTMLDetailsElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDetailsElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDetailsElement>&&);
+    JSHTMLDetailsElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDetailsElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLDetailsElement> {
+    using WrapperClass = JSHTMLDetailsElement;
+    using ToWrappedReturnType = HTMLDetailsElement*;
+};
 
 } // namespace WebCore
-
-#endif // ENABLE(DETAILS_ELEMENT)
-
-#endif

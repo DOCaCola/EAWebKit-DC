@@ -46,28 +46,18 @@ using namespace WebCore;
 
 WEBCORE_EXPORT DEFINE_GLOBAL(AtomicString, xmlNamespaceURI)
 
-static const LChar baseString8[] = "base";
-static const LChar langString8[] = "lang";
-static const LChar spaceString8[] = "space";
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4307)
+#endif
 
-static StringImpl::StaticASCIILiteral baseData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    baseString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (4376626 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral langData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    4,
-    langString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (3702417 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
-static StringImpl::StaticASCIILiteral spaceData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    spaceString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (531440 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
+static StringImpl::StaticStringImpl baseData("base");
+static StringImpl::StaticStringImpl langData("lang");
+static StringImpl::StaticStringImpl spaceData("space");
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 
 // Attributes

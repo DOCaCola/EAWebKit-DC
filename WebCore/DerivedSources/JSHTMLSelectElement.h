@@ -18,30 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLSelectElement_h
-#define JSHTMLSelectElement_h
+#pragma once
 
 #include "HTMLSelectElement.h"
 #include "JSHTMLElement.h"
 
 namespace WebCore {
 
-class JSHTMLSelectElement : public JSHTMLElement {
+class WEBCORE_EXPORT JSHTMLSelectElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLSelectElement;
     static JSHTMLSelectElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSelectElement>&& impl)
     {
-        JSHTMLSelectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSelectElement>(globalObject->vm().heap)) JSHTMLSelectElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSelectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSelectElement>(globalObject->vm().heap)) JSHTMLSelectElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static HTMLSelectElement* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
 
     DECLARE_INFO;
 
@@ -51,30 +52,26 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue remove(JSC::ExecState*);
-    HTMLSelectElement& impl() const
+    HTMLSelectElement& wrapped() const
     {
-        return static_cast<HTMLSelectElement&>(Base::impl());
+        return static_cast<HTMLSelectElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLSelectElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSelectElement>&&);
+    JSHTMLSelectElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSelectElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
     void indexSetter(JSC::ExecState*, unsigned index, JSC::JSValue);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLSelectElement> {
+    using WrapperClass = JSHTMLSelectElement;
+    using ToWrappedReturnType = HTMLSelectElement*;
+};
 
 } // namespace WebCore
-
-#endif

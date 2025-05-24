@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSHTMLHtmlElement.h"
 
-#include "HTMLHtmlElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,15 +33,16 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLHtmlElementVersion(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHtmlElementVersion(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHtmlElementManifest(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLHtmlElementManifest(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLHtmlElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLHtmlElementVersion(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHtmlElementVersion(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHtmlElementManifest(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHtmlElementManifest(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLHtmlElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLHtmlElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLHtmlElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLHtmlElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLHtmlElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLHtmlElementPrototype>(vm.heap)) JSHTMLHtmlElementPrototype(vm, globalObject, structure);
@@ -65,50 +65,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLHtmlElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLHtmlElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLHtmlElementConstructor = JSDOMConstructorNotConstructable<JSHTMLHtmlElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLHtmlElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLHtmlElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLHtmlElementConstructor>(vm.heap)) JSHTMLHtmlElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLHtmlElementConstructor::s_info = { "HTMLHtmlElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHtmlElementConstructor) };
-
-JSHTMLHtmlElementConstructor::JSHTMLHtmlElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLHtmlElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLHtmlElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLHtmlElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLHtmlElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLHtmlElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLHtmlElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLHtmlElementConstructor::s_info = { "HTMLHtmlElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHtmlElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLHtmlElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "version", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHtmlElementVersion) },
-    { "manifest", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementManifest), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHtmlElementManifest) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHtmlElementConstructor) } },
+    { "version", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHtmlElementVersion) } },
+    { "manifest", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHtmlElementManifest), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHtmlElementManifest) } },
 };
 
 const ClassInfo JSHTMLHtmlElementPrototype::s_info = { "HTMLHtmlElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHtmlElementPrototype) };
@@ -121,106 +100,138 @@ void JSHTMLHtmlElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLHtmlElement::s_info = { "HTMLHtmlElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHtmlElement) };
 
-JSHTMLHtmlElement::JSHTMLHtmlElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLHtmlElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLHtmlElement::JSHTMLHtmlElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLHtmlElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLHtmlElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLHtmlElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLHtmlElementPrototype::create(vm, globalObject, JSHTMLHtmlElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLHtmlElementPrototype::create(vm, globalObject, JSHTMLHtmlElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLHtmlElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLHtmlElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLHtmlElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLHtmlElementVersion(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLHtmlElement* BindingCaller<JSHTMLHtmlElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHtmlElement* castedThis = jsDynamicCast<JSHTMLHtmlElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHtmlElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHtmlElement", "version");
-        return throwGetterTypeError(*exec, "HTMLHtmlElement", "version");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::versionAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLHtmlElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLHtmlElementVersionGetter(ExecState&, JSHTMLHtmlElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLHtmlElementManifest(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLHtmlElementVersion(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLHtmlElement* castedThis = jsDynamicCast<JSHTMLHtmlElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHtmlElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHtmlElement", "manifest");
-        return throwGetterTypeError(*exec, "HTMLHtmlElement", "manifest");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::manifestAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLHtmlElement>::attribute<jsHTMLHtmlElementVersionGetter>(state, thisValue, "version");
 }
 
-
-EncodedJSValue jsHTMLHtmlElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLHtmlElementVersionGetter(ExecState& state, JSHTMLHtmlElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLHtmlElementPrototype* domObject = jsDynamicCast<JSHTMLHtmlElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLHtmlElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::versionAttr));
+    return result;
 }
 
-void setJSHTMLHtmlElementVersion(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLHtmlElementManifestGetter(ExecState&, JSHTMLHtmlElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLHtmlElementManifest(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLHtmlElement>::attribute<jsHTMLHtmlElementManifestGetter>(state, thisValue, "manifest");
+}
+
+static inline JSValue jsHTMLHtmlElementManifestGetter(ExecState& state, JSHTMLHtmlElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getURLAttribute(WebCore::HTMLNames::manifestAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLHtmlElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLHtmlElementPrototype* domObject = jsDynamicDowncast<JSHTMLHtmlElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLHtmlElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLHtmlElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHtmlElement* castedThis = jsDynamicCast<JSHTMLHtmlElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHtmlElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHtmlElement", "version");
-        else
-            throwSetterTypeError(*exec, "HTMLHtmlElement", "version");
-        return;
+    JSHTMLHtmlElementPrototype* domObject = jsDynamicDowncast<JSHTMLHtmlElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::versionAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLHtmlElementVersionFunction(ExecState&, JSHTMLHtmlElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHtmlElementVersion(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLHtmlElement>::setAttribute<setJSHTMLHtmlElementVersionFunction>(state, thisValue, encodedValue, "version");
+}
+
+static inline bool setJSHTMLHtmlElementVersionFunction(ExecState& state, JSHTMLHtmlElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::versionAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLHtmlElementManifest(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLHtmlElementManifestFunction(ExecState&, JSHTMLHtmlElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLHtmlElementManifest(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLHtmlElement* castedThis = jsDynamicCast<JSHTMLHtmlElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLHtmlElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHtmlElement", "manifest");
-        else
-            throwSetterTypeError(*exec, "HTMLHtmlElement", "manifest");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::manifestAttr, nativeValue);
+    return BindingCaller<JSHTMLHtmlElement>::setAttribute<setJSHTMLHtmlElementManifestFunction>(state, thisValue, encodedValue, "manifest");
+}
+
+static inline bool setJSHTMLHtmlElementManifestFunction(ExecState& state, JSHTMLHtmlElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::manifestAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLHtmlElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLHtmlElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLHtmlElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLHtmlElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLHtmlElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLHtmlElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

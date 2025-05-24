@@ -21,26 +21,66 @@
 #include "config.h"
 #include "JSBeforeLoadEvent.h"
 
-#include "BeforeLoadEvent.h"
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> BeforeLoadEvent::Init convertDictionary<BeforeLoadEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    BeforeLoadEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue urlValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "url"));
+    if (!urlValue.isUndefined()) {
+        result.url = convert<IDLDOMString>(state, urlValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.url = emptyString();
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsBeforeLoadEventUrl(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsBeforeLoadEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsBeforeLoadEventUrl(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsBeforeLoadEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSBeforeLoadEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSBeforeLoadEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSBeforeLoadEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSBeforeLoadEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEventPrototype>(vm.heap)) JSBeforeLoadEventPrototype(vm, globalObject, structure);
@@ -63,99 +103,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSBeforeLoadEventConstructor : public DOMConstructorObject {
-private:
-    JSBeforeLoadEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSBeforeLoadEventConstructor = JSDOMConstructor<JSBeforeLoadEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSBeforeLoadEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSBeforeLoadEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEventConstructor>(vm.heap)) JSBeforeLoadEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSBeforeLoadEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSBeforeLoadEventConstructor::constructJSBeforeLoadEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSBeforeLoadEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSBeforeLoadEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    BeforeLoadEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillBeforeLoadEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<BeforeLoadEvent> event = BeforeLoadEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSBeforeLoadEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<BeforeLoadEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = BeforeLoadEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<BeforeLoadEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillBeforeLoadEventInit(BeforeLoadEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSBeforeLoadEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("url", eventInit.url))
-        return false;
-    return true;
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSBeforeLoadEventConstructor::s_info = { "BeforeLoadEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeLoadEventConstructor) };
-
-JSBeforeLoadEventConstructor::JSBeforeLoadEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSBeforeLoadEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSBeforeLoadEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSBeforeLoadEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSBeforeLoadEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("BeforeLoadEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSBeforeLoadEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSBeforeLoadEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSBeforeLoadEventConstructor::s_info = { "BeforeLoadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeLoadEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSBeforeLoadEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeLoadEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "url", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeLoadEventUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeLoadEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSBeforeLoadEventConstructor) } },
+    { "url", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeLoadEventUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSBeforeLoadEventPrototype::s_info = { "BeforeLoadEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeLoadEventPrototype) };
@@ -168,49 +154,114 @@ void JSBeforeLoadEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSBeforeLoadEvent::s_info = { "BeforeLoadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeLoadEvent) };
 
-JSBeforeLoadEvent::JSBeforeLoadEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<BeforeLoadEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSBeforeLoadEvent::JSBeforeLoadEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<BeforeLoadEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSBeforeLoadEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSBeforeLoadEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSBeforeLoadEventPrototype::create(vm, globalObject, JSBeforeLoadEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSBeforeLoadEventPrototype::create(vm, globalObject, JSBeforeLoadEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSBeforeLoadEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSBeforeLoadEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSBeforeLoadEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsBeforeLoadEventUrl(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSBeforeLoadEvent* BindingCaller<JSBeforeLoadEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSBeforeLoadEvent* castedThis = jsDynamicCast<JSBeforeLoadEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSBeforeLoadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "BeforeLoadEvent", "url");
-        return throwGetterTypeError(*exec, "BeforeLoadEvent", "url");
+    return jsDynamicDowncast<JSBeforeLoadEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsBeforeLoadEventUrlGetter(ExecState&, JSBeforeLoadEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsBeforeLoadEventUrl(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSBeforeLoadEvent>::attribute<jsBeforeLoadEventUrlGetter>(state, thisValue, "url");
+}
+
+static inline JSValue jsBeforeLoadEventUrlGetter(ExecState& state, JSBeforeLoadEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.url());
+    return result;
+}
+
+EncodedJSValue jsBeforeLoadEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSBeforeLoadEventPrototype* domObject = jsDynamicDowncast<JSBeforeLoadEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSBeforeLoadEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSBeforeLoadEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSBeforeLoadEventPrototype* domObject = jsDynamicDowncast<JSBeforeLoadEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.url());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsBeforeLoadEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSBeforeLoadEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSBeforeLoadEventPrototype* domObject = jsDynamicCast<JSBeforeLoadEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSBeforeLoadEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSBeforeLoadEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSBeforeLoadEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7BeforeLoadEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore15BeforeLoadEventE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<BeforeLoadEvent>&& impl)
 {
-    return getDOMConstructor<JSBeforeLoadEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7BeforeLoadEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore15BeforeLoadEventE[2];
+#if COMPILER(CLANG)
+    // If this fails BeforeLoadEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(BeforeLoadEvent), "BeforeLoadEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // BeforeLoadEvent has subclasses. If BeforeLoadEvent has subclasses that get passed
+    // to toJS() we currently require BeforeLoadEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<BeforeLoadEvent>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, BeforeLoadEvent& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

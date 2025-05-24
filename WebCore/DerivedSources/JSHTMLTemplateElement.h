@@ -18,10 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTemplateElement_h
-#define JSHTMLTemplateElement_h
-
-#if ENABLE(TEMPLATE_ELEMENT)
+#pragma once
 
 #include "HTMLTemplateElement.h"
 #include "JSHTMLElement.h"
@@ -30,17 +27,17 @@ namespace WebCore {
 
 class JSHTMLTemplateElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLTemplateElement;
     static JSHTMLTemplateElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTemplateElement>&& impl)
     {
-        JSHTMLTemplateElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElement>(globalObject->vm().heap)) JSHTMLTemplateElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTemplateElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElement>(globalObject->vm().heap)) JSHTMLTemplateElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,31 +46,26 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
 
     // Custom attributes
-    JSC::JSValue content(JSC::ExecState*) const;
-    HTMLTemplateElement& impl() const
+    JSC::JSValue content(JSC::ExecState&) const;
+    HTMLTemplateElement& wrapped() const
     {
-        return static_cast<HTMLTemplateElement&>(Base::impl());
+        return static_cast<HTMLTemplateElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLTemplateElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTemplateElement>&&);
+    JSHTMLTemplateElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTemplateElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLTemplateElement> {
+    using WrapperClass = JSHTMLTemplateElement;
+    using ToWrappedReturnType = HTMLTemplateElement*;
+};
 
 } // namespace WebCore
-
-#endif // ENABLE(TEMPLATE_ELEMENT)
-
-#endif

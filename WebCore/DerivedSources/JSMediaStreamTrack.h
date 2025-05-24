@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaStreamTrack_h
-#define JSMediaStreamTrack_h
+#pragma once
 
 #if ENABLE(MEDIA_STREAM)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include "MediaStreamTrack.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMediaStreamTrack : public JSDOMWrapper {
+class JSMediaStreamTrack : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = MediaStreamTrack;
     static JSMediaStreamTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamTrack>&& impl)
     {
-        JSMediaStreamTrack* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrack>(globalObject->vm().heap)) JSMediaStreamTrack(structure, globalObject, WTF::move(impl));
+        JSMediaStreamTrack* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrack>(globalObject->vm().heap)) JSMediaStreamTrack(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaStreamTrack* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSMediaStreamTrack();
 
     DECLARE_INFO;
 
@@ -52,23 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaStreamTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaStreamTrack* m_impl;
-protected:
-    JSMediaStreamTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStreamTrack>&&);
-
-    void finishCreation(JSC::VM& vm)
+    MediaStreamTrack& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<MediaStreamTrack&>(Base::wrapped());
     }
+protected:
+    JSMediaStreamTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStreamTrack>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaStreamTrackOwner : public JSC::WeakHandleOwner {
@@ -83,12 +76,43 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaStreamTrack*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaStreamTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaStreamTrack* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamTrack&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStreamTrack* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaStreamTrack>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaStreamTrack>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaStreamTrack> {
+    using WrapperClass = JSMediaStreamTrack;
+    using ToWrappedReturnType = MediaStreamTrack*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, MediaStreamTrack::State);
+
+template<> std::optional<MediaStreamTrack::State> parseEnumeration<MediaStreamTrack::State>(JSC::ExecState&, JSC::JSValue);
+template<> MediaStreamTrack::State convertEnumeration<MediaStreamTrack::State>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<MediaStreamTrack::State>();
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> MediaStreamTrack::TrackCapabilities convertDictionary<MediaStreamTrack::TrackCapabilities>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const MediaStreamTrack::TrackCapabilities&);
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+
+template<> MediaStreamTrack::TrackSettings convertDictionary<MediaStreamTrack::TrackSettings>(JSC::ExecState&, JSC::JSValue);
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState&, JSDOMGlobalObject&, const MediaStreamTrack::TrackSettings&);
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM)
-
-#endif

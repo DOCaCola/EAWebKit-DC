@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLDepthTexture_h
-#define JSWebGLDepthTexture_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLDepthTexture : public JSDOMWrapper {
+class JSWebGLDepthTexture : public JSDOMWrapper<WebGLDepthTexture> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLDepthTexture>;
     static JSWebGLDepthTexture* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDepthTexture>&& impl)
     {
-        JSWebGLDepthTexture* ptr = new (NotNull, JSC::allocateCell<JSWebGLDepthTexture>(globalObject->vm().heap)) JSWebGLDepthTexture(structure, globalObject, WTF::move(impl));
+        JSWebGLDepthTexture* ptr = new (NotNull, JSC::allocateCell<JSWebGLDepthTexture>(globalObject->vm().heap)) JSWebGLDepthTexture(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDepthTexture* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDepthTexture();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDepthTexture& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDepthTexture* m_impl;
 protected:
-    JSWebGLDepthTexture(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDepthTexture>&&);
+    JSWebGLDepthTexture(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDepthTexture>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLDepthTextureOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDepthTexture*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDepthTexture*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDepthTexture& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLDepthTexture* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDepthTexture&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDepthTexture* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLDepthTexture>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLDepthTexture>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLDepthTexture> {
+    using WrapperClass = JSWebGLDepthTexture;
+    using ToWrappedReturnType = WebGLDepthTexture*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

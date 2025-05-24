@@ -18,10 +18,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCDataChannelEvent_h
-#define JSRTCDataChannelEvent_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSEvent.h"
 #include "RTCDataChannelEvent.h"
@@ -30,43 +29,41 @@ namespace WebCore {
 
 class JSRTCDataChannelEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = RTCDataChannelEvent;
     static JSRTCDataChannelEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDataChannelEvent>&& impl)
     {
-        JSRTCDataChannelEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannelEvent>(globalObject->vm().heap)) JSRTCDataChannelEvent(structure, globalObject, WTF::move(impl));
+        JSRTCDataChannelEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannelEvent>(globalObject->vm().heap)) JSRTCDataChannelEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    RTCDataChannelEvent& impl() const
+    RTCDataChannelEvent& wrapped() const
     {
-        return static_cast<RTCDataChannelEvent&>(Base::impl());
+        return static_cast<RTCDataChannelEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCDataChannelEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDataChannelEvent>&&);
+    JSRTCDataChannelEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDataChannelEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<RTCDataChannelEvent> {
+    using WrapperClass = JSRTCDataChannelEvent;
+    using ToWrappedReturnType = RTCDataChannelEvent*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

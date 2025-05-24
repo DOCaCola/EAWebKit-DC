@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioContext_h
-#define JSAudioContext_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
 #include "AudioContext.h"
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSAudioContext : public JSDOMWrapper {
+class WEBCORE_EXPORT JSAudioContext : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = AudioContext;
     static JSAudioContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioContext>&& impl)
     {
-        JSAudioContext* ptr = new (NotNull, JSC::allocateCell<JSAudioContext>(globalObject->vm().heap)) JSAudioContext(structure, globalObject, WTF::move(impl));
+        JSAudioContext* ptr = new (NotNull, JSC::allocateCell<JSAudioContext>(globalObject->vm().heap)) JSAudioContext(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioContext* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSAudioContext();
 
     DECLARE_INFO;
 
@@ -52,23 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    AudioContext& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioContext* m_impl;
-protected:
-    JSAudioContext(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioContext>&&);
-
-    void finishCreation(JSC::VM& vm)
+    AudioContext& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<AudioContext&>(Base::wrapped());
     }
+protected:
+    JSAudioContext(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioContext>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSAudioContextOwner : public JSC::WeakHandleOwner {
@@ -83,15 +76,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioContext*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioContext& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(AudioContext* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSAudioContext(JSC::ExecState*);
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioContext&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioContext* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioContext>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioContext>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<AudioContext> {
+    using WrapperClass = JSAudioContext;
+    using ToWrappedReturnType = AudioContext*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, AudioContext::State);
+
+template<> std::optional<AudioContext::State> parseEnumeration<AudioContext::State>(JSC::ExecState&, JSC::JSValue);
+template<> AudioContext::State convertEnumeration<AudioContext::State>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<AudioContext::State>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

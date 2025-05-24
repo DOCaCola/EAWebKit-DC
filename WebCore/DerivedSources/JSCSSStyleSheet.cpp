@@ -21,13 +21,11 @@
 #include "config.h"
 #include "JSCSSStyleSheet.h"
 
-#include "CSSRule.h"
-#include "CSSRuleList.h"
-#include "CSSStyleSheet.h"
-#include "ExceptionCode.h"
 #include "JSCSSRule.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -44,14 +42,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionRemoveRule(JSC
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSStyleSheetOwnerRule(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSStyleSheetCssRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSStyleSheetRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSStyleSheetConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleSheetOwnerRule(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleSheetCssRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleSheetRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSStyleSheetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSStyleSheetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSStyleSheetPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSStyleSheetPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSStyleSheetPrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheetPrototype>(vm.heap)) JSCSSStyleSheetPrototype(vm, globalObject, structure);
@@ -74,55 +73,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSStyleSheetConstructor : public DOMConstructorObject {
-private:
-    JSCSSStyleSheetConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSStyleSheetConstructor = JSDOMConstructorNotConstructable<JSCSSStyleSheet>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSStyleSheetConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSStyleSheetConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheetConstructor>(vm.heap)) JSCSSStyleSheetConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSStyleSheetConstructor::s_info = { "CSSStyleSheetConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleSheetConstructor) };
-
-JSCSSStyleSheetConstructor::JSCSSStyleSheetConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCSSStyleSheetConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSStyleSheet::getConstructor(vm, &globalObject);
 }
 
-void JSCSSStyleSheetConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSStyleSheetConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleSheet::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleSheet::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSStyleSheet"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSStyleSheetConstructor::s_info = { "CSSStyleSheet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleSheetConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSStyleSheetPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ownerRule", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetOwnerRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionInsertRule), (intptr_t) (0) },
-    { "deleteRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionDeleteRule), (intptr_t) (0) },
-    { "addRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionAddRule), (intptr_t) (0) },
-    { "removeRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionRemoveRule), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleSheetConstructor) } },
+    { "ownerRule", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetOwnerRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleSheetRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionInsertRule), (intptr_t) (1) } },
+    { "deleteRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionDeleteRule), (intptr_t) (1) } },
+    { "addRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionAddRule), (intptr_t) (0) } },
+    { "removeRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSStyleSheetPrototypeFunctionRemoveRule), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSStyleSheetPrototype::s_info = { "CSSStyleSheetPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleSheetPrototype) };
@@ -135,170 +113,226 @@ void JSCSSStyleSheetPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSStyleSheet::s_info = { "CSSStyleSheet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleSheet) };
 
-JSCSSStyleSheet::JSCSSStyleSheet(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleSheet>&& impl)
-    : JSStyleSheet(structure, globalObject, WTF::move(impl))
+JSCSSStyleSheet::JSCSSStyleSheet(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSStyleSheet>&& impl)
+    : JSStyleSheet(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSStyleSheet::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSStyleSheet::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSStyleSheetPrototype::create(vm, globalObject, JSCSSStyleSheetPrototype::createStructure(vm, globalObject, JSStyleSheet::getPrototype(vm, globalObject)));
+    return JSCSSStyleSheetPrototype::create(vm, globalObject, JSCSSStyleSheetPrototype::createStructure(vm, globalObject, JSStyleSheet::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSStyleSheet::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSStyleSheet::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSStyleSheet>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSStyleSheetOwnerRule(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSStyleSheet* BindingCaller<JSCSSStyleSheet>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleSheetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleSheet", "ownerRule");
-        return throwGetterTypeError(*exec, "CSSStyleSheet", "ownerRule");
+    return jsDynamicDowncast<JSCSSStyleSheet*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSCSSStyleSheet* BindingCaller<JSCSSStyleSheet>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSCSSStyleSheet*>(state.thisValue());
+}
+
+static inline JSValue jsCSSStyleSheetOwnerRuleGetter(ExecState&, JSCSSStyleSheet&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleSheetOwnerRule(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleSheet>::attribute<jsCSSStyleSheetOwnerRuleGetter>(state, thisValue, "ownerRule");
+}
+
+static inline JSValue jsCSSStyleSheetOwnerRuleGetter(ExecState& state, JSCSSStyleSheet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRule>>(state, *thisObject.globalObject(), impl.ownerRule());
+    return result;
+}
+
+static inline JSValue jsCSSStyleSheetCssRulesGetter(ExecState&, JSCSSStyleSheet&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleSheetCssRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleSheet>::attribute<jsCSSStyleSheetCssRulesGetter>(state, thisValue, "cssRules");
+}
+
+static inline JSValue jsCSSStyleSheetCssRulesGetter(ExecState& state, JSCSSStyleSheet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.cssRules());
+    return result;
+}
+
+static inline JSValue jsCSSStyleSheetRulesGetter(ExecState&, JSCSSStyleSheet&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSStyleSheetRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSStyleSheet>::attribute<jsCSSStyleSheetRulesGetter>(state, thisValue, "rules");
+}
+
+static inline JSValue jsCSSStyleSheetRulesGetter(ExecState& state, JSCSSStyleSheet& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.rules());
+    return result;
+}
+
+EncodedJSValue jsCSSStyleSheetConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSStyleSheetPrototype* domObject = jsDynamicDowncast<JSCSSStyleSheetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSStyleSheet::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSStyleSheetConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCSSStyleSheetPrototype* domObject = jsDynamicDowncast<JSCSSStyleSheetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ownerRule()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsCSSStyleSheetCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSCSSStyleSheet::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleSheetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleSheet", "cssRules");
-        return throwGetterTypeError(*exec, "CSSStyleSheet", "cssRules");
+    return getDOMConstructor<JSCSSStyleSheetConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule1Caller(JSC::ExecState*, JSCSSStyleSheet*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule1(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleSheet>::callOperation<jsCSSStyleSheetPrototypeFunctionInsertRule1Caller>(state, "insertRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule1Caller(JSC::ExecState* state, JSCSSStyleSheet* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rule = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(*state, throwScope, impl.insertRule(WTFMove(rule), WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule2Caller(JSC::ExecState*, JSCSSStyleSheet*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule2(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleSheet>::callOperation<jsCSSStyleSheetPrototypeFunctionInsertRule2Caller>(state, "insertRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionInsertRule2Caller(JSC::ExecState* state, JSCSSStyleSheet* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto rule = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(*state, throwScope, impl.deprecatedInsertRule(WTFMove(rule))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionInsertRule(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 1) {
+        return jsCSSStyleSheetPrototypeFunctionInsertRule2(state);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCSSStyleSheetRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSStyleSheetPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleSheet", "rules");
-        return throwGetterTypeError(*exec, "CSSStyleSheet", "rules");
+    if (argsCount == 2) {
+        return jsCSSStyleSheetPrototypeFunctionInsertRule1(state);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rules()));
-    return JSValue::encode(result);
+    return argsCount < 1 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
 }
 
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionDeleteRuleCaller(JSC::ExecState*, JSCSSStyleSheet*, JSC::ThrowScope&);
 
-EncodedJSValue jsCSSStyleSheetConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionDeleteRule(ExecState* state)
 {
-    JSCSSStyleSheetPrototype* domObject = jsDynamicCast<JSCSSStyleSheetPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSStyleSheet::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSCSSStyleSheet>::callOperation<jsCSSStyleSheetPrototypeFunctionDeleteRuleCaller>(state, "deleteRule");
 }
 
-JSValue JSCSSStyleSheet::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionDeleteRuleCaller(JSC::ExecState* state, JSCSSStyleSheet* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSCSSStyleSheetConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionInsertRule(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleSheet", "insertRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleSheet::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.insertRule(rule, index, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionDeleteRule(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleSheet", "deleteRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleSheet::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.deleteRule(index, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.deleteRule(WTFMove(index)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionAddRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionAddRuleCaller(JSC::ExecState*, JSCSSStyleSheet*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionAddRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleSheet", "addRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleSheet::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String selector = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String style = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 2) {
-        JSValue result = jsNumber(impl.addRule(selector, style, ec));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
-    }
-
-    unsigned index = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.addRule(selector, style, index, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return BindingCaller<JSCSSStyleSheet>::callOperation<jsCSSStyleSheetPrototypeFunctionAddRuleCaller>(state, "addRule");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionRemoveRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionAddRuleCaller(JSC::ExecState* state, JSCSSStyleSheet* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSStyleSheet* castedThis = jsDynamicCast<JSCSSStyleSheet*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSStyleSheet", "removeRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSStyleSheet::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.removeRule(index, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto selector = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto style = convert<IDLDOMString>(*state, state->argument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = state->argument(2).isUndefined() ? std::optional<uint32_t>() : convert<IDLUnsignedLong>(*state, state->uncheckedArgument(2), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLLong>(*state, throwScope, impl.addRule(WTFMove(selector), WTFMove(style), WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionRemoveRuleCaller(JSC::ExecState*, JSCSSStyleSheet*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsCSSStyleSheetPrototypeFunctionRemoveRule(ExecState* state)
+{
+    return BindingCaller<JSCSSStyleSheet>::callOperation<jsCSSStyleSheetPrototypeFunctionRemoveRuleCaller>(state, "removeRule");
+}
+
+static inline JSC::EncodedJSValue jsCSSStyleSheetPrototypeFunctionRemoveRuleCaller(JSC::ExecState* state, JSCSSStyleSheet* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto index = convert<IDLUnsignedLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.removeRule(WTFMove(index)));
     return JSValue::encode(jsUndefined());
 }
 

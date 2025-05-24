@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBTransaction_h
-#define JSIDBTransaction_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSIDBTransaction : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = IDBTransaction;
     static JSIDBTransaction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBTransaction>&& impl)
     {
-        JSIDBTransaction* ptr = new (NotNull, JSC::allocateCell<JSIDBTransaction>(globalObject->vm().heap)) JSIDBTransaction(structure, globalObject, WTF::move(impl));
+        JSIDBTransaction* ptr = new (NotNull, JSC::allocateCell<JSIDBTransaction>(globalObject->vm().heap)) JSIDBTransaction(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBTransaction* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,22 +50,20 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
+    void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    IDBTransaction& impl() const
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    IDBTransaction& wrapped() const
     {
-        return static_cast<IDBTransaction&>(Base::impl());
+        return static_cast<IDBTransaction&>(Base::wrapped());
     }
 protected:
-    JSIDBTransaction(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBTransaction>&&);
+    JSIDBTransaction(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBTransaction>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBTransactionOwner : public JSC::WeakHandleOwner {
@@ -80,12 +78,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBTransaction*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBTransaction*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBTransaction& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBTransaction* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBTransaction&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBTransaction* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBTransaction>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBTransaction>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBTransaction> {
+    using WrapperClass = JSIDBTransaction;
+    using ToWrappedReturnType = IDBTransaction*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

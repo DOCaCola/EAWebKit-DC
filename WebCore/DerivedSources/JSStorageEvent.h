@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStorageEvent_h
-#define JSStorageEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "StorageEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSStorageEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = StorageEvent;
     static JSStorageEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StorageEvent>&& impl)
     {
-        JSStorageEvent* ptr = new (NotNull, JSC::allocateCell<JSStorageEvent>(globalObject->vm().heap)) JSStorageEvent(structure, globalObject, WTF::move(impl));
+        JSStorageEvent* ptr = new (NotNull, JSC::allocateCell<JSStorageEvent>(globalObject->vm().heap)) JSStorageEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    StorageEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    StorageEvent& wrapped() const
     {
-        return static_cast<StorageEvent&>(Base::impl());
+        return static_cast<StorageEvent&>(Base::wrapped());
     }
 protected:
-    JSStorageEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<StorageEvent>&&);
+    JSStorageEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<StorageEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StorageEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StorageEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<StorageEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<StorageEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillStorageEventInit(StorageEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<StorageEvent> {
+    using WrapperClass = JSStorageEvent;
+    using ToWrappedReturnType = StorageEvent*;
+};
+template<> StorageEvent::Init convertDictionary<StorageEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

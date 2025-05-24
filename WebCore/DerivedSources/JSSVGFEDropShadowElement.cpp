@@ -21,12 +21,12 @@
 #include "config.h"
 #include "JSSVGFEDropShadowElement.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEDropShadowElement.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -40,21 +40,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGFEDropShadowElementPrototypeFunctionSetSt
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFEDropShadowElementIn1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementDx(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementDy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementStdDeviationX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementStdDeviationY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEDropShadowElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementIn1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementDx(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementDy(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementStdDeviationX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementStdDeviationY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEDropShadowElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFEDropShadowElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFEDropShadowElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFEDropShadowElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFEDropShadowElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDropShadowElementPrototype>(vm.heap)) JSSVGFEDropShadowElementPrototype(vm, globalObject, structure);
@@ -77,59 +78,38 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEDropShadowElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEDropShadowElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGFEDropShadowElementConstructor = JSDOMConstructorNotConstructable<JSSVGFEDropShadowElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEDropShadowElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEDropShadowElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDropShadowElementConstructor>(vm.heap)) JSSVGFEDropShadowElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEDropShadowElementConstructor::s_info = { "SVGFEDropShadowElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDropShadowElementConstructor) };
-
-JSSVGFEDropShadowElementConstructor::JSSVGFEDropShadowElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFEDropShadowElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFEDropShadowElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFEDropShadowElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDropShadowElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDropShadowElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEDropShadowElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEDropShadowElementConstructor::s_info = { "SVGFEDropShadowElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDropShadowElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEDropShadowElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "dx", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementDx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "dy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementDy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "stdDeviationX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementStdDeviationX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "stdDeviationY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementStdDeviationY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "setStdDeviation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviation), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFEDropShadowElementConstructor) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "dx", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementDx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "dy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementDy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "stdDeviationX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementStdDeviationX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "stdDeviationY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementStdDeviationY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDropShadowElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setStdDeviation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviation), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGFEDropShadowElementPrototype::s_info = { "SVGFEDropShadowElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDropShadowElementPrototype) };
@@ -142,230 +122,253 @@ void JSSVGFEDropShadowElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEDropShadowElement::s_info = { "SVGFEDropShadowElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDropShadowElement) };
 
-JSSVGFEDropShadowElement::JSSVGFEDropShadowElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDropShadowElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFEDropShadowElement::JSSVGFEDropShadowElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEDropShadowElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFEDropShadowElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFEDropShadowElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFEDropShadowElementPrototype::create(vm, globalObject, JSSVGFEDropShadowElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFEDropShadowElementPrototype::create(vm, globalObject, JSSVGFEDropShadowElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFEDropShadowElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFEDropShadowElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFEDropShadowElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEDropShadowElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGFEDropShadowElement* BindingCaller<JSSVGFEDropShadowElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "in1");
+    return jsDynamicDowncast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSSVGFEDropShadowElement* BindingCaller<JSSVGFEDropShadowElement>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSSVGFEDropShadowElement*>(state.thisValue());
+}
+
+static inline JSValue jsSVGFEDropShadowElementIn1Getter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementIn1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementIn1Getter>(state, thisValue, "in1");
+}
+
+static inline JSValue jsSVGFEDropShadowElementIn1Getter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.in1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementDxGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementDx(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementDxGetter>(state, thisValue, "dx");
+}
+
+static inline JSValue jsSVGFEDropShadowElementDxGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.dxAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementDyGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementDy(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementDyGetter>(state, thisValue, "dy");
+}
+
+static inline JSValue jsSVGFEDropShadowElementDyGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.dyAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementStdDeviationXGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementStdDeviationX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementStdDeviationXGetter>(state, thisValue, "stdDeviationX");
+}
+
+static inline JSValue jsSVGFEDropShadowElementStdDeviationXGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.stdDeviationXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementStdDeviationYGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementStdDeviationY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementStdDeviationYGetter>(state, thisValue, "stdDeviationY");
+}
+
+static inline JSValue jsSVGFEDropShadowElementStdDeviationYGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.stdDeviationYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementXGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGFEDropShadowElementXGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementYGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGFEDropShadowElementYGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementWidthGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsSVGFEDropShadowElementWidthGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementHeightGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsSVGFEDropShadowElementHeightGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEDropShadowElementResultGetter(ExecState&, JSSVGFEDropShadowElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEDropShadowElementResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEDropShadowElement>::attribute<jsSVGFEDropShadowElementResultGetter>(state, thisValue, "result");
+}
+
+static inline JSValue jsSVGFEDropShadowElementResultGetter(ExecState& state, JSSVGFEDropShadowElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.resultAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGFEDropShadowElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFEDropShadowElementPrototype* domObject = jsDynamicDowncast<JSSVGFEDropShadowElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFEDropShadowElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGFEDropShadowElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFEDropShadowElementPrototype* domObject = jsDynamicDowncast<JSSVGFEDropShadowElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGFEDropShadowElementDx(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGFEDropShadowElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "dx");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "dx");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.dxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGFEDropShadowElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviationCaller(JSC::ExecState*, JSSVGFEDropShadowElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGFEDropShadowElementDy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviation(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "dy");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "dy");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.dyAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGFEDropShadowElement>::callOperation<jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviationCaller>(state, "setStdDeviation");
 }
 
-
-EncodedJSValue jsSVGFEDropShadowElementStdDeviationX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviationCaller(JSC::ExecState* state, JSSVGFEDropShadowElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "stdDeviationX");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "stdDeviationX");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.stdDeviationXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementStdDeviationY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "stdDeviationY");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "stdDeviationY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.stdDeviationYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDropShadowElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEDropShadowElement", "result");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEDropShadowElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGFEDropShadowElementPrototype* domObject = jsDynamicCast<JSSVGFEDropShadowElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEDropShadowElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGFEDropShadowElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGFEDropShadowElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsSVGFEDropShadowElementPrototypeFunctionSetStdDeviation(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGFEDropShadowElement* castedThis = jsDynamicCast<JSSVGFEDropShadowElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGFEDropShadowElement", "setStdDeviation");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGFEDropShadowElement::info());
-    auto& impl = castedThis->impl();
-    float stdDeviationX = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float stdDeviationY = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setStdDeviation(stdDeviationX, stdDeviationY);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto stdDeviationX = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto stdDeviationY = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setStdDeviation(WTFMove(stdDeviationX), WTFMove(stdDeviationY));
     return JSValue::encode(jsUndefined());
+}
+
+void JSSVGFEDropShadowElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGFEDropShadowElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

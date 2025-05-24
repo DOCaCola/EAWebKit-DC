@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLAudioElement_h
-#define JSHTMLAudioElement_h
+#pragma once
 
 #if ENABLE(VIDEO)
 
@@ -32,16 +31,17 @@ namespace WebCore {
 
 class JSHTMLAudioElement : public JSHTMLMediaElement {
 public:
-    typedef JSHTMLMediaElement Base;
+    using Base = JSHTMLMediaElement;
+    using DOMWrapped = HTMLAudioElement;
     static JSHTMLAudioElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAudioElement>&& impl)
     {
-        JSHTMLAudioElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAudioElement>(globalObject->vm().heap)) JSHTMLAudioElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAudioElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAudioElement>(globalObject->vm().heap)) JSHTMLAudioElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -50,21 +50,18 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static JSC::JSValue getNamedConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAudioElement& impl() const
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLAudioElement& wrapped() const
     {
-        return static_cast<HTMLAudioElement&>(Base::impl());
+        return static_cast<HTMLAudioElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAudioElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAudioElement>&&);
+    JSHTMLAudioElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAudioElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSHTMLAudioElementOwner : public JSNodeOwner {
@@ -79,10 +76,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLAudioElement*)
     return &owner.get();
 }
 
+inline void* wrapperKey(HTMLAudioElement* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HTMLAudioElement&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLAudioElement* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<HTMLAudioElement>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<HTMLAudioElement>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<HTMLAudioElement> {
+    using WrapperClass = JSHTMLAudioElement;
+    using ToWrappedReturnType = HTMLAudioElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO)
-
-#endif

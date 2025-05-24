@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSVideoPlaybackQuality_h
-#define JSVideoPlaybackQuality_h
+#pragma once
 
 #if ENABLE(MEDIA_SOURCE)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSVideoPlaybackQuality : public JSDOMWrapper {
+class JSVideoPlaybackQuality : public JSDOMWrapper<VideoPlaybackQuality> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<VideoPlaybackQuality>;
     static JSVideoPlaybackQuality* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoPlaybackQuality>&& impl)
     {
-        JSVideoPlaybackQuality* ptr = new (NotNull, JSC::allocateCell<JSVideoPlaybackQuality>(globalObject->vm().heap)) JSVideoPlaybackQuality(structure, globalObject, WTF::move(impl));
+        JSVideoPlaybackQuality* ptr = new (NotNull, JSC::allocateCell<JSVideoPlaybackQuality>(globalObject->vm().heap)) JSVideoPlaybackQuality(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static VideoPlaybackQuality* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSVideoPlaybackQuality();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    VideoPlaybackQuality& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VideoPlaybackQuality* m_impl;
 protected:
-    JSVideoPlaybackQuality(JSC::Structure*, JSDOMGlobalObject*, Ref<VideoPlaybackQuality>&&);
+    JSVideoPlaybackQuality(JSC::Structure*, JSDOMGlobalObject&, Ref<VideoPlaybackQuality>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSVideoPlaybackQualityOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VideoPlaybackQuality
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoPlaybackQuality*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VideoPlaybackQuality& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(VideoPlaybackQuality* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoPlaybackQuality&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VideoPlaybackQuality* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<VideoPlaybackQuality>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<VideoPlaybackQuality>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<VideoPlaybackQuality> {
+    using WrapperClass = JSVideoPlaybackQuality;
+    using ToWrappedReturnType = VideoPlaybackQuality*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_SOURCE)
-
-#endif

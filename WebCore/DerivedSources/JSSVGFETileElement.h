@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFETileElement_h
-#define JSSVGFETileElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFETileElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFETileElement;
     static JSSVGFETileElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFETileElement>&& impl)
     {
-        JSSVGFETileElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETileElement>(globalObject->vm().heap)) JSSVGFETileElement(structure, globalObject, WTF::move(impl));
+        JSSVGFETileElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETileElement>(globalObject->vm().heap)) JSSVGFETileElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFETileElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFETileElement& wrapped() const
     {
-        return static_cast<SVGFETileElement&>(Base::impl());
+        return static_cast<SVGFETileElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFETileElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFETileElement>&&);
+    JSSVGFETileElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFETileElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFETileElement> {
+    using WrapperClass = JSSVGFETileElement;
+    using ToWrappedReturnType = SVGFETileElement*;
+};
 
 } // namespace WebCore
-
-#endif

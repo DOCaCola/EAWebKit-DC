@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSVideoTrack_h
-#define JSVideoTrack_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSVideoTrack : public JSDOMWrapper {
+class JSVideoTrack : public JSDOMWrapper<VideoTrack> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<VideoTrack>;
     static JSVideoTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoTrack>&& impl)
     {
-        JSVideoTrack* ptr = new (NotNull, JSC::allocateCell<JSVideoTrack>(globalObject->vm().heap)) JSVideoTrack(structure, globalObject, WTF::move(impl));
+        JSVideoTrack* ptr = new (NotNull, JSC::allocateCell<JSVideoTrack>(globalObject->vm().heap)) JSVideoTrack(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static VideoTrack* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSVideoTrack();
 
     DECLARE_INFO;
 
@@ -53,29 +50,20 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 
     // Custom attributes
-    void setKind(JSC::ExecState*, JSC::JSValue);
-    void setLanguage(JSC::ExecState*, JSC::JSValue);
-    VideoTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VideoTrack* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    void setKind(JSC::ExecState&, JSC::JSValue);
+    void setLanguage(JSC::ExecState&, JSC::JSValue);
 protected:
-    JSVideoTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<VideoTrack>&&);
+    JSVideoTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<VideoTrack>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSVideoTrackOwner : public JSC::WeakHandleOwner {
@@ -90,12 +78,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VideoTrack*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VideoTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(VideoTrack* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoTrack&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VideoTrack* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<VideoTrack>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<VideoTrack>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<VideoTrack> {
+    using WrapperClass = JSVideoTrack;
+    using ToWrappedReturnType = VideoTrack*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

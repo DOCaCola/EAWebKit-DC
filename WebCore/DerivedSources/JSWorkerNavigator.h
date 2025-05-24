@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWorkerNavigator_h
-#define JSWorkerNavigator_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "WorkerNavigator.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSWorkerNavigator : public JSDOMWrapper {
+class JSWorkerNavigator : public JSDOMWrapper<WorkerNavigator> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WorkerNavigator>;
     static JSWorkerNavigator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WorkerNavigator>&& impl)
     {
-        JSWorkerNavigator* ptr = new (NotNull, JSC::allocateCell<JSWorkerNavigator>(globalObject->vm().heap)) JSWorkerNavigator(structure, globalObject, WTF::move(impl));
+        JSWorkerNavigator* ptr = new (NotNull, JSC::allocateCell<JSWorkerNavigator>(globalObject->vm().heap)) JSWorkerNavigator(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WorkerNavigator* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSWorkerNavigator();
 
     DECLARE_INFO;
 
@@ -51,22 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WorkerNavigator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WorkerNavigator* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWorkerNavigator(JSC::Structure*, JSDOMGlobalObject*, Ref<WorkerNavigator>&&);
+    JSWorkerNavigator(JSC::Structure*, JSDOMGlobalObject&, Ref<WorkerNavigator>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWorkerNavigatorOwner : public JSC::WeakHandleOwner {
@@ -81,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WorkerNavigator*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WorkerNavigator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WorkerNavigator& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WorkerNavigator* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WorkerNavigator&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WorkerNavigator* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WorkerNavigator>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WorkerNavigator>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WorkerNavigator> {
+    using WrapperClass = JSWorkerNavigator;
+    using ToWrappedReturnType = WorkerNavigator*;
+};
 
 } // namespace WebCore
-
-#endif

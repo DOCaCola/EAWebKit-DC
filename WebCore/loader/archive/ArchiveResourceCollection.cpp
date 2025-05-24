@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008-2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,64 +29,43 @@
 #include "config.h"
 #include "ArchiveResourceCollection.h"
 
+#include "Archive.h"
+
 namespace WebCore {
 
-ArchiveResourceCollection::ArchiveResourceCollection()
+void ArchiveResourceCollection::addAllResources(Archive& archive)
 {
-}
+    for (auto& subresource : archive.subresources())
+        m_subresources.set(subresource->url(), subresource.ptr());
 
-void ArchiveResourceCollection::addAllResources(Archive* archive)
-{
-    ASSERT(archive);
-    if (!archive)
-        return;
-
-    const Vector<RefPtr<ArchiveResource>>& subresources = archive->subresources();
-    for (Vector<RefPtr<ArchiveResource>>::const_iterator iterator = subresources.begin(); iterator != subresources.end(); ++iterator)
-        m_subresources.set((*iterator)->url(), iterator->get());
-
-    const Vector<RefPtr<Archive>>& subframes = archive->subframeArchives();
-    for (Vector<RefPtr<Archive>>::const_iterator iterator = subframes.begin(); iterator != subframes.end(); ++iterator) {
-        RefPtr<Archive> archive = *iterator;
-        ASSERT(archive->mainResource());
-
-        const String& frameName = archive->mainResource()->frameName();
-        if (!frameName.isNull())
-            m_subframes.set(frameName, archive.get());
-        else {
-            // In the MHTML case, frames don't have a name so we use the URL instead.
-            m_subframes.set(archive->mainResource()->url().string(), archive.get());
+    for (auto& subframeArchive : archive.subframeArchives()) {
+        ASSERT(subframeArchive->mainResource());
+        auto frameName = subframeArchive->mainResource()->frameName();
+        if (frameName.isNull()) {
+            // In the MHTML case, frames don't have a name, so we use the URL instead.
+            frameName = subframeArchive->mainResource()->url().string();
         }
+        m_subframes.set(frameName, subframeArchive.ptr());
     }
 }
 
 // FIXME: Adding a resource directly to a DocumentLoader/ArchiveResourceCollection seems like bad design, but is API some apps rely on.
 // Can we change the design in a manner that will let us deprecate that API without reducing functionality of those apps?
-void ArchiveResourceCollection::addResource(PassRefPtr<ArchiveResource> resource)
+void ArchiveResourceCollection::addResource(Ref<ArchiveResource>&& resource)
 {
-    ASSERT(resource);
-    if (!resource)
-        return;
-
-    const URL& url = resource->url(); // get before passing PassRefPtr (which sets it to 0)
-    m_subresources.set(url, resource);
+    auto& url = resource->url();
+    m_subresources.set(url, WTFMove(resource));
 }
 
 ArchiveResource* ArchiveResourceCollection::archiveResourceForURL(const URL& url)
 {
-    ArchiveResource* resource = m_subresources.get(url);
-    if (!resource)
-        return 0;
-        
-    return resource;
+    return m_subresources.get(url);
 }
 
-PassRefPtr<Archive> ArchiveResourceCollection::popSubframeArchive(const String& frameName, const URL& url)
+RefPtr<Archive> ArchiveResourceCollection::popSubframeArchive(const String& frameName, const URL& url)
 {
-    RefPtr<Archive> archive = m_subframes.take(frameName);
-    if (archive)
-        return archive.release();
-
+    if (auto archive = m_subframes.take(frameName))
+        return archive;
     return m_subframes.take(url.string());
 }
 

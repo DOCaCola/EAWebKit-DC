@@ -18,60 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSecurityPolicyViolationEvent_h
-#define JSSecurityPolicyViolationEvent_h
+#pragma once
 
-#if ENABLE(CSP_NEXT)
-
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "SecurityPolicyViolationEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSSecurityPolicyViolationEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = SecurityPolicyViolationEvent;
     static JSSecurityPolicyViolationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SecurityPolicyViolationEvent>&& impl)
     {
-        JSSecurityPolicyViolationEvent* ptr = new (NotNull, JSC::allocateCell<JSSecurityPolicyViolationEvent>(globalObject->vm().heap)) JSSecurityPolicyViolationEvent(structure, globalObject, WTF::move(impl));
+        JSSecurityPolicyViolationEvent* ptr = new (NotNull, JSC::allocateCell<JSSecurityPolicyViolationEvent>(globalObject->vm().heap)) JSSecurityPolicyViolationEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SecurityPolicyViolationEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SecurityPolicyViolationEvent& wrapped() const
     {
-        return static_cast<SecurityPolicyViolationEvent&>(Base::impl());
+        return static_cast<SecurityPolicyViolationEvent&>(Base::wrapped());
     }
 protected:
-    JSSecurityPolicyViolationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SecurityPolicyViolationEvent>&&);
+    JSSecurityPolicyViolationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SecurityPolicyViolationEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SecurityPolicyViolationEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SecurityPolicyViolationEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SecurityPolicyViolationEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SecurityPolicyViolationEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillSecurityPolicyViolationEventInit(SecurityPolicyViolationEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<SecurityPolicyViolationEvent> {
+    using WrapperClass = JSSecurityPolicyViolationEvent;
+    using ToWrappedReturnType = SecurityPolicyViolationEvent*;
+};
+template<> SecurityPolicyViolationEvent::Init convertDictionary<SecurityPolicyViolationEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif // ENABLE(CSP_NEXT)
-
-#endif

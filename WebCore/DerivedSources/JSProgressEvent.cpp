@@ -22,8 +22,7 @@
 #include "JSProgressEvent.h"
 
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
-#include "ProgressEvent.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -31,16 +30,71 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> ProgressEvent::Init convertDictionary<ProgressEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    ProgressEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue lengthComputableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "lengthComputable"));
+    if (!lengthComputableValue.isUndefined()) {
+        result.lengthComputable = convert<IDLBoolean>(state, lengthComputableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.lengthComputable = false;
+    JSValue loadedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "loaded"));
+    if (!loadedValue.isUndefined()) {
+        result.loaded = convert<IDLUnsignedLongLong>(state, loadedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.loaded = 0;
+    JSValue totalValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "total"));
+    if (!totalValue.isUndefined()) {
+        result.total = convert<IDLUnsignedLongLong>(state, totalValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.total = 0;
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsProgressEventLengthComputable(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsProgressEventLoaded(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsProgressEventTotal(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsProgressEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProgressEventLengthComputable(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProgressEventLoaded(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProgressEventTotal(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsProgressEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSProgressEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSProgressEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSProgressEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSProgressEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSProgressEventPrototype>(vm.heap)) JSProgressEventPrototype(vm, globalObject, structure);
@@ -63,105 +117,47 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSProgressEventConstructor : public DOMConstructorObject {
-private:
-    JSProgressEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSProgressEventConstructor = JSDOMConstructor<JSProgressEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSProgressEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSProgressEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSProgressEventConstructor>(vm.heap)) JSProgressEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSProgressEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSProgressEventConstructor::constructJSProgressEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSProgressEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSProgressEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    ProgressEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillProgressEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<ProgressEvent> event = ProgressEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSProgressEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto eventInitDict = convert<IDLDictionary<ProgressEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = ProgressEvent::create(WTFMove(type), WTFMove(eventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<ProgressEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillProgressEventInit(ProgressEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSProgressEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("lengthComputable", eventInit.lengthComputable))
-        return false;
-    if (!dictionary.tryGetProperty("loaded", eventInit.loaded))
-        return false;
-    if (!dictionary.tryGetProperty("total", eventInit.total))
-        return false;
-    return true;
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSProgressEventConstructor::s_info = { "ProgressEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProgressEventConstructor) };
-
-JSProgressEventConstructor::JSProgressEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSProgressEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSProgressEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSProgressEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSProgressEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ProgressEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSProgressEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSProgressEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSProgressEventConstructor::s_info = { "ProgressEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProgressEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSProgressEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lengthComputable", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventLengthComputable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "loaded", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventLoaded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "total", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventTotal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSProgressEventConstructor) } },
+    { "lengthComputable", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventLengthComputable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "loaded", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventLoaded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "total", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsProgressEventTotal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSProgressEventPrototype::s_info = { "ProgressEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProgressEventPrototype) };
@@ -174,83 +170,146 @@ void JSProgressEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSProgressEvent::s_info = { "ProgressEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSProgressEvent) };
 
-JSProgressEvent::JSProgressEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProgressEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSProgressEvent::JSProgressEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ProgressEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSProgressEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSProgressEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSProgressEventPrototype::create(vm, globalObject, JSProgressEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSProgressEventPrototype::create(vm, globalObject, JSProgressEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSProgressEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSProgressEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSProgressEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsProgressEventLengthComputable(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSProgressEvent* BindingCaller<JSProgressEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSProgressEvent* castedThis = jsDynamicCast<JSProgressEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSProgressEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ProgressEvent", "lengthComputable");
-        return throwGetterTypeError(*exec, "ProgressEvent", "lengthComputable");
+    return jsDynamicDowncast<JSProgressEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsProgressEventLengthComputableGetter(ExecState&, JSProgressEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsProgressEventLengthComputable(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSProgressEvent>::attribute<jsProgressEventLengthComputableGetter>(state, thisValue, "lengthComputable");
+}
+
+static inline JSValue jsProgressEventLengthComputableGetter(ExecState& state, JSProgressEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.lengthComputable());
+    return result;
+}
+
+static inline JSValue jsProgressEventLoadedGetter(ExecState&, JSProgressEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsProgressEventLoaded(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSProgressEvent>::attribute<jsProgressEventLoadedGetter>(state, thisValue, "loaded");
+}
+
+static inline JSValue jsProgressEventLoadedGetter(ExecState& state, JSProgressEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.loaded());
+    return result;
+}
+
+static inline JSValue jsProgressEventTotalGetter(ExecState&, JSProgressEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsProgressEventTotal(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSProgressEvent>::attribute<jsProgressEventTotalGetter>(state, thisValue, "total");
+}
+
+static inline JSValue jsProgressEventTotalGetter(ExecState& state, JSProgressEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.total());
+    return result;
+}
+
+EncodedJSValue jsProgressEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSProgressEventPrototype* domObject = jsDynamicDowncast<JSProgressEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSProgressEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSProgressEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSProgressEventPrototype* domObject = jsDynamicDowncast<JSProgressEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.lengthComputable());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsProgressEventLoaded(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSProgressEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSProgressEvent* castedThis = jsDynamicCast<JSProgressEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSProgressEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ProgressEvent", "loaded");
-        return throwGetterTypeError(*exec, "ProgressEvent", "loaded");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.loaded());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSProgressEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7ProgressEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore13ProgressEventE[]; }
+#endif
+#endif
 
-EncodedJSValue jsProgressEventTotal(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<ProgressEvent>&& impl)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSProgressEvent* castedThis = jsDynamicCast<JSProgressEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSProgressEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ProgressEvent", "total");
-        return throwGetterTypeError(*exec, "ProgressEvent", "total");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.total());
-    return JSValue::encode(result);
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7ProgressEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore13ProgressEventE[2];
+#if COMPILER(CLANG)
+    // If this fails ProgressEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(ProgressEvent), "ProgressEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // ProgressEvent has subclasses. If ProgressEvent has subclasses that get passed
+    // to toJS() we currently require ProgressEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<ProgressEvent>(globalObject, WTFMove(impl));
 }
 
-
-EncodedJSValue jsProgressEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ProgressEvent& impl)
 {
-    JSProgressEventPrototype* domObject = jsDynamicCast<JSProgressEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSProgressEvent::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSProgressEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSProgressEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return wrap(state, globalObject, impl);
 }
 
 

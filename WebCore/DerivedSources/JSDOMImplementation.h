@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMImplementation_h
-#define JSDOMImplementation_h
+#pragma once
 
 #include "DOMImplementation.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMImplementation : public JSDOMWrapper {
+class JSDOMImplementation : public JSDOMWrapper<DOMImplementation> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMImplementation>;
     static JSDOMImplementation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMImplementation>&& impl)
     {
-        JSDOMImplementation* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementation>(globalObject->vm().heap)) JSDOMImplementation(structure, globalObject, WTF::move(impl));
+        JSDOMImplementation* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementation>(globalObject->vm().heap)) JSDOMImplementation(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static DOMImplementation* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT DOMImplementation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMImplementation();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMImplementation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMImplementation* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMImplementation(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMImplementation>&&);
+    JSDOMImplementation(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMImplementation>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMImplementationOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMImplementation*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMImplementation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMImplementation& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMImplementation* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMImplementation&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMImplementation* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMImplementation>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMImplementation>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMImplementation> {
+    using WrapperClass = JSDOMImplementation;
+    using ToWrappedReturnType = DOMImplementation*;
+};
 
 } // namespace WebCore
-
-#endif

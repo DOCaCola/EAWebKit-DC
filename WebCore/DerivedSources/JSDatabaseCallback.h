@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDatabaseCallback_h
-#define JSDatabaseCallback_h
+#pragma once
 
 #include "ActiveDOMCallback.h"
 #include "DatabaseCallback.h"
@@ -38,16 +37,18 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSDatabaseCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(Database* database);
 
 private:
-    JSDatabaseCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSDatabaseCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
 
-} // namespace WebCore
+JSC::JSValue toJS(DatabaseCallback&);
+inline JSC::JSValue toJS(DatabaseCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
-#endif
+} // namespace WebCore

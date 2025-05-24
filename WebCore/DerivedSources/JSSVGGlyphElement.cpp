@@ -25,7 +25,7 @@
 #include "JSSVGGlyphElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGGlyphElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGGlyphElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGGlyphElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGGlyphElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGGlyphElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGGlyphElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphElementPrototype>(vm.heap)) JSSVGGlyphElementPrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGGlyphElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGGlyphElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGGlyphElementConstructor = JSDOMConstructorNotConstructable<JSSVGGlyphElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGGlyphElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGGlyphElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphElementConstructor>(vm.heap)) JSSVGGlyphElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGGlyphElementConstructor::s_info = { "SVGGlyphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphElementConstructor) };
-
-JSSVGGlyphElementConstructor::JSSVGGlyphElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGGlyphElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGGlyphElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGGlyphElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGGlyphElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGGlyphElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGGlyphElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGGlyphElementConstructor::s_info = { "SVGGlyphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGGlyphElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphElementConstructor) } },
 };
 
 const ClassInfo JSSVGGlyphElementPrototype::s_info = { "SVGGlyphElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphElementPrototype) };
@@ -115,32 +95,63 @@ void JSSVGGlyphElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGGlyphElement::s_info = { "SVGGlyphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphElement) };
 
-JSSVGGlyphElement::JSSVGGlyphElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGGlyphElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGGlyphElement::JSSVGGlyphElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGGlyphElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGGlyphElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGGlyphElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGGlyphElementPrototype::create(vm, globalObject, JSSVGGlyphElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGGlyphElementPrototype::create(vm, globalObject, JSSVGGlyphElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGGlyphElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGGlyphElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGGlyphElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGGlyphElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGGlyphElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGGlyphElementPrototype* domObject = jsDynamicCast<JSSVGGlyphElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGGlyphElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGGlyphElementPrototype* domObject = jsDynamicDowncast<JSSVGGlyphElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGGlyphElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGGlyphElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGGlyphElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGGlyphElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGGlyphElementPrototype* domObject = jsDynamicDowncast<JSSVGGlyphElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGGlyphElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGGlyphElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGGlyphElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGGlyphElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

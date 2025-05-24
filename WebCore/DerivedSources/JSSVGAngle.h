@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAngle_h
-#define JSSVGAngle_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGAngle.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGAngle : public JSDOMWrapper {
+class JSSVGAngle : public JSDOMWrapper<SVGAngle> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGAngle* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGAngle>>&& impl)
+    using Base = JSDOMWrapper<SVGAngle>;
+    static JSSVGAngle* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAngle>&& impl)
     {
-        JSSVGAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAngle>(globalObject->vm().heap)) JSSVGAngle(structure, globalObject, WTF::move(impl));
+        JSSVGAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAngle>(globalObject->vm().heap)) JSSVGAngle(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<SVGAngle>* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGAngle* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAngle();
 
     DECLARE_INFO;
 
@@ -52,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGAngle>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGAngle>* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGAngle(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGAngle>>&&);
+    JSSVGAngle(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAngle>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGAngleOwner : public JSC::WeakHandleOwner {
@@ -75,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<SVGAngle>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAngle*)
 {
     static NeverDestroyed<JSSVGAngleOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGAngle>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGAngle>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGAngle* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAngle&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAngle* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGAngle>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGAngle>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGAngle> {
+    using WrapperClass = JSSVGAngle;
+    using ToWrappedReturnType = SVGAngle*;
+};
 
 } // namespace WebCore
-
-#endif

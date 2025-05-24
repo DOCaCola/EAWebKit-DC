@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathExpression_h
-#define JSXPathExpression_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "XPathExpression.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSXPathExpression : public JSDOMWrapper {
+class JSXPathExpression : public JSDOMWrapper<XPathExpression> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<XPathExpression>;
     static JSXPathExpression* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathExpression>&& impl)
     {
-        JSXPathExpression* ptr = new (NotNull, JSC::allocateCell<JSXPathExpression>(globalObject->vm().heap)) JSXPathExpression(structure, globalObject, WTF::move(impl));
+        JSXPathExpression* ptr = new (NotNull, JSC::allocateCell<JSXPathExpression>(globalObject->vm().heap)) JSXPathExpression(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static XPathExpression* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT XPathExpression* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathExpression();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathExpression& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathExpression* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSXPathExpression(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathExpression>&&);
+    JSXPathExpression(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathExpression>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSXPathExpressionOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathExpression*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathExpression*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathExpression& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XPathExpression* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathExpression&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathExpression* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XPathExpression>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XPathExpression>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XPathExpression> {
+    using WrapperClass = JSXPathExpression;
+    using ToWrappedReturnType = XPathExpression*;
+};
 
 } // namespace WebCore
-
-#endif

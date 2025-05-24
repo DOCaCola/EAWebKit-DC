@@ -1,0 +1,2 @@
+JSSVGPathSegCurvetoQuadraticRel.h : SVGPathSeg.idl
+SVGPathSeg.idl :

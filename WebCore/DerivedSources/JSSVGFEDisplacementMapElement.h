@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEDisplacementMapElement_h
-#define JSSVGFEDisplacementMapElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEDisplacementMapElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEDisplacementMapElement;
     static JSSVGFEDisplacementMapElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDisplacementMapElement>&& impl)
     {
-        JSSVGFEDisplacementMapElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElement>(globalObject->vm().heap)) JSSVGFEDisplacementMapElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDisplacementMapElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElement>(globalObject->vm().heap)) JSSVGFEDisplacementMapElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDisplacementMapElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEDisplacementMapElement& wrapped() const
     {
-        return static_cast<SVGFEDisplacementMapElement&>(Base::impl());
+        return static_cast<SVGFEDisplacementMapElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDisplacementMapElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDisplacementMapElement>&&);
+    JSSVGFEDisplacementMapElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDisplacementMapElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEDisplacementMapElement> {
+    using WrapperClass = JSSVGFEDisplacementMapElement;
+    using ToWrappedReturnType = SVGFEDisplacementMapElement*;
+};
 
 } // namespace WebCore
-
-#endif

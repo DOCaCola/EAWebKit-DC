@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLShaderPrecisionFormat_h
-#define JSWebGLShaderPrecisionFormat_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLShaderPrecisionFormat : public JSDOMWrapper {
+class JSWebGLShaderPrecisionFormat : public JSDOMWrapper<WebGLShaderPrecisionFormat> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLShaderPrecisionFormat>;
     static JSWebGLShaderPrecisionFormat* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLShaderPrecisionFormat>&& impl)
     {
-        JSWebGLShaderPrecisionFormat* ptr = new (NotNull, JSC::allocateCell<JSWebGLShaderPrecisionFormat>(globalObject->vm().heap)) JSWebGLShaderPrecisionFormat(structure, globalObject, WTF::move(impl));
+        JSWebGLShaderPrecisionFormat* ptr = new (NotNull, JSC::allocateCell<JSWebGLShaderPrecisionFormat>(globalObject->vm().heap)) JSWebGLShaderPrecisionFormat(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLShaderPrecisionFormat* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLShaderPrecisionFormat();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLShaderPrecisionFormat& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLShaderPrecisionFormat* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLShaderPrecisionFormat(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLShaderPrecisionFormat>&&);
+    JSWebGLShaderPrecisionFormat(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLShaderPrecisionFormat>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLShaderPrecisionFormatOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLShaderPrecision
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLShaderPrecisionFormat*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLShaderPrecisionFormat& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLShaderPrecisionFormat* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLShaderPrecisionFormat&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLShaderPrecisionFormat* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLShaderPrecisionFormat>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLShaderPrecisionFormat>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLShaderPrecisionFormat> {
+    using WrapperClass = JSWebGLShaderPrecisionFormat;
+    using ToWrappedReturnType = WebGLShaderPrecisionFormat*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

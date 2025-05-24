@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimateColorElement_h
-#define JSSVGAnimateColorElement_h
+#pragma once
 
 #include "JSSVGAnimationElement.h"
 #include "SVGAnimateColorElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGAnimateColorElement : public JSSVGAnimationElement {
 public:
-    typedef JSSVGAnimationElement Base;
+    using Base = JSSVGAnimationElement;
+    using DOMWrapped = SVGAnimateColorElement;
     static JSSVGAnimateColorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateColorElement>&& impl)
     {
-        JSSVGAnimateColorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateColorElement>(globalObject->vm().heap)) JSSVGAnimateColorElement(structure, globalObject, WTF::move(impl));
+        JSSVGAnimateColorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateColorElement>(globalObject->vm().heap)) JSSVGAnimateColorElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimateColorElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGAnimateColorElement& wrapped() const
     {
-        return static_cast<SVGAnimateColorElement&>(Base::impl());
+        return static_cast<SVGAnimateColorElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAnimateColorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimateColorElement>&&);
+    JSSVGAnimateColorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimateColorElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGAnimateColorElement> {
+    using WrapperClass = JSSVGAnimateColorElement;
+    using ToWrappedReturnType = SVGAnimateColorElement*;
+};
 
 } // namespace WebCore
-
-#endif

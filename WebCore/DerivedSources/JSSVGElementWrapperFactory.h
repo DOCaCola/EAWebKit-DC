@@ -34,11 +34,11 @@
 
 namespace WebCore {
 
-    class JSDOMWrapper;
+    class JSDOMObject;
     class JSDOMGlobalObject;
     class SVGElement;
 
-    JSDOMWrapper* createJSSVGWrapper(JSDOMGlobalObject*, PassRefPtr<SVGElement>);
+    JSDOMObject* createJSSVGWrapper(JSDOMGlobalObject*, Ref<SVGElement>&&);
 
 }
  

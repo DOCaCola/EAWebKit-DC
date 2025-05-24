@@ -33,19 +33,34 @@
 
 #if ENABLE(MATHML)
 
-#include "JSMathMLTextElement.h"
-#include "JSMathMLInlineContainerElement.h"
+#include "JSMathMLAnnotationElement.h"
 #include "JSMathMLSelectElement.h"
+#include "JSMathMLPresentationElement.h"
 #include "JSMathMLMathElement.h"
 #include "JSMathMLMencloseElement.h"
-#include "JSMathMLElement.h"
-#include "MathMLTextElement.h"
-#include "MathMLInlineContainerElement.h"
+#include "JSMathMLRowElement.h"
+#include "JSMathMLFractionElement.h"
+#include "JSMathMLTokenElement.h"
+#include "JSMathMLScriptsElement.h"
+#include "JSMathMLOperatorElement.h"
+#include "JSMathMLUnderOverElement.h"
+#include "JSMathMLPaddedElement.h"
+#include "JSMathMLSpaceElement.h"
+#include "JSMathMLUnknownElement.h"
+#include "MathMLAnnotationElement.h"
 #include "MathMLSelectElement.h"
-#include "MathMLElement.h"
+#include "MathMLPresentationElement.h"
 #include "MathMLMathElement.h"
 #include "MathMLMencloseElement.h"
-#include "MathMLElement.h"
+#include "MathMLRowElement.h"
+#include "MathMLFractionElement.h"
+#include "MathMLTokenElement.h"
+#include "MathMLScriptsElement.h"
+#include "MathMLOperatorElement.h"
+#include "MathMLUnderOverElement.h"
+#include "MathMLPaddedElement.h"
+#include "MathMLSpaceElement.h"
+#include "MathMLUnknownElement.h"
 
 #include "MathMLNames.h"
 
@@ -61,31 +76,71 @@ namespace WebCore {
 
 using namespace MathMLNames;
 
-typedef JSDOMWrapper* (*CreateMathMLElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<MathMLElement>);
+typedef JSDOMObject* (*CreateMathMLElementWrapperFunction)(JSDOMGlobalObject*, Ref<MathMLElement>&&);
 
-static JSDOMWrapper* createMathMLTextElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLAnnotationElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, MathMLTextElement, element.get());
+    return createWrapper<MathMLAnnotationElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createMathMLInlineContainerElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLSelectElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, MathMLInlineContainerElement, element.get());
+    return createWrapper<MathMLSelectElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createMathMLSelectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLPresentationElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, MathMLSelectElement, element.get());
+    return createWrapper<MathMLPresentationElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createMathMLMathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLMathElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, MathMLMathElement, element.get());
+    return createWrapper<MathMLMathElement>(globalObject, WTFMove(element));
 }
 
-static JSDOMWrapper* createMathMLMencloseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLMencloseElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, MathMLMencloseElement, element.get());
+    return createWrapper<MathMLMencloseElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLRowElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLRowElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLFractionElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLFractionElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLTokenElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLTokenElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLScriptsElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLScriptsElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLOperatorElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLOperatorElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLUnderOverElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLUnderOverElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLPaddedElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLPaddedElement>(globalObject, WTFMove(element));
+}
+
+static JSDOMObject* createMathMLSpaceElementWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
+{
+    return createWrapper<MathMLSpaceElement>(globalObject, WTFMove(element));
 }
 
 
@@ -97,50 +152,64 @@ static NEVER_INLINE void populateMathMLWrapperMap(HashMap<AtomicStringImpl*, Cre
     };
 
     static const TableEntry table[] = {
-        { annotationTag, &createMathMLTextElementWrapper },
-        { annotation_xmlTag, &createMathMLInlineContainerElementWrapper },
-        { mactionTag, &createMathMLSelectElementWrapper },
-        { mathTag, &createMathMLMathElementWrapper },
-        { mencloseTag, &createMathMLMencloseElementWrapper },
-        { merrorTag, &createMathMLInlineContainerElementWrapper },
-        { mfencedTag, &createMathMLInlineContainerElementWrapper },
-        { mfracTag, &createMathMLInlineContainerElementWrapper },
-        { miTag, &createMathMLTextElementWrapper },
-        { mmultiscriptsTag, &createMathMLInlineContainerElementWrapper },
-        { mnTag, &createMathMLTextElementWrapper },
-        { moTag, &createMathMLTextElementWrapper },
-        { moverTag, &createMathMLInlineContainerElementWrapper },
-        { mphantomTag, &createMathMLInlineContainerElementWrapper },
-        { mprescriptsTag, &createMathMLInlineContainerElementWrapper },
-        { mrootTag, &createMathMLInlineContainerElementWrapper },
-        { mrowTag, &createMathMLInlineContainerElementWrapper },
-        { msTag, &createMathMLTextElementWrapper },
-        { mspaceTag, &createMathMLTextElementWrapper },
-        { msqrtTag, &createMathMLInlineContainerElementWrapper },
-        { mstyleTag, &createMathMLInlineContainerElementWrapper },
-        { msubTag, &createMathMLInlineContainerElementWrapper },
-        { msubsupTag, &createMathMLInlineContainerElementWrapper },
-        { msupTag, &createMathMLInlineContainerElementWrapper },
-        { mtableTag, &createMathMLInlineContainerElementWrapper },
-        { mtextTag, &createMathMLTextElementWrapper },
-        { munderTag, &createMathMLInlineContainerElementWrapper },
-        { munderoverTag, &createMathMLInlineContainerElementWrapper },
-        { noneTag, &createMathMLInlineContainerElementWrapper },
-        { semanticsTag, &createMathMLSelectElementWrapper },
+        { annotationTag, createMathMLAnnotationElementWrapper },
+        { annotation_xmlTag, createMathMLAnnotationElementWrapper },
+        { mactionTag, createMathMLSelectElementWrapper },
+        { maligngroupTag, createMathMLPresentationElementWrapper },
+        { malignmarkTag, createMathMLPresentationElementWrapper },
+        { mathTag, createMathMLMathElementWrapper },
+        { mencloseTag, createMathMLMencloseElementWrapper },
+        { merrorTag, createMathMLRowElementWrapper },
+        { mfencedTag, createMathMLRowElementWrapper },
+        { mfracTag, createMathMLFractionElementWrapper },
+        { mglyphTag, createMathMLPresentationElementWrapper },
+        { miTag, createMathMLTokenElementWrapper },
+        { mlabeledtrTag, createMathMLPresentationElementWrapper },
+        { mlongdivTag, createMathMLPresentationElementWrapper },
+        { mmultiscriptsTag, createMathMLScriptsElementWrapper },
+        { mnTag, createMathMLTokenElementWrapper },
+        { moTag, createMathMLOperatorElementWrapper },
+        { moverTag, createMathMLUnderOverElementWrapper },
+        { mpaddedTag, createMathMLPaddedElementWrapper },
+        { mphantomTag, createMathMLRowElementWrapper },
+        { mprescriptsTag, createMathMLPresentationElementWrapper },
+        { mrootTag, createMathMLRowElementWrapper },
+        { mrowTag, createMathMLRowElementWrapper },
+        { msTag, createMathMLTokenElementWrapper },
+        { mscarriesTag, createMathMLPresentationElementWrapper },
+        { mscarryTag, createMathMLPresentationElementWrapper },
+        { msgroupTag, createMathMLPresentationElementWrapper },
+        { mslineTag, createMathMLPresentationElementWrapper },
+        { mspaceTag, createMathMLSpaceElementWrapper },
+        { msqrtTag, createMathMLRowElementWrapper },
+        { msrowTag, createMathMLPresentationElementWrapper },
+        { mstackTag, createMathMLPresentationElementWrapper },
+        { mstyleTag, createMathMLRowElementWrapper },
+        { msubTag, createMathMLScriptsElementWrapper },
+        { msubsupTag, createMathMLScriptsElementWrapper },
+        { msupTag, createMathMLScriptsElementWrapper },
+        { mtableTag, createMathMLPresentationElementWrapper },
+        { mtdTag, createMathMLPresentationElementWrapper },
+        { mtextTag, createMathMLTokenElementWrapper },
+        { mtrTag, createMathMLPresentationElementWrapper },
+        { munderTag, createMathMLUnderOverElementWrapper },
+        { munderoverTag, createMathMLUnderOverElementWrapper },
+        { noneTag, createMathMLPresentationElementWrapper },
+        { semanticsTag, createMathMLSelectElementWrapper },
     };
 
     for (unsigned i = 0; i < WTF_ARRAY_LENGTH(table); ++i)
         map.add(table[i].name.localName().impl(), table[i].function);
 }
 
-JSDOMWrapper* createJSMathMLWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+JSDOMObject* createJSMathMLWrapper(JSDOMGlobalObject* globalObject, Ref<MathMLElement>&& element)
 {
     static NeverDestroyed<HashMap<AtomicStringImpl*, CreateMathMLElementWrapperFunction>> functions;
     if (functions.get().isEmpty())
         populateMathMLWrapperMap(functions);
     if (auto function = functions.get().get(element->localName().impl()))
-        return function(globalObject, element);
-    return CREATE_DOM_WRAPPER(globalObject, MathMLElement, element.get());
+        return function(globalObject, WTFMove(element));
+    return createWrapper<MathMLUnknownElement>(globalObject, WTFMove(element));
 }
 
 }

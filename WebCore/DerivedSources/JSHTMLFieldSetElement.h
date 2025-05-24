@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFieldSetElement_h
-#define JSHTMLFieldSetElement_h
+#pragma once
 
 #include "HTMLFieldSetElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLFieldSetElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLFieldSetElement;
     static JSHTMLFieldSetElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFieldSetElement>&& impl)
     {
-        JSHTMLFieldSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFieldSetElement>(globalObject->vm().heap)) JSHTMLFieldSetElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFieldSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFieldSetElement>(globalObject->vm().heap)) JSHTMLFieldSetElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFieldSetElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLFieldSetElement& wrapped() const
     {
-        return static_cast<HTMLFieldSetElement&>(Base::impl());
+        return static_cast<HTMLFieldSetElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLFieldSetElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFieldSetElement>&&);
+    JSHTMLFieldSetElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFieldSetElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLFieldSetElement> {
+    using WrapperClass = JSHTMLFieldSetElement;
+    using ToWrappedReturnType = HTMLFieldSetElement*;
+};
 
 } // namespace WebCore
-
-#endif

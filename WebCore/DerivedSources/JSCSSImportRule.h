@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSImportRule_h
-#define JSCSSImportRule_h
+#pragma once
 
 #include "CSSImportRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSImportRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSImportRule;
     static JSCSSImportRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSImportRule>&& impl)
     {
-        JSCSSImportRule* ptr = new (NotNull, JSC::allocateCell<JSCSSImportRule>(globalObject->vm().heap)) JSCSSImportRule(structure, globalObject, WTF::move(impl));
+        JSCSSImportRule* ptr = new (NotNull, JSC::allocateCell<JSCSSImportRule>(globalObject->vm().heap)) JSCSSImportRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSImportRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSImportRule& wrapped() const
     {
-        return static_cast<CSSImportRule&>(Base::impl());
+        return static_cast<CSSImportRule&>(Base::wrapped());
     }
 protected:
-    JSCSSImportRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSImportRule>&&);
+    JSCSSImportRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSImportRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSImportRule> {
+    using WrapperClass = JSCSSImportRule;
+    using ToWrappedReturnType = CSSImportRule*;
+};
 
 } // namespace WebCore
-
-#endif

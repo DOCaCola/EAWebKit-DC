@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFormElement_h
-#define JSHTMLFormElement_h
+#pragma once
 
 #include "HTMLFormElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,18 @@ namespace WebCore {
 
 class JSHTMLFormElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLFormElement;
     static JSHTMLFormElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFormElement>&& impl)
     {
-        JSHTMLFormElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElement>(globalObject->vm().heap)) JSHTMLFormElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFormElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElement>(globalObject->vm().heap)) JSHTMLFormElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static HTMLFormElement* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
 
@@ -49,29 +50,25 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFormElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLFormElement& wrapped() const
     {
-        return static_cast<HTMLFormElement&>(Base::impl());
+        return static_cast<HTMLFormElement&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpure | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLFormElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFormElement>&&);
+    JSHTMLFormElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFormElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLFormElement*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLFormElement> {
+    using WrapperClass = JSHTMLFormElement;
+    using ToWrappedReturnType = HTMLFormElement*;
+};
 
 } // namespace WebCore
-
-#endif

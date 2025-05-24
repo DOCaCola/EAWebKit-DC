@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTableColElement_h
-#define JSHTMLTableColElement_h
+#pragma once
 
 #include "HTMLTableColElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLTableColElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLTableColElement;
     static JSHTMLTableColElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTableColElement>&& impl)
     {
-        JSHTMLTableColElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableColElement>(globalObject->vm().heap)) JSHTMLTableColElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTableColElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableColElement>(globalObject->vm().heap)) JSHTMLTableColElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTableColElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLTableColElement& wrapped() const
     {
-        return static_cast<HTMLTableColElement&>(Base::impl());
+        return static_cast<HTMLTableColElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTableColElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTableColElement>&&);
+    JSHTMLTableColElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTableColElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLTableColElement> {
+    using WrapperClass = JSHTMLTableColElement;
+    using ToWrappedReturnType = HTMLTableColElement*;
+};
 
 } // namespace WebCore
-
-#endif

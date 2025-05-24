@@ -24,9 +24,7 @@
 
 #include "JSWebGLLoseContext.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "WebGLLoseContext.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -41,7 +39,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreCont
 
 class JSWebGLLoseContextPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLLoseContextPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLLoseContextPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLLoseContextPrototype>(vm.heap)) JSWebGLLoseContextPrototype(vm, globalObject, structure);
@@ -68,8 +66,8 @@ private:
 
 static const HashTableValue JSWebGLLoseContextPrototypeTableValues[] =
 {
-    { "loseContext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionLoseContext), (intptr_t) (0) },
-    { "restoreContext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionRestoreContext), (intptr_t) (0) },
+    { "loseContext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionLoseContext), (intptr_t) (0) } },
+    { "restoreContext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionRestoreContext), (intptr_t) (0) } },
 };
 
 const ClassInfo JSWebGLLoseContextPrototype::s_info = { "WebGLLoseContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLLoseContextPrototype) };
@@ -82,10 +80,16 @@ void JSWebGLLoseContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLLoseContext::s_info = { "WebGLLoseContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLLoseContext) };
 
-JSWebGLLoseContext::JSWebGLLoseContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLLoseContext>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLLoseContext::JSWebGLLoseContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLLoseContext>&& impl)
+    : JSDOMWrapper<WebGLLoseContext>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLLoseContext::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLLoseContext::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -93,7 +97,7 @@ JSObject* JSWebGLLoseContext::createPrototype(VM& vm, JSGlobalObject* globalObje
     return JSWebGLLoseContextPrototype::create(vm, globalObject, JSWebGLLoseContextPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLLoseContext::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLLoseContext::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLLoseContext>(vm, globalObject);
 }
@@ -104,31 +108,39 @@ void JSWebGLLoseContext::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLLoseContext::~JSWebGLLoseContext();
 }
 
-JSWebGLLoseContext::~JSWebGLLoseContext()
+template<> inline JSWebGLLoseContext* BindingCaller<JSWebGLLoseContext>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSWebGLLoseContext*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionLoseContext(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebGLLoseContextPrototypeFunctionLoseContextCaller(JSC::ExecState*, JSWebGLLoseContext*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionLoseContext(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebGLLoseContext* castedThis = jsDynamicCast<JSWebGLLoseContext*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLLoseContext", "loseContext");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLLoseContext::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSWebGLLoseContext>::callOperation<jsWebGLLoseContextPrototypeFunctionLoseContextCaller>(state, "loseContext");
+}
+
+static inline JSC::EncodedJSValue jsWebGLLoseContextPrototypeFunctionLoseContextCaller(JSC::ExecState* state, JSWebGLLoseContext* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.loseContext();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebGLLoseContextPrototypeFunctionRestoreContextCaller(JSC::ExecState*, JSWebGLLoseContext*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebGLLoseContext* castedThis = jsDynamicCast<JSWebGLLoseContext*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLLoseContext", "restoreContext");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLLoseContext::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSWebGLLoseContext>::callOperation<jsWebGLLoseContextPrototypeFunctionRestoreContextCaller>(state, "restoreContext");
+}
+
+static inline JSC::EncodedJSValue jsWebGLLoseContextPrototypeFunctionRestoreContextCaller(JSC::ExecState* state, JSWebGLLoseContext* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.restoreContext();
     return JSValue::encode(jsUndefined());
 }
@@ -136,15 +148,15 @@ EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(E
 bool JSWebGLLoseContextOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLLoseContext = jsCast<JSWebGLLoseContext*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLLoseContext->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLLoseContext->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebGLLoseContextOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLLoseContext = jsCast<JSWebGLLoseContext*>(handle.slot()->asCell());
+    auto* jsWebGLLoseContext = static_cast<JSWebGLLoseContext*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLLoseContext->impl(), jsWebGLLoseContext);
+    uncacheWrapper(world, &jsWebGLLoseContext->wrapped(), jsWebGLLoseContext);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -155,15 +167,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLLoseContext@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16WebGLLoseContextE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseContext* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLLoseContext>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLLoseContext>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLLoseContext@WebCore@@6B@"));
 #else
@@ -171,7 +180,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseCon
 #if COMPILER(CLANG)
     // If this fails WebGLLoseContext does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLLoseContext), WebGLLoseContext_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLLoseContext), "WebGLLoseContext is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -180,13 +189,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseCon
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLLoseContext>(globalObject, impl);
+    return createWrapper<WebGLLoseContext>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLLoseContext& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLLoseContext* JSWebGLLoseContext::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLLoseContext*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLLoseContext*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -24,8 +24,8 @@
 
 #include "JSDeviceMotionEvent.h"
 
-#include "DeviceMotionEvent.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -33,21 +33,138 @@ using namespace JSC;
 
 namespace WebCore {
 
+#if ENABLE(DEVICE_ORIENTATION)
+
+template<> DeviceMotionEvent::Acceleration convertDictionary<DeviceMotionEvent::Acceleration>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    DeviceMotionEvent::Acceleration result;
+    JSValue xValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "x"));
+    if (!xValue.isUndefined()) {
+        result.x = convert<IDLNullable<IDLDouble>>(state, xValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue yValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "y"));
+    if (!yValue.isUndefined()) {
+        result.y = convert<IDLNullable<IDLDouble>>(state, yValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue zValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "z"));
+    if (!zValue.isUndefined()) {
+        result.z = convert<IDLNullable<IDLDouble>>(state, zValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const DeviceMotionEvent::Acceleration& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.x)) {
+        auto xValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.x));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "x"), xValue);
+    }
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.y)) {
+        auto yValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.y));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "y"), yValue);
+    }
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.z)) {
+        auto zValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.z));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "z"), zValue);
+    }
+    return result;
+}
+
+#endif
+
+#if ENABLE(DEVICE_ORIENTATION)
+
+template<> DeviceMotionEvent::RotationRate convertDictionary<DeviceMotionEvent::RotationRate>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    DeviceMotionEvent::RotationRate result;
+    JSValue alphaValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "alpha"));
+    if (!alphaValue.isUndefined()) {
+        result.alpha = convert<IDLNullable<IDLDouble>>(state, alphaValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue betaValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "beta"));
+    if (!betaValue.isUndefined()) {
+        result.beta = convert<IDLNullable<IDLDouble>>(state, betaValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue gammaValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "gamma"));
+    if (!gammaValue.isUndefined()) {
+        result.gamma = convert<IDLNullable<IDLDouble>>(state, gammaValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const DeviceMotionEvent::RotationRate& dictionary)
+{
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.alpha)) {
+        auto alphaValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.alpha));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "alpha"), alphaValue);
+    }
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.beta)) {
+        auto betaValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.beta));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "beta"), betaValue);
+    }
+    if (!IDLNullable<IDLDouble>::isNullValue(dictionary.gamma)) {
+        auto gammaValue = toJS<IDLNullable<IDLDouble>>(state, globalObject, IDLNullable<IDLDouble>::extractValueFromNullable(dictionary.gamma));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "gamma"), gammaValue);
+    }
+    return result;
+}
+
+#endif
+
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsDeviceMotionEventAcceleration(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDeviceMotionEventAccelerationIncludingGravity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDeviceMotionEventRotationRate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDeviceMotionEventInterval(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDeviceMotionEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDeviceMotionEventAcceleration(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDeviceMotionEventAccelerationIncludingGravity(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDeviceMotionEventRotationRate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDeviceMotionEventInterval(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDeviceMotionEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDeviceMotionEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDeviceMotionEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDeviceMotionEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDeviceMotionEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEventPrototype>(vm.heap)) JSDeviceMotionEventPrototype(vm, globalObject, structure);
@@ -70,74 +187,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDeviceMotionEventConstructor : public DOMConstructorObject {
-private:
-    JSDeviceMotionEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDeviceMotionEventConstructor = JSDOMConstructorNotConstructable<JSDeviceMotionEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDeviceMotionEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDeviceMotionEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEventConstructor>(vm.heap)) JSDeviceMotionEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSDeviceMotionEventTableIndex[10] = {
-    { -1, -1 },
-    { 1, 8 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { -1, -1 },
-    { 2, 9 },
-    { 3, -1 },
-};
-
-
-static const HashTableValue JSDeviceMotionEventTableValues[] =
+template<> JSValue JSDeviceMotionEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "acceleration", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventAcceleration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "accelerationIncludingGravity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventAccelerationIncludingGravity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rotationRate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventRotationRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "interval", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventInterval), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDeviceMotionEventTable = { 4, 7, true, JSDeviceMotionEventTableValues, 0, JSDeviceMotionEventTableIndex };
-const ClassInfo JSDeviceMotionEventConstructor::s_info = { "DeviceMotionEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDeviceMotionEventConstructor) };
-
-JSDeviceMotionEventConstructor::JSDeviceMotionEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-void JSDeviceMotionEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDeviceMotionEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDeviceMotionEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDeviceMotionEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DeviceMotionEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDeviceMotionEventConstructor::s_info = { "DeviceMotionEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDeviceMotionEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDeviceMotionEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "initDeviceMotionEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEvent), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDeviceMotionEventConstructor) } },
+    { "acceleration", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventAcceleration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "accelerationIncludingGravity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventAccelerationIncludingGravity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rotationRate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventRotationRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "interval", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDeviceMotionEventInterval), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initDeviceMotionEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDeviceMotionEventPrototype::s_info = { "DeviceMotionEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDeviceMotionEventPrototype) };
@@ -148,91 +223,161 @@ void JSDeviceMotionEventPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSDeviceMotionEventPrototypeTableValues, *this);
 }
 
-const ClassInfo JSDeviceMotionEvent::s_info = { "DeviceMotionEvent", &Base::s_info, &JSDeviceMotionEventTable, CREATE_METHOD_TABLE(JSDeviceMotionEvent) };
+const ClassInfo JSDeviceMotionEvent::s_info = { "DeviceMotionEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDeviceMotionEvent) };
 
-JSDeviceMotionEvent::JSDeviceMotionEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DeviceMotionEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSDeviceMotionEvent::JSDeviceMotionEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DeviceMotionEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDeviceMotionEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDeviceMotionEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSDeviceMotionEventPrototype::create(vm, globalObject, JSDeviceMotionEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSDeviceMotionEventPrototype::create(vm, globalObject, JSDeviceMotionEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSDeviceMotionEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDeviceMotionEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDeviceMotionEvent>(vm, globalObject);
 }
 
-bool JSDeviceMotionEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSDeviceMotionEvent* BindingCaller<JSDeviceMotionEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSDeviceMotionEvent*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDeviceMotionEvent, Base>(exec, JSDeviceMotionEventTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSDeviceMotionEvent*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsDeviceMotionEventAcceleration(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSDeviceMotionEvent* BindingCaller<JSDeviceMotionEvent>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDeviceMotionEvent*>(slotBase);
-    return JSValue::encode(castedThis->acceleration(exec));
+    return jsDynamicDowncast<JSDeviceMotionEvent*>(state.thisValue());
 }
 
+static inline JSValue jsDeviceMotionEventAccelerationGetter(ExecState&, JSDeviceMotionEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsDeviceMotionEventAccelerationIncludingGravity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDeviceMotionEventAcceleration(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDeviceMotionEvent*>(slotBase);
-    return JSValue::encode(castedThis->accelerationIncludingGravity(exec));
+    return BindingCaller<JSDeviceMotionEvent>::attribute<jsDeviceMotionEventAccelerationGetter>(state, thisValue, "acceleration");
 }
 
-
-EncodedJSValue jsDeviceMotionEventRotationRate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDeviceMotionEventAccelerationGetter(ExecState& state, JSDeviceMotionEvent& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDeviceMotionEvent*>(slotBase);
-    return JSValue::encode(castedThis->rotationRate(exec));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDictionary<DeviceMotionEvent::Acceleration>>>(state, *thisObject.globalObject(), impl.acceleration());
+    return result;
 }
 
+static inline JSValue jsDeviceMotionEventAccelerationIncludingGravityGetter(ExecState&, JSDeviceMotionEvent&, ThrowScope& throwScope);
 
-EncodedJSValue jsDeviceMotionEventInterval(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDeviceMotionEventAccelerationIncludingGravity(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDeviceMotionEvent*>(slotBase);
-    return JSValue::encode(castedThis->interval(exec));
+    return BindingCaller<JSDeviceMotionEvent>::attribute<jsDeviceMotionEventAccelerationIncludingGravityGetter>(state, thisValue, "accelerationIncludingGravity");
 }
 
-
-EncodedJSValue jsDeviceMotionEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsDeviceMotionEventAccelerationIncludingGravityGetter(ExecState& state, JSDeviceMotionEvent& thisObject, ThrowScope& throwScope)
 {
-    JSDeviceMotionEventPrototype* domObject = jsDynamicCast<JSDeviceMotionEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDeviceMotionEvent::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDictionary<DeviceMotionEvent::Acceleration>>>(state, *thisObject.globalObject(), impl.accelerationIncludingGravity());
+    return result;
 }
 
-JSValue JSDeviceMotionEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsDeviceMotionEventRotationRateGetter(ExecState&, JSDeviceMotionEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsDeviceMotionEventRotationRate(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSDeviceMotionEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSDeviceMotionEvent>::attribute<jsDeviceMotionEventRotationRateGetter>(state, thisValue, "rotationRate");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEvent(ExecState* exec)
+static inline JSValue jsDeviceMotionEventRotationRateGetter(ExecState& state, JSDeviceMotionEvent& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDeviceMotionEvent* castedThis = jsDynamicCast<JSDeviceMotionEvent*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DeviceMotionEvent", "initDeviceMotionEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDeviceMotionEvent::info());
-    return JSValue::encode(castedThis->initDeviceMotionEvent(exec));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDictionary<DeviceMotionEvent::RotationRate>>>(state, *thisObject.globalObject(), impl.rotationRate());
+    return result;
+}
+
+static inline JSValue jsDeviceMotionEventIntervalGetter(ExecState&, JSDeviceMotionEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsDeviceMotionEventInterval(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDeviceMotionEvent>::attribute<jsDeviceMotionEventIntervalGetter>(state, thisValue, "interval");
+}
+
+static inline JSValue jsDeviceMotionEventIntervalGetter(ExecState& state, JSDeviceMotionEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnrestrictedDouble>>(impl.interval());
+    return result;
+}
+
+EncodedJSValue jsDeviceMotionEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDeviceMotionEventPrototype* domObject = jsDynamicDowncast<JSDeviceMotionEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDeviceMotionEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDeviceMotionEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDeviceMotionEventPrototype* domObject = jsDynamicDowncast<JSDeviceMotionEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSDeviceMotionEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDeviceMotionEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEventCaller(JSC::ExecState*, JSDeviceMotionEvent*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEvent(ExecState* state)
+{
+    return BindingCaller<JSDeviceMotionEvent>::callOperation<jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEventCaller>(state, "initDeviceMotionEvent");
+}
+
+static inline JSC::EncodedJSValue jsDeviceMotionEventPrototypeFunctionInitDeviceMotionEventCaller(JSC::ExecState* state, JSDeviceMotionEvent* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto type = state->argument(0).isUndefined() ? emptyString() : convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto bubbles = convert<IDLBoolean>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto cancelable = convert<IDLBoolean>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto acceleration = state->argument(3).isUndefined() ? std::nullopt : convert<IDLNullable<IDLDictionary<DeviceMotionEvent::Acceleration>>>(*state, state->uncheckedArgument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto accelerationIncludingGravity = state->argument(4).isUndefined() ? std::nullopt : convert<IDLNullable<IDLDictionary<DeviceMotionEvent::Acceleration>>>(*state, state->uncheckedArgument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto rotationRate = state->argument(5).isUndefined() ? std::nullopt : convert<IDLNullable<IDLDictionary<DeviceMotionEvent::RotationRate>>>(*state, state->uncheckedArgument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto interval = state->argument(6).isUndefined() ? std::nullopt : convert<IDLNullable<IDLUnrestrictedDouble>>(*state, state->uncheckedArgument(6));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.initDeviceMotionEvent(WTFMove(type), WTFMove(bubbles), WTFMove(cancelable), WTFMove(acceleration), WTFMove(accelerationIncludingGravity), WTFMove(rotationRate), WTFMove(interval));
+    return JSValue::encode(jsUndefined());
 }
 
 

@@ -22,8 +22,9 @@
 #include "JSSVGTRefElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGTRefElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -32,12 +33,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGTRefElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGTRefElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGTRefElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGTRefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGTRefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGTRefElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGTRefElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGTRefElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGTRefElementPrototype>(vm.heap)) JSSVGTRefElementPrototype(vm, globalObject, structure);
@@ -60,49 +62,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGTRefElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGTRefElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGTRefElementConstructor = JSDOMConstructorNotConstructable<JSSVGTRefElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGTRefElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGTRefElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGTRefElementConstructor>(vm.heap)) JSSVGTRefElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGTRefElementConstructor::s_info = { "SVGTRefElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTRefElementConstructor) };
-
-JSSVGTRefElementConstructor::JSSVGTRefElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGTRefElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGTextPositioningElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGTRefElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGTRefElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGTRefElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGTRefElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGTRefElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGTRefElementConstructor::s_info = { "SVGTRefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTRefElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGTRefElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTRefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTRefElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTRefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGTRefElementConstructor) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTRefElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGTRefElementPrototype::s_info = { "SVGTRefElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTRefElementPrototype) };
@@ -115,50 +96,84 @@ void JSSVGTRefElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGTRefElement::s_info = { "SVGTRefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTRefElement) };
 
-JSSVGTRefElement::JSSVGTRefElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTRefElement>&& impl)
-    : JSSVGTextPositioningElement(structure, globalObject, WTF::move(impl))
+JSSVGTRefElement::JSSVGTRefElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGTRefElement>&& impl)
+    : JSSVGTextPositioningElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGTRefElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGTRefElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGTRefElementPrototype::create(vm, globalObject, JSSVGTRefElementPrototype::createStructure(vm, globalObject, JSSVGTextPositioningElement::getPrototype(vm, globalObject)));
+    return JSSVGTRefElementPrototype::create(vm, globalObject, JSSVGTRefElementPrototype::createStructure(vm, globalObject, JSSVGTextPositioningElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGTRefElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGTRefElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGTRefElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGTRefElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGTRefElement* BindingCaller<JSSVGTRefElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGTRefElement* castedThis = jsDynamicCast<JSSVGTRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGTRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGTRefElement", "href");
-        return throwGetterTypeError(*exec, "SVGTRefElement", "href");
+    return jsDynamicDowncast<JSSVGTRefElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGTRefElementHrefGetter(ExecState&, JSSVGTRefElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGTRefElementHref(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGTRefElement>::attribute<jsSVGTRefElementHrefGetter>(state, thisValue, "href");
+}
+
+static inline JSValue jsSVGTRefElementHrefGetter(ExecState& state, JSSVGTRefElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.hrefAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGTRefElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGTRefElementPrototype* domObject = jsDynamicDowncast<JSSVGTRefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGTRefElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGTRefElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGTRefElementPrototype* domObject = jsDynamicDowncast<JSSVGTRefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGTRefElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSSVGTRefElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSSVGTRefElementPrototype* domObject = jsDynamicCast<JSSVGTRefElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGTRefElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSSVGTRefElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSSVGTRefElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+void JSSVGTRefElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    return getDOMConstructor<JSSVGTRefElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGTRefElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

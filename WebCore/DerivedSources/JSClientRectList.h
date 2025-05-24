@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSClientRectList_h
-#define JSClientRectList_h
+#pragma once
 
 #include "ClientRectList.h"
 #include "JSDOMWrapper.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSClientRectList : public JSDOMWrapper {
+class WEBCORE_EXPORT JSClientRectList : public JSDOMWrapper<ClientRectList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<ClientRectList>;
     static JSClientRectList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ClientRectList>&& impl)
     {
-        JSClientRectList* ptr = new (NotNull, JSC::allocateCell<JSClientRectList>(globalObject->vm().heap)) JSClientRectList(structure, globalObject, WTF::move(impl));
+        JSClientRectList* ptr = new (NotNull, JSC::allocateCell<JSClientRectList>(globalObject->vm().heap)) JSClientRectList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static ClientRectList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSClientRectList();
 
     DECLARE_INFO;
 
@@ -53,23 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ClientRectList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ClientRectList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSClientRectList(JSC::Structure*, JSDOMGlobalObject*, Ref<ClientRectList>&&);
+    JSClientRectList(JSC::Structure*, JSDOMGlobalObject&, Ref<ClientRectList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSClientRectListOwner : public JSC::WeakHandleOwner {
@@ -84,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ClientRectList*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRectList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ClientRectList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(ClientRectList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRectList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ClientRectList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ClientRectList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ClientRectList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<ClientRectList> {
+    using WrapperClass = JSClientRectList;
+    using ToWrappedReturnType = ClientRectList*;
+};
 
 } // namespace WebCore
-
-#endif

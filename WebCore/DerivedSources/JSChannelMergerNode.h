@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSChannelMergerNode_h
-#define JSChannelMergerNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSChannelMergerNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = ChannelMergerNode;
     static JSChannelMergerNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelMergerNode>&& impl)
     {
-        JSChannelMergerNode* ptr = new (NotNull, JSC::allocateCell<JSChannelMergerNode>(globalObject->vm().heap)) JSChannelMergerNode(structure, globalObject, WTF::move(impl));
+        JSChannelMergerNode* ptr = new (NotNull, JSC::allocateCell<JSChannelMergerNode>(globalObject->vm().heap)) JSChannelMergerNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ChannelMergerNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    ChannelMergerNode& wrapped() const
     {
-        return static_cast<ChannelMergerNode&>(Base::impl());
+        return static_cast<ChannelMergerNode&>(Base::wrapped());
     }
 protected:
-    JSChannelMergerNode(JSC::Structure*, JSDOMGlobalObject*, Ref<ChannelMergerNode>&&);
+    JSChannelMergerNode(JSC::Structure*, JSDOMGlobalObject&, Ref<ChannelMergerNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelMergerNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ChannelMergerNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelMergerNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ChannelMergerNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ChannelMergerNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ChannelMergerNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<ChannelMergerNode> {
+    using WrapperClass = JSChannelMergerNode;
+    using ToWrappedReturnType = ChannelMergerNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

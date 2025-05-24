@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMutationRecord_h
-#define JSMutationRecord_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "MutationRecord.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSMutationRecord : public JSDOMWrapper {
+class JSMutationRecord : public JSDOMWrapper<MutationRecord> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MutationRecord>;
     static JSMutationRecord* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationRecord>&& impl)
     {
-        JSMutationRecord* ptr = new (NotNull, JSC::allocateCell<JSMutationRecord>(globalObject->vm().heap)) JSMutationRecord(structure, globalObject, WTF::move(impl));
+        JSMutationRecord* ptr = new (NotNull, JSC::allocateCell<JSMutationRecord>(globalObject->vm().heap)) JSMutationRecord(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MutationRecord* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMutationRecord();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MutationRecord& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MutationRecord* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSMutationRecord(JSC::Structure*, JSDOMGlobalObject*, Ref<MutationRecord>&&);
+    JSMutationRecord(JSC::Structure*, JSDOMGlobalObject&, Ref<MutationRecord>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMutationRecordOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MutationRecord*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MutationRecord*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MutationRecord& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MutationRecord* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MutationRecord&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MutationRecord* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MutationRecord>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MutationRecord>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MutationRecord> {
+    using WrapperClass = JSMutationRecord;
+    using ToWrappedReturnType = MutationRecord*;
+};
 
 } // namespace WebCore
-
-#endif

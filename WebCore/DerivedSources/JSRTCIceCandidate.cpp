@@ -20,30 +20,74 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCIceCandidate.h"
 
 #include "JSDOMBinding.h"
-#include "RTCIceCandidate.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/ObjectConstructor.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> RTCIceCandidate::Init convertDictionary<RTCIceCandidate::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCIceCandidate::Init result;
+    JSValue candidateValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "candidate"));
+    if (!candidateValue.isUndefined()) {
+        result.candidate = convert<IDLDOMString>(state, candidateValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else {
+        throwRequiredMemberTypeError(state, throwScope, "candidate", "RTCIceCandidateInit", "DOMString");
+        return { };
+    }
+    JSValue sdpMLineIndexValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sdpMLineIndex"));
+    if (!sdpMLineIndexValue.isUndefined()) {
+        result.sdpMLineIndex = convert<IDLNullable<IDLUnsignedShort>>(state, sdpMLineIndexValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.sdpMLineIndex = std::nullopt;
+    JSValue sdpMidValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sdpMid"));
+    if (!sdpMidValue.isUndefined()) {
+        result.sdpMid = convert<IDLNullable<IDLDOMString>>(state, sdpMidValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.sdpMid = String();
+    return result;
+}
+
+// Functions
+
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCIceCandidatePrototypeFunctionToJSON(JSC::ExecState*);
+
 // Attributes
 
-JSC::EncodedJSValue jsRTCIceCandidateCandidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCIceCandidateSdpMid(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCIceCandidateSdpMLineIndex(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCIceCandidateConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCIceCandidateCandidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCIceCandidateSdpMid(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCIceCandidateSdpMLineIndex(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCIceCandidateConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCIceCandidateConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSRTCIceCandidatePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCIceCandidatePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCIceCandidatePrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidatePrototype>(vm.heap)) JSRTCIceCandidatePrototype(vm, globalObject, structure);
@@ -66,58 +110,47 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSRTCIceCandidateConstructor : public DOMConstructorObject {
-private:
-    JSRTCIceCandidateConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSRTCIceCandidateConstructor = JSDOMConstructor<JSRTCIceCandidate>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSRTCIceCandidateConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSRTCIceCandidateConstructor* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateConstructor>(vm.heap)) JSRTCIceCandidateConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSRTCIceCandidateConstructor::s_info = { "RTCIceCandidateConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidateConstructor) };
-
-JSRTCIceCandidateConstructor::JSRTCIceCandidateConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> EncodedJSValue JSC_HOST_CALL JSRTCIceCandidateConstructor::construct(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSRTCIceCandidateConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto candidateInitDict = convert<IDLDictionary<RTCIceCandidate::Init>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = RTCIceCandidate::create(WTFMove(candidateInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<RTCIceCandidate>>(*state, *castedThis->globalObject(), throwScope, WTFMove(object)));
 }
 
-void JSRTCIceCandidateConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSRTCIceCandidateConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSRTCIceCandidate::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSRTCIceCandidateConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSRTCIceCandidate::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("RTCIceCandidate"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSRTCIceCandidateConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSRTCIceCandidate;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSRTCIceCandidateConstructor::s_info = { "RTCIceCandidate", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidateConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSRTCIceCandidatePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "candidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateCandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "sdpMid", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateSdpMid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "sdpMLineIndex", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateSdpMLineIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCIceCandidateConstructor) } },
+    { "candidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateCandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sdpMid", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateSdpMid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sdpMLineIndex", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateSdpMLineIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "toJSON", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCIceCandidatePrototypeFunctionToJSON), (intptr_t) (0) } },
 };
 
 const ClassInfo JSRTCIceCandidatePrototype::s_info = { "RTCIceCandidatePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidatePrototype) };
@@ -130,10 +163,16 @@ void JSRTCIceCandidatePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCIceCandidate::s_info = { "RTCIceCandidate", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidate) };
 
-JSRTCIceCandidate::JSRTCIceCandidate(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidate>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCIceCandidate::JSRTCIceCandidate(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCIceCandidate>&& impl)
+    : JSDOMWrapper<RTCIceCandidate>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCIceCandidate::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCIceCandidate::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -141,7 +180,7 @@ JSObject* JSRTCIceCandidate::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSRTCIceCandidatePrototype::create(vm, globalObject, JSRTCIceCandidatePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSRTCIceCandidate::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCIceCandidate::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCIceCandidate>(vm, globalObject);
 }
@@ -152,73 +191,116 @@ void JSRTCIceCandidate::destroy(JSC::JSCell* cell)
     thisObject->JSRTCIceCandidate::~JSRTCIceCandidate();
 }
 
-JSRTCIceCandidate::~JSRTCIceCandidate()
+template<> inline JSRTCIceCandidate* BindingCaller<JSRTCIceCandidate>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSRTCIceCandidate*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsRTCIceCandidateCandidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSRTCIceCandidate* BindingCaller<JSRTCIceCandidate>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceCandidate* castedThis = jsDynamicCast<JSRTCIceCandidate*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceCandidatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceCandidate", "candidate");
-        return throwGetterTypeError(*exec, "RTCIceCandidate", "candidate");
+    return jsDynamicDowncast<JSRTCIceCandidate*>(state.thisValue());
+}
+
+static inline JSValue jsRTCIceCandidateCandidateGetter(ExecState&, JSRTCIceCandidate&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCIceCandidateCandidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCIceCandidate>::attribute<jsRTCIceCandidateCandidateGetter>(state, thisValue, "candidate");
+}
+
+static inline JSValue jsRTCIceCandidateCandidateGetter(ExecState& state, JSRTCIceCandidate& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.candidate());
+    return result;
+}
+
+static inline JSValue jsRTCIceCandidateSdpMidGetter(ExecState&, JSRTCIceCandidate&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCIceCandidateSdpMid(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCIceCandidate>::attribute<jsRTCIceCandidateSdpMidGetter>(state, thisValue, "sdpMid");
+}
+
+static inline JSValue jsRTCIceCandidateSdpMidGetter(ExecState& state, JSRTCIceCandidate& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.sdpMid());
+    return result;
+}
+
+static inline JSValue jsRTCIceCandidateSdpMLineIndexGetter(ExecState&, JSRTCIceCandidate&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCIceCandidateSdpMLineIndex(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCIceCandidate>::attribute<jsRTCIceCandidateSdpMLineIndexGetter>(state, thisValue, "sdpMLineIndex");
+}
+
+static inline JSValue jsRTCIceCandidateSdpMLineIndexGetter(ExecState& state, JSRTCIceCandidate& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLUnsignedShort>>(impl.sdpMLineIndex());
+    return result;
+}
+
+EncodedJSValue jsRTCIceCandidateConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSRTCIceCandidatePrototype* domObject = jsDynamicDowncast<JSRTCIceCandidatePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSRTCIceCandidate::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSRTCIceCandidateConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSRTCIceCandidatePrototype* domObject = jsDynamicDowncast<JSRTCIceCandidatePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.candidate());
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSRTCIceCandidate::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSRTCIceCandidateConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline EncodedJSValue jsRTCIceCandidatePrototypeFunctionToJSONCaller(ExecState* state, JSRTCIceCandidate* thisObject, JSC::ThrowScope& throwScope)
+{
+    auto& vm = state->vm();
+    auto* result = constructEmptyObject(state);
+
+    auto candidateValue = jsRTCIceCandidateCandidateGetter(*state, *thisObject, throwScope);
+    ASSERT(!throwScope.exception());
+    result->putDirect(vm, Identifier::fromString(&vm, "candidate"), candidateValue);
+
+    auto sdpMidValue = jsRTCIceCandidateSdpMidGetter(*state, *thisObject, throwScope);
+    ASSERT(!throwScope.exception());
+    result->putDirect(vm, Identifier::fromString(&vm, "sdpMid"), sdpMidValue);
+
+    auto sdpMLineIndexValue = jsRTCIceCandidateSdpMLineIndexGetter(*state, *thisObject, throwScope);
+    ASSERT(!throwScope.exception());
+    result->putDirect(vm, Identifier::fromString(&vm, "sdpMLineIndex"), sdpMLineIndexValue);
+
     return JSValue::encode(result);
 }
 
-
-EncodedJSValue jsRTCIceCandidateSdpMid(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsRTCIceCandidatePrototypeFunctionToJSON(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceCandidate* castedThis = jsDynamicCast<JSRTCIceCandidate*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceCandidatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceCandidate", "sdpMid");
-        return throwGetterTypeError(*exec, "RTCIceCandidate", "sdpMid");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.sdpMid());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsRTCIceCandidateSdpMLineIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceCandidate* castedThis = jsDynamicCast<JSRTCIceCandidate*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceCandidatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceCandidate", "sdpMLineIndex");
-        return throwGetterTypeError(*exec, "RTCIceCandidate", "sdpMLineIndex");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.sdpMLineIndex());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsRTCIceCandidateConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSRTCIceCandidatePrototype* domObject = jsDynamicCast<JSRTCIceCandidatePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSRTCIceCandidate::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSRTCIceCandidate::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSRTCIceCandidateConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSRTCIceCandidate>::callOperation<jsRTCIceCandidatePrototypeFunctionToJSONCaller>(state, "toJSON");
 }
 
 bool JSRTCIceCandidateOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -230,54 +312,35 @@ bool JSRTCIceCandidateOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSRTCIceCandidateOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsRTCIceCandidate = jsCast<JSRTCIceCandidate*>(handle.slot()->asCell());
+    auto* jsRTCIceCandidate = static_cast<JSRTCIceCandidate*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCIceCandidate->impl(), jsRTCIceCandidate);
+    uncacheWrapper(world, &jsRTCIceCandidate->wrapped(), jsRTCIceCandidate);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7RTCIceCandidate@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore15RTCIceCandidateE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCIceCandidate* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidate>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCIceCandidate>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCIceCandidate@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore15RTCIceCandidateE[2];
 #if COMPILER(CLANG)
-    // If this fails RTCIceCandidate does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCIceCandidate), RTCIceCandidate_is_not_polymorphic);
+    // If you hit this failure the interface definition has the ImplementationLacksVTable
+    // attribute. You should remove that attribute. If the class has subclasses
+    // that may be passed through this toJS() function you should use the SkipVTableValidation
+    // attribute to RTCIceCandidate.
+    static_assert(!__is_polymorphic(RTCIceCandidate), "RTCIceCandidate is polymorphic but the IDL claims it is not");
 #endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // RTCIceCandidate has subclasses. If RTCIceCandidate has subclasses that get passed
-    // to toJS() we currently require RTCIceCandidate you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSRTCIceCandidate>(globalObject, impl);
+    return createWrapper<RTCIceCandidate>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCIceCandidate& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 RTCIceCandidate* JSRTCIceCandidate::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSRTCIceCandidate*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSRTCIceCandidate*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

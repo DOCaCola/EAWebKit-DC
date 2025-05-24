@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMMimeType_h
-#define JSDOMMimeType_h
+#pragma once
 
 #include "DOMMimeType.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMMimeType : public JSDOMWrapper {
+class JSDOMMimeType : public JSDOMWrapper<DOMMimeType> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMMimeType>;
     static JSDOMMimeType* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMMimeType>&& impl)
     {
-        JSDOMMimeType* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeType>(globalObject->vm().heap)) JSDOMMimeType(structure, globalObject, WTF::move(impl));
+        JSDOMMimeType* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeType>(globalObject->vm().heap)) JSDOMMimeType(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMMimeType* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMMimeType();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMMimeType& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMMimeType* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMMimeType(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMMimeType>&&);
+    JSDOMMimeType(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMMimeType>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMMimeTypeOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMMimeType*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeType*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMMimeType& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMMimeType* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeType&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMMimeType* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMMimeType>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMMimeType>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMMimeType> {
+    using WrapperClass = JSDOMMimeType;
+    using ToWrappedReturnType = DOMMimeType*;
+};
 
 } // namespace WebCore
-
-#endif

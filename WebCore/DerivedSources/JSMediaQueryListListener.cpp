@@ -21,6 +21,7 @@
 #include "config.h"
 #include "JSMediaQueryListListener.h"
 
+#include "JSDOMConvert.h"
 #include "JSMediaQueryList.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
@@ -32,7 +33,7 @@ namespace WebCore {
 JSMediaQueryListListener::JSMediaQueryListListener(JSObject* callback, JSDOMGlobalObject* globalObject)
     : MediaQueryListListener(JSMediaQueryListListenerType)
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -46,7 +47,7 @@ JSMediaQueryListListener::~JSMediaQueryListListener()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
@@ -57,25 +58,33 @@ bool JSMediaQueryListListener::operator==(const MediaQueryListListener& other) c
     return static_cast<const JSMediaQueryListListener*>(&other)->m_data->callback() == m_data->callback();
 }
 
-
-// Functions
-
-bool JSMediaQueryListListener::queryChanged(MediaQueryList* list)
+bool JSMediaQueryListListener::handleEvent(MediaQueryList* list)
 {
     if (!canInvokeCallback())
         return true;
 
-    Ref<JSMediaQueryListListener> protect(*this);
+    Ref<JSMediaQueryListListener> protectedThis(*this);
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), list));
+    args.append(toJS<IDLNullable<IDLInterface<MediaQueryList>>>(*state, *m_data->globalObject(), list));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
 }
 
+JSC::JSValue toJS(MediaQueryListListener& impl)
+{
+    if (!static_cast<JSMediaQueryListListener&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSMediaQueryListListener&>(impl).callbackData()->callback();
+
 }
+
+} // namespace WebCore

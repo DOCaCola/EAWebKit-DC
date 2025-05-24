@@ -24,9 +24,9 @@
 
 #include "JSOfflineAudioContext.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "OfflineAudioContext.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -36,11 +36,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsOfflineAudioContextConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsOfflineAudioContextConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSOfflineAudioContextConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSOfflineAudioContextPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSOfflineAudioContextPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSOfflineAudioContextPrototype* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContextPrototype>(vm.heap)) JSOfflineAudioContextPrototype(vm, globalObject, structure);
@@ -63,83 +64,49 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSOfflineAudioContextConstructor : public DOMConstructorObject {
-private:
-    JSOfflineAudioContextConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSOfflineAudioContextConstructor = JSDOMConstructor<JSOfflineAudioContext>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSOfflineAudioContextConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSOfflineAudioContextConstructor* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContextConstructor>(vm.heap)) JSOfflineAudioContextConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSOfflineAudioContext(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSOfflineAudioContextConstructor::constructJSOfflineAudioContext(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSOfflineAudioContextConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSOfflineAudioContextConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    unsigned numberOfChannels = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned numberOfFrames = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float sampleRate = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSOfflineAudioContextConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto numberOfChannels = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto numberOfFrames = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto sampleRate = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "OfflineAudioContext");
-    RefPtr<OfflineAudioContext> object = OfflineAudioContext::create(*context, numberOfChannels, numberOfFrames, sampleRate, ec);
-    if (ec) {
-        setDOMException(exec, ec);
-        return JSValue::encode(JSValue());
-    }
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "webkitOfflineAudioContext");
+    auto object = OfflineAudioContext::create(*context, WTFMove(numberOfChannels), WTFMove(numberOfFrames), WTFMove(sampleRate));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<OfflineAudioContext>>(*state, *castedThis->globalObject(), throwScope, WTFMove(object)));
 }
 
-const ClassInfo JSOfflineAudioContextConstructor::s_info = { "webkitOfflineAudioContextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioContextConstructor) };
-
-JSOfflineAudioContextConstructor::JSOfflineAudioContextConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSOfflineAudioContextConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioContext::getConstructor(vm, &globalObject);
 }
 
-void JSOfflineAudioContextConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSOfflineAudioContextConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSOfflineAudioContext::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSOfflineAudioContext::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("webkitOfflineAudioContext"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(3), ReadOnly | DontEnum);
 }
 
-ConstructType JSOfflineAudioContextConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSOfflineAudioContext;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSOfflineAudioContextConstructor::s_info = { "webkitOfflineAudioContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioContextConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSOfflineAudioContextPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSOfflineAudioContextConstructor) } },
 };
 
 const ClassInfo JSOfflineAudioContextPrototype::s_info = { "webkitOfflineAudioContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioContextPrototype) };
@@ -152,32 +119,55 @@ void JSOfflineAudioContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSOfflineAudioContext::s_info = { "webkitOfflineAudioContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioContext) };
 
-JSOfflineAudioContext::JSOfflineAudioContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OfflineAudioContext>&& impl)
-    : JSAudioContext(structure, globalObject, WTF::move(impl))
+JSOfflineAudioContext::JSOfflineAudioContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OfflineAudioContext>&& impl)
+    : JSAudioContext(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSOfflineAudioContext::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSOfflineAudioContext::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSOfflineAudioContextPrototype::create(vm, globalObject, JSOfflineAudioContextPrototype::createStructure(vm, globalObject, JSAudioContext::getPrototype(vm, globalObject)));
+    return JSOfflineAudioContextPrototype::create(vm, globalObject, JSOfflineAudioContextPrototype::createStructure(vm, globalObject, JSAudioContext::prototype(vm, globalObject)));
 }
 
-JSObject* JSOfflineAudioContext::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSOfflineAudioContext::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSOfflineAudioContext>(vm, globalObject);
 }
 
-EncodedJSValue jsOfflineAudioContextConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsOfflineAudioContextConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSOfflineAudioContextPrototype* domObject = jsDynamicCast<JSOfflineAudioContextPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSOfflineAudioContext::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSOfflineAudioContextPrototype* domObject = jsDynamicDowncast<JSOfflineAudioContextPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSOfflineAudioContext::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSOfflineAudioContext::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSOfflineAudioContextConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSOfflineAudioContextConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSOfflineAudioContextPrototype* domObject = jsDynamicDowncast<JSOfflineAudioContextPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSOfflineAudioContext::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSOfflineAudioContextConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 void JSOfflineAudioContext::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -185,15 +175,15 @@ void JSOfflineAudioContext::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSOfflineAudioContext*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSOfflineAudioContextOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsOfflineAudioContext = jsCast<JSOfflineAudioContext*>(handle.slot()->asCell());
-    if (jsOfflineAudioContext->impl().hasPendingActivity())
+    if (jsOfflineAudioContext->wrapped().hasPendingActivity())
         return true;
-    if (jsOfflineAudioContext->impl().isFiringEventListeners())
+    if (jsOfflineAudioContext->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -201,9 +191,9 @@ bool JSOfflineAudioContextOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unk
 
 void JSOfflineAudioContextOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsOfflineAudioContext = jsCast<JSOfflineAudioContext*>(handle.slot()->asCell());
+    auto* jsOfflineAudioContext = static_cast<JSOfflineAudioContext*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsOfflineAudioContext->impl(), jsOfflineAudioContext);
+    uncacheWrapper(world, &jsOfflineAudioContext->wrapped(), jsOfflineAudioContext);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -214,15 +204,12 @@ extern "C" { extern void (*const __identifier("??_7OfflineAudioContext@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19OfflineAudioContextE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OfflineAudioContext* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<OfflineAudioContext>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSOfflineAudioContext>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7OfflineAudioContext@WebCore@@6B@"));
 #else
@@ -230,7 +217,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OfflineAudio
 #if COMPILER(CLANG)
     // If this fails OfflineAudioContext does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(OfflineAudioContext), OfflineAudioContext_is_not_polymorphic);
+    static_assert(__is_polymorphic(OfflineAudioContext), "OfflineAudioContext is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -239,7 +226,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OfflineAudio
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSOfflineAudioContext>(globalObject, impl);
+    return createWrapper<OfflineAudioContext>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OfflineAudioContext& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

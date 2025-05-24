@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMStringMap_h
-#define JSDOMStringMap_h
+#pragma once
 
 #include "DOMStringMap.h"
 #include "JSDOMWrapper.h"
@@ -27,27 +26,24 @@
 
 namespace WebCore {
 
-class JSDOMStringMap : public JSDOMWrapper {
+class JSDOMStringMap : public JSDOMWrapper<DOMStringMap> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMStringMap>;
     static JSDOMStringMap* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMStringMap>&& impl)
     {
-        JSDOMStringMap* ptr = new (NotNull, JSC::allocateCell<JSDOMStringMap>(globalObject->vm().heap)) JSDOMStringMap(structure, globalObject, WTF::move(impl));
+        JSDOMStringMap* ptr = new (NotNull, JSC::allocateCell<JSDOMStringMap>(globalObject->vm().heap)) JSDOMStringMap(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMStringMap* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
-    static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
-    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
+    static bool putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     static void destroy(JSC::JSCell*);
-    ~JSDOMStringMap();
 
     DECLARE_INFO;
 
@@ -59,23 +55,14 @@ public:
     static bool deleteProperty(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName);
     static bool deletePropertyByIndex(JSC::JSCell*, JSC::ExecState*, unsigned);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMStringMap& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMStringMap* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpure | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMStringMap(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMStringMap>&&);
+    JSDOMStringMap(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMStringMap>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
+    bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&, bool& putResult);
 };
 
 class JSDOMStringMapOwner : public JSC::WeakHandleOwner {
@@ -90,10 +77,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMStringMap*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMStringMap*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMStringMap& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMStringMap* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMStringMap&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMStringMap* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMStringMap>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMStringMap>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMStringMap> {
+    using WrapperClass = JSDOMStringMap;
+    using ToWrappedReturnType = DOMStringMap*;
+};
 
 } // namespace WebCore
-
-#endif

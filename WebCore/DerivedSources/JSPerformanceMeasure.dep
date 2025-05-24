@@ -1,0 +1,2 @@
+JSPerformanceMeasure.h : PerformanceEntry.idl
+PerformanceEntry.idl :

@@ -21,12 +21,13 @@
 #include "config.h"
 #include "JSClientRectList.h"
 
-#include "ClientRect.h"
-#include "ClientRectList.h"
-#include "ExceptionCode.h"
 #include "JSClientRect.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -40,12 +41,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsClientRectListPrototypeFunctionItem(JSC::Exe
 
 // Attributes
 
-JSC::EncodedJSValue jsClientRectListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsClientRectListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsClientRectListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsClientRectListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSClientRectListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSClientRectListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSClientRectListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSClientRectListPrototype* ptr = new (NotNull, JSC::allocateCell<JSClientRectListPrototype>(vm.heap)) JSClientRectListPrototype(vm, globalObject, structure);
@@ -68,66 +70,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSClientRectListConstructor : public DOMConstructorObject {
-private:
-    JSClientRectListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSClientRectListConstructor = JSDOMConstructorNotConstructable<JSClientRectList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSClientRectListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSClientRectListConstructor* ptr = new (NotNull, JSC::allocateCell<JSClientRectListConstructor>(vm.heap)) JSClientRectListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSClientRectListTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSClientRectListTableValues[] =
+template<> JSValue JSClientRectListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsClientRectListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsClientRectListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSClientRectListTable = { 2, 3, true, JSClientRectListTableValues, 0, JSClientRectListTableIndex };
-const ClassInfo JSClientRectListConstructor::s_info = { "ClientRectListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSClientRectListConstructor) };
-
-JSClientRectListConstructor::JSClientRectListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSClientRectListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSClientRectListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSClientRectList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSClientRectList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ClientRectList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSClientRectListConstructor::s_info = { "ClientRectList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSClientRectListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSClientRectListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsClientRectListPrototypeFunctionItem), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsClientRectListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSClientRectListConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsClientRectListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsClientRectListPrototypeFunctionItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSClientRectListPrototype::s_info = { "ClientRectListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSClientRectListPrototype) };
@@ -136,14 +102,21 @@ void JSClientRectListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSClientRectListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSClientRectList::s_info = { "ClientRectList", &Base::s_info, &JSClientRectListTable, CREATE_METHOD_TABLE(JSClientRectList) };
+const ClassInfo JSClientRectList::s_info = { "ClientRectList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSClientRectList) };
 
-JSClientRectList::JSClientRectList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ClientRectList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSClientRectList::JSClientRectList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ClientRectList>&& impl)
+    : JSDOMWrapper<ClientRectList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSClientRectList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSClientRectList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -151,7 +124,7 @@ JSObject* JSClientRectList::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSClientRectListPrototype::create(vm, globalObject, JSClientRectListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSClientRectList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSClientRectList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSClientRectList>(vm, globalObject);
 }
@@ -162,96 +135,113 @@ void JSClientRectList::destroy(JSC::JSCell* cell)
     thisObject->JSClientRectList::~JSClientRectList();
 }
 
-JSClientRectList::~JSClientRectList()
-{
-    releaseImpl();
-}
-
-bool JSClientRectList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSClientRectList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSClientRectList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSClientRectList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<ClientRect>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSClientRectList, Base>(exec, JSClientRectListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSClientRectList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSClientRectList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSClientRectList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLInterface<ClientRect>>(*state, *thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsClientRectListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSClientRectList*>(slotBase);
-    JSClientRectList* castedThisObject = jsDynamicCast<JSClientRectList*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "ClientRectList", "length");
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsClientRectListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSClientRectList* domObject = jsDynamicCast<JSClientRectList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSClientRectList::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSClientRectList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSClientRectList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSClientRectList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSClientRectList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSClientRectList* BindingCaller<JSClientRectList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSClientRectListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSClientRectList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsClientRectListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSClientRectList* BindingCaller<JSClientRectList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSClientRectList* castedThis = jsDynamicCast<JSClientRectList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ClientRectList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSClientRectList::info());
-    auto& impl = castedThis->impl();
-    int index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (index < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
-        return JSValue::encode(jsUndefined());
+    return jsDynamicDowncast<JSClientRectList*>(state.thisValue());
+}
+
+static inline JSValue jsClientRectListLengthGetter(ExecState&, JSClientRectList&, ThrowScope& throwScope);
+
+EncodedJSValue jsClientRectListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSClientRectList>::attribute<jsClientRectListLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsClientRectListLengthGetter(ExecState& state, JSClientRectList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsClientRectListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSClientRectListPrototype* domObject = jsDynamicDowncast<JSClientRectListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSClientRectList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSClientRectListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSClientRectListPrototype* domObject = jsDynamicDowncast<JSClientRectListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSClientRectList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSClientRectListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsClientRectListPrototypeFunctionItemCaller(JSC::ExecState*, JSClientRectList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsClientRectListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSClientRectList>::callOperation<jsClientRectListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsClientRectListPrototypeFunctionItemCaller(JSC::ExecState* state, JSClientRectList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<ClientRect>>(*state, *castedThis->globalObject(), impl.item(WTFMove(index))));
 }
 
 bool JSClientRectListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -263,31 +253,32 @@ bool JSClientRectListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSClientRectListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsClientRectList = jsCast<JSClientRectList*>(handle.slot()->asCell());
+    auto* jsClientRectList = static_cast<JSClientRectList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsClientRectList->impl(), jsClientRectList);
+    uncacheWrapper(world, &jsClientRectList->wrapped(), jsClientRectList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ClientRectList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<ClientRectList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSClientRectList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to ClientRectList.
-    COMPILE_ASSERT(!__is_polymorphic(ClientRectList), ClientRectList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(ClientRectList), "ClientRectList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSClientRectList>(globalObject, impl);
+    return createWrapper<ClientRectList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ClientRectList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 ClientRectList* JSClientRectList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSClientRectList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSClientRectList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

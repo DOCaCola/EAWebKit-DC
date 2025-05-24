@@ -21,8 +21,9 @@
 #include "config.h"
 #include "JSSVGMarkerElement.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAngle.h"
 #include "JSSVGAnimatedAngle.h"
 #include "JSSVGAnimatedBoolean.h"
@@ -30,7 +31,6 @@
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedPreserveAspectRatio.h"
 #include "JSSVGAnimatedRect.h"
-#include "SVGMarkerElement.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -45,21 +45,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGMarkerElementPrototypeFunctionSetOrientTo
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGMarkerElementRefX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementRefY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementMarkerUnits(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementMarkerWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementMarkerHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementOrientType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementOrientAngle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementViewBox(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementPreserveAspectRatio(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGMarkerElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementRefX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementRefY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementMarkerUnits(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementMarkerWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementMarkerHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementOrientType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementOrientAngle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementViewBox(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementPreserveAspectRatio(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGMarkerElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGMarkerElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGMarkerElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGMarkerElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGMarkerElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGMarkerElementPrototype>(vm.heap)) JSSVGMarkerElementPrototype(vm, globalObject, structure);
@@ -82,87 +83,65 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGMarkerElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGMarkerElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGMarkerElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGMarkerElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGMarkerElementConstructor>(vm.heap)) JSSVGMarkerElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGMarkerElementConstructor = JSDOMConstructorNotConstructable<JSSVGMarkerElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGMarkerElementConstructorTableValues[] =
 {
-    { "SVG_MARKERUNITS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MARKERUNITS_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MARKERUNITS_STROKEWIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_MARKERUNITS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MARKERUNITS_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MARKERUNITS_STROKEWIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_MARKER_ORIENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MARKER_ORIENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MARKER_ORIENT_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
+static_assert(SVGMarkerElement::SVG_MARKERUNITS_UNKNOWN == 0, "SVG_MARKERUNITS_UNKNOWN in SVGMarkerElement does not match value from IDL");
+static_assert(SVGMarkerElement::SVG_MARKERUNITS_USERSPACEONUSE == 1, "SVG_MARKERUNITS_USERSPACEONUSE in SVGMarkerElement does not match value from IDL");
+static_assert(SVGMarkerElement::SVG_MARKERUNITS_STROKEWIDTH == 2, "SVG_MARKERUNITS_STROKEWIDTH in SVGMarkerElement does not match value from IDL");
+static_assert(SVGMarkerElement::SVG_MARKER_ORIENT_UNKNOWN == 0, "SVG_MARKER_ORIENT_UNKNOWN in SVGMarkerElement does not match value from IDL");
+static_assert(SVGMarkerElement::SVG_MARKER_ORIENT_AUTO == 1, "SVG_MARKER_ORIENT_AUTO in SVGMarkerElement does not match value from IDL");
+static_assert(SVGMarkerElement::SVG_MARKER_ORIENT_ANGLE == 2, "SVG_MARKER_ORIENT_ANGLE in SVGMarkerElement does not match value from IDL");
 
-COMPILE_ASSERT(0 == SVGMarkerElement::SVG_MARKERUNITS_UNKNOWN, SVGMarkerElementEnumSVG_MARKERUNITS_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGMarkerElement::SVG_MARKERUNITS_USERSPACEONUSE, SVGMarkerElementEnumSVG_MARKERUNITS_USERSPACEONUSEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGMarkerElement::SVG_MARKERUNITS_STROKEWIDTH, SVGMarkerElementEnumSVG_MARKERUNITS_STROKEWIDTHIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(0 == SVGMarkerElement::SVG_MARKER_ORIENT_UNKNOWN, SVGMarkerElementEnumSVG_MARKER_ORIENT_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGMarkerElement::SVG_MARKER_ORIENT_AUTO, SVGMarkerElementEnumSVG_MARKER_ORIENT_AUTOIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGMarkerElement::SVG_MARKER_ORIENT_ANGLE, SVGMarkerElementEnumSVG_MARKER_ORIENT_ANGLEIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSSVGMarkerElementConstructor::s_info = { "SVGMarkerElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMarkerElementConstructor) };
-
-JSSVGMarkerElementConstructor::JSSVGMarkerElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGMarkerElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGMarkerElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGMarkerElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGMarkerElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGMarkerElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGMarkerElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGMarkerElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGMarkerElementConstructor::s_info = { "SVGMarkerElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMarkerElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGMarkerElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "refX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementRefX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "refY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementRefY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "markerUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "markerWidth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "markerHeight", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "orientType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementOrientType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "orientAngle", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementOrientAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewBox", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAspectRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_MARKERUNITS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MARKERUNITS_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MARKERUNITS_STROKEWIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_MARKER_ORIENT_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "setOrientToAuto", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMarkerElementPrototypeFunctionSetOrientToAuto), (intptr_t) (0) },
-    { "setOrientToAngle", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMarkerElementPrototypeFunctionSetOrientToAngle), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMarkerElementConstructor) } },
+    { "refX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementRefX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "refY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementRefY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "markerUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "markerWidth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "markerHeight", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementMarkerHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "orientType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementOrientType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "orientAngle", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementOrientAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "viewBox", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAspectRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMarkerElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setOrientToAuto", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMarkerElementPrototypeFunctionSetOrientToAuto), (intptr_t) (0) } },
+    { "setOrientToAngle", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMarkerElementPrototypeFunctionSetOrientToAngle), (intptr_t) (1) } },
+    { "SVG_MARKERUNITS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MARKERUNITS_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MARKERUNITS_STROKEWIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_MARKER_ORIENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_MARKER_ORIENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_MARKER_ORIENT_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGMarkerElementPrototype::s_info = { "SVGMarkerElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMarkerElementPrototype) };
@@ -175,243 +154,269 @@ void JSSVGMarkerElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGMarkerElement::s_info = { "SVGMarkerElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMarkerElement) };
 
-JSSVGMarkerElement::JSSVGMarkerElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMarkerElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGMarkerElement::JSSVGMarkerElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGMarkerElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGMarkerElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGMarkerElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGMarkerElementPrototype::create(vm, globalObject, JSSVGMarkerElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGMarkerElementPrototype::create(vm, globalObject, JSSVGMarkerElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGMarkerElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGMarkerElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGMarkerElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGMarkerElementRefX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGMarkerElement* BindingCaller<JSSVGMarkerElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "refX");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "refX");
+    return jsDynamicDowncast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSSVGMarkerElement* BindingCaller<JSSVGMarkerElement>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSSVGMarkerElement*>(state.thisValue());
+}
+
+static inline JSValue jsSVGMarkerElementRefXGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementRefX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementRefXGetter>(state, thisValue, "refX");
+}
+
+static inline JSValue jsSVGMarkerElementRefXGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.refXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementRefYGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementRefY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementRefYGetter>(state, thisValue, "refY");
+}
+
+static inline JSValue jsSVGMarkerElementRefYGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.refYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementMarkerUnitsGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementMarkerUnits(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementMarkerUnitsGetter>(state, thisValue, "markerUnits");
+}
+
+static inline JSValue jsSVGMarkerElementMarkerUnitsGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.markerUnitsAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementMarkerWidthGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementMarkerWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementMarkerWidthGetter>(state, thisValue, "markerWidth");
+}
+
+static inline JSValue jsSVGMarkerElementMarkerWidthGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.markerWidthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementMarkerHeightGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementMarkerHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementMarkerHeightGetter>(state, thisValue, "markerHeight");
+}
+
+static inline JSValue jsSVGMarkerElementMarkerHeightGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.markerHeightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementOrientTypeGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementOrientType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementOrientTypeGetter>(state, thisValue, "orientType");
+}
+
+static inline JSValue jsSVGMarkerElementOrientTypeGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.orientTypeAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementOrientAngleGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementOrientAngle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementOrientAngleGetter>(state, thisValue, "orientAngle");
+}
+
+static inline JSValue jsSVGMarkerElementOrientAngleGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedAngle>>(state, *thisObject.globalObject(), impl.orientAngleAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementExternalResourcesRequiredGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGMarkerElementExternalResourcesRequiredGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementViewBoxGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementViewBox(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementViewBoxGetter>(state, thisValue, "viewBox");
+}
+
+static inline JSValue jsSVGMarkerElementViewBoxGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedRect>>(state, *thisObject.globalObject(), impl.viewBoxAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGMarkerElementPreserveAspectRatioGetter(ExecState&, JSSVGMarkerElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGMarkerElementPreserveAspectRatio(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGMarkerElement>::attribute<jsSVGMarkerElementPreserveAspectRatioGetter>(state, thisValue, "preserveAspectRatio");
+}
+
+static inline JSValue jsSVGMarkerElementPreserveAspectRatioGetter(ExecState& state, JSSVGMarkerElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedPreserveAspectRatio>>(state, *thisObject.globalObject(), impl.preserveAspectRatioAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGMarkerElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGMarkerElementPrototype* domObject = jsDynamicDowncast<JSSVGMarkerElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGMarkerElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGMarkerElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGMarkerElementPrototype* domObject = jsDynamicDowncast<JSSVGMarkerElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.refXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGMarkerElementRefY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGMarkerElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "refY");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "refY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.refYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGMarkerElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsSVGMarkerElementPrototypeFunctionSetOrientToAutoCaller(JSC::ExecState*, JSSVGMarkerElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGMarkerElementMarkerUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGMarkerElementPrototypeFunctionSetOrientToAuto(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "markerUnits");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "markerUnits");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.markerUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGMarkerElement>::callOperation<jsSVGMarkerElementPrototypeFunctionSetOrientToAutoCaller>(state, "setOrientToAuto");
 }
 
-
-EncodedJSValue jsSVGMarkerElementMarkerWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGMarkerElementPrototypeFunctionSetOrientToAutoCaller(JSC::ExecState* state, JSSVGMarkerElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "markerWidth");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "markerWidth");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.markerWidthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementMarkerHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "markerHeight");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "markerHeight");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.markerHeightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementOrientType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "orientType");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "orientType");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.orientTypeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementOrientAngle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "orientAngle");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "orientAngle");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedAngle> obj = impl.orientAngleAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementViewBox(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "viewBox");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "viewBox");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedRect> obj = impl.viewBoxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementPreserveAspectRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGMarkerElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMarkerElement", "preserveAspectRatio");
-        return throwGetterTypeError(*exec, "SVGMarkerElement", "preserveAspectRatio");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedPreserveAspectRatio> obj = impl.preserveAspectRatioAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGMarkerElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGMarkerElementPrototype* domObject = jsDynamicCast<JSSVGMarkerElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGMarkerElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGMarkerElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGMarkerElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsSVGMarkerElementPrototypeFunctionSetOrientToAuto(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMarkerElement", "setOrientToAuto");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMarkerElement::info());
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.setOrientToAuto();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMarkerElementPrototypeFunctionSetOrientToAngle(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGMarkerElementPrototypeFunctionSetOrientToAngleCaller(JSC::ExecState*, JSSVGMarkerElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGMarkerElementPrototypeFunctionSetOrientToAngle(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGMarkerElement* castedThis = jsDynamicCast<JSSVGMarkerElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMarkerElement", "setOrientToAngle");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMarkerElement::info());
-    auto& impl = castedThis->impl();
-    SVGPropertyTearOff<SVGAngle>* angle = JSSVGAngle::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!angle) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    impl.setOrientToAngle(angle->propertyReference());
+    return BindingCaller<JSSVGMarkerElement>::callOperation<jsSVGMarkerElementPrototypeFunctionSetOrientToAngleCaller>(state, "setOrientToAngle");
+}
+
+static inline JSC::EncodedJSValue jsSVGMarkerElementPrototypeFunctionSetOrientToAngleCaller(JSC::ExecState* state, JSSVGMarkerElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto angle = convert<IDLInterface<SVGAngle>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "angle", "SVGMarkerElement", "setOrientToAngle", "SVGAngle"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setOrientToAngle(*angle);
     return JSValue::encode(jsUndefined());
+}
+
+void JSSVGMarkerElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGMarkerElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

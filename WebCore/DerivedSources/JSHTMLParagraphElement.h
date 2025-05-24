@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLParagraphElement_h
-#define JSHTMLParagraphElement_h
+#pragma once
 
 #include "HTMLParagraphElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLParagraphElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLParagraphElement;
     static JSHTMLParagraphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLParagraphElement>&& impl)
     {
-        JSHTMLParagraphElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElement>(globalObject->vm().heap)) JSHTMLParagraphElement(structure, globalObject, WTF::move(impl));
+        JSHTMLParagraphElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElement>(globalObject->vm().heap)) JSHTMLParagraphElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLParagraphElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLParagraphElement& wrapped() const
     {
-        return static_cast<HTMLParagraphElement&>(Base::impl());
+        return static_cast<HTMLParagraphElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLParagraphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLParagraphElement>&&);
+    JSHTMLParagraphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLParagraphElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLParagraphElement> {
+    using WrapperClass = JSHTMLParagraphElement;
+    using ToWrappedReturnType = HTMLParagraphElement*;
+};
 
 } // namespace WebCore
-
-#endif

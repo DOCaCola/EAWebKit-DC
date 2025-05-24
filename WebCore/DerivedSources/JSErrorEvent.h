@@ -18,59 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSErrorEvent_h
-#define JSErrorEvent_h
+#pragma once
 
 #include "ErrorEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSErrorEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = ErrorEvent;
     static JSErrorEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ErrorEvent>&& impl)
     {
-        JSErrorEvent* ptr = new (NotNull, JSC::allocateCell<JSErrorEvent>(globalObject->vm().heap)) JSErrorEvent(structure, globalObject, WTF::move(impl));
+        JSErrorEvent* ptr = new (NotNull, JSC::allocateCell<JSErrorEvent>(globalObject->vm().heap)) JSErrorEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ErrorEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    ErrorEvent& wrapped() const
     {
-        return static_cast<ErrorEvent&>(Base::impl());
+        return static_cast<ErrorEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSErrorEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<ErrorEvent>&&);
+    JSErrorEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<ErrorEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ErrorEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ErrorEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ErrorEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ErrorEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillErrorEventInit(ErrorEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<ErrorEvent> {
+    using WrapperClass = JSErrorEvent;
+    using ToWrappedReturnType = ErrorEvent*;
+};
+template<> ErrorEvent::Init convertDictionary<ErrorEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

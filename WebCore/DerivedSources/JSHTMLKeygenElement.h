@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLKeygenElement_h
-#define JSHTMLKeygenElement_h
+#pragma once
 
 #include "HTMLKeygenElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLKeygenElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLKeygenElement;
     static JSHTMLKeygenElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLKeygenElement>&& impl)
     {
-        JSHTMLKeygenElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLKeygenElement>(globalObject->vm().heap)) JSHTMLKeygenElement(structure, globalObject, WTF::move(impl));
+        JSHTMLKeygenElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLKeygenElement>(globalObject->vm().heap)) JSHTMLKeygenElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLKeygenElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLKeygenElement& wrapped() const
     {
-        return static_cast<HTMLKeygenElement&>(Base::impl());
+        return static_cast<HTMLKeygenElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLKeygenElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLKeygenElement>&&);
+    JSHTMLKeygenElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLKeygenElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLKeygenElement> {
+    using WrapperClass = JSHTMLKeygenElement;
+    using ToWrappedReturnType = HTMLKeygenElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -21,11 +21,13 @@
 #include "config.h"
 #include "JSDOMStringList.h"
 
-#include "DOMStringList.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "URL.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -40,12 +42,13 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDOMStringListPrototypeFunctionContains(JSC::
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMStringListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMStringListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMStringListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMStringListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMStringListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMStringListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMStringListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMStringListPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMStringListPrototype>(vm.heap)) JSDOMStringListPrototype(vm, globalObject, structure);
@@ -68,67 +71,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMStringListConstructor : public DOMConstructorObject {
-private:
-    JSDOMStringListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMStringListConstructor = JSDOMConstructorNotConstructable<JSDOMStringList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMStringListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMStringListConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMStringListConstructor>(vm.heap)) JSDOMStringListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSDOMStringListTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSDOMStringListTableValues[] =
+template<> JSValue JSDOMStringListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDOMStringListTable = { 2, 3, true, JSDOMStringListTableValues, 0, JSDOMStringListTableIndex };
-const ClassInfo JSDOMStringListConstructor::s_info = { "DOMStringListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringListConstructor) };
-
-JSDOMStringListConstructor::JSDOMStringListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDOMStringListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDOMStringListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMStringList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMStringList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMStringList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMStringListConstructor::s_info = { "DOMStringList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMStringListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMStringListPrototypeFunctionItem), (intptr_t) (0) },
-    { "contains", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMStringListPrototypeFunctionContains), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMStringListConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMStringListPrototypeFunctionItem), (intptr_t) (1) } },
+    { "contains", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMStringListPrototypeFunctionContains), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDOMStringListPrototype::s_info = { "DOMStringListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringListPrototype) };
@@ -137,14 +104,21 @@ void JSDOMStringListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSDOMStringListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSDOMStringList::s_info = { "DOMStringList", &Base::s_info, &JSDOMStringListTable, CREATE_METHOD_TABLE(JSDOMStringList) };
+const ClassInfo JSDOMStringList::s_info = { "DOMStringList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringList) };
 
-JSDOMStringList::JSDOMStringList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMStringList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMStringList::JSDOMStringList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMStringList>&& impl)
+    : JSDOMWrapper<DOMStringList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMStringList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMStringList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -152,7 +126,7 @@ JSObject* JSDOMStringList::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDOMStringListPrototype::create(vm, globalObject, JSDOMStringListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMStringList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMStringList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMStringList>(vm, globalObject);
 }
@@ -163,104 +137,132 @@ void JSDOMStringList::destroy(JSC::JSCell* cell)
     thisObject->JSDOMStringList::~JSDOMStringList();
 }
 
-JSDOMStringList::~JSDOMStringList()
-{
-    releaseImpl();
-}
-
-bool JSDOMStringList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMStringList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMStringList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSDOMStringList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSDOMStringList, Base>(exec, JSDOMStringListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSDOMStringList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDOMStringList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMStringList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index <= MAX_ARRAY_INDEX) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDOMStringListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDOMStringList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMStringListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSDOMStringList* domObject = jsDynamicCast<JSDOMStringList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMStringList::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSDOMStringList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSDOMStringList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSDOMStringList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSDOMStringList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSDOMStringList* BindingCaller<JSDOMStringList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSDOMStringListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSDOMStringList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMStringListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSDOMStringList* BindingCaller<JSDOMStringList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMStringList* castedThis = jsDynamicCast<JSDOMStringList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMStringList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMStringList::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.item(index));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSDOMStringList*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMStringListPrototypeFunctionContains(ExecState* exec)
+static inline JSValue jsDOMStringListLengthGetter(ExecState&, JSDOMStringList&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMStringListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMStringList* castedThis = jsDynamicCast<JSDOMStringList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMStringList", "contains");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMStringList::info());
-    auto& impl = castedThis->impl();
-    String string = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.contains(string));
-    return JSValue::encode(result);
+    return BindingCaller<JSDOMStringList>::attribute<jsDOMStringListLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsDOMStringListLengthGetter(ExecState& state, JSDOMStringList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsDOMStringListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMStringListPrototype* domObject = jsDynamicDowncast<JSDOMStringListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMStringList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDOMStringListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMStringListPrototype* domObject = jsDynamicDowncast<JSDOMStringListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSDOMStringList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDOMStringListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDOMStringListPrototypeFunctionItemCaller(JSC::ExecState*, JSDOMStringList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMStringListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSDOMStringList>::callOperation<jsDOMStringListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsDOMStringListPrototypeFunctionItemCaller(JSC::ExecState* state, JSDOMStringList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsDOMStringListPrototypeFunctionContainsCaller(JSC::ExecState*, JSDOMStringList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMStringListPrototypeFunctionContains(ExecState* state)
+{
+    return BindingCaller<JSDOMStringList>::callOperation<jsDOMStringListPrototypeFunctionContainsCaller>(state, "contains");
+}
+
+static inline JSC::EncodedJSValue jsDOMStringListPrototypeFunctionContainsCaller(JSC::ExecState* state, JSDOMStringList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto string = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.contains(WTFMove(string))));
 }
 
 bool JSDOMStringListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -272,26 +274,33 @@ bool JSDOMStringListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> 
 
 void JSDOMStringListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMStringList = jsCast<JSDOMStringList*>(handle.slot()->asCell());
+    auto* jsDOMStringList = static_cast<JSDOMStringList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMStringList->impl(), jsDOMStringList);
+    uncacheWrapper(world, &jsDOMStringList->wrapped(), jsDOMStringList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMStringList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMStringList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMStringList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to DOMStringList.
-    COMPILE_ASSERT(!__is_polymorphic(DOMStringList), DOMStringList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(DOMStringList), "DOMStringList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSDOMStringList>(globalObject, impl);
+    return createWrapper<DOMStringList>(globalObject, WTFMove(impl));
 }
 
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMStringList& impl)
+{
+    return wrap(state, globalObject, impl);
+}
+
+DOMStringList* JSDOMStringList::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSDOMStringList*>(value))
+        return &wrapper->wrapped();
+    return nullptr;
+}
 
 }

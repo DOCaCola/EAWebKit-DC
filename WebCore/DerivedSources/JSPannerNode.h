@@ -18,29 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPannerNode_h
-#define JSPannerNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
 #include "JSAudioNode.h"
+#include "JSDOMConvert.h"
 #include "PannerNode.h"
 
 namespace WebCore {
 
 class JSPannerNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = PannerNode;
     static JSPannerNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PannerNode>&& impl)
     {
-        JSPannerNode* ptr = new (NotNull, JSC::allocateCell<JSPannerNode>(globalObject->vm().heap)) JSPannerNode(structure, globalObject, WTF::move(impl));
+        JSPannerNode* ptr = new (NotNull, JSC::allocateCell<JSPannerNode>(globalObject->vm().heap)) JSPannerNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,34 +49,49 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setPanningModel(JSC::ExecState*, JSC::JSValue);
-    void setDistanceModel(JSC::ExecState*, JSC::JSValue);
-    PannerNode& impl() const
+    PannerNode& wrapped() const
     {
-        return static_cast<PannerNode&>(Base::impl());
+        return static_cast<PannerNode&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPannerNode(JSC::Structure*, JSDOMGlobalObject*, Ref<PannerNode>&&);
+    JSPannerNode(JSC::Structure*, JSDOMGlobalObject&, Ref<PannerNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PannerNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PannerNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PannerNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PannerNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<PannerNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<PannerNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<PannerNode> {
+    using WrapperClass = JSPannerNode;
+    using ToWrappedReturnType = PannerNode*;
+};
+#if ENABLE(WEB_AUDIO)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, PanningModelType);
+
+template<> std::optional<PanningModelType> parseEnumeration<PanningModelType>(JSC::ExecState&, JSC::JSValue);
+template<> PanningModelType convertEnumeration<PanningModelType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<PanningModelType>();
+
+#endif
+
+#if ENABLE(WEB_AUDIO)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, DistanceModelType);
+
+template<> std::optional<DistanceModelType> parseEnumeration<DistanceModelType>(JSC::ExecState&, JSC::JSValue);
+template<> DistanceModelType convertEnumeration<DistanceModelType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<DistanceModelType>();
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

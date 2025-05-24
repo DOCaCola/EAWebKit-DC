@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLPreElement_h
-#define JSHTMLPreElement_h
+#pragma once
 
 #include "HTMLPreElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLPreElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLPreElement;
     static JSHTMLPreElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLPreElement>&& impl)
     {
-        JSHTMLPreElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLPreElement>(globalObject->vm().heap)) JSHTMLPreElement(structure, globalObject, WTF::move(impl));
+        JSHTMLPreElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLPreElement>(globalObject->vm().heap)) JSHTMLPreElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLPreElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLPreElement& wrapped() const
     {
-        return static_cast<HTMLPreElement&>(Base::impl());
+        return static_cast<HTMLPreElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLPreElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLPreElement>&&);
+    JSHTMLPreElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLPreElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLPreElement> {
+    using WrapperClass = JSHTMLPreElement;
+    using ToWrappedReturnType = HTMLPreElement*;
+};
 
 } // namespace WebCore
-
-#endif

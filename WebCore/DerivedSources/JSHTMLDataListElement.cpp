@@ -24,9 +24,9 @@
 
 #include "JSHTMLDataListElement.h"
 
-#include "HTMLCollection.h"
-#include "HTMLDataListElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSHTMLCollection.h"
 #include <wtf/GetPtr.h>
 
@@ -36,12 +36,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLDataListElementOptions(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLDataListElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLDataListElementOptions(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLDataListElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLDataListElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLDataListElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLDataListElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLDataListElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElementPrototype>(vm.heap)) JSHTMLDataListElementPrototype(vm, globalObject, structure);
@@ -64,49 +65,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLDataListElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLDataListElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLDataListElementConstructor = JSDOMConstructorNotConstructable<JSHTMLDataListElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLDataListElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLDataListElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElementConstructor>(vm.heap)) JSHTMLDataListElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLDataListElementConstructor::s_info = { "HTMLDataListElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDataListElementConstructor) };
-
-JSHTMLDataListElementConstructor::JSHTMLDataListElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLDataListElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLDataListElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLDataListElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLDataListElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLDataListElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLDataListElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLDataListElementConstructor::s_info = { "HTMLDataListElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDataListElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLDataListElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDataListElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "options", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDataListElementOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDataListElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLDataListElementConstructor) } },
+    { "options", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLDataListElementOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLDataListElementPrototype::s_info = { "HTMLDataListElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDataListElementPrototype) };
@@ -119,49 +99,84 @@ void JSHTMLDataListElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLDataListElement::s_info = { "HTMLDataListElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLDataListElement) };
 
-JSHTMLDataListElement::JSHTMLDataListElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDataListElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLDataListElement::JSHTMLDataListElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLDataListElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLDataListElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLDataListElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLDataListElementPrototype::create(vm, globalObject, JSHTMLDataListElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLDataListElementPrototype::create(vm, globalObject, JSHTMLDataListElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLDataListElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLDataListElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLDataListElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLDataListElementOptions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLDataListElement* BindingCaller<JSHTMLDataListElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLDataListElement* castedThis = jsDynamicCast<JSHTMLDataListElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLDataListElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLDataListElement", "options");
-        return throwGetterTypeError(*exec, "HTMLDataListElement", "options");
+    return jsDynamicDowncast<JSHTMLDataListElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsHTMLDataListElementOptionsGetter(ExecState&, JSHTMLDataListElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLDataListElementOptions(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLDataListElement>::attribute<jsHTMLDataListElementOptionsGetter>(state, thisValue, "options");
+}
+
+static inline JSValue jsHTMLDataListElementOptionsGetter(ExecState& state, JSHTMLDataListElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLCollection>>(state, *thisObject.globalObject(), impl.options());
+    return result;
+}
+
+EncodedJSValue jsHTMLDataListElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLDataListElementPrototype* domObject = jsDynamicDowncast<JSHTMLDataListElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLDataListElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLDataListElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLDataListElementPrototype* domObject = jsDynamicDowncast<JSHTMLDataListElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.options()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsHTMLDataListElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSHTMLDataListElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSHTMLDataListElementPrototype* domObject = jsDynamicCast<JSHTMLDataListElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLDataListElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSHTMLDataListElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSHTMLDataListElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+void JSHTMLDataListElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    return getDOMConstructor<JSHTMLDataListElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSHTMLDataListElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

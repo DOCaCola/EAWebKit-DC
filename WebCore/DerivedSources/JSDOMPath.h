@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMPath_h
-#define JSDOMPath_h
+#pragma once
 
 #include "DOMPath.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSDOMPath : public JSDOMWrapper {
+class WEBCORE_EXPORT JSDOMPath : public JSDOMWrapper<DOMPath> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMPath>;
     static JSDOMPath* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMPath>&& impl)
     {
-        JSDOMPath* ptr = new (NotNull, JSC::allocateCell<JSDOMPath>(globalObject->vm().heap)) JSDOMPath(structure, globalObject, WTF::move(impl));
+        JSDOMPath* ptr = new (NotNull, JSC::allocateCell<JSDOMPath>(globalObject->vm().heap)) JSDOMPath(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMPath* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMPath();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMPath& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMPath* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMPath(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMPath>&&);
+    JSDOMPath(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMPath>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMPathOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMPath*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPath*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMPath& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMPath* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPath&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMPath* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMPath>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMPath>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMPath> {
+    using WrapperClass = JSDOMPath;
+    using ToWrappedReturnType = DOMPath*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -25,7 +25,8 @@
 #include "JSWebGLBuffer.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLBuffer.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLBufferConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLBufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLBufferConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLBufferPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLBufferPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLBufferPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLBufferPrototype>(vm.heap)) JSWebGLBufferPrototype(vm, globalObject, structure);
@@ -61,48 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLBufferConstructor : public DOMConstructorObject {
-private:
-    JSWebGLBufferConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLBufferConstructor = JSDOMConstructorNotConstructable<JSWebGLBuffer>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLBufferConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLBufferConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLBufferConstructor>(vm.heap)) JSWebGLBufferConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLBufferConstructor::s_info = { "WebGLBufferConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLBufferConstructor) };
-
-JSWebGLBufferConstructor::JSWebGLBufferConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLBufferConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLBufferConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLBufferConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLBuffer::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLBuffer::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLBuffer"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLBufferConstructor::s_info = { "WebGLBuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLBufferConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLBufferPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLBufferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLBufferConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLBufferConstructor) } },
 };
 
 const ClassInfo JSWebGLBufferPrototype::s_info = { "WebGLBufferPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLBufferPrototype) };
@@ -115,10 +97,16 @@ void JSWebGLBufferPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLBuffer::s_info = { "WebGLBuffer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLBuffer) };
 
-JSWebGLBuffer::JSWebGLBuffer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLBuffer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLBuffer::JSWebGLBuffer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLBuffer>&& impl)
+    : JSDOMWrapper<WebGLBuffer>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLBuffer::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLBuffer::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -126,7 +114,7 @@ JSObject* JSWebGLBuffer::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSWebGLBufferPrototype::create(vm, globalObject, JSWebGLBufferPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLBuffer::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLBuffer::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLBuffer>(vm, globalObject);
 }
@@ -137,22 +125,33 @@ void JSWebGLBuffer::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLBuffer::~JSWebGLBuffer();
 }
 
-JSWebGLBuffer::~JSWebGLBuffer()
+EncodedJSValue jsWebGLBufferConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLBufferPrototype* domObject = jsDynamicDowncast<JSWebGLBufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLBuffer::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsWebGLBufferConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSWebGLBufferConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSWebGLBufferPrototype* domObject = jsDynamicCast<JSWebGLBufferPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLBuffer::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLBufferPrototype* domObject = jsDynamicDowncast<JSWebGLBufferPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSWebGLBuffer::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWebGLBuffer::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLBufferConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLBufferConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLBufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,9 +163,9 @@ bool JSWebGLBufferOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSWebGLBufferOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLBuffer = jsCast<JSWebGLBuffer*>(handle.slot()->asCell());
+    auto* jsWebGLBuffer = static_cast<JSWebGLBuffer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLBuffer->impl(), jsWebGLBuffer);
+    uncacheWrapper(world, &jsWebGLBuffer->wrapped(), jsWebGLBuffer);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLBuffer@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11WebGLBufferE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLBuffer* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLBuffer>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLBuffer>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLBuffer@WebCore@@6B@"));
 #else
@@ -193,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLBuffer*
 #if COMPILER(CLANG)
     // If this fails WebGLBuffer does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLBuffer), WebGLBuffer_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLBuffer), "WebGLBuffer is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -202,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLBuffer*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLBuffer>(globalObject, impl);
+    return createWrapper<WebGLBuffer>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLBuffer& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLBuffer* JSWebGLBuffer::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLBuffer*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLBuffer*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

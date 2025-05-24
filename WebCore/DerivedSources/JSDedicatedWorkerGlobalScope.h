@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDedicatedWorkerGlobalScope_h
-#define JSDedicatedWorkerGlobalScope_h
+#pragma once
 
 #include "DedicatedWorkerGlobalScope.h"
 #include "JSWorkerGlobalScope.h"
@@ -30,19 +29,18 @@ class DedicatedWorkerGlobalScope;
 
 class JSDedicatedWorkerGlobalScope : public JSWorkerGlobalScope {
 public:
-    typedef JSWorkerGlobalScope Base;
-    static JSDedicatedWorkerGlobalScope* create(JSC::VM& vm, JSC::Structure* structure, Ref<DedicatedWorkerGlobalScope>&& impl)
+    using Base = JSWorkerGlobalScope;
+    using DOMWrapped = DedicatedWorkerGlobalScope;
+    static JSDedicatedWorkerGlobalScope* create(JSC::VM& vm, JSC::Structure* structure, Ref<DedicatedWorkerGlobalScope>&& impl, JSC::JSProxy* proxy)
     {
-        JSDedicatedWorkerGlobalScope* ptr = new (NotNull, JSC::allocateCell<JSDedicatedWorkerGlobalScope>(vm.heap)) JSDedicatedWorkerGlobalScope(vm, structure, WTF::move(impl));
-        ptr->finishCreation(vm);
-        vm.heap.addFinalizer(ptr, destroy);
+        JSDedicatedWorkerGlobalScope* ptr = new (NotNull, JSC::allocateCell<JSDedicatedWorkerGlobalScope>(vm.heap)) JSDedicatedWorkerGlobalScope(vm, structure, WTFMove(impl));
+        ptr->finishCreation(vm, proxy);
         return ptr;
     }
 
     static const bool needsDestruction = false;
 
     static DedicatedWorkerGlobalScope* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 
     DECLARE_INFO;
 
@@ -51,24 +49,24 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::GlobalObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue postMessage(JSC::ExecState*);
-    DedicatedWorkerGlobalScope& impl() const
+    DedicatedWorkerGlobalScope& wrapped() const
     {
-        return static_cast<DedicatedWorkerGlobalScope&>(Base::impl());
+        return static_cast<DedicatedWorkerGlobalScope&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
     JSDedicatedWorkerGlobalScope(JSC::VM&, JSC::Structure*, Ref<DedicatedWorkerGlobalScope>&&);
+    void finishCreation(JSC::VM&, JSC::JSProxy*);
 };
 
 
 class JSDedicatedWorkerGlobalScopePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDedicatedWorkerGlobalScopePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDedicatedWorkerGlobalScopePrototype* ptr = new (NotNull, JSC::allocateCell<JSDedicatedWorkerGlobalScopePrototype>(vm.heap)) JSDedicatedWorkerGlobalScopePrototype(vm, globalObject, structure);
@@ -87,13 +85,13 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
-
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 };
 
+template<> struct JSDOMWrapperConverterTraits<DedicatedWorkerGlobalScope> {
+    using WrapperClass = JSDedicatedWorkerGlobalScope;
+    using ToWrappedReturnType = DedicatedWorkerGlobalScope*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -21,11 +21,13 @@
 #include "config.h"
 #include "JSMediaList.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "MediaList.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "URL.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -41,14 +43,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionAppendMedium(JSC::
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaListMediaText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaListMediaText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaListMediaText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaListMediaText(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaListPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaListPrototype>(vm.heap)) JSMediaListPrototype(vm, globalObject, structure);
@@ -71,73 +74,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaListConstructor : public DOMConstructorObject {
-private:
-    JSMediaListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSMediaListConstructor = JSDOMConstructorNotConstructable<JSMediaList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaListConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaListConstructor>(vm.heap)) JSMediaListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSMediaListTableIndex[9] = {
-    { -1, -1 },
-    { 0, 8 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-    { 2, -1 },
-};
-
-
-static const HashTableValue JSMediaListTableValues[] =
+template<> JSValue JSMediaListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "mediaText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListMediaText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaListMediaText) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSMediaListTable = { 3, 7, true, JSMediaListTableValues, 0, JSMediaListTableIndex };
-const ClassInfo JSMediaListConstructor::s_info = { "MediaListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaListConstructor) };
-
-JSMediaListConstructor::JSMediaListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSMediaListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSMediaListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSMediaListConstructor::s_info = { "MediaList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionItem), (intptr_t) (0) },
-    { "deleteMedium", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionDeleteMedium), (intptr_t) (0) },
-    { "appendMedium", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionAppendMedium), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaListConstructor) } },
+    { "mediaText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListMediaText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaListMediaText) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionItem), (intptr_t) (1) } },
+    { "deleteMedium", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionDeleteMedium), (intptr_t) (1) } },
+    { "appendMedium", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaListPrototypeFunctionAppendMedium), (intptr_t) (1) } },
 };
 
 const ClassInfo JSMediaListPrototype::s_info = { "MediaListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaListPrototype) };
@@ -146,14 +109,21 @@ void JSMediaListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSMediaListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
 }
 
-const ClassInfo JSMediaList::s_info = { "MediaList", &Base::s_info, &JSMediaListTable, CREATE_METHOD_TABLE(JSMediaList) };
+const ClassInfo JSMediaList::s_info = { "MediaList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaList) };
 
-JSMediaList::JSMediaList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaList::JSMediaList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaList>&& impl)
+    : JSDOMWrapper<MediaList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -161,7 +131,7 @@ JSObject* JSMediaList::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSMediaListPrototype::create(vm, globalObject, JSMediaListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMediaList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaList>(vm, globalObject);
 }
@@ -172,189 +142,225 @@ void JSMediaList::destroy(JSC::JSCell* cell)
     thisObject->JSMediaList::~JSMediaList();
 }
 
-JSMediaList::~JSMediaList()
-{
-    releaseImpl();
-}
-
-bool JSMediaList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSMediaList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSMediaList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSMediaList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSMediaList, Base>(exec, JSMediaListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSMediaList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSMediaList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSMediaList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index <= MAX_ARRAY_INDEX) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsMediaListMediaText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSMediaList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMediaList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.mediaText());
-    return JSValue::encode(result);
+    auto* thisObject = jsCast<JSMediaList*>(object);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-
-EncodedJSValue jsMediaListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaList* BindingCaller<JSMediaList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMediaList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSMediaList*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsMediaListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaList* BindingCaller<JSMediaList>::castForOperation(ExecState& state)
 {
-    JSMediaList* domObject = jsDynamicCast<JSMediaList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaList::getConstructor(exec->vm(), domObject->globalObject()));
+    return jsDynamicDowncast<JSMediaList*>(state.thisValue());
 }
 
-void setJSMediaListMediaText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsMediaListMediaTextGetter(ExecState&, JSMediaList&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaListMediaText(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSMediaList>::attribute<jsMediaListMediaTextGetter>(state, thisValue, "mediaText");
+}
+
+static inline JSValue jsMediaListMediaTextGetter(ExecState& state, JSMediaList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.mediaText());
+    return result;
+}
+
+static inline JSValue jsMediaListLengthGetter(ExecState&, JSMediaList&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaList>::attribute<jsMediaListLengthGetter>(state, thisValue, "length");
+}
+
+static inline JSValue jsMediaListLengthGetter(ExecState& state, JSMediaList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+EncodedJSValue jsMediaListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaListPrototype* domObject = jsDynamicDowncast<JSMediaListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMediaList*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setMediaText(nativeValue, ec);
-    setDOMException(exec, ec);
+    JSMediaListPrototype* domObject = jsDynamicDowncast<JSMediaListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMediaListMediaTextFunction(ExecState&, JSMediaList&, JSValue, ThrowScope&);
+
+bool setJSMediaListMediaText(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaList>::setAttribute<setJSMediaListMediaTextFunction>(state, thisValue, encodedValue, "mediaText");
+}
+
+static inline bool setJSMediaListMediaTextFunction(ExecState& state, JSMediaList& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setMediaText(WTFMove(nativeValue)));
+    return true;
 }
 
 
-void JSMediaList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+JSValue JSMediaList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    auto* thisObject = jsCast<JSMediaList*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    return getDOMConstructor<JSMediaListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSMediaList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionItemCaller(JSC::ExecState*, JSMediaList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionItem(ExecState* state)
 {
-    return getDOMConstructor<JSMediaListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSMediaList>::callOperation<jsMediaListPrototypeFunctionItemCaller>(state, "item");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionItem(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionItemCaller(JSC::ExecState* state, JSMediaList* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaList* castedThis = jsDynamicCast<JSMediaList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaList::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.item(index));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.item(WTFMove(index))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionDeleteMedium(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionDeleteMediumCaller(JSC::ExecState*, JSMediaList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionDeleteMedium(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaList* castedThis = jsDynamicCast<JSMediaList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaList", "deleteMedium");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaList::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String oldMedium = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.deleteMedium(oldMedium, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSMediaList>::callOperation<jsMediaListPrototypeFunctionDeleteMediumCaller>(state, "deleteMedium");
+}
+
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionDeleteMediumCaller(JSC::ExecState* state, JSMediaList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto oldMedium = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.deleteMedium(WTFMove(oldMedium)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionAppendMedium(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionAppendMediumCaller(JSC::ExecState*, JSMediaList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaListPrototypeFunctionAppendMedium(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaList* castedThis = jsDynamicCast<JSMediaList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaList", "appendMedium");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaList::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String newMedium = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.appendMedium(newMedium, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSMediaList>::callOperation<jsMediaListPrototypeFunctionAppendMediumCaller>(state, "appendMedium");
+}
+
+static inline JSC::EncodedJSValue jsMediaListPrototypeFunctionAppendMediumCaller(JSC::ExecState* state, JSMediaList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto newMedium = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.appendMedium(WTFMove(newMedium)));
     return JSValue::encode(jsUndefined());
 }
 
 bool JSMediaListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsMediaList = jsCast<JSMediaList*>(handle.slot()->asCell());
-    void* root = WebCore::root(&jsMediaList->impl());
+    void* root = WebCore::root(&jsMediaList->wrapped());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSMediaListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaList = jsCast<JSMediaList*>(handle.slot()->asCell());
+    auto* jsMediaList = static_cast<JSMediaList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaList->impl(), jsMediaList);
+    uncacheWrapper(world, &jsMediaList->wrapped(), jsMediaList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaList>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to MediaList.
-    COMPILE_ASSERT(!__is_polymorphic(MediaList), MediaList_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(MediaList), "MediaList is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSMediaList>(globalObject, impl);
+    return createWrapper<MediaList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaList* JSMediaList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

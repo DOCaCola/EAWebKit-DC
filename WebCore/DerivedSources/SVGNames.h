@@ -253,6 +253,8 @@ WEBCORE_EXPORT extern const WebCore::QualifiedName modeAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName nameAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName numOctavesAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName offsetAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName onbeginAttr;
+WEBCORE_EXPORT extern const WebCore::QualifiedName onendAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName onzoomAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName opacityAttr;
 WEBCORE_EXPORT extern const WebCore::QualifiedName operatorAttr;
@@ -373,7 +375,7 @@ WEBCORE_EXPORT extern const WebCore::QualifiedName zoomAndPanAttr;
 
 const unsigned SVGTagsCount = 81;
 const WebCore::SVGQualifiedName* const* getSVGTags();
-const unsigned SVGAttrsCount = 242;
+const unsigned SVGAttrsCount = 244;
 const WebCore::QualifiedName* const* getSVGAttrs();
 
 WEBCORE_EXPORT void init();

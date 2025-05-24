@@ -24,7 +24,6 @@
 
 #include "JSEXTShaderTextureLOD.h"
 
-#include "EXTShaderTextureLOD.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSEXTShaderTextureLODPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSEXTShaderTextureLODPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSEXTShaderTextureLODPrototype* ptr = new (NotNull, JSC::allocateCell<JSEXTShaderTextureLODPrototype>(vm.heap)) JSEXTShaderTextureLODPrototype(vm, globalObject, structure);
@@ -53,31 +52,23 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
-
-    void finishCreation(JSC::VM&);
 };
 
 /* Hash table for prototype */
-
-static const HashTableValue JSEXTShaderTextureLODPrototypeTableValues[] =
-{
-    { 0, 0, NoIntrinsic, 0, 0 }
-};
-
 const ClassInfo JSEXTShaderTextureLODPrototype::s_info = { "EXTShaderTextureLODPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTShaderTextureLODPrototype) };
-
-void JSEXTShaderTextureLODPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSEXTShaderTextureLODPrototypeTableValues, *this);
-}
 
 const ClassInfo JSEXTShaderTextureLOD::s_info = { "EXTShaderTextureLOD", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTShaderTextureLOD) };
 
-JSEXTShaderTextureLOD::JSEXTShaderTextureLOD(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTShaderTextureLOD>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTShaderTextureLOD::JSEXTShaderTextureLOD(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTShaderTextureLOD>&& impl)
+    : JSDOMWrapper<EXTShaderTextureLOD>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSEXTShaderTextureLOD::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSEXTShaderTextureLOD::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -85,7 +76,7 @@ JSObject* JSEXTShaderTextureLOD::createPrototype(VM& vm, JSGlobalObject* globalO
     return JSEXTShaderTextureLODPrototype::create(vm, globalObject, JSEXTShaderTextureLODPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSEXTShaderTextureLOD::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSEXTShaderTextureLOD::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSEXTShaderTextureLOD>(vm, globalObject);
 }
@@ -96,23 +87,18 @@ void JSEXTShaderTextureLOD::destroy(JSC::JSCell* cell)
     thisObject->JSEXTShaderTextureLOD::~JSEXTShaderTextureLOD();
 }
 
-JSEXTShaderTextureLOD::~JSEXTShaderTextureLOD()
-{
-    releaseImpl();
-}
-
 bool JSEXTShaderTextureLODOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTShaderTextureLOD = jsCast<JSEXTShaderTextureLOD*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTShaderTextureLOD->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTShaderTextureLOD->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSEXTShaderTextureLODOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsEXTShaderTextureLOD = jsCast<JSEXTShaderTextureLOD*>(handle.slot()->asCell());
+    auto* jsEXTShaderTextureLOD = static_cast<JSEXTShaderTextureLOD*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTShaderTextureLOD->impl(), jsEXTShaderTextureLOD);
+    uncacheWrapper(world, &jsEXTShaderTextureLOD->wrapped(), jsEXTShaderTextureLOD);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,15 +109,12 @@ extern "C" { extern void (*const __identifier("??_7EXTShaderTextureLOD@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19EXTShaderTextureLODE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<EXTShaderTextureLOD>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSEXTShaderTextureLOD>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7EXTShaderTextureLOD@WebCore@@6B@"));
 #else
@@ -139,7 +122,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTex
 #if COMPILER(CLANG)
     // If this fails EXTShaderTextureLOD does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(EXTShaderTextureLOD), EXTShaderTextureLOD_is_not_polymorphic);
+    static_assert(__is_polymorphic(EXTShaderTextureLOD), "EXTShaderTextureLOD is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -148,13 +131,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTex
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSEXTShaderTextureLOD>(globalObject, impl);
+    return createWrapper<EXTShaderTextureLOD>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 EXTShaderTextureLOD* JSEXTShaderTextureLOD::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSEXTShaderTextureLOD*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSEXTShaderTextureLOD*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,10 +18,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSVTTRegion_h
-#define JSVTTRegion_h
+#pragma once
 
-#if ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#if ENABLE(VIDEO_TRACK)
 
 #include "JSDOMWrapper.h"
 #include "VTTRegion.h"
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSVTTRegion : public JSDOMWrapper {
+class JSVTTRegion : public JSDOMWrapper<VTTRegion> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<VTTRegion>;
     static JSVTTRegion* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTRegion>&& impl)
     {
-        JSVTTRegion* ptr = new (NotNull, JSC::allocateCell<JSVTTRegion>(globalObject->vm().heap)) JSVTTRegion(structure, globalObject, WTF::move(impl));
+        JSVTTRegion* ptr = new (NotNull, JSC::allocateCell<JSVTTRegion>(globalObject->vm().heap)) JSVTTRegion(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static VTTRegion* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSVTTRegion();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    VTTRegion& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VTTRegion* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSVTTRegion(JSC::Structure*, JSDOMGlobalObject*, Ref<VTTRegion>&&);
+    JSVTTRegion(JSC::Structure*, JSDOMGlobalObject&, Ref<VTTRegion>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSVTTRegionOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VTTRegion*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VTTRegion*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VTTRegion& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(VTTRegion* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VTTRegion&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTRegion* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<VTTRegion>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<VTTRegion>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<VTTRegion> {
+    using WrapperClass = JSVTTRegion;
+    using ToWrappedReturnType = VTTRegion*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
-
-#endif
+#endif // ENABLE(VIDEO_TRACK)

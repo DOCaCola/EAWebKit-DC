@@ -21,12 +21,9 @@
 #include "config.h"
 #include "JSStyleMedia.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "StyleMedia.h"
-#include "URL.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -39,11 +36,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsStyleMediaPrototypeFunctionMatchMedium(JSC::
 
 // Attributes
 
-JSC::EncodedJSValue jsStyleMediaType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsStyleMediaType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSStyleMediaConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSStyleMediaPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSStyleMediaPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSStyleMediaPrototype* ptr = new (NotNull, JSC::allocateCell<JSStyleMediaPrototype>(vm.heap)) JSStyleMediaPrototype(vm, globalObject, structure);
@@ -70,8 +68,8 @@ private:
 
 static const HashTableValue JSStyleMediaPrototypeTableValues[] =
 {
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleMediaType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "matchMedium", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStyleMediaPrototypeFunctionMatchMedium), (intptr_t) (0) },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleMediaType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "matchMedium", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStyleMediaPrototypeFunctionMatchMedium), (intptr_t) (0) } },
 };
 
 const ClassInfo JSStyleMediaPrototype::s_info = { "StyleMediaPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStyleMediaPrototype) };
@@ -84,10 +82,16 @@ void JSStyleMediaPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSStyleMedia::s_info = { "StyleMedia", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStyleMedia) };
 
-JSStyleMedia::JSStyleMedia(Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleMedia>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSStyleMedia::JSStyleMedia(Structure* structure, JSDOMGlobalObject& globalObject, Ref<StyleMedia>&& impl)
+    : JSDOMWrapper<StyleMedia>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSStyleMedia::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSStyleMedia::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -95,7 +99,7 @@ JSObject* JSStyleMedia::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSStyleMediaPrototype::create(vm, globalObject, JSStyleMediaPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSStyleMedia::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSStyleMedia::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSStyleMedia>(vm, globalObject);
 }
@@ -106,47 +110,67 @@ void JSStyleMedia::destroy(JSC::JSCell* cell)
     thisObject->JSStyleMedia::~JSStyleMedia();
 }
 
-JSStyleMedia::~JSStyleMedia()
+template<> inline JSStyleMedia* BindingCaller<JSStyleMedia>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSStyleMedia*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsStyleMediaType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSStyleMedia* BindingCaller<JSStyleMedia>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSStyleMedia* castedThis = jsDynamicCast<JSStyleMedia*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSStyleMediaPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StyleMedia", "type");
-        return throwGetterTypeError(*exec, "StyleMedia", "type");
+    return jsDynamicDowncast<JSStyleMedia*>(state.thisValue());
+}
+
+static inline JSValue jsStyleMediaTypeGetter(ExecState&, JSStyleMedia&, ThrowScope& throwScope);
+
+EncodedJSValue jsStyleMediaType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSStyleMedia>::attribute<jsStyleMediaTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsStyleMediaTypeGetter(ExecState& state, JSStyleMedia& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
+}
+
+bool setJSStyleMediaConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSStyleMediaPrototype* domObject = jsDynamicDowncast<JSStyleMediaPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline JSC::EncodedJSValue jsStyleMediaPrototypeFunctionMatchMediumCaller(JSC::ExecState*, JSStyleMedia*, JSC::ThrowScope&);
 
-EncodedJSValue JSC_HOST_CALL jsStyleMediaPrototypeFunctionMatchMedium(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsStyleMediaPrototypeFunctionMatchMedium(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSStyleMedia* castedThis = jsDynamicCast<JSStyleMedia*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "StyleMedia", "matchMedium");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSStyleMedia::info());
-    auto& impl = castedThis->impl();
-    String mediaquery = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.matchMedium(mediaquery));
-    return JSValue::encode(result);
+    return BindingCaller<JSStyleMedia>::callOperation<jsStyleMediaPrototypeFunctionMatchMediumCaller>(state, "matchMedium");
+}
+
+static inline JSC::EncodedJSValue jsStyleMediaPrototypeFunctionMatchMediumCaller(JSC::ExecState* state, JSStyleMedia* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto mediaquery = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.matchMedium(WTFMove(mediaquery))));
 }
 
 bool JSStyleMediaOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsStyleMedia = jsCast<JSStyleMedia*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsStyleMedia->impl().frame());
+    Frame* root = WTF::getPtr(jsStyleMedia->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -154,9 +178,9 @@ bool JSStyleMediaOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> han
 
 void JSStyleMediaOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsStyleMedia = jsCast<JSStyleMedia*>(handle.slot()->asCell());
+    auto* jsStyleMedia = static_cast<JSStyleMedia*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsStyleMedia->impl(), jsStyleMedia);
+    uncacheWrapper(world, &jsStyleMedia->wrapped(), jsStyleMedia);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -167,15 +191,12 @@ extern "C" { extern void (*const __identifier("??_7StyleMedia@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10StyleMediaE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleMedia* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<StyleMedia>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSStyleMedia>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7StyleMedia@WebCore@@6B@"));
 #else
@@ -183,7 +204,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleMedia* 
 #if COMPILER(CLANG)
     // If this fails StyleMedia does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(StyleMedia), StyleMedia_is_not_polymorphic);
+    static_assert(__is_polymorphic(StyleMedia), "StyleMedia is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -192,13 +213,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleMedia* 
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSStyleMedia>(globalObject, impl);
+    return createWrapper<StyleMedia>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleMedia& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 StyleMedia* JSStyleMedia::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSStyleMedia*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSStyleMedia*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

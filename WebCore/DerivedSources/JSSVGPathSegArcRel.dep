@@ -1,0 +1,2 @@
+JSSVGPathSegArcRel.h : SVGPathSeg.idl
+SVGPathSeg.idl :

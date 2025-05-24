@@ -24,13 +24,12 @@
 
 #include "JSIDBFactory.h"
 
-#include "ExceptionCode.h"
-#include "IDBFactory.h"
-#include "IDBOpenDBRequest.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSIDBOpenDBRequest.h"
-#include <bindings/ScriptValue.h>
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -45,11 +44,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionCmp(JSC::ExecStat
 
 // Attributes
 
-JSC::EncodedJSValue jsIDBFactoryConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsIDBFactoryConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSIDBFactoryConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSIDBFactoryPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSIDBFactoryPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSIDBFactoryPrototype* ptr = new (NotNull, JSC::allocateCell<JSIDBFactoryPrototype>(vm.heap)) JSIDBFactoryPrototype(vm, globalObject, structure);
@@ -72,51 +72,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBFactoryConstructor : public DOMConstructorObject {
-private:
-    JSIDBFactoryConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSIDBFactoryConstructor = JSDOMConstructorNotConstructable<JSIDBFactory>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBFactoryConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBFactoryConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBFactoryConstructor>(vm.heap)) JSIDBFactoryConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBFactoryConstructor::s_info = { "IDBFactoryConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBFactoryConstructor) };
-
-JSIDBFactoryConstructor::JSIDBFactoryConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSIDBFactoryConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSIDBFactoryConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSIDBFactoryConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBFactory::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBFactory::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBFactory"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBFactoryConstructor::s_info = { "IDBFactory", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBFactoryConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBFactoryPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "open", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionOpen), (intptr_t) (1) },
-    { "deleteDatabase", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionDeleteDatabase), (intptr_t) (1) },
-    { "cmp", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionCmp), (intptr_t) (2) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSIDBFactoryConstructor) } },
+    { "open", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionOpen), (intptr_t) (1) } },
+    { "deleteDatabase", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionDeleteDatabase), (intptr_t) (1) } },
+    { "cmp", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBFactoryPrototypeFunctionCmp), (intptr_t) (2) } },
 };
 
 const ClassInfo JSIDBFactoryPrototype::s_info = { "IDBFactoryPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBFactoryPrototype) };
@@ -129,10 +109,16 @@ void JSIDBFactoryPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBFactory::s_info = { "IDBFactory", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBFactory) };
 
-JSIDBFactory::JSIDBFactory(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBFactory>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBFactory::JSIDBFactory(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBFactory>&& impl)
+    : JSDOMWrapper<IDBFactory>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSIDBFactory::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSIDBFactory::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -140,7 +126,7 @@ JSObject* JSIDBFactory::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSIDBFactoryPrototype::create(vm, globalObject, JSIDBFactoryPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSIDBFactory::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSIDBFactory::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSIDBFactory>(vm, globalObject);
 }
@@ -151,106 +137,105 @@ void JSIDBFactory::destroy(JSC::JSCell* cell)
     thisObject->JSIDBFactory::~JSIDBFactory();
 }
 
-JSIDBFactory::~JSIDBFactory()
+template<> inline JSIDBFactory* BindingCaller<JSIDBFactory>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSIDBFactory*>(state.thisValue());
 }
 
-EncodedJSValue jsIDBFactoryConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBFactoryConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSIDBFactoryPrototype* domObject = jsDynamicCast<JSIDBFactoryPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBFactory::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSIDBFactoryPrototype* domObject = jsDynamicDowncast<JSIDBFactoryPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSIDBFactory::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSIDBFactory::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSIDBFactoryConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSIDBFactoryConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionOpen(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBFactory* castedThis = jsDynamicCast<JSIDBFactory*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBFactory", "open");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBFactory::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.open(scriptContext, name, ec)));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSIDBFactoryPrototype* domObject = jsDynamicDowncast<JSIDBFactoryPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-
-    unsigned long long version = toUInt64(exec, exec->argument(1), EnforceRange);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.open(scriptContext, name, version, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionDeleteDatabase(ExecState* exec)
+JSValue JSIDBFactory::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSIDBFactory* castedThis = jsDynamicCast<JSIDBFactory*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBFactory", "deleteDatabase");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBFactory::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.deleteDatabase(scriptContext, name, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return getDOMConstructor<JSIDBFactoryConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionCmp(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSIDBFactory* castedThis = jsDynamicCast<JSIDBFactory*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBFactory", "cmp");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBFactory::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue first = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue second = { exec->vm(), exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.cmp(scriptContext, first, second, ec));
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionOpenCaller(JSC::ExecState*, JSIDBFactory*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionOpen(ExecState* state)
+{
+    return BindingCaller<JSIDBFactory>::callOperation<jsIDBFactoryPrototypeFunctionOpenCaller>(state, "open");
+}
+
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionOpenCaller(JSC::ExecState* state, JSIDBFactory* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto version = state->argument(1).isUndefined() ? std::optional<uint64_t>() : convert<IDLUnsignedLongLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::EnforceRange);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBOpenDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.open(*context, WTFMove(name), WTFMove(version))));
+}
+
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionDeleteDatabaseCaller(JSC::ExecState*, JSIDBFactory*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionDeleteDatabase(ExecState* state)
+{
+    return BindingCaller<JSIDBFactory>::callOperation<jsIDBFactoryPrototypeFunctionDeleteDatabaseCaller>(state, "deleteDatabase");
+}
+
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionDeleteDatabaseCaller(JSC::ExecState* state, JSIDBFactory* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<IDBOpenDBRequest>>(*state, *castedThis->globalObject(), throwScope, impl.deleteDatabase(*context, WTFMove(name))));
+}
+
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionCmpCaller(JSC::ExecState*, JSIDBFactory*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsIDBFactoryPrototypeFunctionCmp(ExecState* state)
+{
+    return BindingCaller<JSIDBFactory>::callOperation<jsIDBFactoryPrototypeFunctionCmpCaller>(state, "cmp");
+}
+
+static inline JSC::EncodedJSValue jsIDBFactoryPrototypeFunctionCmpCaller(JSC::ExecState* state, JSIDBFactory* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto first = convert<IDLAny>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto second = convert<IDLAny>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLShort>(*state, throwScope, impl.cmp(*state, WTFMove(first), WTFMove(second))));
 }
 
 bool JSIDBFactoryOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -262,31 +247,25 @@ bool JSIDBFactoryOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> han
 
 void JSIDBFactoryOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsIDBFactory = jsCast<JSIDBFactory*>(handle.slot()->asCell());
+    auto* jsIDBFactory = static_cast<JSIDBFactory*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBFactory->impl(), jsIDBFactory);
+    uncacheWrapper(world, &jsIDBFactory->wrapped(), jsIDBFactory);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBFactory* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<IDBFactory>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSIDBFactory>(globalObject, impl))
-        return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to IDBFactory.
-    COMPILE_ASSERT(!__is_polymorphic(IDBFactory), IDBFactory_is_polymorphic_but_idl_claims_not_to_be);
-#endif
-    return createNewWrapper<JSIDBFactory>(globalObject, impl);
+    return createWrapper<IDBFactory>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBFactory& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 IDBFactory* JSIDBFactory::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSIDBFactory*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSIDBFactory*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

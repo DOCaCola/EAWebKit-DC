@@ -1,0 +1,7 @@
+JSSVGTextPathElement.h : SVGTextContentElement.idl SVGGraphicsElement.idl SVGElement.idl Element.idl Node.idl EventTarget.idl
+SVGTextContentElement.idl :
+SVGGraphicsElement.idl :
+SVGElement.idl :
+Element.idl :
+Node.idl :
+EventTarget.idl :

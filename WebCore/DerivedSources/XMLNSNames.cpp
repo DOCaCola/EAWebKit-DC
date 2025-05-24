@@ -46,14 +46,16 @@ using namespace WebCore;
 
 WEBCORE_EXPORT DEFINE_GLOBAL(AtomicString, xmlnsNamespaceURI)
 
-static const LChar xmlnsString8[] = "xmlns";
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4307)
+#endif
 
-static StringImpl::StaticASCIILiteral xmlnsData = {
-    StringImpl::StaticASCIILiteral::s_initialRefCount,
-    5,
-    xmlnsString8,
-    StringImpl::StaticASCIILiteral::s_initialFlags | (171597 << StringImpl::StaticASCIILiteral::s_hashShift)
-};
+static StringImpl::StaticStringImpl xmlnsData("xmlns");
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 
 // Attributes

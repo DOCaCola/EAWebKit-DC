@@ -24,25 +24,62 @@
 
 #include "JSMediaDevices.h"
 
-#include "Dictionary.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include "JSDOMPromise.h"
-#include "MediaDevices.h"
+#include "JSMediaTrackConstraints.h"
+#include "JSMediaTrackSupportedConstraints.h"
+#include "WebCoreJSClientData.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+#if ENABLE(MEDIA_STREAM)
+
+template<> MediaDevices::StreamConstraints convertDictionary<MediaDevices::StreamConstraints>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    MediaDevices::StreamConstraints result;
+    JSValue audioValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "audio"));
+    if (!audioValue.isUndefined()) {
+        result.audio = convert<IDLUnion<IDLBoolean, IDLDictionary<MediaTrackConstraints>>>(state, audioValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.audio = false;
+    JSValue videoValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "video"));
+    if (!videoValue.isUndefined()) {
+        result.video = convert<IDLUnion<IDLBoolean, IDLDictionary<MediaTrackConstraints>>>(state, videoValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.video = false;
+    return result;
+}
+
+#endif
+
 // Functions
 
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetSupportedConstraints(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMedia(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionEnumerateDevices(JSC::ExecState*);
 
 class JSMediaDevicesPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaDevicesPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaDevicesPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaDevicesPrototype>(vm.heap)) JSMediaDevicesPrototype(vm, globalObject, structure);
@@ -69,7 +106,9 @@ private:
 
 static const HashTableValue JSMediaDevicesPrototypeTableValues[] =
 {
-    { "getUserMedia", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionGetUserMedia), (intptr_t) (1) },
+    { "getSupportedConstraints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionGetSupportedConstraints), (intptr_t) (0) } },
+    { "getUserMedia", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionGetUserMedia), (intptr_t) (0) } },
+    { "enumerateDevices", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionEnumerateDevices), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaDevicesPrototype::s_info = { "MediaDevicesPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDevicesPrototype) };
@@ -78,14 +117,21 @@ void JSMediaDevicesPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSMediaDevicesPrototypeTableValues, *this);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().getUserMediaPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsMediaDevicesPrototypeFunctionGetUserMedia), ReadOnly | DontEnum);
 }
 
 const ClassInfo JSMediaDevices::s_info = { "MediaDevices", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDevices) };
 
-JSMediaDevices::JSMediaDevices(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDevices>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaDevices::JSMediaDevices(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaDevices>&& impl)
+    : JSDOMWrapper<MediaDevices>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaDevices::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaDevices::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -93,7 +139,7 @@ JSObject* JSMediaDevices::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSMediaDevicesPrototype::create(vm, globalObject, JSMediaDevicesPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMediaDevices::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaDevices::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaDevices>(vm, globalObject);
 }
@@ -104,33 +150,73 @@ void JSMediaDevices::destroy(JSC::JSCell* cell)
     thisObject->JSMediaDevices::~JSMediaDevices();
 }
 
-JSMediaDevices::~JSMediaDevices()
+template<> inline JSMediaDevices* BindingCaller<JSMediaDevices>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMediaDevices*>(state.thisValue());
 }
 
-static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState*, JSPromiseDeferred*);
-EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMedia(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionGetSupportedConstraintsCaller(JSC::ExecState*, JSMediaDevices*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetSupportedConstraints(ExecState* state)
 {
-    return JSValue::encode(callPromiseFunction(*exec, jsMediaDevicesPrototypeFunctionGetUserMediaPromise));
+    return BindingCaller<JSMediaDevices>::callOperation<jsMediaDevicesPrototypeFunctionGetSupportedConstraintsCaller>(state, "getSupportedConstraints");
 }
 
-static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState* exec, JSPromiseDeferred* promiseDeferred)
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionGetSupportedConstraintsCaller(JSC::ExecState* state, JSMediaDevices* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaDevices* castedThis = jsDynamicCast<JSMediaDevices*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaDevices", "getUserMedia");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaDevices::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Dictionary options = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.getUserMedia(options, DeferredWrapper(exec, castedThis->globalObject(), promiseDeferred), ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDictionary<MediaTrackSupportedConstraints>>(*state, *castedThis->globalObject(), impl.getSupportedConstraints()));
+}
+
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaCaller(JSC::ExecState*, JSMediaDevices*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMedia(ExecState* state)
+{
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsMediaDevicesPrototypeFunctionGetUserMediaPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSMediaDevices>::callPromiseOperation<jsMediaDevicesPrototypeFunctionGetUserMediaCaller>(state, WTFMove(promise), "getUserMedia");
+}
+
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaCaller(JSC::ExecState* state, JSMediaDevices* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto constraints = convert<IDLDictionary<MediaDevices::StreamConstraints>>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.getUserMedia(WTFMove(constraints), WTFMove(promise)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesCaller(JSC::ExecState*, JSMediaDevices*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionEnumerateDevices(ExecState* state)
+{
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSMediaDevices>::callPromiseOperation<jsMediaDevicesPrototypeFunctionEnumerateDevicesCaller>(state, WTFMove(promise), "enumerateDevices");
+}
+
+static inline JSC::EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesCaller(JSC::ExecState* state, JSMediaDevices* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.enumerateDevices(WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
@@ -143,9 +229,9 @@ bool JSMediaDevicesOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSMediaDevicesOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaDevices = jsCast<JSMediaDevices*>(handle.slot()->asCell());
+    auto* jsMediaDevices = static_cast<JSMediaDevices*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaDevices->impl(), jsMediaDevices);
+    uncacheWrapper(world, &jsMediaDevices->wrapped(), jsMediaDevices);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -156,15 +242,12 @@ extern "C" { extern void (*const __identifier("??_7MediaDevices@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12MediaDevicesE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaDevices>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaDevices>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaDevices@WebCore@@6B@"));
 #else
@@ -172,7 +255,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices
 #if COMPILER(CLANG)
     // If this fails MediaDevices does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(MediaDevices), MediaDevices_is_not_polymorphic);
+    static_assert(__is_polymorphic(MediaDevices), "MediaDevices is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -181,13 +264,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSMediaDevices>(globalObject, impl);
+    return createWrapper<MediaDevices>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaDevices& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaDevices* JSMediaDevices::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaDevices*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaDevices*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

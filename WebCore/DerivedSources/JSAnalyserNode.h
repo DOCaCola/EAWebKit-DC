@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAnalyserNode_h
-#define JSAnalyserNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSAnalyserNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = AnalyserNode;
     static JSAnalyserNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnalyserNode>&& impl)
     {
-        JSAnalyserNode* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNode>(globalObject->vm().heap)) JSAnalyserNode(structure, globalObject, WTF::move(impl));
+        JSAnalyserNode* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNode>(globalObject->vm().heap)) JSAnalyserNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AnalyserNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    AnalyserNode& wrapped() const
     {
-        return static_cast<AnalyserNode&>(Base::impl());
+        return static_cast<AnalyserNode&>(Base::wrapped());
     }
 protected:
-    JSAnalyserNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AnalyserNode>&&);
+    JSAnalyserNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AnalyserNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AnalyserNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AnalyserNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AnalyserNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AnalyserNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AnalyserNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AnalyserNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<AnalyserNode> {
+    using WrapperClass = JSAnalyserNode;
+    using ToWrappedReturnType = AnalyserNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

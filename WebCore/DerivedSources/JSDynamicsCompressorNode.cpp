@@ -24,10 +24,10 @@
 
 #include "JSDynamicsCompressorNode.h"
 
-#include "AudioParam.h"
-#include "DynamicsCompressorNode.h"
 #include "JSAudioParam.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,17 +36,18 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsDynamicsCompressorNodeThreshold(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeKnee(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeRatio(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeReduction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeAttack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeRelease(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDynamicsCompressorNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeThreshold(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeKnee(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeRatio(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeReduction(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeAttack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeRelease(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDynamicsCompressorNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDynamicsCompressorNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDynamicsCompressorNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDynamicsCompressorNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDynamicsCompressorNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNodePrototype>(vm.heap)) JSDynamicsCompressorNodePrototype(vm, globalObject, structure);
@@ -69,54 +70,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDynamicsCompressorNodeConstructor : public DOMConstructorObject {
-private:
-    JSDynamicsCompressorNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDynamicsCompressorNodeConstructor = JSDOMConstructorNotConstructable<JSDynamicsCompressorNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDynamicsCompressorNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDynamicsCompressorNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNodeConstructor>(vm.heap)) JSDynamicsCompressorNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSDynamicsCompressorNodeConstructor::s_info = { "DynamicsCompressorNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDynamicsCompressorNodeConstructor) };
-
-JSDynamicsCompressorNodeConstructor::JSDynamicsCompressorNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSDynamicsCompressorNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSDynamicsCompressorNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDynamicsCompressorNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDynamicsCompressorNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDynamicsCompressorNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DynamicsCompressorNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDynamicsCompressorNodeConstructor::s_info = { "DynamicsCompressorNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDynamicsCompressorNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDynamicsCompressorNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "threshold", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeThreshold), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "knee", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeKnee), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ratio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "reduction", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeReduction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "attack", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeAttack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "release", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeRelease), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDynamicsCompressorNodeConstructor) } },
+    { "threshold", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeThreshold), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "knee", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeKnee), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ratio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "reduction", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeReduction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "attack", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeAttack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "release", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDynamicsCompressorNodeRelease), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSDynamicsCompressorNodePrototype::s_info = { "DynamicsCompressorNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDynamicsCompressorNodePrototype) };
@@ -129,134 +109,164 @@ void JSDynamicsCompressorNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDynamicsCompressorNode::s_info = { "DynamicsCompressorNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDynamicsCompressorNode) };
 
-JSDynamicsCompressorNode::JSDynamicsCompressorNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DynamicsCompressorNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSDynamicsCompressorNode::JSDynamicsCompressorNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DynamicsCompressorNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDynamicsCompressorNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDynamicsCompressorNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSDynamicsCompressorNodePrototype::create(vm, globalObject, JSDynamicsCompressorNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSDynamicsCompressorNodePrototype::create(vm, globalObject, JSDynamicsCompressorNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSDynamicsCompressorNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDynamicsCompressorNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDynamicsCompressorNode>(vm, globalObject);
 }
 
-EncodedJSValue jsDynamicsCompressorNodeThreshold(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSDynamicsCompressorNode* BindingCaller<JSDynamicsCompressorNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "threshold");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "threshold");
+    return jsDynamicDowncast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsDynamicsCompressorNodeThresholdGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeThreshold(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeThresholdGetter>(state, thisValue, "threshold");
+}
+
+static inline JSValue jsDynamicsCompressorNodeThresholdGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.threshold());
+    return result;
+}
+
+static inline JSValue jsDynamicsCompressorNodeKneeGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeKnee(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeKneeGetter>(state, thisValue, "knee");
+}
+
+static inline JSValue jsDynamicsCompressorNodeKneeGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.knee());
+    return result;
+}
+
+static inline JSValue jsDynamicsCompressorNodeRatioGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeRatio(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeRatioGetter>(state, thisValue, "ratio");
+}
+
+static inline JSValue jsDynamicsCompressorNodeRatioGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.ratio());
+    return result;
+}
+
+static inline JSValue jsDynamicsCompressorNodeReductionGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeReduction(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeReductionGetter>(state, thisValue, "reduction");
+}
+
+static inline JSValue jsDynamicsCompressorNodeReductionGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.reduction());
+    return result;
+}
+
+static inline JSValue jsDynamicsCompressorNodeAttackGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeAttack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeAttackGetter>(state, thisValue, "attack");
+}
+
+static inline JSValue jsDynamicsCompressorNodeAttackGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.attack());
+    return result;
+}
+
+static inline JSValue jsDynamicsCompressorNodeReleaseGetter(ExecState&, JSDynamicsCompressorNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsDynamicsCompressorNodeRelease(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDynamicsCompressorNode>::attribute<jsDynamicsCompressorNodeReleaseGetter>(state, thisValue, "release");
+}
+
+static inline JSValue jsDynamicsCompressorNodeReleaseGetter(ExecState& state, JSDynamicsCompressorNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.release());
+    return result;
+}
+
+EncodedJSValue jsDynamicsCompressorNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDynamicsCompressorNodePrototype* domObject = jsDynamicDowncast<JSDynamicsCompressorNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDynamicsCompressorNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDynamicsCompressorNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDynamicsCompressorNodePrototype* domObject = jsDynamicDowncast<JSDynamicsCompressorNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.threshold()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsDynamicsCompressorNodeKnee(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSDynamicsCompressorNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "knee");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "knee");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.knee()));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSDynamicsCompressorNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsDynamicsCompressorNodeRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSDynamicsCompressorNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "ratio");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "ratio");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ratio()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDynamicsCompressorNodeReduction(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "reduction");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "reduction");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.reduction()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDynamicsCompressorNodeAttack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "attack");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "attack");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.attack()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDynamicsCompressorNodeRelease(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDynamicsCompressorNode* castedThis = jsDynamicCast<JSDynamicsCompressorNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDynamicsCompressorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DynamicsCompressorNode", "release");
-        return throwGetterTypeError(*exec, "DynamicsCompressorNode", "release");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.release()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDynamicsCompressorNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSDynamicsCompressorNodePrototype* domObject = jsDynamicCast<JSDynamicsCompressorNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDynamicsCompressorNode::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSDynamicsCompressorNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSDynamicsCompressorNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSDynamicsCompressorNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -267,15 +277,12 @@ extern "C" { extern void (*const __identifier("??_7DynamicsCompressorNode@WebCor
 extern "C" { extern void* _ZTVN7WebCore22DynamicsCompressorNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DynamicsCompressorNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DynamicsCompressorNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDynamicsCompressorNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7DynamicsCompressorNode@WebCore@@6B@"));
 #else
@@ -283,7 +290,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DynamicsComp
 #if COMPILER(CLANG)
     // If this fails DynamicsCompressorNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(DynamicsCompressorNode), DynamicsCompressorNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(DynamicsCompressorNode), "DynamicsCompressorNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -292,7 +299,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DynamicsComp
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSDynamicsCompressorNode>(globalObject, impl);
+    return createWrapper<DynamicsCompressorNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DynamicsCompressorNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

@@ -21,10 +21,10 @@
 #include "config.h"
 #include "JSHTMLTitleElement.h"
 
-#include "HTMLTitleElement.h"
+#include "CustomElementReactionQueue.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLTitleElementText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLTitleElementText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLTitleElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLTitleElementText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTitleElementText(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLTitleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTitleElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLTitleElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLTitleElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLTitleElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLTitleElementPrototype>(vm.heap)) JSHTMLTitleElementPrototype(vm, globalObject, structure);
@@ -62,49 +63,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLTitleElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLTitleElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLTitleElementConstructor = JSDOMConstructorNotConstructable<JSHTMLTitleElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLTitleElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLTitleElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLTitleElementConstructor>(vm.heap)) JSHTMLTitleElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLTitleElementConstructor::s_info = { "HTMLTitleElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTitleElementConstructor) };
-
-JSHTMLTitleElementConstructor::JSHTMLTitleElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLTitleElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLTitleElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLTitleElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLTitleElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLTitleElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLTitleElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLTitleElementConstructor::s_info = { "HTMLTitleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTitleElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLTitleElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTitleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "text", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTitleElementText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTitleElementText) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTitleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTitleElementConstructor) } },
+    { "text", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTitleElementText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTitleElementText) } },
 };
 
 const ClassInfo JSHTMLTitleElementPrototype::s_info = { "HTMLTitleElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTitleElementPrototype) };
@@ -117,69 +97,104 @@ void JSHTMLTitleElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLTitleElement::s_info = { "HTMLTitleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTitleElement) };
 
-JSHTMLTitleElement::JSHTMLTitleElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTitleElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLTitleElement::JSHTMLTitleElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLTitleElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLTitleElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLTitleElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLTitleElementPrototype::create(vm, globalObject, JSHTMLTitleElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLTitleElementPrototype::create(vm, globalObject, JSHTMLTitleElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLTitleElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLTitleElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLTitleElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLTitleElementText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLTitleElement* BindingCaller<JSHTMLTitleElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLTitleElement* castedThis = jsDynamicCast<JSHTMLTitleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTitleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTitleElement", "text");
-        return throwGetterTypeError(*exec, "HTMLTitleElement", "text");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.text());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLTitleElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLTitleElementTextGetter(ExecState&, JSHTMLTitleElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLTitleElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLTitleElementText(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLTitleElementPrototype* domObject = jsDynamicCast<JSHTMLTitleElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLTitleElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLTitleElement>::attribute<jsHTMLTitleElementTextGetter>(state, thisValue, "text");
 }
 
-void setJSHTMLTitleElementText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLTitleElementTextGetter(ExecState& state, JSHTMLTitleElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.text());
+    return result;
+}
+
+EncodedJSValue jsHTMLTitleElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLTitleElementPrototype* domObject = jsDynamicDowncast<JSHTMLTitleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLTitleElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLTitleElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLTitleElement* castedThis = jsDynamicCast<JSHTMLTitleElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLTitleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTitleElement", "text");
-        else
-            throwSetterTypeError(*exec, "HTMLTitleElement", "text");
-        return;
+    JSHTMLTitleElementPrototype* domObject = jsDynamicDowncast<JSHTMLTitleElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setText(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLTitleElementTextFunction(ExecState&, JSHTMLTitleElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLTitleElementText(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLTitleElement>::setAttribute<setJSHTMLTitleElementTextFunction>(state, thisValue, encodedValue, "text");
+}
+
+static inline bool setJSHTMLTitleElementTextFunction(ExecState& state, JSHTMLTitleElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setText(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLTitleElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLTitleElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLTitleElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLTitleElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLTitleElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLTitleElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

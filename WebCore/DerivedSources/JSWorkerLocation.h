@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWorkerLocation_h
-#define JSWorkerLocation_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "WorkerLocation.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSWorkerLocation : public JSDOMWrapper {
+class JSWorkerLocation : public JSDOMWrapper<WorkerLocation> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WorkerLocation>;
     static JSWorkerLocation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WorkerLocation>&& impl)
     {
-        JSWorkerLocation* ptr = new (NotNull, JSC::allocateCell<JSWorkerLocation>(globalObject->vm().heap)) JSWorkerLocation(structure, globalObject, WTF::move(impl));
+        JSWorkerLocation* ptr = new (NotNull, JSC::allocateCell<JSWorkerLocation>(globalObject->vm().heap)) JSWorkerLocation(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WorkerLocation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWorkerLocation();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WorkerLocation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WorkerLocation* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWorkerLocation(JSC::Structure*, JSDOMGlobalObject*, Ref<WorkerLocation>&&);
+    JSWorkerLocation(JSC::Structure*, JSDOMGlobalObject&, Ref<WorkerLocation>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWorkerLocationOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WorkerLocation*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WorkerLocation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WorkerLocation& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WorkerLocation* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WorkerLocation&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WorkerLocation* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WorkerLocation>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WorkerLocation>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WorkerLocation> {
+    using WrapperClass = JSWorkerLocation;
+    using ToWrappedReturnType = WorkerLocation*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLRenderbuffer_h
-#define JSWebGLRenderbuffer_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLRenderbuffer : public JSDOMWrapper {
+class JSWebGLRenderbuffer : public JSDOMWrapper<WebGLRenderbuffer> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLRenderbuffer>;
     static JSWebGLRenderbuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderbuffer>&& impl)
     {
-        JSWebGLRenderbuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderbuffer>(globalObject->vm().heap)) JSWebGLRenderbuffer(structure, globalObject, WTF::move(impl));
+        JSWebGLRenderbuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderbuffer>(globalObject->vm().heap)) JSWebGLRenderbuffer(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLRenderbuffer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLRenderbuffer();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLRenderbuffer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLRenderbuffer* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLRenderbuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLRenderbuffer>&&);
+    JSWebGLRenderbuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLRenderbuffer>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLRenderbufferOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLRenderbuffer*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLRenderbuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLRenderbuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLRenderbuffer* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLRenderbuffer&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLRenderbuffer* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLRenderbuffer>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLRenderbuffer>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLRenderbuffer> {
+    using WrapperClass = JSWebGLRenderbuffer;
+    using ToWrappedReturnType = WebGLRenderbuffer*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

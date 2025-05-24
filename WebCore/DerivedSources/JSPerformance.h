@@ -18,32 +18,30 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPerformance_h
-#define JSPerformance_h
+#pragma once
 
 #if ENABLE(WEB_TIMING)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "Performance.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSPerformance : public JSDOMWrapper {
+class JSPerformance : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = Performance;
     static JSPerformance* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Performance>&& impl)
     {
-        JSPerformance* ptr = new (NotNull, JSC::allocateCell<JSPerformance>(globalObject->vm().heap)) JSPerformance(structure, globalObject, WTF::move(impl));
+        JSPerformance* ptr = new (NotNull, JSC::allocateCell<JSPerformance>(globalObject->vm().heap)) JSPerformance(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Performance* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSPerformance();
 
     DECLARE_INFO;
 
@@ -52,23 +50,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    Performance& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Performance* m_impl;
-protected:
-    JSPerformance(JSC::Structure*, JSDOMGlobalObject*, Ref<Performance>&&);
-
-    void finishCreation(JSC::VM& vm)
+    Performance& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<Performance&>(Base::wrapped());
     }
+protected:
+    JSPerformance(JSC::Structure*, JSDOMGlobalObject&, Ref<Performance>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSPerformanceOwner : public JSC::WeakHandleOwner {
@@ -83,12 +75,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Performance*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Performance*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Performance& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Performance* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Performance&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Performance* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Performance>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Performance>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Performance> {
+    using WrapperClass = JSPerformance;
+    using ToWrappedReturnType = Performance*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_TIMING)
-
-#endif

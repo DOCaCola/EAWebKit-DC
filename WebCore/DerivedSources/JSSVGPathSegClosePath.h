@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegClosePath_h
-#define JSSVGPathSegClosePath_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegClosePath : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegClosePath;
     static JSSVGPathSegClosePath* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegClosePath>&& impl)
     {
-        JSSVGPathSegClosePath* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegClosePath>(globalObject->vm().heap)) JSSVGPathSegClosePath(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegClosePath* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegClosePath>(globalObject->vm().heap)) JSSVGPathSegClosePath(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegClosePath& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegClosePath& wrapped() const
     {
-        return static_cast<SVGPathSegClosePath&>(Base::impl());
+        return static_cast<SVGPathSegClosePath&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegClosePath(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegClosePath>&&);
+    JSSVGPathSegClosePath(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegClosePath>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegClosePath> {
+    using WrapperClass = JSSVGPathSegClosePath;
+    using ToWrappedReturnType = SVGPathSegClosePath*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,69 +18,66 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMessageEvent_h
-#define JSMessageEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "MessageEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSMessageEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = MessageEvent;
     static JSMessageEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageEvent>&& impl)
     {
-        JSMessageEvent* ptr = new (NotNull, JSC::allocateCell<JSMessageEvent>(globalObject->vm().heap)) JSMessageEvent(structure, globalObject, WTF::move(impl));
+        JSMessageEvent* ptr = new (NotNull, JSC::allocateCell<JSMessageEvent>(globalObject->vm().heap)) JSMessageEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_data;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    mutable JSC::WriteBarrier<JSC::Unknown> m_data;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue data(JSC::ExecState*) const;
+    JSC::JSValue data(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue initMessageEvent(JSC::ExecState*);
-    JSC::JSValue webkitInitMessageEvent(JSC::ExecState*);
-    MessageEvent& impl() const
+    JSC::JSValue initMessageEvent(JSC::ExecState&);
+    JSC::JSValue webkitInitMessageEvent(JSC::ExecState&);
+    MessageEvent& wrapped() const
     {
-        return static_cast<MessageEvent&>(Base::impl());
+        return static_cast<MessageEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSMessageEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MessageEvent>&&);
+    JSMessageEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MessageEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MessageEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MessageEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MessageEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MessageEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillMessageEventInit(MessageEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<MessageEvent> {
+    using WrapperClass = JSMessageEvent;
+    using ToWrappedReturnType = MessageEvent*;
+};
+template<> MessageEvent::Init convertDictionary<MessageEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

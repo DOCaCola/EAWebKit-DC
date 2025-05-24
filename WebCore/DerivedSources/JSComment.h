@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSComment_h
-#define JSComment_h
+#pragma once
 
 #include "Comment.h"
 #include "JSCharacterData.h"
@@ -28,42 +27,46 @@ namespace WebCore {
 
 class JSComment : public JSCharacterData {
 public:
-    typedef JSCharacterData Base;
+    using Base = JSCharacterData;
+    using DOMWrapped = Comment;
     static JSComment* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Comment>&& impl)
     {
-        JSComment* ptr = new (NotNull, JSC::allocateCell<JSComment>(globalObject->vm().heap)) JSComment(structure, globalObject, WTF::move(impl));
+        JSComment* ptr = new (NotNull, JSC::allocateCell<JSComment>(globalObject->vm().heap)) JSComment(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSCommentNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Comment& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    Comment& wrapped() const
     {
-        return static_cast<Comment&>(Base::impl());
+        return static_cast<Comment&>(Base::wrapped());
     }
 protected:
-    JSComment(JSC::Structure*, JSDOMGlobalObject*, Ref<Comment>&&);
+    JSComment(JSC::Structure*, JSDOMGlobalObject&, Ref<Comment>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Comment&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Comment* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Comment>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Comment>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<Comment> {
+    using WrapperClass = JSComment;
+    using ToWrappedReturnType = Comment*;
+};
 
 } // namespace WebCore
-
-#endif

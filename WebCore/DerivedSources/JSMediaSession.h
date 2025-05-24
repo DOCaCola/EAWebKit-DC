@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaSession_h
-#define JSMediaSession_h
+#pragma once
 
 #if ENABLE(MEDIA_SESSION)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "MediaSession.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSMediaSession : public JSDOMWrapper {
+class WEBCORE_EXPORT JSMediaSession : public JSDOMWrapper<MediaSession> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaSession>;
     static JSMediaSession* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSession>&& impl)
     {
-        JSMediaSession* ptr = new (NotNull, JSC::allocateCell<JSMediaSession>(globalObject->vm().heap)) JSMediaSession(structure, globalObject, WTF::move(impl));
+        JSMediaSession* ptr = new (NotNull, JSC::allocateCell<JSMediaSession>(globalObject->vm().heap)) JSMediaSession(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaSession* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaSession();
 
     DECLARE_INFO;
 
@@ -52,21 +51,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaSession& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaSession* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSMediaSession(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaSession>&&);
+    JSMediaSession(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaSession>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaSessionOwner : public JSC::WeakHandleOwner {
@@ -81,12 +70,32 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaSession*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSession*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaSession& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaSession* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSession&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSession* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaSession>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaSession>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+// Custom constructor
+JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaSession(JSC::ExecState&);
+
+template<> struct JSDOMWrapperConverterTraits<MediaSession> {
+    using WrapperClass = JSMediaSession;
+    using ToWrappedReturnType = MediaSession*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, MediaSession::Kind);
+
+template<> std::optional<MediaSession::Kind> parseEnumeration<MediaSession::Kind>(JSC::ExecState&, JSC::JSValue);
+template<> MediaSession::Kind convertEnumeration<MediaSession::Kind>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<MediaSession::Kind>();
+
+template<> MediaSession::Metadata convertDictionary<MediaSession::Metadata>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_SESSION)
-
-#endif

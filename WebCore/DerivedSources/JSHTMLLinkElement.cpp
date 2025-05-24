@@ -21,17 +21,13 @@
 #include "config.h"
 #include "JSHTMLLinkElement.h"
 
-#include "DOMSettableTokenList.h"
-#include "DOMTokenList.h"
-#include "HTMLLinkElement.h"
+#include "CustomElementReactionQueue.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "JSDOMSettableTokenList.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDOMTokenList.h"
 #include "JSStyleSheet.h"
-#include "StyleSheet.h"
-#include "URL.h"
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -40,33 +36,41 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLLinkElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementHreflang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementHreflang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementRel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementRel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementRev(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementRev(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementSizes(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementSizes(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLLinkElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLLinkElementSheet(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLLinkElementRelList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLLinkElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLLinkElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementHreflang(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementHreflang(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementRel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementRel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementRev(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementRev(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementSizes(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementSizes(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementAs(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementAs(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementCrossOrigin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementCrossOrigin(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementSheet(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLLinkElementRelList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementRelList(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementNonce(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementNonce(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLLinkElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLLinkElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLLinkElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLLinkElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLLinkElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElementPrototype>(vm.heap)) JSHTMLLinkElementPrototype(vm, globalObject, structure);
@@ -89,73 +93,42 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLLinkElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLLinkElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLLinkElementConstructor = JSDOMConstructorNotConstructable<JSHTMLLinkElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLLinkElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLLinkElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElementConstructor>(vm.heap)) JSHTMLLinkElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSHTMLLinkElementTableIndex[2] = {
-    { 0, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSHTMLLinkElementTableValues[] =
+template<> JSValue JSHTMLLinkElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "sizes", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementSizes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementSizes) },
-};
-
-static const HashTable JSHTMLLinkElementTable = { 1, 1, true, JSHTMLLinkElementTableValues, 0, JSHTMLLinkElementTableIndex };
-const ClassInfo JSHTMLLinkElementConstructor::s_info = { "HTMLLinkElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLinkElementConstructor) };
-
-JSHTMLLinkElementConstructor::JSHTMLLinkElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLLinkElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLLinkElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLLinkElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLLinkElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLLinkElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLLinkElementConstructor::s_info = { "HTMLLinkElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLinkElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLLinkElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementDisabled) },
-    { "charset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementCharset) },
-    { "href", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementHref) },
-    { "hreflang", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementHreflang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementHreflang) },
-    { "media", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementMedia) },
-    { "rel", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementRel) },
-    { "rev", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRev), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementRev) },
-    { "target", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementTarget) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementType) },
-    { "sheet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "relList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRelList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementConstructor) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementDisabled) } },
+    { "charset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementCharset) } },
+    { "href", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementHref) } },
+    { "hreflang", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementHreflang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementHreflang) } },
+    { "media", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementMedia) } },
+    { "rel", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementRel) } },
+    { "rev", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRev), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementRev) } },
+    { "sizes", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementSizes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementSizes) } },
+    { "target", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementTarget) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementType) } },
+    { "as", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementAs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementAs) } },
+    { "crossOrigin", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementCrossOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementCrossOrigin) } },
+    { "sheet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "relList", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementRelList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementRelList) } },
+    { "nonce", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLinkElementNonce), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLinkElementNonce) } },
 };
 
 const ClassInfo JSHTMLLinkElementPrototype::s_info = { "HTMLLinkElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLinkElementPrototype) };
@@ -166,433 +139,587 @@ void JSHTMLLinkElementPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSHTMLLinkElementPrototypeTableValues, *this);
 }
 
-const ClassInfo JSHTMLLinkElement::s_info = { "HTMLLinkElement", &Base::s_info, &JSHTMLLinkElementTable, CREATE_METHOD_TABLE(JSHTMLLinkElement) };
+const ClassInfo JSHTMLLinkElement::s_info = { "HTMLLinkElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLinkElement) };
 
-JSHTMLLinkElement::JSHTMLLinkElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLinkElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLLinkElement::JSHTMLLinkElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLLinkElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLLinkElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLLinkElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLLinkElementPrototype::create(vm, globalObject, JSHTMLLinkElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLLinkElementPrototype::create(vm, globalObject, JSHTMLLinkElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLLinkElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLLinkElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLLinkElement>(vm, globalObject);
 }
 
-bool JSHTMLLinkElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSHTMLLinkElement* BindingCaller<JSHTMLLinkElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSHTMLLinkElement*>(object);
+    return jsDynamicDowncast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsHTMLLinkElementDisabledGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementDisabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementDisabledGetter>(state, thisValue, "disabled");
+}
+
+static inline JSValue jsHTMLLinkElementDisabledGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::disabledAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementCharsetGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementCharset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementCharsetGetter>(state, thisValue, "charset");
+}
+
+static inline JSValue jsHTMLLinkElementCharsetGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementHrefGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementHref(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementHrefGetter>(state, thisValue, "href");
+}
+
+static inline JSValue jsHTMLLinkElementHrefGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::hrefAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementHreflangGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementHreflang(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementHreflangGetter>(state, thisValue, "hreflang");
+}
+
+static inline JSValue jsHTMLLinkElementHreflangGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementMediaGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementMedia(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementMediaGetter>(state, thisValue, "media");
+}
+
+static inline JSValue jsHTMLLinkElementMediaGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::mediaAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementRelGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementRel(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementRelGetter>(state, thisValue, "rel");
+}
+
+static inline JSValue jsHTMLLinkElementRelGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::relAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementRevGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementRev(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementRevGetter>(state, thisValue, "rev");
+}
+
+static inline JSValue jsHTMLLinkElementRevGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::revAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementSizesGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementSizes(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementSizesGetter>(state, thisValue, "sizes");
+}
+
+static inline JSValue jsHTMLLinkElementSizesGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMTokenList>>(state, *thisObject.globalObject(), impl.sizes());
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementTargetGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementTargetGetter>(state, thisValue, "target");
+}
+
+static inline JSValue jsHTMLLinkElementTargetGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::targetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementTypeGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsHTMLLinkElementTypeGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::typeAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementAsGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementAs(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementAsGetter>(state, thisValue, "as");
+}
+
+static inline JSValue jsHTMLLinkElementAsGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::asAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementCrossOriginGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementCrossOrigin(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementCrossOriginGetter>(state, thisValue, "crossOrigin");
+}
+
+static inline JSValue jsHTMLLinkElementCrossOriginGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLDOMString>>(state, impl.crossOrigin());
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementSheetGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementSheet(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementSheetGetter>(state, thisValue, "sheet");
+}
+
+static inline JSValue jsHTMLLinkElementSheetGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<StyleSheet>>(state, *thisObject.globalObject(), impl.sheet());
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementRelListGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementRelList(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementRelListGetter>(state, thisValue, "relList");
+}
+
+static inline JSValue jsHTMLLinkElementRelListGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMTokenList>>(state, *thisObject.globalObject(), impl.relList());
+    return result;
+}
+
+static inline JSValue jsHTMLLinkElementNonceGetter(ExecState&, JSHTMLLinkElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLLinkElementNonce(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLLinkElement>::attribute<jsHTMLLinkElementNonceGetter>(state, thisValue, "nonce");
+}
+
+static inline JSValue jsHTMLLinkElementNonceGetter(ExecState& state, JSHTMLLinkElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::nonceAttr));
+    return result;
+}
+
+EncodedJSValue jsHTMLLinkElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLLinkElementPrototype* domObject = jsDynamicDowncast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLLinkElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLLinkElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLLinkElementPrototype* domObject = jsDynamicDowncast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLLinkElementDisabledFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementDisabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementDisabledFunction>(state, thisValue, encodedValue, "disabled");
+}
+
+static inline bool setJSHTMLLinkElementDisabledFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementCharsetFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementCharset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementCharsetFunction>(state, thisValue, encodedValue, "charset");
+}
+
+static inline bool setJSHTMLLinkElementCharsetFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementHrefFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementHref(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementHrefFunction>(state, thisValue, encodedValue, "href");
+}
+
+static inline bool setJSHTMLLinkElementHrefFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hrefAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementHreflangFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementHreflang(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementHreflangFunction>(state, thisValue, encodedValue, "hreflang");
+}
+
+static inline bool setJSHTMLLinkElementHreflangFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementMediaFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementMedia(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementMediaFunction>(state, thisValue, encodedValue, "media");
+}
+
+static inline bool setJSHTMLLinkElementMediaFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::mediaAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementRelFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementRel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementRelFunction>(state, thisValue, encodedValue, "rel");
+}
+
+static inline bool setJSHTMLLinkElementRelFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::relAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementRevFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementRev(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementRevFunction>(state, thisValue, encodedValue, "rev");
+}
+
+static inline bool setJSHTMLLinkElementRevFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::revAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementSizesFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementSizes(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementSizesFunction>(state, thisValue, encodedValue, "sizes");
+}
+
+static inline bool setJSHTMLLinkElementSizesFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    Ref<DOMTokenList> forwardedImpl = thisObject.wrapped().sizes();
+    auto& impl = forwardedImpl.get();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementTargetFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementTarget(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementTargetFunction>(state, thisValue, encodedValue, "target");
+}
+
+static inline bool setJSHTMLLinkElementTargetFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementTypeFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementTypeFunction>(state, thisValue, encodedValue, "type");
+}
+
+static inline bool setJSHTMLLinkElementTypeFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementAsFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementAs(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementAsFunction>(state, thisValue, encodedValue, "as");
+}
+
+static inline bool setJSHTMLLinkElementAsFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::asAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementCrossOriginFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementCrossOrigin(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementCrossOriginFunction>(state, thisValue, encodedValue, "crossOrigin");
+}
+
+static inline bool setJSHTMLLinkElementCrossOriginFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLDOMString>>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setCrossOrigin(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementRelListFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementRelList(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementRelListFunction>(state, thisValue, encodedValue, "relList");
+}
+
+static inline bool setJSHTMLLinkElementRelListFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    Ref<DOMTokenList> forwardedImpl = thisObject.wrapped().relList();
+    auto& impl = forwardedImpl.get();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLLinkElementNonceFunction(ExecState&, JSHTMLLinkElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLLinkElementNonce(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLLinkElement>::setAttribute<setJSHTMLLinkElementNonceFunction>(state, thisValue, encodedValue, "nonce");
+}
+
+static inline bool setJSHTMLLinkElementNonceFunction(ExecState& state, JSHTMLLinkElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nonceAttr, WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLLinkElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLLinkElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLLinkElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLLinkElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSHTMLLinkElement, Base>(exec, JSHTMLLinkElementTable, thisObject, propertyName, slot);
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
-EncodedJSValue jsHTMLLinkElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+HTMLLinkElement* JSHTMLLinkElement::toWrapped(JSC::JSValue value)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "disabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
-    return JSValue::encode(result);
+    if (auto* wrapper = jsDynamicDowncast<JSHTMLLinkElement*>(value))
+        return &wrapper->wrapped();
+    return nullptr;
 }
-
-
-EncodedJSValue jsHTMLLinkElementCharset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "charset");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "charset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::charsetAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "href");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "href");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::hrefAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementHreflang(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "hreflang");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "hreflang");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::hreflangAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "media");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "media");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::mediaAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementRel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "rel");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "rel");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::relAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementRev(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "rev");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "rev");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::revAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementSizes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLLinkElement*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.sizes()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "target");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "target");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::targetAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "type");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementSheet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "sheet");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "sheet");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.sheet()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementRelList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLinkElement", "relList");
-        return throwGetterTypeError(*exec, "HTMLLinkElement", "relList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.relList()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsHTMLLinkElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSHTMLLinkElementPrototype* domObject = jsDynamicCast<JSHTMLLinkElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLLinkElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void setJSHTMLLinkElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "disabled");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "disabled");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementCharset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "charset");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "charset");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementHref(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "href");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "href");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hrefAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementHreflang(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "hreflang");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "hreflang");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementMedia(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "media");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "media");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::mediaAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementRel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "rel");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "rel");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::relAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementRev(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "rev");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "rev");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::revAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementSizes(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLLinkElement*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setSizes(exec, value);
-}
-
-
-void setJSHTMLLinkElementTarget(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "target");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "target");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, nativeValue);
-}
-
-
-void setJSHTMLLinkElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLLinkElement* castedThis = jsDynamicCast<JSHTMLLinkElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLLinkElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLinkElement", "type");
-        else
-            throwSetterTypeError(*exec, "HTMLLinkElement", "type");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, nativeValue);
-}
-
-
-JSValue JSHTMLLinkElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSHTMLLinkElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
 
 }

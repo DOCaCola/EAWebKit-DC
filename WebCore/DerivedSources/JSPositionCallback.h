@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPositionCallback_h
-#define JSPositionCallback_h
+#pragma once
 
 #if ENABLE(GEOLOCATION)
 
@@ -40,18 +39,20 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSPositionCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(Geoposition* position);
 
 private:
-    JSPositionCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSPositionCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(PositionCallback&);
+inline JSC::JSValue toJS(PositionCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
 } // namespace WebCore
 
 #endif // ENABLE(GEOLOCATION)
-
-#endif

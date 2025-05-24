@@ -18,35 +18,35 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNode_h
-#define JSNode_h
+#pragma once
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include "Node.h"
+#include <domjit/DOMJITGetterSetter.h>
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSNode : public JSDOMWrapper {
+class WEBCORE_EXPORT JSNode : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = Node;
     static JSNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Node>&& impl)
     {
-        JSNode* ptr = new (NotNull, JSC::allocateCell<JSNode>(globalObject->vm().heap)) JSNode(structure, globalObject, WTF::move(impl));
+        JSNode* ptr = new (NotNull, JSC::allocateCell<JSNode>(globalObject->vm().heap)) JSNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Node* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSNode();
 
 protected:
     static const JSC::ClassInfo s_info;
 public:
-    static const JSC::ClassInfo* info() { return &s_info; }
+    static constexpr const JSC::ClassInfo* info() { return &s_info; }
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
@@ -55,30 +55,29 @@ public:
 
     JSC::JSScope* pushEventHandlerScope(JSC::ExecState*, JSC::JSScope*) const;
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+
+    // Custom attributes
+    JSC::JSValue nodeType(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue insertBefore(JSC::ExecState*);
-    JSC::JSValue replaceChild(JSC::ExecState*);
-    JSC::JSValue removeChild(JSC::ExecState*);
-    JSC::JSValue appendChild(JSC::ExecState*);
-    Node& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Node* m_impl;
-protected:
-    JSNode(JSC::Structure*, JSDOMGlobalObject*, Ref<Node>&&);
-
-    void finishCreation(JSC::VM& vm)
+    JSC::JSValue insertBefore(JSC::ExecState&);
+    JSC::JSValue replaceChild(JSC::ExecState&);
+    JSC::JSValue removeChild(JSC::ExecState&);
+    JSC::JSValue appendChild(JSC::ExecState&);
+    Node& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<Node&>(Base::wrapped());
     }
+protected:
+    JSNode(JSC::Structure*, JSDOMGlobalObject&, Ref<Node>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSNodeOwner : public JSC::WeakHandleOwner {
@@ -93,12 +92,94 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Node*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Node*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Node& impl) { return toJS(exec, globalObject, &impl); }
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Node*);
+inline void* wrapperKey(Node* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Node&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Node* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Node>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Node>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+// DOMJIT emitters for attributes
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeNodeType(void);
+class NodeNodeTypeDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeNodeTypeDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeParentNode(void);
+class NodeParentNodeDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeParentNodeDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeFirstChild(void);
+class NodeFirstChildDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeFirstChildDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeLastChild(void);
+class NodeLastChildDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeLastChildDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodePreviousSibling(void);
+class NodePreviousSiblingDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodePreviousSiblingDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeNextSibling(void);
+class NodeNextSiblingDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeNextSiblingDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForNodeOwnerDocument(void);
+class NodeOwnerDocumentDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    NodeOwnerDocumentDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+template<> struct JSDOMWrapperConverterTraits<Node> {
+    using WrapperClass = JSNode;
+    using ToWrappedReturnType = Node*;
+};
+template<> Node::GetRootNodeOptions convertDictionary<Node::GetRootNodeOptions>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif
 #include "JSNodeCustom.h"

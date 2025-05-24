@@ -24,8 +24,10 @@
 
 #include "JSCryptoKey.h"
 
-#include "CryptoKey.h"
+#include "JSCryptoKeyUsage.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -34,16 +36,61 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, CryptoKey::Type enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("public"),
+        ASCIILiteral("private"),
+        ASCIILiteral("secret"),
+    };
+    static_assert(static_cast<size_t>(CryptoKey::Type::Public) == 0, "CryptoKey::Type::Public is not 0 as expected");
+    static_assert(static_cast<size_t>(CryptoKey::Type::Private) == 1, "CryptoKey::Type::Private is not 1 as expected");
+    static_assert(static_cast<size_t>(CryptoKey::Type::Secret) == 2, "CryptoKey::Type::Secret is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<CryptoKey::Type> parseEnumeration<CryptoKey::Type>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "public")
+        return CryptoKey::Type::Public;
+    if (stringValue == "private")
+        return CryptoKey::Type::Private;
+    if (stringValue == "secret")
+        return CryptoKey::Type::Secret;
+    return std::nullopt;
+}
+
+template<> CryptoKey::Type convertEnumeration<CryptoKey::Type>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<CryptoKey::Type>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<CryptoKey::Type>()
+{
+    return "\"public\", \"private\", \"secret\"";
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsCryptoKeyType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCryptoKeyExtractable(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCryptoKeyAlgorithm(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCryptoKeyUsages(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCryptoKeyType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCryptoKeyExtractable(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCryptoKeyAlgorithm(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCryptoKeyUsages(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCryptoKeyConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCryptoKeyConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCryptoKeyPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCryptoKeyPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCryptoKeyPrototype* ptr = new (NotNull, JSC::allocateCell<JSCryptoKeyPrototype>(vm.heap)) JSCryptoKeyPrototype(vm, globalObject, structure);
@@ -66,30 +113,35 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
+using JSCryptoKeyConstructor = JSDOMConstructorNotConstructable<JSCryptoKey>;
 
-static const struct CompactHashIndex JSCryptoKeyTableIndex[2] = {
-    { 0, -1 },
-    { -1, -1 },
-};
-
-
-static const HashTableValue JSCryptoKeyTableValues[] =
+template<> JSValue JSCryptoKeyConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "algorithm", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyAlgorithm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
 
-static const HashTable JSCryptoKeyTable = { 1, 1, true, JSCryptoKeyTableValues, 0, JSCryptoKeyTableIndex };
+template<> void JSCryptoKeyConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSCryptoKey::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CryptoKey"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSCryptoKeyConstructor::s_info = { "CryptoKey", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCryptoKeyPrototypeTableValues[] =
 {
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "extractable", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyExtractable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "usages", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyUsages), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCryptoKeyConstructor) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "extractable", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyExtractable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "algorithm", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyAlgorithm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "usages", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyUsages), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-const ClassInfo JSCryptoKeyPrototype::s_info = { "KeyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPrototype) };
+const ClassInfo JSCryptoKeyPrototype::s_info = { "CryptoKeyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPrototype) };
 
 void JSCryptoKeyPrototype::finishCreation(VM& vm)
 {
@@ -97,12 +149,18 @@ void JSCryptoKeyPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSCryptoKeyPrototypeTableValues, *this);
 }
 
-const ClassInfo JSCryptoKey::s_info = { "Key", &Base::s_info, &JSCryptoKeyTable, CREATE_METHOD_TABLE(JSCryptoKey) };
+const ClassInfo JSCryptoKey::s_info = { "CryptoKey", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKey) };
 
-JSCryptoKey::JSCryptoKey(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKey>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCryptoKey::JSCryptoKey(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CryptoKey>&& impl)
+    : JSDOMWrapper<CryptoKey>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCryptoKey::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCryptoKey::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -110,7 +168,7 @@ JSObject* JSCryptoKey::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSCryptoKeyPrototype::create(vm, globalObject, JSCryptoKeyPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSCryptoKey::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCryptoKey::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCryptoKey>(vm, globalObject);
 }
@@ -121,106 +179,142 @@ void JSCryptoKey::destroy(JSC::JSCell* cell)
     thisObject->JSCryptoKey::~JSCryptoKey();
 }
 
-JSCryptoKey::~JSCryptoKey()
+template<> inline JSCryptoKey* BindingCaller<JSCryptoKey>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSCryptoKey*>(JSValue::decode(thisValue));
 }
 
-bool JSCryptoKey::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsCryptoKeyTypeGetter(ExecState&, JSCryptoKey&, ThrowScope& throwScope);
+
+EncodedJSValue jsCryptoKeyType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSCryptoKey*>(object);
+    return BindingCaller<JSCryptoKey>::attribute<jsCryptoKeyTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsCryptoKeyTypeGetter(ExecState& state, JSCryptoKey& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<CryptoKey::Type>>(state, impl.type());
+    return result;
+}
+
+static inline JSValue jsCryptoKeyExtractableGetter(ExecState&, JSCryptoKey&, ThrowScope& throwScope);
+
+EncodedJSValue jsCryptoKeyExtractable(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCryptoKey>::attribute<jsCryptoKeyExtractableGetter>(state, thisValue, "extractable");
+}
+
+static inline JSValue jsCryptoKeyExtractableGetter(ExecState& state, JSCryptoKey& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.extractable());
+    return result;
+}
+
+static inline JSValue jsCryptoKeyAlgorithmGetter(ExecState&, JSCryptoKey&, ThrowScope& throwScope);
+
+EncodedJSValue jsCryptoKeyAlgorithm(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCryptoKey>::attribute<jsCryptoKeyAlgorithmGetter>(state, thisValue, "algorithm");
+}
+
+static inline JSValue jsCryptoKeyAlgorithmGetter(ExecState& state, JSCryptoKey& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.algorithm(state);
+}
+
+static inline JSValue jsCryptoKeyUsagesGetter(ExecState&, JSCryptoKey&, ThrowScope& throwScope);
+
+EncodedJSValue jsCryptoKeyUsages(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCryptoKey>::attribute<jsCryptoKeyUsagesGetter>(state, thisValue, "usages");
+}
+
+static inline JSValue jsCryptoKeyUsagesGetter(ExecState& state, JSCryptoKey& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    if (JSValue cachedValue = thisObject.m_usages.get())
+        return cachedValue;
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLSequence<IDLEnumeration<CryptoKeyUsage>>>(state, *thisObject.globalObject(), impl.usages());
+    thisObject.m_usages.set(state.vm(), &thisObject, result);
+    return result;
+}
+
+EncodedJSValue jsCryptoKeyConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCryptoKeyPrototype* domObject = jsDynamicDowncast<JSCryptoKeyPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCryptoKey::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCryptoKeyConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCryptoKeyPrototype* domObject = jsDynamicDowncast<JSCryptoKeyPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSCryptoKey::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSCryptoKeyConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSCryptoKey::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSCryptoKey*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSCryptoKey, Base>(exec, JSCryptoKeyTable, thisObject, propertyName, slot);
+    Base::visitChildren(thisObject, visitor);
+    visitor.append(thisObject->m_algorithm);
+    visitor.append(thisObject->m_usages);
 }
-
-EncodedJSValue jsCryptoKeyType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCryptoKey* castedThis = jsDynamicCast<JSCryptoKey*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCryptoKeyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKey", "type");
-        return throwGetterTypeError(*exec, "CryptoKey", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCryptoKeyExtractable(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCryptoKey* castedThis = jsDynamicCast<JSCryptoKey*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCryptoKeyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKey", "extractable");
-        return throwGetterTypeError(*exec, "CryptoKey", "extractable");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.extractable());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsCryptoKeyAlgorithm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSCryptoKey*>(slotBase);
-    return JSValue::encode(castedThis->algorithm(exec));
-}
-
-
-EncodedJSValue jsCryptoKeyUsages(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCryptoKey* castedThis = jsDynamicCast<JSCryptoKey*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCryptoKeyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKey", "usages");
-        return throwGetterTypeError(*exec, "CryptoKey", "usages");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.usages());
-    return JSValue::encode(result);
-}
-
 
 bool JSCryptoKeyOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsCryptoKey = jsCast<JSCryptoKey*>(handle.slot()->asCell());
-    CryptoKey* root = &jsCryptoKey->impl();
+    CryptoKey* root = &jsCryptoKey->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSCryptoKeyOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsCryptoKey = jsCast<JSCryptoKey*>(handle.slot()->asCell());
+    auto* jsCryptoKey = static_cast<JSCryptoKey*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCryptoKey->impl(), jsCryptoKey);
+    uncacheWrapper(world, &jsCryptoKey->wrapped(), jsCryptoKey);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CryptoKey* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CryptoKey>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCryptoKey>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSCryptoKey>(globalObject, impl);
+    return createWrapper<CryptoKey>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CryptoKey& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 CryptoKey* JSCryptoKey::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSCryptoKey*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSCryptoKey*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -24,27 +24,120 @@
 
 #include "JSNotification.h"
 
-#include "CallbackFunction.h"
 #include "Document.h"
-#include "Event.h"
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
-#include "JSEvent.h"
+#include "JSDOMConstructor.h"
 #include "JSEventListener.h"
-#include "JSNotificationPermissionCallback.h"
-#include "Notification.h"
 #include <runtime/Error.h>
+#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
-#if ENABLE(LEGACY_NOTIFICATIONS) || ENABLE(NOTIFICATIONS)
-#include "Dictionary.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#if ENABLE(NOTIFICATIONS)
+#include "JSNotificationPermissionCallback.h"
 #endif
 
 using namespace JSC;
 
 namespace WebCore {
+
+#if ENABLE(NOTIFICATIONS)
+
+template<> JSString* convertEnumerationToJS(ExecState& state, Notification::Direction enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("auto"),
+        ASCIILiteral("ltr"),
+        ASCIILiteral("rtl"),
+    };
+    static_assert(static_cast<size_t>(Notification::Direction::Auto) == 0, "Notification::Direction::Auto is not 0 as expected");
+    static_assert(static_cast<size_t>(Notification::Direction::Ltr) == 1, "Notification::Direction::Ltr is not 1 as expected");
+    static_assert(static_cast<size_t>(Notification::Direction::Rtl) == 2, "Notification::Direction::Rtl is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<Notification::Direction> parseEnumeration<Notification::Direction>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "auto")
+        return Notification::Direction::Auto;
+    if (stringValue == "ltr")
+        return Notification::Direction::Ltr;
+    if (stringValue == "rtl")
+        return Notification::Direction::Rtl;
+    return std::nullopt;
+}
+
+template<> Notification::Direction convertEnumeration<Notification::Direction>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<Notification::Direction>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<Notification::Direction>()
+{
+    return "\"auto\", \"ltr\", \"rtl\"";
+}
+
+#endif
+
+#if ENABLE(NOTIFICATIONS)
+
+template<> Notification::Options convertDictionary<Notification::Options>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    Notification::Options result;
+    JSValue bodyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "body"));
+    if (!bodyValue.isUndefined()) {
+        result.body = convert<IDLDOMString>(state, bodyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.body = emptyString();
+    JSValue dirValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "dir"));
+    if (!dirValue.isUndefined()) {
+        result.dir = convert<IDLEnumeration<Notification::Direction>>(state, dirValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.dir = Notification::Direction::Auto;
+    JSValue iconValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "icon"));
+    if (!iconValue.isUndefined()) {
+        result.icon = convert<IDLDOMString>(state, iconValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue langValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "lang"));
+    if (!langValue.isUndefined()) {
+        result.lang = convert<IDLDOMString>(state, langValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.lang = emptyString();
+    JSValue tagValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "tag"));
+    if (!tagValue.isUndefined()) {
+        result.tag = convert<IDLDOMString>(state, tagValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.tag = emptyString();
+    return result;
+}
+
+#endif
 
 // Functions
 
@@ -58,42 +151,40 @@ JSC::EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionClose(JSC::Exec
 #if ENABLE(NOTIFICATIONS)
 JSC::EncodedJSValue JSC_HOST_CALL jsNotificationConstructorFunctionRequestPermission(JSC::ExecState*);
 #endif
-JSC::EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
 // Attributes
 
 #if ENABLE(NOTIFICATIONS)
-JSC::EncodedJSValue jsNotificationConstructorPermission(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNotificationConstructorPermission(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
-JSC::EncodedJSValue jsNotificationOnclick(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationOnclick(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNotificationOnclose(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationOnclose(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNotificationOndisplay(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationOndisplay(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNotificationOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationOnerror(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsNotificationOnshow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationOnshow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationOnclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationOnclick(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationOnclose(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationOnclose(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationOndisplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationOndisplay(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationOnerror(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationOnshow(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationOnshow(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(LEGACY_NOTIFICATIONS)
-JSC::EncodedJSValue jsNotificationDir(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationDir(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationDir(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationDir(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(LEGACY_NOTIFICATIONS)
-JSC::EncodedJSValue jsNotificationReplaceId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationReplaceId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationReplaceId(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationReplaceId(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(NOTIFICATIONS)
-JSC::EncodedJSValue jsNotificationTag(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSNotificationTag(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsNotificationTag(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationTag(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
-JSC::EncodedJSValue jsNotificationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNotificationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSNotificationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSNotificationPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSNotificationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSNotificationPrototype* ptr = new (NotNull, JSC::allocateCell<JSNotificationPrototype>(vm.heap)) JSNotificationPrototype(vm, globalObject, structure);
@@ -116,127 +207,75 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSNotificationConstructor : public DOMConstructorObject {
-private:
-    JSNotificationConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSNotificationConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSNotificationConstructor* ptr = new (NotNull, JSC::allocateCell<JSNotificationConstructor>(vm.heap)) JSNotificationConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSNotification(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+using JSNotificationConstructor = JSDOMConstructorNotConstructable<JSNotification>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSNotificationConstructorTableValues[] =
 {
 #if ENABLE(NOTIFICATIONS)
-    { "permission", DontDelete | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationConstructorPermission), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "permission", ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationConstructorPermission), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(NOTIFICATIONS)
-    { "requestPermission", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationConstructorFunctionRequestPermission), (intptr_t) (0) },
+    { "requestPermission", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationConstructorFunctionRequestPermission), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
-EncodedJSValue JSC_HOST_CALL JSNotificationConstructor::constructJSNotification(ExecState* exec)
+template<> JSValue JSNotificationConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    auto* castedThis = jsCast<JSNotificationConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String title = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    Dictionary options = { exec, exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "Notification");
-    auto& document = downcast<Document>(*context);
-    RefPtr<Notification> object = Notification::create(document, title, options);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSNotificationConstructor::s_info = { "NotificationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotificationConstructor) };
-
-JSNotificationConstructor::JSNotificationConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSNotificationConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSNotificationConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSNotification::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSNotification::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Notification"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSNotificationConstructorTableValues, *this);
 }
 
-ConstructType JSNotificationConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSNotification;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSNotificationConstructor::s_info = { "Notification", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotificationConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSNotificationPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onclick", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnclick) },
-    { "onclose", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnclose), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnclose) },
-    { "ondisplay", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOndisplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOndisplay) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnerror) },
-    { "onshow", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnshow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnshow) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationConstructor) } },
+    { "onclick", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnclick) } },
+    { "onclose", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnclose), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnclose) } },
+    { "ondisplay", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOndisplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOndisplay) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnerror) } },
+    { "onshow", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationOnshow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationOnshow) } },
 #if ENABLE(LEGACY_NOTIFICATIONS)
-    { "dir", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationDir), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationDir) },
+    { "dir", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationDir), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationDir) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(LEGACY_NOTIFICATIONS)
-    { "replaceId", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationReplaceId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationReplaceId) },
+    { "replaceId", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationReplaceId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationReplaceId) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(NOTIFICATIONS)
-    { "tag", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationTag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationTag) },
+    { "tag", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNotificationTag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNotificationTag) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "show", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionShow), (intptr_t) (0) },
+    { "show", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionShow), (intptr_t) (0) } },
 #if ENABLE(LEGACY_NOTIFICATIONS)
-    { "cancel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionCancel), (intptr_t) (0) },
+    { "cancel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionCancel), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(NOTIFICATIONS)
-    { "close", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionClose), (intptr_t) (0) },
+    { "close", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionClose), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationPrototypeFunctionDispatchEvent), (intptr_t) (1) },
 };
 
 const ClassInfo JSNotificationPrototype::s_info = { "NotificationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotificationPrototype) };
@@ -249,380 +288,389 @@ void JSNotificationPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSNotification::s_info = { "Notification", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotification) };
 
-JSNotification::JSNotification(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Notification>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSNotification::JSNotification(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Notification>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSNotification::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSNotification::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSNotificationPrototype::create(vm, globalObject, JSNotificationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSNotificationPrototype::create(vm, globalObject, JSNotificationPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSNotification::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSNotification::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSNotification>(vm, globalObject);
 }
 
-void JSNotification::destroy(JSC::JSCell* cell)
+template<> inline JSNotification* BindingCaller<JSNotification>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSNotification* thisObject = static_cast<JSNotification*>(cell);
-    thisObject->JSNotification::~JSNotification();
+    return jsDynamicDowncast<JSNotification*>(JSValue::decode(thisValue));
 }
 
-JSNotification::~JSNotification()
+template<> inline JSNotification* BindingCaller<JSNotification>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSNotification*>(state.thisValue());
 }
 
 #if ENABLE(NOTIFICATIONS)
-EncodedJSValue jsNotificationConstructorPermission(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationConstructorPermissionGetter(ExecState&);
+
+EncodedJSValue jsNotificationConstructorPermission(ExecState* state, EncodedJSValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, Notification::permission(scriptContext));
-    return JSValue::encode(result);
+    ASSERT(state);
+    return JSValue::encode(jsNotificationConstructorPermissionGetter(*state));
+}
+
+static inline JSValue jsNotificationConstructorPermissionGetter(ExecState& state)
+{
+    UNUSED_PARAM(state);
+    auto* context = jsCast<JSDOMGlobalObject*>(state.lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return jsUndefined();
+    ASSERT(context->isDocument());
+    auto& document = downcast<Document>(*context);
+    JSValue result = toJS<IDLDOMString>(state, Notification::permission(document));
+    return result;
 }
 
 #endif
 
-EncodedJSValue jsNotificationOnclick(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationOnclickGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationOnclick(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "onclick");
-        return throwGetterTypeError(*exec, "Notification", "onclick");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().clickEvent));
+    return BindingCaller<JSNotification>::attribute<jsNotificationOnclickGetter>(state, thisValue, "onclick");
 }
 
-
-EncodedJSValue jsNotificationOnclose(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationOnclickGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "onclose");
-        return throwGetterTypeError(*exec, "Notification", "onclose");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().closeEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().clickEvent);
 }
 
+static inline JSValue jsNotificationOncloseGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
 
-EncodedJSValue jsNotificationOndisplay(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNotificationOnclose(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "ondisplay");
-        return throwGetterTypeError(*exec, "Notification", "ondisplay");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().showEvent));
+    return BindingCaller<JSNotification>::attribute<jsNotificationOncloseGetter>(state, thisValue, "onclose");
 }
 
-
-EncodedJSValue jsNotificationOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationOncloseGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "onerror");
-        return throwGetterTypeError(*exec, "Notification", "onerror");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().closeEvent);
 }
 
+static inline JSValue jsNotificationOndisplayGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
 
-EncodedJSValue jsNotificationOnshow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNotificationOndisplay(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "onshow");
-        return throwGetterTypeError(*exec, "Notification", "onshow");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().showEvent));
+    return BindingCaller<JSNotification>::attribute<jsNotificationOndisplayGetter>(state, thisValue, "ondisplay");
 }
 
+static inline JSValue jsNotificationOndisplayGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().showEvent);
+}
+
+static inline JSValue jsNotificationOnerrorGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationOnerror(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNotification>::attribute<jsNotificationOnerrorGetter>(state, thisValue, "onerror");
+}
+
+static inline JSValue jsNotificationOnerrorGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().errorEvent);
+}
+
+static inline JSValue jsNotificationOnshowGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationOnshow(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSNotification>::attribute<jsNotificationOnshowGetter>(state, thisValue, "onshow");
+}
+
+static inline JSValue jsNotificationOnshowGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().showEvent);
+}
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
-EncodedJSValue jsNotificationDir(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationDirGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationDir(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "dir");
-        return throwGetterTypeError(*exec, "Notification", "dir");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.dir());
-    return JSValue::encode(result);
+    return BindingCaller<JSNotification>::attribute<jsNotificationDirGetter>(state, thisValue, "dir");
+}
+
+static inline JSValue jsNotificationDirGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.dir());
+    return result;
 }
 
 #endif
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
-EncodedJSValue jsNotificationReplaceId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationReplaceIdGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationReplaceId(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "replaceId");
-        return throwGetterTypeError(*exec, "Notification", "replaceId");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.replaceId());
-    return JSValue::encode(result);
+    return BindingCaller<JSNotification>::attribute<jsNotificationReplaceIdGetter>(state, thisValue, "replaceId");
+}
+
+static inline JSValue jsNotificationReplaceIdGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.replaceId());
+    return result;
 }
 
 #endif
 
 #if ENABLE(NOTIFICATIONS)
-EncodedJSValue jsNotificationTag(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsNotificationTagGetter(ExecState&, JSNotification&, ThrowScope& throwScope);
+
+EncodedJSValue jsNotificationTag(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Notification", "tag");
-        return throwGetterTypeError(*exec, "Notification", "tag");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.tag());
-    return JSValue::encode(result);
+    return BindingCaller<JSNotification>::attribute<jsNotificationTagGetter>(state, thisValue, "tag");
+}
+
+static inline JSValue jsNotificationTagGetter(ExecState& state, JSNotification& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.tag());
+    return result;
 }
 
 #endif
 
-EncodedJSValue jsNotificationConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsNotificationConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSNotificationPrototype* domObject = jsDynamicCast<JSNotificationPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSNotification::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSNotificationPrototype* domObject = jsDynamicDowncast<JSNotificationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSNotification::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSNotificationOnclick(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+bool setJSNotificationConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "onclick");
-        else
-            throwSetterTypeError(*exec, "Notification", "onclick");
-        return;
+    JSNotificationPrototype* domObject = jsDynamicDowncast<JSNotificationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().clickEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline bool setJSNotificationOnclickFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
 
-void setJSNotificationOnclose(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+bool setJSNotificationOnclick(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "onclose");
-        else
-            throwSetterTypeError(*exec, "Notification", "onclose");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().closeEvent, value);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationOnclickFunction>(state, thisValue, encodedValue, "onclick");
 }
 
-
-void setJSNotificationOndisplay(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationOnclickFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "ondisplay");
-        else
-            throwSetterTypeError(*exec, "Notification", "ondisplay");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().showEvent, value);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().clickEvent, value);
+    return true;
 }
 
 
-void setJSNotificationOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationOncloseFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationOnclose(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "onerror");
-        else
-            throwSetterTypeError(*exec, "Notification", "onerror");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationOncloseFunction>(state, thisValue, encodedValue, "onclose");
+}
+
+static inline bool setJSNotificationOncloseFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().closeEvent, value);
+    return true;
 }
 
 
-void setJSNotificationOnshow(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationOndisplayFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationOndisplay(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "onshow");
-        else
-            throwSetterTypeError(*exec, "Notification", "onshow");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().showEvent, value);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationOndisplayFunction>(state, thisValue, encodedValue, "ondisplay");
+}
+
+static inline bool setJSNotificationOndisplayFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().showEvent, value);
+    return true;
+}
+
+
+static inline bool setJSNotificationOnerrorFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationOnerror(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationOnerrorFunction>(state, thisValue, encodedValue, "onerror");
+}
+
+static inline bool setJSNotificationOnerrorFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().errorEvent, value);
+    return true;
+}
+
+
+static inline bool setJSNotificationOnshowFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationOnshow(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationOnshowFunction>(state, thisValue, encodedValue, "onshow");
+}
+
+static inline bool setJSNotificationOnshowFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().showEvent, value);
+    return true;
 }
 
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
-void setJSNotificationDir(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationDirFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationDir(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "dir");
-        else
-            throwSetterTypeError(*exec, "Notification", "dir");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDir(nativeValue);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationDirFunction>(state, thisValue, encodedValue, "dir");
+}
+
+static inline bool setJSNotificationDirFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDir(WTFMove(nativeValue));
+    return true;
 }
 
 #endif
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
-void setJSNotificationReplaceId(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationReplaceIdFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationReplaceId(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "replaceId");
-        else
-            throwSetterTypeError(*exec, "Notification", "replaceId");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setReplaceId(nativeValue);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationReplaceIdFunction>(state, thisValue, encodedValue, "replaceId");
+}
+
+static inline bool setJSNotificationReplaceIdFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setReplaceId(WTFMove(nativeValue));
+    return true;
 }
 
 #endif
 
 #if ENABLE(NOTIFICATIONS)
-void setJSNotificationTag(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSNotificationTagFunction(ExecState&, JSNotification&, JSValue, ThrowScope&);
+
+bool setJSNotificationTag(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSNotificationPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Notification", "tag");
-        else
-            throwSetterTypeError(*exec, "Notification", "tag");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setTag(nativeValue);
+    return BindingCaller<JSNotification>::setAttribute<setJSNotificationTagFunction>(state, thisValue, encodedValue, "tag");
+}
+
+static inline bool setJSNotificationTagFunction(ExecState& state, JSNotification& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setTag(WTFMove(nativeValue));
+    return true;
 }
 
 #endif
 
-JSValue JSNotification::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSNotification::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSNotificationConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSNotificationConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionShow(ExecState* exec)
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionShowCaller(JSC::ExecState*, JSNotification*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionShow(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "show");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSNotification>::callOperation<jsNotificationPrototypeFunctionShowCaller>(state, "show");
+}
+
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionShowCaller(JSC::ExecState* state, JSNotification* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.show();
     return JSValue::encode(jsUndefined());
 }
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionCancel(ExecState* exec)
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionCancelCaller(JSC::ExecState*, JSNotification*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionCancel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "cancel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
-    impl.cancel();
-    return JSValue::encode(jsUndefined());
+    return BindingCaller<JSNotification>::callOperation<jsNotificationPrototypeFunctionCancelCaller>(state, "cancel");
 }
 
-#endif
-
-#if ENABLE(NOTIFICATIONS)
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionClose(ExecState* exec)
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionCancelCaller(JSC::ExecState* state, JSNotification* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "close");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.close();
     return JSValue::encode(jsUndefined());
 }
@@ -630,87 +678,57 @@ EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionClose(ExecState* exe
 #endif
 
 #if ENABLE(NOTIFICATIONS)
-EncodedJSValue JSC_HOST_CALL jsNotificationConstructorFunctionRequestPermission(ExecState* exec)
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionCloseCaller(JSC::ExecState*, JSNotification*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionClose(ExecState* state)
 {
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
-    if (!scriptContext)
-        return JSValue::encode(jsUndefined());
-    RefPtr<NotificationPermissionCallback> callback;
-    if (!exec->argument(0).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(0).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 0, "callback", "Notification", "requestPermission");
-        callback = createFunctionOnlyCallback<JSNotificationPermissionCallback>(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), exec->uncheckedArgument(0));
-    }
-    Notification::requestPermission(scriptContext, callback);
+    return BindingCaller<JSNotification>::callOperation<jsNotificationPrototypeFunctionCloseCaller>(state, "close");
+}
+
+static inline JSC::EncodedJSValue jsNotificationPrototypeFunctionCloseCaller(JSC::ExecState* state, JSNotification* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.close();
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionAddEventListener(ExecState* exec)
+#if ENABLE(NOTIFICATIONS)
+EncodedJSValue JSC_HOST_CALL jsNotificationConstructorFunctionRequestPermission(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    ASSERT(context->isDocument());
+    auto& document = downcast<Document>(*context);
+    auto callback = convert<IDLNullable<IDLCallbackFunction<JSNotificationPermissionCallback>>>(*state, state->argument(0), *jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentMustBeFunctionError(state, scope, 0, "callback", "Notification", "requestPermission"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    Notification::requestPermission(document, WTFMove(callback));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionRemoveEventListener(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsNotificationPrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNotification* castedThis = jsDynamicCast<JSNotification*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Notification", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotification::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
+#endif
 
 void JSNotification::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
     auto* thisObject = jsCast<JSNotification*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSNotificationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsNotification = jsCast<JSNotification*>(handle.slot()->asCell());
-    if (jsNotification->impl().hasPendingActivity())
+    if (jsNotification->wrapped().hasPendingActivity())
         return true;
-    if (jsNotification->impl().isFiringEventListeners())
+    if (jsNotification->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -718,9 +736,9 @@ bool JSNotificationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSNotificationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsNotification = jsCast<JSNotification*>(handle.slot()->asCell());
+    auto* jsNotification = static_cast<JSNotification*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNotification->impl(), jsNotification);
+    uncacheWrapper(world, &jsNotification->wrapped(), jsNotification);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -731,15 +749,12 @@ extern "C" { extern void (*const __identifier("??_7Notification@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12NotificationE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Notification* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Notification>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSNotification>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Notification@WebCore@@6B@"));
 #else
@@ -747,7 +762,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Notification
 #if COMPILER(CLANG)
     // If this fails Notification does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Notification), Notification_is_not_polymorphic);
+    static_assert(__is_polymorphic(Notification), "Notification is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -756,13 +771,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Notification
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSNotification>(globalObject, impl);
+    return createWrapper<Notification>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Notification& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Notification* JSNotification::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSNotification*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSNotification*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

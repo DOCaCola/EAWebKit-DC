@@ -18,31 +18,27 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXMLHttpRequestUpload_h
-#define JSXMLHttpRequestUpload_h
+#pragma once
 
-#include "JSDOMWrapper.h"
+#include "JSXMLHttpRequestEventTarget.h"
 #include "XMLHttpRequestUpload.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSXMLHttpRequestUpload : public JSDOMWrapper {
+class JSXMLHttpRequestUpload : public JSXMLHttpRequestEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSXMLHttpRequestEventTarget;
+    using DOMWrapped = XMLHttpRequestUpload;
     static JSXMLHttpRequestUpload* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestUpload>&& impl)
     {
-        JSXMLHttpRequestUpload* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestUpload>(globalObject->vm().heap)) JSXMLHttpRequestUpload(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequestUpload* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestUpload>(globalObject->vm().heap)) JSXMLHttpRequestUpload(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static XMLHttpRequestUpload* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSXMLHttpRequestUpload();
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -51,25 +47,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    XMLHttpRequestUpload& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLHttpRequestUpload* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
-protected:
-    JSXMLHttpRequestUpload(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequestUpload>&&);
-
-    void finishCreation(JSC::VM& vm)
+    XMLHttpRequestUpload& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<XMLHttpRequestUpload&>(Base::wrapped());
     }
+protected:
+    JSXMLHttpRequestUpload(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequestUpload>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSXMLHttpRequestUploadOwner : public JSC::WeakHandleOwner {
@@ -84,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLHttpRequestUpload
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestUpload*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XMLHttpRequestUpload* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestUpload&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XMLHttpRequestUpload>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XMLHttpRequestUpload>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XMLHttpRequestUpload> {
+    using WrapperClass = JSXMLHttpRequestUpload;
+    using ToWrappedReturnType = XMLHttpRequestUpload*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -30,6 +30,26 @@
 
 #include "AnimationEvent.h"
 #include "JSAnimationEvent.h"
+#if ENABLE(APPLE_PAY)
+#include "ApplePayPaymentAuthorizedEvent.h"
+#include "JSApplePayPaymentAuthorizedEvent.h"
+#endif
+#if ENABLE(APPLE_PAY)
+#include "ApplePayPaymentMethodSelectedEvent.h"
+#include "JSApplePayPaymentMethodSelectedEvent.h"
+#endif
+#if ENABLE(APPLE_PAY)
+#include "ApplePayShippingContactSelectedEvent.h"
+#include "JSApplePayShippingContactSelectedEvent.h"
+#endif
+#if ENABLE(APPLE_PAY)
+#include "ApplePayShippingMethodSelectedEvent.h"
+#include "JSApplePayShippingMethodSelectedEvent.h"
+#endif
+#if ENABLE(APPLE_PAY)
+#include "ApplePayValidateMerchantEvent.h"
+#include "JSApplePayValidateMerchantEvent.h"
+#endif
 #if ENABLE(WEB_AUDIO)
 #include "AudioProcessingEvent.h"
 #include "JSAudioProcessingEvent.h"
@@ -46,6 +66,8 @@
 #include "CSSFontFaceLoadEvent.h"
 #include "JSCSSFontFaceLoadEvent.h"
 #endif
+#include "ClipboardEvent.h"
+#include "JSClipboardEvent.h"
 #include "CloseEvent.h"
 #include "JSCloseEvent.h"
 #include "CompositionEvent.h"
@@ -74,7 +96,7 @@
 #include "GamepadEvent.h"
 #include "JSGamepadEvent.h"
 #endif
-#if ENABLE(IOS_GESTURE_EVENTS)
+#if ENABLE(IOS_GESTURE_EVENTS) || ENABLE(MAC_GESTURE_EVENTS)
 #include "GestureEvent.h"
 #include "JSGestureEvent.h"
 #endif
@@ -84,21 +106,19 @@
 #include "IDBVersionChangeEvent.h"
 #include "JSIDBVersionChangeEvent.h"
 #endif
+#include "InputEvent.h"
+#include "JSInputEvent.h"
 #include "KeyboardEvent.h"
 #include "JSKeyboardEvent.h"
 #if ENABLE(ENCRYPTED_MEDIA)
-#include "MediaKeyEvent.h"
-#include "JSMediaKeyEvent.h"
+#include "MediaEncryptedEvent.h"
+#include "JSMediaEncryptedEvent.h"
 #endif
-#if ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(ENCRYPTED_MEDIA)
 #include "MediaKeyMessageEvent.h"
 #include "JSMediaKeyMessageEvent.h"
 #endif
-#if ENABLE(ENCRYPTED_MEDIA_V2)
-#include "MediaKeyNeededEvent.h"
-#include "JSMediaKeyNeededEvent.h"
-#endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "MediaStreamEvent.h"
 #include "JSMediaStreamEvent.h"
 #endif
@@ -116,6 +136,10 @@
 #include "OfflineAudioCompletionEvent.h"
 #include "JSOfflineAudioCompletionEvent.h"
 #endif
+#if ENABLE(MEDIA_STREAM)
+#include "OverconstrainedErrorEvent.h"
+#include "JSOverconstrainedErrorEvent.h"
+#endif
 #include "OverflowEvent.h"
 #include "JSOverflowEvent.h"
 #include "PageTransitionEvent.h"
@@ -124,24 +148,26 @@
 #include "JSPopStateEvent.h"
 #include "ProgressEvent.h"
 #include "JSProgressEvent.h"
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCDTMFToneChangeEvent.h"
 #include "JSRTCDTMFToneChangeEvent.h"
 #endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCDataChannelEvent.h"
 #include "JSRTCDataChannelEvent.h"
 #endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCIceCandidateEvent.h"
 #include "JSRTCIceCandidateEvent.h"
 #endif
+#if ENABLE(WEB_RTC)
+#include "RTCTrackEvent.h"
+#include "JSRTCTrackEvent.h"
+#endif
 #include "SVGZoomEvent.h"
 #include "JSSVGZoomEvent.h"
-#if ENABLE(CSP_NEXT)
 #include "SecurityPolicyViolationEvent.h"
 #include "JSSecurityPolicyViolationEvent.h"
-#endif
 #if ENABLE(SPEECH_SYNTHESIS)
 #include "SpeechSynthesisEvent.h"
 #include "JSSpeechSynthesisEvent.h"
@@ -162,16 +188,20 @@
 #include "JSTransitionEvent.h"
 #include "UIEvent.h"
 #include "JSUIEvent.h"
-#if ENABLE(INDIE_UI)
-#include "UIRequestEvent.h"
-#include "JSUIRequestEvent.h"
-#endif
 #if ENABLE(WEBGL)
 #include "WebGLContextEvent.h"
 #include "JSWebGLContextEvent.h"
 #endif
 #include "WebKitAnimationEvent.h"
 #include "JSWebKitAnimationEvent.h"
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+#include "WebKitMediaKeyMessageEvent.h"
+#include "JSWebKitMediaKeyMessageEvent.h"
+#endif
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+#include "WebKitMediaKeyNeededEvent.h"
+#include "JSWebKitMediaKeyNeededEvent.h"
+#endif
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
 #include "WebKitPlaybackTargetAvailabilityEvent.h"
 #include "JSWebKitPlaybackTargetAvailabilityEvent.h"

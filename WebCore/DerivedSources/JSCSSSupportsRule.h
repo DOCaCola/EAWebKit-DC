@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSSupportsRule_h
-#define JSCSSSupportsRule_h
+#pragma once
 
 #include "CSSSupportsRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSSupportsRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSSupportsRule;
     static JSCSSSupportsRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSSupportsRule>&& impl)
     {
-        JSCSSSupportsRule* ptr = new (NotNull, JSC::allocateCell<JSCSSSupportsRule>(globalObject->vm().heap)) JSCSSSupportsRule(structure, globalObject, WTF::move(impl));
+        JSCSSSupportsRule* ptr = new (NotNull, JSC::allocateCell<JSCSSSupportsRule>(globalObject->vm().heap)) JSCSSSupportsRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,23 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    CSSSupportsRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSSupportsRule& wrapped() const
     {
-        return static_cast<CSSSupportsRule&>(Base::impl());
+        return static_cast<CSSSupportsRule&>(Base::wrapped());
     }
 protected:
-    JSCSSSupportsRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSSupportsRule>&&);
+    JSCSSSupportsRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSSupportsRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSSupportsRule> {
+    using WrapperClass = JSCSSSupportsRule;
+    using ToWrappedReturnType = CSSSupportsRule*;
+};
 
 } // namespace WebCore
-
-#endif

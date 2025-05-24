@@ -25,13 +25,63 @@
 #include "JSSubtleCrypto.h"
 
 #include "JSDOMBinding.h"
-#include "SubtleCrypto.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMPromise.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
+
+template<> JSString* convertEnumerationToJS(ExecState& state, SubtleCrypto::KeyFormat enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("raw"),
+        ASCIILiteral("spki"),
+        ASCIILiteral("pkcs8"),
+        ASCIILiteral("jwk"),
+    };
+    static_assert(static_cast<size_t>(SubtleCrypto::KeyFormat::Raw) == 0, "SubtleCrypto::KeyFormat::Raw is not 0 as expected");
+    static_assert(static_cast<size_t>(SubtleCrypto::KeyFormat::Spki) == 1, "SubtleCrypto::KeyFormat::Spki is not 1 as expected");
+    static_assert(static_cast<size_t>(SubtleCrypto::KeyFormat::Pkcs8) == 2, "SubtleCrypto::KeyFormat::Pkcs8 is not 2 as expected");
+    static_assert(static_cast<size_t>(SubtleCrypto::KeyFormat::Jwk) == 3, "SubtleCrypto::KeyFormat::Jwk is not 3 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<SubtleCrypto::KeyFormat> parseEnumeration<SubtleCrypto::KeyFormat>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "raw")
+        return SubtleCrypto::KeyFormat::Raw;
+    if (stringValue == "spki")
+        return SubtleCrypto::KeyFormat::Spki;
+    if (stringValue == "pkcs8")
+        return SubtleCrypto::KeyFormat::Pkcs8;
+    if (stringValue == "jwk")
+        return SubtleCrypto::KeyFormat::Jwk;
+    return std::nullopt;
+}
+
+template<> SubtleCrypto::KeyFormat convertEnumeration<SubtleCrypto::KeyFormat>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<SubtleCrypto::KeyFormat>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<SubtleCrypto::KeyFormat>()
+{
+    return "\"raw\", \"spki\", \"pkcs8\", \"jwk\"";
+}
 
 // Functions
 
@@ -40,15 +90,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDecrypt(JSC::Ex
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionSign(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionVerify(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDigest(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDeriveKey(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDeriveBits(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionGenerateKey(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionImportKey(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionExportKey(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionWrapKey(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionUnwrapKey(JSC::ExecState*);
 
+// Attributes
+
+JSC::EncodedJSValue jsSubtleCryptoConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSubtleCryptoConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+
 class JSSubtleCryptoPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSubtleCryptoPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSubtleCryptoPrototype* ptr = new (NotNull, JSC::allocateCell<JSSubtleCryptoPrototype>(vm.heap)) JSSubtleCryptoPrototype(vm, globalObject, structure);
@@ -71,23 +128,43 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+using JSSubtleCryptoConstructor = JSDOMConstructorNotConstructable<JSSubtleCrypto>;
+
+template<> JSValue JSSubtleCryptoConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSSubtleCryptoConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSSubtleCrypto::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SubtleCrypto"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSSubtleCryptoConstructor::s_info = { "SubtleCrypto", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSubtleCryptoConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSubtleCryptoPrototypeTableValues[] =
 {
-    { "encrypt", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionEncrypt), (intptr_t) (3) },
-    { "decrypt", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDecrypt), (intptr_t) (3) },
-    { "sign", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionSign), (intptr_t) (3) },
-    { "verify", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionVerify), (intptr_t) (4) },
-    { "digest", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDigest), (intptr_t) (2) },
-    { "generateKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionGenerateKey), (intptr_t) (1) },
-    { "importKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionImportKey), (intptr_t) (3) },
-    { "exportKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionExportKey), (intptr_t) (2) },
-    { "wrapKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionWrapKey), (intptr_t) (4) },
-    { "unwrapKey", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionUnwrapKey), (intptr_t) (5) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSubtleCryptoConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSubtleCryptoConstructor) } },
+    { "encrypt", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionEncrypt), (intptr_t) (3) } },
+    { "decrypt", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDecrypt), (intptr_t) (3) } },
+    { "sign", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionSign), (intptr_t) (3) } },
+    { "verify", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionVerify), (intptr_t) (4) } },
+    { "digest", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDigest), (intptr_t) (2) } },
+    { "deriveKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDeriveKey), (intptr_t) (5) } },
+    { "deriveBits", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionDeriveBits), (intptr_t) (3) } },
+    { "generateKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionGenerateKey), (intptr_t) (3) } },
+    { "importKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionImportKey), (intptr_t) (5) } },
+    { "exportKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionExportKey), (intptr_t) (2) } },
+    { "wrapKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionWrapKey), (intptr_t) (4) } },
+    { "unwrapKey", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSubtleCryptoPrototypeFunctionUnwrapKey), (intptr_t) (7) } },
 };
 
-const ClassInfo JSSubtleCryptoPrototype::s_info = { "WebKitSubtleCryptoPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSubtleCryptoPrototype) };
+const ClassInfo JSSubtleCryptoPrototype::s_info = { "SubtleCryptoPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSubtleCryptoPrototype) };
 
 void JSSubtleCryptoPrototype::finishCreation(VM& vm)
 {
@@ -95,12 +172,18 @@ void JSSubtleCryptoPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSSubtleCryptoPrototypeTableValues, *this);
 }
 
-const ClassInfo JSSubtleCrypto::s_info = { "WebKitSubtleCrypto", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSubtleCrypto) };
+const ClassInfo JSSubtleCrypto::s_info = { "SubtleCrypto", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSubtleCrypto) };
 
-JSSubtleCrypto::JSSubtleCrypto(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SubtleCrypto>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSubtleCrypto::JSSubtleCrypto(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SubtleCrypto>&& impl)
+    : JSDOMWrapper<SubtleCrypto>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSubtleCrypto::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSubtleCrypto::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -108,7 +191,7 @@ JSObject* JSSubtleCrypto::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSubtleCryptoPrototype::create(vm, globalObject, JSSubtleCryptoPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSubtleCrypto::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSubtleCrypto::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSubtleCrypto>(vm, globalObject);
 }
@@ -119,115 +202,212 @@ void JSSubtleCrypto::destroy(JSC::JSCell* cell)
     thisObject->JSSubtleCrypto::~JSSubtleCrypto();
 }
 
-JSSubtleCrypto::~JSSubtleCrypto()
+template<> inline JSSubtleCrypto* BindingCaller<JSSubtleCrypto>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSubtleCrypto*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionEncrypt(ExecState* exec)
+EncodedJSValue jsSubtleCryptoConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "encrypt");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->encrypt(exec));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSubtleCryptoPrototype* domObject = jsDynamicDowncast<JSSubtleCryptoPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSubtleCrypto::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDecrypt(ExecState* exec)
+bool setJSSubtleCryptoConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "decrypt");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->decrypt(exec));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSubtleCryptoPrototype* domObject = jsDynamicDowncast<JSSubtleCryptoPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionSign(ExecState* exec)
+JSValue JSSubtleCrypto::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "sign");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->sign(exec));
+    return getDOMConstructor<JSSubtleCryptoConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionVerify(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionEncryptCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionEncrypt(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "verify");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->verify(exec));
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionEncryptCaller, CastedThisErrorBehavior::RejectPromise>(state, "encrypt");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDigest(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionEncryptCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "digest");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->digest(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->encrypt(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionGenerateKey(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDecryptCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDecrypt(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "generateKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->generateKey(exec));
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionDecryptCaller, CastedThisErrorBehavior::RejectPromise>(state, "decrypt");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionImportKey(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDecryptCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "importKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->importKey(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->decrypt(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionExportKey(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionSignCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionSign(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "exportKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->exportKey(exec));
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionSignCaller, CastedThisErrorBehavior::RejectPromise>(state, "sign");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionWrapKey(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionSignCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "wrapKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->wrapKey(exec));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->sign(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionUnwrapKey(ExecState* exec)
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionVerifyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionVerify(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSubtleCrypto* castedThis = jsDynamicCast<JSSubtleCrypto*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SubtleCrypto", "unwrapKey");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSubtleCrypto::info());
-    return JSValue::encode(castedThis->unwrapKey(exec));
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionVerifyCaller, CastedThisErrorBehavior::RejectPromise>(state, "verify");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionVerifyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->verify(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDigestCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDigest(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionDigestCaller, CastedThisErrorBehavior::RejectPromise>(state, "digest");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDigestCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->digest(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDeriveKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDeriveKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionDeriveKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "deriveKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDeriveKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->deriveKey(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDeriveBitsCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionDeriveBits(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionDeriveBitsCaller, CastedThisErrorBehavior::RejectPromise>(state, "deriveBits");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionDeriveBitsCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->deriveBits(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionGenerateKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionGenerateKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionGenerateKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "generateKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionGenerateKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->generateKey(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionImportKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionImportKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionImportKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "importKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionImportKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->importKey(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionExportKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionExportKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionExportKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "exportKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionExportKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->exportKey(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionWrapKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionWrapKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionWrapKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "wrapKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionWrapKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->wrapKey(*state));
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionUnwrapKeyCaller(JSC::ExecState*, JSSubtleCrypto*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSubtleCryptoPrototypeFunctionUnwrapKey(ExecState* state)
+{
+    return BindingCaller<JSSubtleCrypto>::callOperation<jsSubtleCryptoPrototypeFunctionUnwrapKeyCaller, CastedThisErrorBehavior::RejectPromise>(state, "unwrapKey");
+}
+
+static inline JSC::EncodedJSValue jsSubtleCryptoPrototypeFunctionUnwrapKeyCaller(JSC::ExecState* state, JSSubtleCrypto* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->unwrapKey(*state));
 }
 
 bool JSSubtleCryptoOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsSubtleCrypto = jsCast<JSSubtleCrypto*>(handle.slot()->asCell());
-    Document* root = WTF::getPtr(jsSubtleCrypto->impl().document());
+    ScriptExecutionContext* root = WTF::getPtr(jsSubtleCrypto->wrapped().scriptExecutionContext());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -235,9 +415,9 @@ bool JSSubtleCryptoOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSSubtleCryptoOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSubtleCrypto = jsCast<JSSubtleCrypto*>(handle.slot()->asCell());
+    auto* jsSubtleCrypto = static_cast<JSSubtleCrypto*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSubtleCrypto->impl(), jsSubtleCrypto);
+    uncacheWrapper(world, &jsSubtleCrypto->wrapped(), jsSubtleCrypto);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -248,15 +428,12 @@ extern "C" { extern void (*const __identifier("??_7SubtleCrypto@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12SubtleCryptoE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SubtleCrypto* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SubtleCrypto>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSubtleCrypto>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SubtleCrypto@WebCore@@6B@"));
 #else
@@ -264,7 +441,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SubtleCrypto
 #if COMPILER(CLANG)
     // If this fails SubtleCrypto does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(SubtleCrypto), SubtleCrypto_is_not_polymorphic);
+    static_assert(__is_polymorphic(SubtleCrypto), "SubtleCrypto is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -273,13 +450,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SubtleCrypto
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSSubtleCrypto>(globalObject, impl);
+    return createWrapper<SubtleCrypto>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SubtleCrypto& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SubtleCrypto* JSSubtleCrypto::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSubtleCrypto*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSubtleCrypto*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

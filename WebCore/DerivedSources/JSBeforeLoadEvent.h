@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSBeforeLoadEvent_h
-#define JSBeforeLoadEvent_h
+#pragma once
 
 #include "BeforeLoadEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSBeforeLoadEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = BeforeLoadEvent;
     static JSBeforeLoadEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BeforeLoadEvent>&& impl)
     {
-        JSBeforeLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEvent>(globalObject->vm().heap)) JSBeforeLoadEvent(structure, globalObject, WTF::move(impl));
+        JSBeforeLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEvent>(globalObject->vm().heap)) JSBeforeLoadEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    BeforeLoadEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    BeforeLoadEvent& wrapped() const
     {
-        return static_cast<BeforeLoadEvent&>(Base::impl());
+        return static_cast<BeforeLoadEvent&>(Base::wrapped());
     }
 protected:
-    JSBeforeLoadEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<BeforeLoadEvent>&&);
+    JSBeforeLoadEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<BeforeLoadEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BeforeLoadEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, BeforeLoadEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<BeforeLoadEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<BeforeLoadEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillBeforeLoadEventInit(BeforeLoadEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<BeforeLoadEvent> {
+    using WrapperClass = JSBeforeLoadEvent;
+    using ToWrappedReturnType = BeforeLoadEvent*;
+};
+template<> BeforeLoadEvent::Init convertDictionary<BeforeLoadEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

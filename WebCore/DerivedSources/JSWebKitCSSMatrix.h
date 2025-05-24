@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitCSSMatrix_h
-#define JSWebKitCSSMatrix_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "WebKitCSSMatrix.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSWebKitCSSMatrix : public JSDOMWrapper {
+class JSWebKitCSSMatrix : public JSDOMWrapper<WebKitCSSMatrix> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebKitCSSMatrix>;
     static JSWebKitCSSMatrix* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSMatrix>&& impl)
     {
-        JSWebKitCSSMatrix* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSMatrix>(globalObject->vm().heap)) JSWebKitCSSMatrix(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSMatrix* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSMatrix>(globalObject->vm().heap)) JSWebKitCSSMatrix(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitCSSMatrix* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitCSSMatrix();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSMatrix& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitCSSMatrix* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebKitCSSMatrix(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSMatrix>&&);
+    JSWebKitCSSMatrix(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSMatrix>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebKitCSSMatrixOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitCSSMatrix*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitCSSMatrix*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitCSSMatrix& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebKitCSSMatrix* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitCSSMatrix&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitCSSMatrix* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebKitCSSMatrix>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebKitCSSMatrix>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebKitCSSMatrix> {
+    using WrapperClass = JSWebKitCSSMatrix;
+    using ToWrappedReturnType = WebKitCSSMatrix*;
+};
 
 } // namespace WebCore
-
-#endif

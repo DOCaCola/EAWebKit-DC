@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSQLTransactionCallback_h
-#define JSSQLTransactionCallback_h
+#pragma once
 
 #include "ActiveDOMCallback.h"
 #include "JSCallbackData.h"
@@ -38,16 +37,18 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSSQLTransactionCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(SQLTransaction* transaction);
 
 private:
-    JSSQLTransactionCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSSQLTransactionCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
 
-} // namespace WebCore
+JSC::JSValue toJS(SQLTransactionCallback&);
+inline JSC::JSValue toJS(SQLTransactionCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
-#endif
+} // namespace WebCore

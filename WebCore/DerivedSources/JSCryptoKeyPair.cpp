@@ -24,170 +24,57 @@
 
 #include "JSCryptoKeyPair.h"
 
-#include "CryptoKey.h"
-#include "CryptoKeyPair.h"
 #include "JSCryptoKey.h"
-#include "JSDOMBinding.h"
-#include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-// Attributes
-
-JSC::EncodedJSValue jsCryptoKeyPairPublicKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCryptoKeyPairPrivateKey(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-
-class JSCryptoKeyPairPrototype : public JSC::JSNonFinalObject {
-public:
-    typedef JSC::JSNonFinalObject Base;
-    static JSCryptoKeyPairPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
-    {
-        JSCryptoKeyPairPrototype* ptr = new (NotNull, JSC::allocateCell<JSCryptoKeyPairPrototype>(vm.heap)) JSCryptoKeyPairPrototype(vm, globalObject, structure);
-        ptr->finishCreation(vm);
-        return ptr;
+template<> CryptoKeyPair convertDictionary<CryptoKeyPair>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-private:
-    JSCryptoKeyPairPrototype(JSC::VM& vm, JSC::JSGlobalObject*, JSC::Structure* structure)
-        : JSC::JSNonFinalObject(vm, structure)
-    {
+    CryptoKeyPair result;
+    JSValue privateKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "privateKey"));
+    if (!privateKeyValue.isUndefined()) {
+        result.privateKey = convert<IDLInterface<CryptoKey>>(state, privateKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-
-    void finishCreation(JSC::VM&);
-};
-
-/* Hash table for prototype */
-
-static const HashTableValue JSCryptoKeyPairPrototypeTableValues[] =
-{
-    { "publicKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPublicKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "privateKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPrivateKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-const ClassInfo JSCryptoKeyPairPrototype::s_info = { "KeyPairPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPairPrototype) };
-
-void JSCryptoKeyPairPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSCryptoKeyPairPrototypeTableValues, *this);
-}
-
-const ClassInfo JSCryptoKeyPair::s_info = { "KeyPair", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPair) };
-
-JSCryptoKeyPair::JSCryptoKeyPair(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKeyPair>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
-
-JSObject* JSCryptoKeyPair::createPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return JSCryptoKeyPairPrototype::create(vm, globalObject, JSCryptoKeyPairPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
-}
-
-JSObject* JSCryptoKeyPair::getPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMPrototype<JSCryptoKeyPair>(vm, globalObject);
-}
-
-void JSCryptoKeyPair::destroy(JSC::JSCell* cell)
-{
-    JSCryptoKeyPair* thisObject = static_cast<JSCryptoKeyPair*>(cell);
-    thisObject->JSCryptoKeyPair::~JSCryptoKeyPair();
-}
-
-JSCryptoKeyPair::~JSCryptoKeyPair()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsCryptoKeyPairPublicKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCryptoKeyPair* castedThis = jsDynamicCast<JSCryptoKeyPair*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCryptoKeyPairPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKeyPair", "publicKey");
-        return throwGetterTypeError(*exec, "CryptoKeyPair", "publicKey");
+    JSValue publicKeyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "publicKey"));
+    if (!publicKeyValue.isUndefined()) {
+        result.publicKey = convert<IDLInterface<CryptoKey>>(state, publicKeyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.publicKey()));
-    return JSValue::encode(result);
+    return result;
 }
 
-
-EncodedJSValue jsCryptoKeyPairPrivateKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const CryptoKeyPair& dictionary)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCryptoKeyPair* castedThis = jsDynamicCast<JSCryptoKeyPair*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCryptoKeyPairPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKeyPair", "privateKey");
-        return throwGetterTypeError(*exec, "CryptoKeyPair", "privateKey");
+    auto& vm = state.vm();
+
+    auto result = constructEmptyObject(&state);
+
+    if (!IDLInterface<CryptoKey>::isNullValue(dictionary.privateKey)) {
+        auto privateKeyValue = toJS<IDLInterface<CryptoKey>>(state, globalObject, IDLInterface<CryptoKey>::extractValueFromNullable(dictionary.privateKey));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "privateKey"), privateKeyValue);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.privateKey()));
-    return JSValue::encode(result);
+    if (!IDLInterface<CryptoKey>::isNullValue(dictionary.publicKey)) {
+        auto publicKeyValue = toJS<IDLInterface<CryptoKey>>(state, globalObject, IDLInterface<CryptoKey>::extractValueFromNullable(dictionary.publicKey));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "publicKey"), publicKeyValue);
+    }
+    return result;
 }
 
-
-void JSCryptoKeyPair::visitChildren(JSCell* cell, SlotVisitor& visitor)
-{
-    auto* thisObject = jsCast<JSCryptoKeyPair*>(cell);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Base::visitChildren(thisObject, visitor);
-    thisObject->visitAdditionalChildren(visitor);
-}
-
-bool JSCryptoKeyPairOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSCryptoKeyPairOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsCryptoKeyPair = jsCast<JSCryptoKeyPair*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCryptoKeyPair->impl(), jsCryptoKeyPair);
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CryptoKeyPair* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCryptoKeyPair>(globalObject, impl))
-        return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to CryptoKeyPair.
-    COMPILE_ASSERT(!__is_polymorphic(CryptoKeyPair), CryptoKeyPair_is_polymorphic_but_idl_claims_not_to_be);
-#endif
-    return createNewWrapper<JSCryptoKeyPair>(globalObject, impl);
-}
-
-CryptoKeyPair* JSCryptoKeyPair::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSCryptoKeyPair*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
-
-}
+} // namespace WebCore
 
 #endif // ENABLE(SUBTLE_CRYPTO)

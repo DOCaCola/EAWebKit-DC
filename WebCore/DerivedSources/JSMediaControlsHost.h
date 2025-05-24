@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaControlsHost_h
-#define JSMediaControlsHost_h
+#pragma once
 
 #if ENABLE(MEDIA_CONTROLS_SCRIPT)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "MediaControlsHost.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSMediaControlsHost : public JSDOMWrapper {
+class JSMediaControlsHost : public JSDOMWrapper<MediaControlsHost> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaControlsHost>;
     static JSMediaControlsHost* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaControlsHost>&& impl)
     {
-        JSMediaControlsHost* ptr = new (NotNull, JSC::allocateCell<JSMediaControlsHost>(globalObject->vm().heap)) JSMediaControlsHost(structure, globalObject, WTF::move(impl));
+        JSMediaControlsHost* ptr = new (NotNull, JSC::allocateCell<JSMediaControlsHost>(globalObject->vm().heap)) JSMediaControlsHost(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaControlsHost* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaControlsHost();
 
     DECLARE_INFO;
 
@@ -52,20 +51,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaControlsHost& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaControlsHost* m_impl;
 protected:
-    JSMediaControlsHost(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaControlsHost>&&);
+    JSMediaControlsHost(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaControlsHost>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaControlsHostOwner : public JSC::WeakHandleOwner {
@@ -80,12 +69,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaControlsHost*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaControlsHost*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaControlsHost& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaControlsHost* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaControlsHost&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaControlsHost* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaControlsHost>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaControlsHost>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaControlsHost> {
+    using WrapperClass = JSMediaControlsHost;
+    using ToWrappedReturnType = MediaControlsHost*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, MediaControlsHost::DeviceType);
+
+template<> std::optional<MediaControlsHost::DeviceType> parseEnumeration<MediaControlsHost::DeviceType>(JSC::ExecState&, JSC::JSValue);
+template<> MediaControlsHost::DeviceType convertEnumeration<MediaControlsHost::DeviceType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<MediaControlsHost::DeviceType>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_CONTROLS_SCRIPT)
-
-#endif

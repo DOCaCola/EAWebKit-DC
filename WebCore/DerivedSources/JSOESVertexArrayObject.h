@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOESVertexArrayObject_h
-#define JSOESVertexArrayObject_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSOESVertexArrayObject : public JSDOMWrapper {
+class JSOESVertexArrayObject : public JSDOMWrapper<OESVertexArrayObject> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<OESVertexArrayObject>;
     static JSOESVertexArrayObject* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESVertexArrayObject>&& impl)
     {
-        JSOESVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSOESVertexArrayObject>(globalObject->vm().heap)) JSOESVertexArrayObject(structure, globalObject, WTF::move(impl));
+        JSOESVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSOESVertexArrayObject>(globalObject->vm().heap)) JSOESVertexArrayObject(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESVertexArrayObject* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESVertexArrayObject();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESVertexArrayObject& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESVertexArrayObject* m_impl;
 protected:
-    JSOESVertexArrayObject(JSC::Structure*, JSDOMGlobalObject*, Ref<OESVertexArrayObject>&&);
+    JSOESVertexArrayObject(JSC::Structure*, JSDOMGlobalObject&, Ref<OESVertexArrayObject>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSOESVertexArrayObjectOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESVertexArrayObject
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESVertexArrayObject*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESVertexArrayObject& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(OESVertexArrayObject* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESVertexArrayObject&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESVertexArrayObject* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OESVertexArrayObject>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OESVertexArrayObject>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OESVertexArrayObject> {
+    using WrapperClass = JSOESVertexArrayObject;
+    using ToWrappedReturnType = OESVertexArrayObject*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

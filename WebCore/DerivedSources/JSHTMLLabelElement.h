@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLLabelElement_h
-#define JSHTMLLabelElement_h
+#pragma once
 
 #include "HTMLLabelElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLLabelElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLLabelElement;
     static JSHTMLLabelElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLabelElement>&& impl)
     {
-        JSHTMLLabelElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLabelElement>(globalObject->vm().heap)) JSHTMLLabelElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLabelElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLabelElement>(globalObject->vm().heap)) JSHTMLLabelElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLLabelElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLLabelElement& wrapped() const
     {
-        return static_cast<HTMLLabelElement&>(Base::impl());
+        return static_cast<HTMLLabelElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLLabelElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLabelElement>&&);
+    JSHTMLLabelElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLabelElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLLabelElement> {
+    using WrapperClass = JSHTMLLabelElement;
+    using ToWrappedReturnType = HTMLLabelElement*;
+};
 
 } // namespace WebCore
-
-#endif

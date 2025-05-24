@@ -28,6 +28,10 @@
 #ifndef EventTargetHeaders_h
 #define EventTargetHeaders_h
 
+#if ENABLE(APPLE_PAY)
+#include "ApplePaySession.h"
+#include "JSApplePaySession.h"
+#endif
 #if ENABLE(WEB_AUDIO)
 #include "AudioContext.h"
 #include "JSAudioContext.h"
@@ -40,10 +44,6 @@
 #include "AudioTrackList.h"
 #include "JSAudioTrackList.h"
 #endif
-#if ENABLE(BATTERY_STATUS)
-#include "BatteryManager.h"
-#include "JSBatteryManager.h"
-#endif
 #include "DOMApplicationCache.h"
 #include "JSDOMApplicationCache.h"
 #include "DOMWindow.h"
@@ -54,10 +54,8 @@
 #include "JSEventSource.h"
 #include "FileReader.h"
 #include "JSFileReader.h"
-#if ENABLE(FONT_LOAD_EVENTS)
-#include "FontLoader.h"
-#include "JSFontLoader.h"
-#endif
+#include "FontFaceSet.h"
+#include "JSFontFaceSet.h"
 #if ENABLE(INDEXED_DATABASE)
 #include "IDBDatabase.h"
 #include "JSIDBDatabase.h"
@@ -78,7 +76,7 @@
 #include "MediaController.h"
 #include "JSMediaController.h"
 #endif
-#if ENABLE(ENCRYPTED_MEDIA_V2)
+#if ENABLE(ENCRYPTED_MEDIA)
 #include "MediaKeySession.h"
 #include "JSMediaKeySession.h"
 #endif
@@ -110,15 +108,15 @@
 #include "Performance.h"
 #include "JSPerformance.h"
 #endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCDTMFSender.h"
 #include "JSRTCDTMFSender.h"
 #endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCDataChannel.h"
 #include "JSRTCDataChannel.h"
 #endif
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 #include "RTCPeerConnection.h"
 #include "JSRTCPeerConnection.h"
 #endif
@@ -149,6 +147,10 @@
 #if ENABLE(VIDEO_TRACK)
 #include "VideoTrackList.h"
 #include "JSVideoTrackList.h"
+#endif
+#if ENABLE(LEGACY_ENCRYPTED_MEDIA)
+#include "WebKitMediaKeySession.h"
+#include "JSWebKitMediaKeySession.h"
 #endif
 #include "WebKitNamedFlow.h"
 #include "JSWebKitNamedFlow.h"

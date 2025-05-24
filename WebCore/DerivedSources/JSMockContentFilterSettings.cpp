@@ -25,9 +25,7 @@
 #include "JSMockContentFilterSettings.h"
 
 #include "JSDOMBinding.h"
-#include "MockContentFilterSettings.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,23 +34,24 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsMockContentFilterSettingsEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsBlockedString(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsBlockedString(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsModifiedRequestURL(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsModifiedRequestURL(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsDecisionPoint(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsDecisionPoint(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsDecision(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsDecision(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsUnblockRequestDecision(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMockContentFilterSettingsUnblockRequestDecision(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMockContentFilterSettingsUnblockRequestURL(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMockContentFilterSettingsEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsEnabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsBlockedString(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsBlockedString(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsModifiedRequestURL(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsModifiedRequestURL(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsDecisionPoint(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsDecisionPoint(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsDecision(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsDecision(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsUnblockRequestDecision(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsUnblockRequestDecision(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMockContentFilterSettingsUnblockRequestURL(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMockContentFilterSettingsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMockContentFilterSettingsPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMockContentFilterSettingsPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMockContentFilterSettingsPrototype* ptr = new (NotNull, JSC::allocateCell<JSMockContentFilterSettingsPrototype>(vm.heap)) JSMockContentFilterSettingsPrototype(vm, globalObject, structure);
@@ -75,43 +74,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-/* Hash table */
-
-static const struct CompactHashIndex JSMockContentFilterSettingsTableIndex[8] = {
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 2, -1 },
-};
-
-
-static const HashTableValue JSMockContentFilterSettingsTableValues[] =
-{
-    { "decisionPoint", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsDecisionPoint), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsDecisionPoint) },
-    { "decision", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsDecision), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsDecision) },
-    { "unblockRequestDecision", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsUnblockRequestDecision), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsUnblockRequestDecision) },
-};
-
-static const HashTable JSMockContentFilterSettingsTable = { 3, 7, true, JSMockContentFilterSettingsTableValues, 0, JSMockContentFilterSettingsTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSMockContentFilterSettingsPrototypeTableValues[] =
 {
-    { "enabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsEnabled) },
-    { "blockedString", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsBlockedString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsBlockedString) },
-    { "modifiedRequestURL", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsModifiedRequestURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsModifiedRequestURL) },
-    { "unblockRequestURL", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsUnblockRequestURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "DECISION_POINT_AFTER_WILL_SEND_REQUEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "DECISION_POINT_AFTER_REDIRECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "DECISION_POINT_AFTER_RESPONSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "DECISION_POINT_AFTER_ADD_DATA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "DECISION_POINT_AFTER_FINISHED_ADDING_DATA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "DECISION_ALLOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "DECISION_BLOCK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
+    { "enabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsEnabled) } },
+    { "blockedString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsBlockedString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsBlockedString) } },
+    { "modifiedRequestURL", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsModifiedRequestURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsModifiedRequestURL) } },
+    { "decisionPoint", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsDecisionPoint), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsDecisionPoint) } },
+    { "decision", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsDecision), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsDecision) } },
+    { "unblockRequestDecision", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsUnblockRequestDecision), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMockContentFilterSettingsUnblockRequestDecision) } },
+    { "unblockRequestURL", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMockContentFilterSettingsUnblockRequestURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "DECISION_POINT_AFTER_WILL_SEND_REQUEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "DECISION_POINT_AFTER_REDIRECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "DECISION_POINT_AFTER_RESPONSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "DECISION_POINT_AFTER_ADD_DATA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "DECISION_POINT_AFTER_FINISHED_ADDING_DATA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "DECISION_POINT_NEVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "DECISION_ALLOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "DECISION_BLOCK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
 };
 
 const ClassInfo JSMockContentFilterSettingsPrototype::s_info = { "MockContentFilterSettingsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMockContentFilterSettingsPrototype) };
@@ -122,12 +103,18 @@ void JSMockContentFilterSettingsPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSMockContentFilterSettingsPrototypeTableValues, *this);
 }
 
-const ClassInfo JSMockContentFilterSettings::s_info = { "MockContentFilterSettings", &Base::s_info, &JSMockContentFilterSettingsTable, CREATE_METHOD_TABLE(JSMockContentFilterSettings) };
+const ClassInfo JSMockContentFilterSettings::s_info = { "MockContentFilterSettings", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMockContentFilterSettings) };
 
-JSMockContentFilterSettings::JSMockContentFilterSettings(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MockContentFilterSettings>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMockContentFilterSettings::JSMockContentFilterSettings(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MockContentFilterSettings>&& impl)
+    : JSDOMWrapper<MockContentFilterSettings>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMockContentFilterSettings::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMockContentFilterSettings::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -135,7 +122,7 @@ JSObject* JSMockContentFilterSettings::createPrototype(VM& vm, JSGlobalObject* g
     return JSMockContentFilterSettingsPrototype::create(vm, globalObject, JSMockContentFilterSettingsPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSMockContentFilterSettings::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMockContentFilterSettings::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMockContentFilterSettings>(vm, globalObject);
 }
@@ -146,209 +133,233 @@ void JSMockContentFilterSettings::destroy(JSC::JSCell* cell)
     thisObject->JSMockContentFilterSettings::~JSMockContentFilterSettings();
 }
 
-JSMockContentFilterSettings::~JSMockContentFilterSettings()
+template<> inline JSMockContentFilterSettings* BindingCaller<JSMockContentFilterSettings>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
 }
 
-bool JSMockContentFilterSettings::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsMockContentFilterSettingsEnabledGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
+
+EncodedJSValue jsMockContentFilterSettingsEnabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSMockContentFilterSettings*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSMockContentFilterSettings, Base>(exec, JSMockContentFilterSettingsTable, thisObject, propertyName, slot);
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsEnabledGetter>(state, thisValue, "enabled");
 }
 
-EncodedJSValue jsMockContentFilterSettingsEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMockContentFilterSettingsEnabledGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MockContentFilterSettings", "enabled");
-        return throwGetterTypeError(*exec, "MockContentFilterSettings", "enabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.enabled());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.enabled());
+    return result;
 }
 
+static inline JSValue jsMockContentFilterSettingsBlockedStringGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
 
-EncodedJSValue jsMockContentFilterSettingsBlockedString(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMockContentFilterSettingsBlockedString(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MockContentFilterSettings", "blockedString");
-        return throwGetterTypeError(*exec, "MockContentFilterSettings", "blockedString");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.blockedString());
-    return JSValue::encode(result);
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsBlockedStringGetter>(state, thisValue, "blockedString");
 }
 
-
-EncodedJSValue jsMockContentFilterSettingsModifiedRequestURL(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMockContentFilterSettingsBlockedStringGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MockContentFilterSettings", "modifiedRequestURL");
-        return throwGetterTypeError(*exec, "MockContentFilterSettings", "modifiedRequestURL");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.modifiedRequestURL());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.blockedString());
+    return result;
 }
 
+static inline JSValue jsMockContentFilterSettingsModifiedRequestURLGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
 
-EncodedJSValue jsMockContentFilterSettingsDecisionPoint(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMockContentFilterSettingsModifiedRequestURL(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(slotBase);
-    return JSValue::encode(castedThis->decisionPoint(exec));
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsModifiedRequestURLGetter>(state, thisValue, "modifiedRequestURL");
 }
 
-
-EncodedJSValue jsMockContentFilterSettingsDecision(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMockContentFilterSettingsModifiedRequestURLGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(slotBase);
-    return JSValue::encode(castedThis->decision(exec));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.modifiedRequestURL());
+    return result;
 }
 
+static inline JSValue jsMockContentFilterSettingsDecisionPointGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
 
-EncodedJSValue jsMockContentFilterSettingsUnblockRequestDecision(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMockContentFilterSettingsDecisionPoint(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(slotBase);
-    return JSValue::encode(castedThis->unblockRequestDecision(exec));
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsDecisionPointGetter>(state, thisValue, "decisionPoint");
 }
 
-
-EncodedJSValue jsMockContentFilterSettingsUnblockRequestURL(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMockContentFilterSettingsDecisionPointGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MockContentFilterSettings", "unblockRequestURL");
-        return throwGetterTypeError(*exec, "MockContentFilterSettings", "unblockRequestURL");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.unblockRequestURL());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.decisionPoint(state);
 }
 
+static inline JSValue jsMockContentFilterSettingsDecisionGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
 
-void setJSMockContentFilterSettingsEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+EncodedJSValue jsMockContentFilterSettingsDecision(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsDecisionGetter>(state, thisValue, "decision");
+}
+
+static inline JSValue jsMockContentFilterSettingsDecisionGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.decision(state);
+}
+
+static inline JSValue jsMockContentFilterSettingsUnblockRequestDecisionGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
+
+EncodedJSValue jsMockContentFilterSettingsUnblockRequestDecision(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsUnblockRequestDecisionGetter>(state, thisValue, "unblockRequestDecision");
+}
+
+static inline JSValue jsMockContentFilterSettingsUnblockRequestDecisionGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.unblockRequestDecision(state);
+}
+
+static inline JSValue jsMockContentFilterSettingsUnblockRequestURLGetter(ExecState&, JSMockContentFilterSettings&, ThrowScope& throwScope);
+
+EncodedJSValue jsMockContentFilterSettingsUnblockRequestURL(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMockContentFilterSettings>::attribute<jsMockContentFilterSettingsUnblockRequestURLGetter>(state, thisValue, "unblockRequestURL");
+}
+
+static inline JSValue jsMockContentFilterSettingsUnblockRequestURLGetter(ExecState& state, JSMockContentFilterSettings& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.unblockRequestURL());
+    return result;
+}
+
+bool setJSMockContentFilterSettingsConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MockContentFilterSettings", "enabled");
-        else
-            throwSetterTypeError(*exec, "MockContentFilterSettings", "enabled");
-        return;
+    JSMockContentFilterSettingsPrototype* domObject = jsDynamicDowncast<JSMockContentFilterSettingsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setEnabled(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMockContentFilterSettingsEnabledFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsEnabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsEnabledFunction>(state, thisValue, encodedValue, "enabled");
+}
+
+static inline bool setJSMockContentFilterSettingsEnabledFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setEnabled(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSMockContentFilterSettingsBlockedString(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMockContentFilterSettingsBlockedStringFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsBlockedString(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MockContentFilterSettings", "blockedString");
-        else
-            throwSetterTypeError(*exec, "MockContentFilterSettings", "blockedString");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBlockedString(nativeValue);
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsBlockedStringFunction>(state, thisValue, encodedValue, "blockedString");
+}
+
+static inline bool setJSMockContentFilterSettingsBlockedStringFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBlockedString(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSMockContentFilterSettingsModifiedRequestURL(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMockContentFilterSettingsModifiedRequestURLFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsModifiedRequestURL(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMockContentFilterSettings* castedThis = jsDynamicCast<JSMockContentFilterSettings*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMockContentFilterSettingsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MockContentFilterSettings", "modifiedRequestURL");
-        else
-            throwSetterTypeError(*exec, "MockContentFilterSettings", "modifiedRequestURL");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setModifiedRequestURL(nativeValue);
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsModifiedRequestURLFunction>(state, thisValue, encodedValue, "modifiedRequestURL");
+}
+
+static inline bool setJSMockContentFilterSettingsModifiedRequestURLFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setModifiedRequestURL(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSMockContentFilterSettingsDecisionPoint(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMockContentFilterSettingsDecisionPointFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsDecisionPoint(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setDecisionPoint(exec, value);
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsDecisionPointFunction>(state, thisValue, encodedValue, "decisionPoint");
+}
+
+static inline bool setJSMockContentFilterSettingsDecisionPointFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    thisObject.setDecisionPoint(state, value);
+    return true;
 }
 
 
-void setJSMockContentFilterSettingsDecision(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMockContentFilterSettingsDecisionFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsDecision(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setDecision(exec, value);
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsDecisionFunction>(state, thisValue, encodedValue, "decision");
+}
+
+static inline bool setJSMockContentFilterSettingsDecisionFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    thisObject.setDecision(state, value);
+    return true;
 }
 
 
-void setJSMockContentFilterSettingsUnblockRequestDecision(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMockContentFilterSettingsUnblockRequestDecisionFunction(ExecState&, JSMockContentFilterSettings&, JSValue, ThrowScope&);
+
+bool setJSMockContentFilterSettingsUnblockRequestDecision(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSMockContentFilterSettings*>(baseObject);
-    UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setUnblockRequestDecision(exec, value);
+    return BindingCaller<JSMockContentFilterSettings>::setAttribute<setJSMockContentFilterSettingsUnblockRequestDecisionFunction>(state, thisValue, encodedValue, "unblockRequestDecision");
+}
+
+static inline bool setJSMockContentFilterSettingsUnblockRequestDecisionFunction(ExecState& state, JSMockContentFilterSettings& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    thisObject.setUnblockRequestDecision(state, value);
+    return true;
 }
 
 
@@ -361,31 +372,32 @@ bool JSMockContentFilterSettingsOwner::isReachableFromOpaqueRoots(JSC::Handle<JS
 
 void JSMockContentFilterSettingsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMockContentFilterSettings = jsCast<JSMockContentFilterSettings*>(handle.slot()->asCell());
+    auto* jsMockContentFilterSettings = static_cast<JSMockContentFilterSettings*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMockContentFilterSettings->impl(), jsMockContentFilterSettings);
+    uncacheWrapper(world, &jsMockContentFilterSettings->wrapped(), jsMockContentFilterSettings);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MockContentFilterSettings* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MockContentFilterSettings>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMockContentFilterSettings>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to MockContentFilterSettings.
-    COMPILE_ASSERT(!__is_polymorphic(MockContentFilterSettings), MockContentFilterSettings_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(MockContentFilterSettings), "MockContentFilterSettings is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSMockContentFilterSettings>(globalObject, impl);
+    return createWrapper<MockContentFilterSettings>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MockContentFilterSettings& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MockContentFilterSettings* JSMockContentFilterSettings::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMockContentFilterSettings*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMockContentFilterSettings*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

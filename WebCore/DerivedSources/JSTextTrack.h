@@ -18,33 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTextTrack_h
-#define JSTextTrack_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include "TextTrack.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSTextTrack : public JSDOMWrapper {
+class JSTextTrack : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = TextTrack;
     static JSTextTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrack>&& impl)
     {
-        JSTextTrack* ptr = new (NotNull, JSC::allocateCell<JSTextTrack>(globalObject->vm().heap)) JSTextTrack(structure, globalObject, WTF::move(impl));
+        JSTextTrack* ptr = new (NotNull, JSC::allocateCell<JSTextTrack>(globalObject->vm().heap)) JSTextTrack(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static TextTrack* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSTextTrack();
 
     DECLARE_INFO;
 
@@ -53,30 +51,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 
     // Custom attributes
-    void setKind(JSC::ExecState*, JSC::JSValue);
-    void setLanguage(JSC::ExecState*, JSC::JSValue);
-    TextTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrack* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
-protected:
-    JSTextTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrack>&&);
-
-    void finishCreation(JSC::VM& vm)
+    void setLanguage(JSC::ExecState&, JSC::JSValue);
+    TextTrack& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<TextTrack&>(Base::wrapped());
     }
+protected:
+    JSTextTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrack>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSTextTrackOwner : public JSC::WeakHandleOwner {
@@ -91,12 +82,33 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrack*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(TextTrack* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrack&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrack* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TextTrack>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TextTrack>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TextTrack> {
+    using WrapperClass = JSTextTrack;
+    using ToWrappedReturnType = TextTrack*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, TextTrack::Mode);
+
+template<> std::optional<TextTrack::Mode> parseEnumeration<TextTrack::Mode>(JSC::ExecState&, JSC::JSValue);
+template<> TextTrack::Mode convertEnumeration<TextTrack::Mode>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<TextTrack::Mode>();
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, TextTrack::Kind);
+
+template<> std::optional<TextTrack::Kind> parseEnumeration<TextTrack::Kind>(JSC::ExecState&, JSC::JSValue);
+template<> TextTrack::Kind convertEnumeration<TextTrack::Kind>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<TextTrack::Kind>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

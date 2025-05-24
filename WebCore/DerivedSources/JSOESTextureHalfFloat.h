@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOESTextureHalfFloat_h
-#define JSOESTextureHalfFloat_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSOESTextureHalfFloat : public JSDOMWrapper {
+class JSOESTextureHalfFloat : public JSDOMWrapper<OESTextureHalfFloat> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<OESTextureHalfFloat>;
     static JSOESTextureHalfFloat* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureHalfFloat>&& impl)
     {
-        JSOESTextureHalfFloat* ptr = new (NotNull, JSC::allocateCell<JSOESTextureHalfFloat>(globalObject->vm().heap)) JSOESTextureHalfFloat(structure, globalObject, WTF::move(impl));
+        JSOESTextureHalfFloat* ptr = new (NotNull, JSC::allocateCell<JSOESTextureHalfFloat>(globalObject->vm().heap)) JSOESTextureHalfFloat(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESTextureHalfFloat* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESTextureHalfFloat();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESTextureHalfFloat& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESTextureHalfFloat* m_impl;
 protected:
-    JSOESTextureHalfFloat(JSC::Structure*, JSDOMGlobalObject*, Ref<OESTextureHalfFloat>&&);
+    JSOESTextureHalfFloat(JSC::Structure*, JSDOMGlobalObject&, Ref<OESTextureHalfFloat>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSOESTextureHalfFloatOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESTextureHalfFloat*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESTextureHalfFloat*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESTextureHalfFloat& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(OESTextureHalfFloat* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESTextureHalfFloat&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESTextureHalfFloat* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OESTextureHalfFloat>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OESTextureHalfFloat>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OESTextureHalfFloat> {
+    using WrapperClass = JSOESTextureHalfFloat;
+    using ToWrappedReturnType = OESTextureHalfFloat*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

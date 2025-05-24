@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOESElementIndexUint_h
-#define JSOESElementIndexUint_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSOESElementIndexUint : public JSDOMWrapper {
+class JSOESElementIndexUint : public JSDOMWrapper<OESElementIndexUint> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<OESElementIndexUint>;
     static JSOESElementIndexUint* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESElementIndexUint>&& impl)
     {
-        JSOESElementIndexUint* ptr = new (NotNull, JSC::allocateCell<JSOESElementIndexUint>(globalObject->vm().heap)) JSOESElementIndexUint(structure, globalObject, WTF::move(impl));
+        JSOESElementIndexUint* ptr = new (NotNull, JSC::allocateCell<JSOESElementIndexUint>(globalObject->vm().heap)) JSOESElementIndexUint(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESElementIndexUint* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESElementIndexUint();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESElementIndexUint& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESElementIndexUint* m_impl;
 protected:
-    JSOESElementIndexUint(JSC::Structure*, JSDOMGlobalObject*, Ref<OESElementIndexUint>&&);
+    JSOESElementIndexUint(JSC::Structure*, JSDOMGlobalObject&, Ref<OESElementIndexUint>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSOESElementIndexUintOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESElementIndexUint*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESElementIndexUint*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESElementIndexUint& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(OESElementIndexUint* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESElementIndexUint&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESElementIndexUint* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OESElementIndexUint>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OESElementIndexUint>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OESElementIndexUint> {
+    using WrapperClass = JSOESElementIndexUint;
+    using ToWrappedReturnType = OESElementIndexUint*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

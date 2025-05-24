@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWheelEvent_h
-#define JSWheelEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSMouseEvent.h"
 #include "WheelEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSWheelEvent : public JSMouseEvent {
 public:
-    typedef JSMouseEvent Base;
+    using Base = JSMouseEvent;
+    using DOMWrapped = WheelEvent;
     static JSWheelEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WheelEvent>&& impl)
     {
-        JSWheelEvent* ptr = new (NotNull, JSC::allocateCell<JSWheelEvent>(globalObject->vm().heap)) JSWheelEvent(structure, globalObject, WTF::move(impl));
+        JSWheelEvent* ptr = new (NotNull, JSC::allocateCell<JSWheelEvent>(globalObject->vm().heap)) JSWheelEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WheelEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WheelEvent& wrapped() const
     {
-        return static_cast<WheelEvent&>(Base::impl());
+        return static_cast<WheelEvent&>(Base::wrapped());
     }
 protected:
-    JSWheelEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WheelEvent>&&);
+    JSWheelEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WheelEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WheelEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WheelEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WheelEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WheelEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillWheelEventInit(WheelEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<WheelEvent> {
+    using WrapperClass = JSWheelEvent;
+    using ToWrappedReturnType = WheelEvent*;
+};
+template<> WheelEvent::Init convertDictionary<WheelEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

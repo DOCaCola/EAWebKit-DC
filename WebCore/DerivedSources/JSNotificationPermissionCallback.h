@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNotificationPermissionCallback_h
-#define JSNotificationPermissionCallback_h
+#pragma once
 
 #if ENABLE(NOTIFICATIONS)
 
@@ -40,18 +39,20 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSNotificationPermissionCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(const String& permission);
 
 private:
-    JSNotificationPermissionCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSNotificationPermissionCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(NotificationPermissionCallback&);
+inline JSC::JSValue toJS(NotificationPermissionCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
 
 } // namespace WebCore
 
 #endif // ENABLE(NOTIFICATIONS)
-
-#endif

@@ -24,10 +24,10 @@
 
 #include "JSGainNode.h"
 
-#include "AudioParam.h"
-#include "GainNode.h"
 #include "JSAudioParam.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,12 +36,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsGainNodeGain(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsGainNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsGainNodeGain(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsGainNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSGainNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSGainNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSGainNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSGainNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSGainNodePrototype>(vm.heap)) JSGainNodePrototype(vm, globalObject, structure);
@@ -64,49 +65,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSGainNodeConstructor : public DOMConstructorObject {
-private:
-    JSGainNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSGainNodeConstructor = JSDOMConstructorNotConstructable<JSGainNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSGainNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSGainNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSGainNodeConstructor>(vm.heap)) JSGainNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSGainNodeConstructor::s_info = { "GainNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGainNodeConstructor) };
-
-JSGainNodeConstructor::JSGainNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSGainNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSGainNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSGainNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSGainNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSGainNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("GainNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSGainNodeConstructor::s_info = { "GainNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGainNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSGainNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsGainNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "gain", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsGainNodeGain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsGainNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSGainNodeConstructor) } },
+    { "gain", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsGainNodeGain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSGainNodePrototype::s_info = { "GainNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGainNodePrototype) };
@@ -119,49 +99,84 @@ void JSGainNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSGainNode::s_info = { "GainNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSGainNode) };
 
-JSGainNode::JSGainNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<GainNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSGainNode::JSGainNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<GainNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSGainNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSGainNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSGainNodePrototype::create(vm, globalObject, JSGainNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSGainNodePrototype::create(vm, globalObject, JSGainNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSGainNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSGainNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSGainNode>(vm, globalObject);
 }
 
-EncodedJSValue jsGainNodeGain(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSGainNode* BindingCaller<JSGainNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSGainNode* castedThis = jsDynamicCast<JSGainNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSGainNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "GainNode", "gain");
-        return throwGetterTypeError(*exec, "GainNode", "gain");
+    return jsDynamicDowncast<JSGainNode*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsGainNodeGainGetter(ExecState&, JSGainNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsGainNodeGain(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSGainNode>::attribute<jsGainNodeGainGetter>(state, thisValue, "gain");
+}
+
+static inline JSValue jsGainNodeGainGetter(ExecState& state, JSGainNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<AudioParam>>(state, *thisObject.globalObject(), impl.gain());
+    return result;
+}
+
+EncodedJSValue jsGainNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSGainNodePrototype* domObject = jsDynamicDowncast<JSGainNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSGainNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSGainNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSGainNodePrototype* domObject = jsDynamicDowncast<JSGainNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.gain()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsGainNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSGainNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSGainNodePrototype* domObject = jsDynamicCast<JSGainNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSGainNode::getConstructor(exec->vm(), domObject->globalObject()));
+    return getDOMConstructor<JSGainNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-JSValue JSGainNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
+void JSGainNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    return getDOMConstructor<JSGainNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSGainNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -172,15 +187,12 @@ extern "C" { extern void (*const __identifier("??_7GainNode@WebCore@@6B@")[])();
 extern "C" { extern void* _ZTVN7WebCore8GainNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, GainNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<GainNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSGainNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7GainNode@WebCore@@6B@"));
 #else
@@ -188,7 +200,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, GainNode* im
 #if COMPILER(CLANG)
     // If this fails GainNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(GainNode), GainNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(GainNode), "GainNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -197,7 +209,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, GainNode* im
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSGainNode>(globalObject, impl);
+    return createWrapper<GainNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, GainNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

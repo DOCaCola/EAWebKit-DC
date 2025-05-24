@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTableCaptionElement_h
-#define JSHTMLTableCaptionElement_h
+#pragma once
 
 #include "HTMLTableCaptionElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLTableCaptionElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLTableCaptionElement;
     static JSHTMLTableCaptionElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTableCaptionElement>&& impl)
     {
-        JSHTMLTableCaptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCaptionElement>(globalObject->vm().heap)) JSHTMLTableCaptionElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTableCaptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCaptionElement>(globalObject->vm().heap)) JSHTMLTableCaptionElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLTableCaptionElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTableCaptionElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLTableCaptionElement& wrapped() const
     {
-        return static_cast<HTMLTableCaptionElement&>(Base::impl());
+        return static_cast<HTMLTableCaptionElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTableCaptionElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTableCaptionElement>&&);
+    JSHTMLTableCaptionElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTableCaptionElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLTableCaptionElement> {
+    using WrapperClass = JSHTMLTableCaptionElement;
+    using ToWrappedReturnType = HTMLTableCaptionElement*;
+};
 
 } // namespace WebCore
-
-#endif

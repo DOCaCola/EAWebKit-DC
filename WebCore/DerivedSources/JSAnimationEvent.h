@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAnimationEvent_h
-#define JSAnimationEvent_h
+#pragma once
 
 #include "AnimationEvent.h"
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSAnimationEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = AnimationEvent;
     static JSAnimationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnimationEvent>&& impl)
     {
-        JSAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSAnimationEvent>(globalObject->vm().heap)) JSAnimationEvent(structure, globalObject, WTF::move(impl));
+        JSAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSAnimationEvent>(globalObject->vm().heap)) JSAnimationEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AnimationEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    AnimationEvent& wrapped() const
     {
-        return static_cast<AnimationEvent&>(Base::impl());
+        return static_cast<AnimationEvent&>(Base::wrapped());
     }
 protected:
-    JSAnimationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<AnimationEvent>&&);
+    JSAnimationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<AnimationEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AnimationEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AnimationEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AnimationEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AnimationEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillAnimationEventInit(AnimationEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<AnimationEvent> {
+    using WrapperClass = JSAnimationEvent;
+    using ToWrappedReturnType = AnimationEvent*;
+};
+template<> AnimationEvent::Init convertDictionary<AnimationEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

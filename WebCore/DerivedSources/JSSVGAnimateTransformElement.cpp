@@ -22,7 +22,7 @@
 #include "JSSVGAnimateTransformElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGAnimateTransformElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,11 +31,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGAnimateTransformElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAnimateTransformElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGAnimateTransformElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGAnimateTransformElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGAnimateTransformElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGAnimateTransformElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateTransformElementPrototype>(vm.heap)) JSSVGAnimateTransformElementPrototype(vm, globalObject, structure);
@@ -58,48 +59,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAnimateTransformElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGAnimateTransformElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGAnimateTransformElementConstructor = JSDOMConstructorNotConstructable<JSSVGAnimateTransformElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAnimateTransformElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAnimateTransformElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateTransformElementConstructor>(vm.heap)) JSSVGAnimateTransformElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAnimateTransformElementConstructor::s_info = { "SVGAnimateTransformElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateTransformElementConstructor) };
-
-JSSVGAnimateTransformElementConstructor::JSSVGAnimateTransformElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGAnimateTransformElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGAnimationElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGAnimateTransformElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGAnimateTransformElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateTransformElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateTransformElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAnimateTransformElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAnimateTransformElementConstructor::s_info = { "SVGAnimateTransformElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateTransformElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnimateTransformElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateTransformElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateTransformElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAnimateTransformElementConstructor) } },
 };
 
 const ClassInfo JSSVGAnimateTransformElementPrototype::s_info = { "SVGAnimateTransformElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateTransformElementPrototype) };
@@ -112,32 +92,63 @@ void JSSVGAnimateTransformElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAnimateTransformElement::s_info = { "SVGAnimateTransformElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateTransformElement) };
 
-JSSVGAnimateTransformElement::JSSVGAnimateTransformElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateTransformElement>&& impl)
-    : JSSVGAnimationElement(structure, globalObject, WTF::move(impl))
+JSSVGAnimateTransformElement::JSSVGAnimateTransformElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAnimateTransformElement>&& impl)
+    : JSSVGAnimationElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGAnimateTransformElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGAnimateTransformElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGAnimateTransformElementPrototype::create(vm, globalObject, JSSVGAnimateTransformElementPrototype::createStructure(vm, globalObject, JSSVGAnimationElement::getPrototype(vm, globalObject)));
+    return JSSVGAnimateTransformElementPrototype::create(vm, globalObject, JSSVGAnimateTransformElementPrototype::createStructure(vm, globalObject, JSSVGAnimationElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGAnimateTransformElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGAnimateTransformElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGAnimateTransformElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGAnimateTransformElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAnimateTransformElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGAnimateTransformElementPrototype* domObject = jsDynamicCast<JSSVGAnimateTransformElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAnimateTransformElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGAnimateTransformElementPrototype* domObject = jsDynamicDowncast<JSSVGAnimateTransformElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGAnimateTransformElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGAnimateTransformElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGAnimateTransformElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGAnimateTransformElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGAnimateTransformElementPrototype* domObject = jsDynamicDowncast<JSSVGAnimateTransformElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGAnimateTransformElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGAnimateTransformElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGAnimateTransformElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGAnimateTransformElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

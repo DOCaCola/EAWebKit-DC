@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSourceBufferList_h
-#define JSSourceBufferList_h
+#pragma once
 
 #if ENABLE(MEDIA_SOURCE)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSSourceBufferList : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = SourceBufferList;
     static JSSourceBufferList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBufferList>&& impl)
     {
-        JSSourceBufferList* ptr = new (NotNull, JSC::allocateCell<JSSourceBufferList>(globalObject->vm().heap)) JSSourceBufferList(structure, globalObject, WTF::move(impl));
+        JSSourceBufferList* ptr = new (NotNull, JSC::allocateCell<JSSourceBufferList>(globalObject->vm().heap)) JSSourceBufferList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SourceBufferList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
@@ -53,23 +53,19 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    SourceBufferList& impl() const
+    SourceBufferList& wrapped() const
     {
-        return static_cast<SourceBufferList&>(Base::impl());
+        return static_cast<SourceBufferList&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSSourceBufferList(JSC::Structure*, JSDOMGlobalObject*, Ref<SourceBufferList>&&);
+    JSSourceBufferList(JSC::Structure*, JSDOMGlobalObject&, Ref<SourceBufferList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSourceBufferListOwner : public JSC::WeakHandleOwner {
@@ -84,12 +80,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SourceBufferList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBufferList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SourceBufferList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SourceBufferList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBufferList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceBufferList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SourceBufferList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SourceBufferList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SourceBufferList> {
+    using WrapperClass = JSSourceBufferList;
+    using ToWrappedReturnType = SourceBufferList*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_SOURCE)
-
-#endif

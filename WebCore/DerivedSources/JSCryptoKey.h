@@ -18,33 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCryptoKey_h
-#define JSCryptoKey_h
+#pragma once
 
 #if ENABLE(SUBTLE_CRYPTO)
 
 #include "CryptoKey.h"
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSCryptoKey : public JSDOMWrapper {
+class JSCryptoKey : public JSDOMWrapper<CryptoKey> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<CryptoKey>;
     static JSCryptoKey* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKey>&& impl)
     {
-        JSCryptoKey* ptr = new (NotNull, JSC::allocateCell<JSCryptoKey>(globalObject->vm().heap)) JSCryptoKey(structure, globalObject, WTF::move(impl));
+        JSCryptoKey* ptr = new (NotNull, JSC::allocateCell<JSCryptoKey>(globalObject->vm().heap)) JSCryptoKey(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static CryptoKey* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSCryptoKey();
 
     DECLARE_INFO;
 
@@ -53,25 +51,18 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    mutable JSC::WriteBarrier<JSC::Unknown> m_algorithm;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_usages;
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
 
     // Custom attributes
-    JSC::JSValue algorithm(JSC::ExecState*) const;
-    CryptoKey& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CryptoKey* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    JSC::JSValue algorithm(JSC::ExecState&) const;
 protected:
-    JSCryptoKey(JSC::Structure*, JSDOMGlobalObject*, Ref<CryptoKey>&&);
+    JSCryptoKey(JSC::Structure*, JSDOMGlobalObject&, Ref<CryptoKey>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSCryptoKeyOwner : public JSC::WeakHandleOwner {
@@ -86,12 +77,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CryptoKey*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CryptoKey*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CryptoKey& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(CryptoKey* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CryptoKey&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CryptoKey* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CryptoKey>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CryptoKey>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<CryptoKey> {
+    using WrapperClass = JSCryptoKey;
+    using ToWrappedReturnType = CryptoKey*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, CryptoKey::Type);
+
+template<> std::optional<CryptoKey::Type> parseEnumeration<CryptoKey::Type>(JSC::ExecState&, JSC::JSValue);
+template<> CryptoKey::Type convertEnumeration<CryptoKey::Type>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<CryptoKey::Type>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(SUBTLE_CRYPTO)
-
-#endif

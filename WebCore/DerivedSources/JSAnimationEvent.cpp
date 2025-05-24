@@ -21,27 +21,73 @@
 #include "config.h"
 #include "JSAnimationEvent.h"
 
-#include "AnimationEvent.h"
 #include "JSDOMBinding.h"
-#include "JSDictionary.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> AnimationEvent::Init convertDictionary<AnimationEvent::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    AnimationEvent::Init result;
+    JSValue bubblesValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bubbles"));
+    if (!bubblesValue.isUndefined()) {
+        result.bubbles = convert<IDLBoolean>(state, bubblesValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bubbles = false;
+    JSValue cancelableValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "cancelable"));
+    if (!cancelableValue.isUndefined()) {
+        result.cancelable = convert<IDLBoolean>(state, cancelableValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.cancelable = false;
+    JSValue composedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "composed"));
+    if (!composedValue.isUndefined()) {
+        result.composed = convert<IDLBoolean>(state, composedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.composed = false;
+    JSValue animationNameValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "animationName"));
+    if (!animationNameValue.isUndefined()) {
+        result.animationName = convert<IDLDOMString>(state, animationNameValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.animationName = emptyString();
+    JSValue elapsedTimeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "elapsedTime"));
+    if (!elapsedTimeValue.isUndefined()) {
+        result.elapsedTime = convert<IDLDouble>(state, elapsedTimeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.elapsedTime = 0.0;
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsAnimationEventAnimationName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAnimationEventElapsedTime(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAnimationEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAnimationEventAnimationName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAnimationEventElapsedTime(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAnimationEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAnimationEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAnimationEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAnimationEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAnimationEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSAnimationEventPrototype>(vm.heap)) JSAnimationEventPrototype(vm, globalObject, structure);
@@ -64,102 +110,46 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAnimationEventConstructor : public DOMConstructorObject {
-private:
-    JSAnimationEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSAnimationEventConstructor = JSDOMConstructor<JSAnimationEvent>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAnimationEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAnimationEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSAnimationEventConstructor>(vm.heap)) JSAnimationEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSAnimationEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSAnimationEventConstructor::constructJSAnimationEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSAnimationEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSAnimationEventConstructor*>(exec->callee());
-
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
-
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    AnimationEventInit eventInit;
-
-    JSValue initializerValue = exec->argument(1);
-    if (!initializerValue.isUndefinedOrNull()) {
-        // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
-
-        // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
-
-        // Attempt to fill in the EventInit.
-        if (!fillAnimationEventInit(eventInit, dictionary))
-            return JSValue::encode(jsUndefined());
-    }
-
-    RefPtr<AnimationEvent> event = AnimationEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSAnimationEventConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto animationEventInitDict = convert<IDLDictionary<AnimationEvent::Init>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = AnimationEvent::create(WTFMove(type), WTFMove(animationEventInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<AnimationEvent>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-bool fillAnimationEventInit(AnimationEventInit& eventInit, JSDictionary& dictionary)
+template<> JSValue JSAnimationEventConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    if (!fillEventInit(eventInit, dictionary))
-        return false;
-
-    if (!dictionary.tryGetProperty("animationName", eventInit.animationName))
-        return false;
-    if (!dictionary.tryGetProperty("elapsedTime", eventInit.elapsedTime))
-        return false;
-    return true;
+    return JSEvent::getConstructor(vm, &globalObject);
 }
 
-const ClassInfo JSAnimationEventConstructor::s_info = { "AnimationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnimationEventConstructor) };
-
-JSAnimationEventConstructor::JSAnimationEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSAnimationEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSAnimationEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAnimationEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAnimationEvent::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AnimationEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSAnimationEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSAnimationEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSAnimationEventConstructor::s_info = { "AnimationEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnimationEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAnimationEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animationName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventAnimationName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "elapsedTime", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAnimationEventConstructor) } },
+    { "animationName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventAnimationName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "elapsedTime", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAnimationEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSAnimationEventPrototype::s_info = { "AnimationEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnimationEventPrototype) };
@@ -172,66 +162,130 @@ void JSAnimationEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAnimationEvent::s_info = { "AnimationEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAnimationEvent) };
 
-JSAnimationEvent::JSAnimationEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnimationEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSAnimationEvent::JSAnimationEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AnimationEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAnimationEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAnimationEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSAnimationEventPrototype::create(vm, globalObject, JSAnimationEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSAnimationEventPrototype::create(vm, globalObject, JSAnimationEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSAnimationEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAnimationEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAnimationEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsAnimationEventAnimationName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSAnimationEvent* BindingCaller<JSAnimationEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnimationEvent* castedThis = jsDynamicCast<JSAnimationEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnimationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnimationEvent", "animationName");
-        return throwGetterTypeError(*exec, "AnimationEvent", "animationName");
+    return jsDynamicDowncast<JSAnimationEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsAnimationEventAnimationNameGetter(ExecState&, JSAnimationEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsAnimationEventAnimationName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAnimationEvent>::attribute<jsAnimationEventAnimationNameGetter>(state, thisValue, "animationName");
+}
+
+static inline JSValue jsAnimationEventAnimationNameGetter(ExecState& state, JSAnimationEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.animationName());
+    return result;
+}
+
+static inline JSValue jsAnimationEventElapsedTimeGetter(ExecState&, JSAnimationEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsAnimationEventElapsedTime(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAnimationEvent>::attribute<jsAnimationEventElapsedTimeGetter>(state, thisValue, "elapsedTime");
+}
+
+static inline JSValue jsAnimationEventElapsedTimeGetter(ExecState& state, JSAnimationEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDouble>(impl.elapsedTime());
+    return result;
+}
+
+EncodedJSValue jsAnimationEventConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAnimationEventPrototype* domObject = jsDynamicDowncast<JSAnimationEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAnimationEvent::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAnimationEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSAnimationEventPrototype* domObject = jsDynamicDowncast<JSAnimationEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.animationName());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsAnimationEventElapsedTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSAnimationEvent::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAnimationEvent* castedThis = jsDynamicCast<JSAnimationEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAnimationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AnimationEvent", "elapsedTime");
-        return throwGetterTypeError(*exec, "AnimationEvent", "elapsedTime");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.elapsedTime());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSAnimationEventConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7AnimationEvent@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore14AnimationEventE[]; }
+#endif
+#endif
 
-EncodedJSValue jsAnimationEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AnimationEvent>&& impl)
 {
-    JSAnimationEventPrototype* domObject = jsDynamicCast<JSAnimationEventPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAnimationEvent::getConstructor(exec->vm(), domObject->globalObject()));
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7AnimationEvent@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore14AnimationEventE[2];
+#if COMPILER(CLANG)
+    // If this fails AnimationEvent does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(AnimationEvent), "AnimationEvent is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // AnimationEvent has subclasses. If AnimationEvent has subclasses that get passed
+    // to toJS() we currently require AnimationEvent you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<AnimationEvent>(globalObject, WTFMove(impl));
 }
 
-JSValue JSAnimationEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AnimationEvent& impl)
 {
-    return getDOMConstructor<JSAnimationEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return wrap(state, globalObject, impl);
 }
 
 

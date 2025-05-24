@@ -34,16 +34,20 @@
 
 namespace WebCore {
 
-    class Document;
-    class HTMLFormElement;
-    class QualifiedName;
+class Document;
+class HTMLFormElement;
+class QualifiedName;
 
-    class MathMLElement;
+class MathMLElement;
 
-    class MathMLElementFactory {
-    public:
-        static Ref<MathMLElement> createElement(const QualifiedName&, Document&, bool createdByParser = false);
-    };
+class MathMLElementFactory {
+public:
+static RefPtr<MathMLElement> createKnownElement(const AtomicString&, Document&, bool createdByParser = false);
+static RefPtr<MathMLElement> createKnownElement(const QualifiedName&, Document&, bool createdByParser = false);
+static Ref<MathMLElement> createElement(const AtomicString&, Document&, bool createdByParser = false);
+static Ref<MathMLElement> createElement(const QualifiedName&, Document&, bool createdByParser = false);
+};
+
 }
 
 #endif // MathMLElementFactory_h

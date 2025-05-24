@@ -21,25 +21,63 @@
 #include "config.h"
 #include "JSFile.h"
 
-#include "File.h"
+#include "JSBlobLineEndings.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include <runtime/Error.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> File::PropertyBag convertDictionary<File::PropertyBag>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    File::PropertyBag result;
+    JSValue endingsValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "endings"));
+    if (!endingsValue.isUndefined()) {
+        result.endings = convert<IDLEnumeration<BlobLineEndings>>(state, endingsValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.endings = BlobLineEndings::Transparent;
+    JSValue typeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "type"));
+    if (!typeValue.isUndefined()) {
+        result.type = convert<IDLDOMString>(state, typeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.type = emptyString();
+    JSValue lastModifiedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "lastModified"));
+    if (!lastModifiedValue.isUndefined()) {
+        result.lastModified = convert<IDLLongLong>(state, lastModifiedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    return result;
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsFileName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsFileLastModifiedDate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsFileConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsFileName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsFileLastModified(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsFileConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSFileConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSFilePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSFilePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSFilePrototype* ptr = new (NotNull, JSC::allocateCell<JSFilePrototype>(vm.heap)) JSFilePrototype(vm, globalObject, structure);
@@ -62,50 +100,48 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSFileConstructor : public DOMConstructorObject {
-private:
-    JSFileConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSFileConstructor = JSDOMConstructor<JSFile>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSFileConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSFileConstructor* ptr = new (NotNull, JSC::allocateCell<JSFileConstructor>(vm.heap)) JSFileConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSFileConstructor::s_info = { "FileConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileConstructor) };
-
-JSFileConstructor::JSFileConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> EncodedJSValue JSC_HOST_CALL JSFileConstructor::construct(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSFileConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto fileBits = convert<IDLSequence<IDLUnion<IDLInterface<ArrayBufferView>, IDLInterface<ArrayBuffer>, IDLInterface<Blob>, IDLUSVString>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto fileName = convert<IDLUSVString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = convert<IDLDictionary<File::PropertyBag>>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = File::create(WTFMove(fileBits), WTFMove(fileName), WTFMove(options));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<File>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSFileConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSFileConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSFile::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    return JSBlob::getConstructor(vm, &globalObject);
+}
+
+template<> void JSFileConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSFile::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("File"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(2), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSFileConstructor::s_info = { "File", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSFilePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastModifiedDate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileLastModifiedDate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFileConstructor) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastModified", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileLastModified), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSFilePrototype::s_info = { "FilePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFilePrototype) };
@@ -118,66 +154,92 @@ void JSFilePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSFile::s_info = { "File", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFile) };
 
-JSFile::JSFile(Structure* structure, JSDOMGlobalObject* globalObject, Ref<File>&& impl)
-    : JSBlob(structure, globalObject, WTF::move(impl))
+JSFile::JSFile(Structure* structure, JSDOMGlobalObject& globalObject, Ref<File>&& impl)
+    : JSBlob(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSFile::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSFile::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSFilePrototype::create(vm, globalObject, JSFilePrototype::createStructure(vm, globalObject, JSBlob::getPrototype(vm, globalObject)));
+    return JSFilePrototype::create(vm, globalObject, JSFilePrototype::createStructure(vm, globalObject, JSBlob::prototype(vm, globalObject)));
 }
 
-JSObject* JSFile::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSFile::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSFile>(vm, globalObject);
 }
 
-EncodedJSValue jsFileName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSFile* BindingCaller<JSFile>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSFile* castedThis = jsDynamicCast<JSFile*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSFilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "File", "name");
-        return throwGetterTypeError(*exec, "File", "name");
+    return jsDynamicDowncast<JSFile*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsFileNameGetter(ExecState&, JSFile&, ThrowScope& throwScope);
+
+EncodedJSValue jsFileName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSFile>::attribute<jsFileNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsFileNameGetter(ExecState& state, JSFile& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+static inline JSValue jsFileLastModifiedGetter(ExecState&, JSFile&, ThrowScope& throwScope);
+
+EncodedJSValue jsFileLastModified(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSFile>::attribute<jsFileLastModifiedGetter>(state, thisValue, "lastModified");
+}
+
+static inline JSValue jsFileLastModifiedGetter(ExecState& state, JSFile& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLongLong>(impl.lastModified());
+    return result;
+}
+
+EncodedJSValue jsFileConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSFilePrototype* domObject = jsDynamicDowncast<JSFilePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSFile::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSFileConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSFilePrototype* domObject = jsDynamicDowncast<JSFilePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsFileLastModifiedDate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSFile::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSFile* castedThis = jsDynamicCast<JSFile*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSFilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "File", "lastModifiedDate");
-        return throwGetterTypeError(*exec, "File", "lastModifiedDate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsDateOrNull(exec, impl.lastModifiedDate());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsFileConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSFilePrototype* domObject = jsDynamicCast<JSFilePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSFile::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSFile::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSFileConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSFileConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -188,15 +250,12 @@ extern "C" { extern void (*const __identifier("??_7File@WebCore@@6B@")[])(); }
 extern "C" { extern void* _ZTVN7WebCore4FileE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<File>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSFile>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7File@WebCore@@6B@"));
 #else
@@ -204,7 +263,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
 #if COMPILER(CLANG)
     // If this fails File does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(File), File_is_not_polymorphic);
+    static_assert(__is_polymorphic(File), "File is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -213,13 +272,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSFile>(globalObject, impl);
+    return createWrapper<File>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, File& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 File* JSFile::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSFile*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSFile*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegLinetoAbs_h
-#define JSSVGPathSegLinetoAbs_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegLinetoAbs : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegLinetoAbs;
     static JSSVGPathSegLinetoAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoAbs>&& impl)
     {
-        JSSVGPathSegLinetoAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoAbs>(globalObject->vm().heap)) JSSVGPathSegLinetoAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoAbs>(globalObject->vm().heap)) JSSVGPathSegLinetoAbs(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoAbs& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegLinetoAbs& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoAbs&>(Base::impl());
+        return static_cast<SVGPathSegLinetoAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoAbs>&&);
+    JSSVGPathSegLinetoAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoAbs>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegLinetoAbs> {
+    using WrapperClass = JSSVGPathSegLinetoAbs;
+    using ToWrappedReturnType = SVGPathSegLinetoAbs*;
+};
 
 } // namespace WebCore
-
-#endif

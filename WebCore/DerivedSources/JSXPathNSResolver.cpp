@@ -21,11 +21,8 @@
 #include "config.h"
 #include "JSXPathNSResolver.h"
 
-#include "ExceptionCode.h"
-#include "JSCustomXPathNSResolver.h"
 #include "JSDOMBinding.h"
-#include "JSXPathNSResolver.h"
-#include "URL.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -39,7 +36,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsXPathNSResolverPrototypeFunctionLookupNamesp
 
 class JSXPathNSResolverPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSXPathNSResolverPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSXPathNSResolverPrototype* ptr = new (NotNull, JSC::allocateCell<JSXPathNSResolverPrototype>(vm.heap)) JSXPathNSResolverPrototype(vm, globalObject, structure);
@@ -66,7 +63,7 @@ private:
 
 static const HashTableValue JSXPathNSResolverPrototypeTableValues[] =
 {
-    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathNSResolverPrototypeFunctionLookupNamespaceURI), (intptr_t) (0) },
+    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathNSResolverPrototypeFunctionLookupNamespaceURI), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathNSResolverPrototype::s_info = { "XPathNSResolverPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathNSResolverPrototype) };
@@ -79,10 +76,16 @@ void JSXPathNSResolverPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathNSResolver::s_info = { "XPathNSResolver", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathNSResolver) };
 
-JSXPathNSResolver::JSXPathNSResolver(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathNSResolver>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathNSResolver::JSXPathNSResolver(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathNSResolver>&& impl)
+    : JSDOMWrapper<XPathNSResolver>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSXPathNSResolver::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSXPathNSResolver::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -90,7 +93,7 @@ JSObject* JSXPathNSResolver::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSXPathNSResolverPrototype::create(vm, globalObject, JSXPathNSResolverPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSXPathNSResolver::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSXPathNSResolver::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSXPathNSResolver>(vm, globalObject);
 }
@@ -101,24 +104,26 @@ void JSXPathNSResolver::destroy(JSC::JSCell* cell)
     thisObject->JSXPathNSResolver::~JSXPathNSResolver();
 }
 
-JSXPathNSResolver::~JSXPathNSResolver()
+template<> inline JSXPathNSResolver* BindingCaller<JSXPathNSResolver>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSXPathNSResolver*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathNSResolverPrototypeFunctionLookupNamespaceURI(ExecState* exec)
+static inline JSC::EncodedJSValue jsXPathNSResolverPrototypeFunctionLookupNamespaceURICaller(JSC::ExecState*, JSXPathNSResolver*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsXPathNSResolverPrototypeFunctionLookupNamespaceURI(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSXPathNSResolver* castedThis = jsDynamicCast<JSXPathNSResolver*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathNSResolver", "lookupNamespaceURI");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathNSResolver::info());
-    auto& impl = castedThis->impl();
-    String prefix = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.lookupNamespaceURI(prefix));
-    return JSValue::encode(result);
+    return BindingCaller<JSXPathNSResolver>::callOperation<jsXPathNSResolverPrototypeFunctionLookupNamespaceURICaller>(state, "lookupNamespaceURI");
+}
+
+static inline JSC::EncodedJSValue jsXPathNSResolverPrototypeFunctionLookupNamespaceURICaller(JSC::ExecState* state, JSXPathNSResolver* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto prefix = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.lookupNamespaceURI(WTFMove(prefix))));
 }
 
 bool JSXPathNSResolverOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -130,25 +135,20 @@ bool JSXPathNSResolverOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSXPathNSResolverOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsXPathNSResolver = jsCast<JSXPathNSResolver*>(handle.slot()->asCell());
+    auto* jsXPathNSResolver = static_cast<JSXPathNSResolver*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathNSResolver->impl(), jsXPathNSResolver);
+    uncacheWrapper(world, &jsXPathNSResolver->wrapped(), jsXPathNSResolver);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathNSResolver* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<XPathNSResolver>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSXPathNSResolver>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSXPathNSResolver>(globalObject, impl);
+    return createWrapper<XPathNSResolver>(globalObject, WTFMove(impl));
 }
 
-XPathNSResolver* JSXPathNSResolver::toWrapped(JSC::JSValue value)
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathNSResolver& impl)
 {
-    if (auto* wrapper = jsDynamicCast<JSXPathNSResolver*>(value))
-        return &wrapper->impl();
-    return nullptr;
+    return wrap(state, globalObject, impl);
 }
+
 
 }

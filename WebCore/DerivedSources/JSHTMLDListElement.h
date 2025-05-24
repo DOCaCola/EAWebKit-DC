@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDListElement_h
-#define JSHTMLDListElement_h
+#pragma once
 
 #include "HTMLDListElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLDListElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLDListElement;
     static JSHTMLDListElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDListElement>&& impl)
     {
-        JSHTMLDListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDListElement>(globalObject->vm().heap)) JSHTMLDListElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDListElement>(globalObject->vm().heap)) JSHTMLDListElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLDListElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLDListElement& wrapped() const
     {
-        return static_cast<HTMLDListElement&>(Base::impl());
+        return static_cast<HTMLDListElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDListElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDListElement>&&);
+    JSHTMLDListElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDListElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLDListElement> {
+    using WrapperClass = JSHTMLDListElement;
+    using ToWrappedReturnType = HTMLDListElement*;
+};
 
 } // namespace WebCore
-
-#endif

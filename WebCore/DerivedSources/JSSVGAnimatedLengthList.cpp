@@ -22,8 +22,10 @@
 #include "JSSVGAnimatedLengthList.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGLengthList.h"
-#include "SVGLengthList.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -32,13 +34,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGAnimatedLengthListBaseVal(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGAnimatedLengthListAnimVal(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGAnimatedLengthListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAnimatedLengthListBaseVal(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAnimatedLengthListAnimVal(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAnimatedLengthListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGAnimatedLengthListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGAnimatedLengthListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGAnimatedLengthListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGAnimatedLengthListPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedLengthListPrototype>(vm.heap)) JSSVGAnimatedLengthListPrototype(vm, globalObject, structure);
@@ -61,65 +64,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAnimatedLengthListConstructor : public DOMConstructorObject {
-private:
-    JSSVGAnimatedLengthListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGAnimatedLengthListConstructor = JSDOMConstructorNotConstructable<JSSVGAnimatedLengthList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAnimatedLengthListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAnimatedLengthListConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedLengthListConstructor>(vm.heap)) JSSVGAnimatedLengthListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSSVGAnimatedLengthListTableIndex[4] = {
-    { -1, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSSVGAnimatedLengthListTableValues[] =
+template<> JSValue JSSVGAnimatedLengthListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "baseVal", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListBaseVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animVal", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListAnimVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSSVGAnimatedLengthListTable = { 2, 3, true, JSSVGAnimatedLengthListTableValues, 0, JSSVGAnimatedLengthListTableIndex };
-const ClassInfo JSSVGAnimatedLengthListConstructor::s_info = { "SVGAnimatedLengthListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedLengthListConstructor) };
-
-JSSVGAnimatedLengthListConstructor::JSSVGAnimatedLengthListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGAnimatedLengthListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGAnimatedLengthListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimatedLengthList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimatedLengthList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAnimatedLengthList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAnimatedLengthListConstructor::s_info = { "SVGAnimatedLengthList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedLengthListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnimatedLengthListPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAnimatedLengthListConstructor) } },
+    { "baseVal", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListBaseVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animVal", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedLengthListAnimVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGAnimatedLengthListPrototype::s_info = { "SVGAnimatedLengthListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedLengthListPrototype) };
@@ -130,12 +98,18 @@ void JSSVGAnimatedLengthListPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSSVGAnimatedLengthListPrototypeTableValues, *this);
 }
 
-const ClassInfo JSSVGAnimatedLengthList::s_info = { "SVGAnimatedLengthList", &Base::s_info, &JSSVGAnimatedLengthListTable, CREATE_METHOD_TABLE(JSSVGAnimatedLengthList) };
+const ClassInfo JSSVGAnimatedLengthList::s_info = { "SVGAnimatedLengthList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedLengthList) };
 
-JSSVGAnimatedLengthList::JSSVGAnimatedLengthList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedLengthList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGAnimatedLengthList::JSSVGAnimatedLengthList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAnimatedLengthList>&& impl)
+    : JSDOMWrapper<SVGAnimatedLengthList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGAnimatedLengthList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGAnimatedLengthList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -143,7 +117,7 @@ JSObject* JSSVGAnimatedLengthList::createPrototype(VM& vm, JSGlobalObject* globa
     return JSSVGAnimatedLengthListPrototype::create(vm, globalObject, JSSVGAnimatedLengthListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSVGAnimatedLengthList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGAnimatedLengthList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGAnimatedLengthList>(vm, globalObject);
 }
@@ -154,53 +128,70 @@ void JSSVGAnimatedLengthList::destroy(JSC::JSCell* cell)
     thisObject->JSSVGAnimatedLengthList::~JSSVGAnimatedLengthList();
 }
 
-JSSVGAnimatedLengthList::~JSSVGAnimatedLengthList()
+template<> inline JSSVGAnimatedLengthList* BindingCaller<JSSVGAnimatedLengthList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSVGAnimatedLengthList*>(JSValue::decode(thisValue));
 }
 
-bool JSSVGAnimatedLengthList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+static inline JSValue jsSVGAnimatedLengthListBaseValGetter(ExecState&, JSSVGAnimatedLengthList&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGAnimatedLengthListBaseVal(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    auto* thisObject = jsCast<JSSVGAnimatedLengthList*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSVGAnimatedLengthList, Base>(exec, JSSVGAnimatedLengthListTable, thisObject, propertyName, slot);
+    return BindingCaller<JSSVGAnimatedLengthList>::attribute<jsSVGAnimatedLengthListBaseValGetter>(state, thisValue, "baseVal");
 }
 
-EncodedJSValue jsSVGAnimatedLengthListBaseVal(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGAnimatedLengthListBaseValGetter(ExecState& state, JSSVGAnimatedLengthList& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGAnimatedLengthList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGListPropertyTearOff<SVGLengthList>*>(impl.baseVal().get())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGLengthList>>(state, *thisObject.globalObject(), impl.baseVal());
+    return result;
 }
 
+static inline JSValue jsSVGAnimatedLengthListAnimValGetter(ExecState&, JSSVGAnimatedLengthList&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGAnimatedLengthListAnimVal(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAnimatedLengthListAnimVal(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSSVGAnimatedLengthList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGListPropertyTearOff<SVGLengthList>*>(impl.animVal().get())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGAnimatedLengthList>::attribute<jsSVGAnimatedLengthListAnimValGetter>(state, thisValue, "animVal");
 }
 
-
-EncodedJSValue jsSVGAnimatedLengthListConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGAnimatedLengthListAnimValGetter(ExecState& state, JSSVGAnimatedLengthList& thisObject, ThrowScope& throwScope)
 {
-    JSSVGAnimatedLengthListPrototype* domObject = jsDynamicCast<JSSVGAnimatedLengthListPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAnimatedLengthList::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGLengthList>>(state, *thisObject.globalObject(), impl.animVal());
+    return result;
 }
 
-JSValue JSSVGAnimatedLengthList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+EncodedJSValue jsSVGAnimatedLengthListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSSVGAnimatedLengthListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGAnimatedLengthListPrototype* domObject = jsDynamicDowncast<JSSVGAnimatedLengthListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGAnimatedLengthList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGAnimatedLengthListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGAnimatedLengthListPrototype* domObject = jsDynamicDowncast<JSSVGAnimatedLengthListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGAnimatedLengthList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGAnimatedLengthListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGAnimatedLengthListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -212,24 +203,25 @@ bool JSSVGAnimatedLengthListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::U
 
 void JSSVGAnimatedLengthListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGAnimatedLengthList = jsCast<JSSVGAnimatedLengthList*>(handle.slot()->asCell());
+    auto* jsSVGAnimatedLengthList = static_cast<JSSVGAnimatedLengthList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGAnimatedLengthList->impl(), jsSVGAnimatedLengthList);
+    uncacheWrapper(world, &jsSVGAnimatedLengthList->wrapped(), jsSVGAnimatedLengthList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGAnimatedLengthList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedLengthList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSVGAnimatedLengthList>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSSVGAnimatedLengthList>(globalObject, impl);
+    return createWrapper<SVGAnimatedLengthList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedLengthList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SVGAnimatedLengthList* JSSVGAnimatedLengthList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGAnimatedLengthList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSVGAnimatedLengthList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

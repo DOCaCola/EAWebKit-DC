@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSANGLEInstancedArrays_h
-#define JSANGLEInstancedArrays_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSANGLEInstancedArrays : public JSDOMWrapper {
+class JSANGLEInstancedArrays : public JSDOMWrapper<ANGLEInstancedArrays> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<ANGLEInstancedArrays>;
     static JSANGLEInstancedArrays* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ANGLEInstancedArrays>&& impl)
     {
-        JSANGLEInstancedArrays* ptr = new (NotNull, JSC::allocateCell<JSANGLEInstancedArrays>(globalObject->vm().heap)) JSANGLEInstancedArrays(structure, globalObject, WTF::move(impl));
+        JSANGLEInstancedArrays* ptr = new (NotNull, JSC::allocateCell<JSANGLEInstancedArrays>(globalObject->vm().heap)) JSANGLEInstancedArrays(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static ANGLEInstancedArrays* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSANGLEInstancedArrays();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    ANGLEInstancedArrays& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ANGLEInstancedArrays* m_impl;
 protected:
-    JSANGLEInstancedArrays(JSC::Structure*, JSDOMGlobalObject*, Ref<ANGLEInstancedArrays>&&);
+    JSANGLEInstancedArrays(JSC::Structure*, JSDOMGlobalObject&, Ref<ANGLEInstancedArrays>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSANGLEInstancedArraysOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ANGLEInstancedArrays
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ANGLEInstancedArrays*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(ANGLEInstancedArrays* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ANGLEInstancedArrays&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ANGLEInstancedArrays>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ANGLEInstancedArrays>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<ANGLEInstancedArrays> {
+    using WrapperClass = JSANGLEInstancedArrays;
+    using ToWrappedReturnType = ANGLEInstancedArrays*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

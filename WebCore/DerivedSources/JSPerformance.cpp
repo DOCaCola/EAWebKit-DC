@@ -24,14 +24,17 @@
 
 #include "JSPerformance.h"
 
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSEventListener.h"
+#include "JSPerformanceEntry.h"
 #include "JSPerformanceNavigation.h"
 #include "JSPerformanceTiming.h"
-#include "Performance.h"
-#include "PerformanceNavigation.h"
-#include "PerformanceTiming.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -41,16 +44,28 @@ namespace WebCore {
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionNow(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntries(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntriesByType(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntriesByName(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearResourceTimings(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionSetResourceTimingBufferSize(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionMark(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearMarks(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionMeasure(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearMeasures(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsPerformanceNavigation(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsPerformanceTiming(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsPerformanceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceNavigation(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceTiming(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceOnresourcetimingbufferfull(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSPerformanceOnresourcetimingbufferfull(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsPerformanceConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSPerformanceConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSPerformancePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSPerformancePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSPerformancePrototype* ptr = new (NotNull, JSC::allocateCell<JSPerformancePrototype>(vm.heap)) JSPerformancePrototype(vm, globalObject, structure);
@@ -73,51 +88,40 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSPerformanceConstructor : public DOMConstructorObject {
-private:
-    JSPerformanceConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSPerformanceConstructor = JSDOMConstructorNotConstructable<JSPerformance>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSPerformanceConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSPerformanceConstructor* ptr = new (NotNull, JSC::allocateCell<JSPerformanceConstructor>(vm.heap)) JSPerformanceConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSPerformanceConstructor::s_info = { "PerformanceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceConstructor) };
-
-JSPerformanceConstructor::JSPerformanceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSPerformanceConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSPerformanceConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSPerformanceConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSPerformance::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSPerformance::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Performance"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSPerformanceConstructor::s_info = { "Performance", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSPerformancePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "navigation", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "timing", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceTiming), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "now", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionNow), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSPerformanceConstructor) } },
+    { "navigation", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "timing", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceTiming), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onresourcetimingbufferfull", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceOnresourcetimingbufferfull), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSPerformanceOnresourcetimingbufferfull) } },
+    { "now", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionNow), (intptr_t) (0) } },
+    { "getEntries", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionGetEntries), (intptr_t) (0) } },
+    { "getEntriesByType", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionGetEntriesByType), (intptr_t) (1) } },
+    { "getEntriesByName", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionGetEntriesByName), (intptr_t) (1) } },
+    { "clearResourceTimings", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionClearResourceTimings), (intptr_t) (0) } },
+    { "setResourceTimingBufferSize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionSetResourceTimingBufferSize), (intptr_t) (1) } },
+    { "mark", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionMark), (intptr_t) (1) } },
+    { "clearMarks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionClearMarks), (intptr_t) (0) } },
+    { "measure", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionMeasure), (intptr_t) (1) } },
+    { "clearMeasures", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionClearMeasures), (intptr_t) (0) } },
 };
 
 const ClassInfo JSPerformancePrototype::s_info = { "PerformancePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformancePrototype) };
@@ -126,94 +130,367 @@ void JSPerformancePrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSPerformancePrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("getEntries"), strlen("getEntries"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("getEntriesByType"), strlen("getEntriesByType"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("getEntriesByName"), strlen("getEntriesByName"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("clearResourceTimings"), strlen("clearResourceTimings"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("setResourceTimingBufferSize"), strlen("setResourceTimingBufferSize"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().userTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("mark"), strlen("mark"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().userTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("clearMarks"), strlen("clearMarks"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().userTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("measure"), strlen("measure"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().userTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("clearMeasures"), strlen("clearMeasures"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+    if (!RuntimeEnabledFeatures::sharedFeatures().resourceTimingEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("onresourcetimingbufferfull"), strlen("onresourcetimingbufferfull"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSPerformance::s_info = { "Performance", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformance) };
 
-JSPerformance::JSPerformance(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Performance>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPerformance::JSPerformance(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Performance>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSPerformance::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSPerformance::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSPerformancePrototype::create(vm, globalObject, JSPerformancePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSPerformancePrototype::create(vm, globalObject, JSPerformancePrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSPerformance::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSPerformance::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSPerformance>(vm, globalObject);
 }
 
-void JSPerformance::destroy(JSC::JSCell* cell)
+template<> inline JSPerformance* BindingCaller<JSPerformance>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSPerformance* thisObject = static_cast<JSPerformance*>(cell);
-    thisObject->JSPerformance::~JSPerformance();
+    return jsDynamicDowncast<JSPerformance*>(JSValue::decode(thisValue));
 }
 
-JSPerformance::~JSPerformance()
+template<> inline JSPerformance* BindingCaller<JSPerformance>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSPerformance*>(state.thisValue());
 }
 
-EncodedJSValue jsPerformanceNavigation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsPerformanceNavigationGetter(ExecState&, JSPerformance&, ThrowScope& throwScope);
+
+EncodedJSValue jsPerformanceNavigation(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSPerformancePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Performance", "navigation");
-        return throwGetterTypeError(*exec, "Performance", "navigation");
+    return BindingCaller<JSPerformance>::attribute<jsPerformanceNavigationGetter>(state, thisValue, "navigation");
+}
+
+static inline JSValue jsPerformanceNavigationGetter(ExecState& state, JSPerformance& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<PerformanceNavigation>>(state, *thisObject.globalObject(), impl.navigation());
+    return result;
+}
+
+static inline JSValue jsPerformanceTimingGetter(ExecState&, JSPerformance&, ThrowScope& throwScope);
+
+EncodedJSValue jsPerformanceTiming(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSPerformance>::attribute<jsPerformanceTimingGetter>(state, thisValue, "timing");
+}
+
+static inline JSValue jsPerformanceTimingGetter(ExecState& state, JSPerformance& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<PerformanceTiming>>(state, *thisObject.globalObject(), impl.timing());
+    return result;
+}
+
+static inline JSValue jsPerformanceOnresourcetimingbufferfullGetter(ExecState&, JSPerformance&, ThrowScope& throwScope);
+
+EncodedJSValue jsPerformanceOnresourcetimingbufferfull(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSPerformance>::attribute<jsPerformanceOnresourcetimingbufferfullGetter>(state, thisValue, "onresourcetimingbufferfull");
+}
+
+static inline JSValue jsPerformanceOnresourcetimingbufferfullGetter(ExecState& state, JSPerformance& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().resourcetimingbufferfullEvent);
+}
+
+EncodedJSValue jsPerformanceConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSPerformancePrototype* domObject = jsDynamicDowncast<JSPerformancePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSPerformance::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSPerformanceConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSPerformancePrototype* domObject = jsDynamicDowncast<JSPerformancePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.navigation()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSPerformanceOnresourcetimingbufferfullFunction(ExecState&, JSPerformance&, JSValue, ThrowScope&);
+
+bool setJSPerformanceOnresourcetimingbufferfull(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSPerformance>::setAttribute<setJSPerformanceOnresourcetimingbufferfullFunction>(state, thisValue, encodedValue, "onresourcetimingbufferfull");
+}
+
+static inline bool setJSPerformanceOnresourcetimingbufferfullFunction(ExecState& state, JSPerformance& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().resourcetimingbufferfullEvent, value);
+    return true;
 }
 
 
-EncodedJSValue jsPerformanceTiming(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSPerformance::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSPerformancePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Performance", "timing");
-        return throwGetterTypeError(*exec, "Performance", "timing");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.timing()));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSPerformanceConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionNowCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
 
-EncodedJSValue jsPerformanceConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionNow(ExecState* state)
 {
-    JSPerformancePrototype* domObject = jsDynamicCast<JSPerformancePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSPerformance::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionNowCaller>(state, "now");
 }
 
-JSValue JSPerformance::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionNowCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSPerformanceConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDouble>(impl.now()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionNow(ExecState* exec)
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntries(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Performance", "now");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSPerformance::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.now());
-    return JSValue::encode(result);
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionGetEntriesCaller>(state, "getEntries");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<PerformanceEntry>>>(*state, *castedThis->globalObject(), impl.getEntries()));
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesByTypeCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntriesByType(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionGetEntriesByTypeCaller>(state, "getEntriesByType");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesByTypeCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto entryType = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<PerformanceEntry>>>(*state, *castedThis->globalObject(), impl.getEntriesByType(WTFMove(entryType))));
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesByNameCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionGetEntriesByName(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionGetEntriesByNameCaller>(state, "getEntriesByName");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionGetEntriesByNameCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto entryType = state->argument(1).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<PerformanceEntry>>>(*state, *castedThis->globalObject(), impl.getEntriesByName(WTFMove(name), WTFMove(entryType))));
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearResourceTimingsCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearResourceTimings(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionClearResourceTimingsCaller>(state, "clearResourceTimings");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearResourceTimingsCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.clearResourceTimings();
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionSetResourceTimingBufferSizeCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionSetResourceTimingBufferSize(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionSetResourceTimingBufferSizeCaller>(state, "setResourceTimingBufferSize");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionSetResourceTimingBufferSizeCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto maxSize = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setResourceTimingBufferSize(WTFMove(maxSize));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionMarkCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionMark(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionMarkCaller>(state, "mark");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionMarkCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto markName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.mark(WTFMove(markName)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearMarksCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearMarks(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionClearMarksCaller>(state, "clearMarks");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearMarksCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto markName = state->argument(0).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.clearMarks(WTFMove(markName));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionMeasureCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionMeasure(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionMeasureCaller>(state, "measure");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionMeasureCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto measureName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto startMark = state->argument(1).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto endMark = state->argument(2).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(2), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.measure(WTFMove(measureName), WTFMove(startMark), WTFMove(endMark)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearMeasuresCaller(JSC::ExecState*, JSPerformance*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionClearMeasures(ExecState* state)
+{
+    return BindingCaller<JSPerformance>::callOperation<jsPerformancePrototypeFunctionClearMeasuresCaller>(state, "clearMeasures");
+}
+
+static inline JSC::EncodedJSValue jsPerformancePrototypeFunctionClearMeasuresCaller(JSC::ExecState* state, JSPerformance* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto measureName = state->argument(0).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.clearMeasures(WTFMove(measureName));
+    return JSValue::encode(jsUndefined());
 }
 
 void JSPerformance::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -221,23 +498,25 @@ void JSPerformance::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSPerformance*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSPerformanceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsPerformance = jsCast<JSPerformance*>(handle.slot()->asCell());
-    if (jsPerformance->impl().isFiringEventListeners())
+    if (jsPerformance->wrapped().isFiringEventListeners())
         return true;
-    UNUSED_PARAM(visitor);
-    return false;
+    Frame* root = WTF::getPtr(jsPerformance->wrapped().frame());
+    if (!root)
+        return false;
+    return visitor.containsOpaqueRoot(root);
 }
 
 void JSPerformanceOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsPerformance = jsCast<JSPerformance*>(handle.slot()->asCell());
+    auto* jsPerformance = static_cast<JSPerformance*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPerformance->impl(), jsPerformance);
+    uncacheWrapper(world, &jsPerformance->wrapped(), jsPerformance);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -248,15 +527,12 @@ extern "C" { extern void (*const __identifier("??_7Performance@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11PerformanceE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Performance>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSPerformance>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Performance@WebCore@@6B@"));
 #else
@@ -264,7 +540,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance*
 #if COMPILER(CLANG)
     // If this fails Performance does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Performance), Performance_is_not_polymorphic);
+    static_assert(__is_polymorphic(Performance), "Performance is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -273,13 +549,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSPerformance>(globalObject, impl);
+    return createWrapper<Performance>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Performance& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Performance* JSPerformance::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSPerformance*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSPerformance*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

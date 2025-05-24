@@ -18,26 +18,27 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFile_h
-#define JSFile_h
+#pragma once
 
 #include "File.h"
 #include "JSBlob.h"
+#include "JSDOMConvert.h"
 
 namespace WebCore {
 
 class WEBCORE_EXPORT JSFile : public JSBlob {
 public:
-    typedef JSBlob Base;
+    using Base = JSBlob;
+    using DOMWrapped = File;
     static JSFile* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<File>&& impl)
     {
-        JSFile* ptr = new (NotNull, JSC::allocateCell<JSFile>(globalObject->vm().heap)) JSFile(structure, globalObject, WTF::move(impl));
+        JSFile* ptr = new (NotNull, JSC::allocateCell<JSFile>(globalObject->vm().heap)) JSFile(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static File* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,26 +48,27 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    File& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    File& wrapped() const
     {
-        return static_cast<File&>(Base::impl());
+        return static_cast<File&>(Base::wrapped());
     }
 protected:
-    JSFile(JSC::Structure*, JSDOMGlobalObject*, Ref<File>&&);
+    JSFile(JSC::Structure*, JSDOMGlobalObject&, Ref<File>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, File*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, File& impl) { return toJS(exec, globalObject, &impl); }
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, File&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, File* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<File>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<File>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<File> {
+    using WrapperClass = JSFile;
+    using ToWrappedReturnType = File*;
+};
+template<> File::PropertyBag convertDictionary<File::PropertyBag>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

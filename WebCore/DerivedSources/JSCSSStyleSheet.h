@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSStyleSheet_h
-#define JSCSSStyleSheet_h
+#pragma once
 
 #include "CSSStyleSheet.h"
 #include "JSStyleSheet.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSStyleSheet : public JSStyleSheet {
 public:
-    typedef JSStyleSheet Base;
+    using Base = JSStyleSheet;
+    using DOMWrapped = CSSStyleSheet;
     static JSCSSStyleSheet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleSheet>&& impl)
     {
-        JSCSSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheet>(globalObject->vm().heap)) JSCSSStyleSheet(structure, globalObject, WTF::move(impl));
+        JSCSSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheet>(globalObject->vm().heap)) JSCSSStyleSheet(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSStyleSheet& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSStyleSheet& wrapped() const
     {
-        return static_cast<CSSStyleSheet&>(Base::impl());
+        return static_cast<CSSStyleSheet&>(Base::wrapped());
     }
 protected:
-    JSCSSStyleSheet(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSStyleSheet>&&);
+    JSCSSStyleSheet(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSStyleSheet>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSStyleSheet> {
+    using WrapperClass = JSCSSStyleSheet;
+    using ToWrappedReturnType = CSSStyleSheet*;
+};
 
 } // namespace WebCore
-
-#endif

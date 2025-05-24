@@ -18,10 +18,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCStatsResponse_h
-#define JSRTCStatsResponse_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSDOMWrapper.h"
 #include "RTCStatsResponse.h"
@@ -29,23 +28,22 @@
 
 namespace WebCore {
 
-class JSRTCStatsResponse : public JSDOMWrapper {
+class JSRTCStatsResponse : public JSDOMWrapper<RTCStatsResponse> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<RTCStatsResponse>;
     static JSRTCStatsResponse* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCStatsResponse>&& impl)
     {
-        JSRTCStatsResponse* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsResponse>(globalObject->vm().heap)) JSRTCStatsResponse(structure, globalObject, WTF::move(impl));
+        JSRTCStatsResponse* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsResponse>(globalObject->vm().heap)) JSRTCStatsResponse(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCStatsResponse* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSRTCStatsResponse();
 
     DECLARE_INFO;
 
@@ -54,25 +52,13 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCStatsResponse& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCStatsResponse* m_impl;
+    static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSRTCStatsResponse(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCStatsResponse>&&);
+    JSRTCStatsResponse(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCStatsResponse>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, RTCStatsResponse*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCStatsResponseOwner : public JSC::WeakHandleOwner {
@@ -87,12 +73,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCStatsResponse*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsResponse*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCStatsResponse& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCStatsResponse* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsResponse&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCStatsResponse* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCStatsResponse>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCStatsResponse>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCStatsResponse> {
+    using WrapperClass = JSRTCStatsResponse;
+    using ToWrappedReturnType = RTCStatsResponse*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

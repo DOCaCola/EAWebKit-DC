@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMutationEvent_h
-#define JSMutationEvent_h
+#pragma once
 
 #include "JSEvent.h"
 #include "MutationEvent.h"
@@ -28,42 +27,40 @@ namespace WebCore {
 
 class JSMutationEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = MutationEvent;
     static JSMutationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationEvent>&& impl)
     {
-        JSMutationEvent* ptr = new (NotNull, JSC::allocateCell<JSMutationEvent>(globalObject->vm().heap)) JSMutationEvent(structure, globalObject, WTF::move(impl));
+        JSMutationEvent* ptr = new (NotNull, JSC::allocateCell<JSMutationEvent>(globalObject->vm().heap)) JSMutationEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MutationEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    MutationEvent& wrapped() const
     {
-        return static_cast<MutationEvent&>(Base::impl());
+        return static_cast<MutationEvent&>(Base::wrapped());
     }
 protected:
-    JSMutationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MutationEvent>&&);
+    JSMutationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MutationEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<MutationEvent> {
+    using WrapperClass = JSMutationEvent;
+    using ToWrappedReturnType = MutationEvent*;
+};
 
 } // namespace WebCore
-
-#endif

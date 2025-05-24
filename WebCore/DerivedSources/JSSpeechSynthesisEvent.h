@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSpeechSynthesisEvent_h
-#define JSSpeechSynthesisEvent_h
+#pragma once
 
 #if ENABLE(SPEECH_SYNTHESIS)
 
@@ -30,44 +29,42 @@ namespace WebCore {
 
 class JSSpeechSynthesisEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = SpeechSynthesisEvent;
     static JSSpeechSynthesisEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesisEvent>&& impl)
     {
-        JSSpeechSynthesisEvent* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisEvent>(globalObject->vm().heap)) JSSpeechSynthesisEvent(structure, globalObject, WTF::move(impl));
+        JSSpeechSynthesisEvent* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisEvent>(globalObject->vm().heap)) JSSpeechSynthesisEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SpeechSynthesisEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SpeechSynthesisEvent& wrapped() const
     {
-        return static_cast<SpeechSynthesisEvent&>(Base::impl());
+        return static_cast<SpeechSynthesisEvent&>(Base::wrapped());
     }
 protected:
-    JSSpeechSynthesisEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SpeechSynthesisEvent>&&);
+    JSSpeechSynthesisEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SpeechSynthesisEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SpeechSynthesisEvent> {
+    using WrapperClass = JSSpeechSynthesisEvent;
+    using ToWrappedReturnType = SpeechSynthesisEvent*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SPEECH_SYNTHESIS)
-
-#endif

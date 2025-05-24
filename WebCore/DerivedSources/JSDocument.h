@@ -18,28 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDocument_h
-#define JSDocument_h
+#pragma once
 
 #include "Document.h"
+#include "JSDOMConvert.h"
 #include "JSNode.h"
+#include <domjit/DOMJITGetterSetter.h>
 
 namespace WebCore {
 
 class WEBCORE_EXPORT JSDocument : public JSNode {
 public:
-    typedef JSNode Base;
+    using Base = JSNode;
+    using DOMWrapped = Document;
     static JSDocument* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Document>&& impl)
     {
-        JSDocument* ptr = new (NotNull, JSC::allocateCell<JSDocument>(globalObject->vm().heap)) JSDocument(structure, globalObject, WTF::move(impl));
+        JSDocument* ptr = new (NotNull, JSC::allocateCell<JSDocument>(globalObject->vm().heap)) JSDocument(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Document* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 
     DECLARE_INFO;
 
@@ -48,38 +49,64 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSDocumentWrapperType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+    void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    // Custom attributes
-    JSC::JSValue location(JSC::ExecState*) const;
-    void setLocation(JSC::ExecState*, JSC::JSValue);
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 
     // Custom functions
-    JSC::JSValue createTouchList(JSC::ExecState*);
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    Document& impl() const
+    JSC::JSValue getCSSCanvasContext(JSC::ExecState&);
+    Document& wrapped() const
     {
-        return static_cast<Document&>(Base::impl());
+        return static_cast<Document&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSDocument(JSC::Structure*, JSDOMGlobalObject*, Ref<Document>&&);
+    JSDocument(JSC::Structure*, JSDOMGlobalObject&, Ref<Document>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Document*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Document& impl) { return toJS(exec, globalObject, &impl); }
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Document&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Document* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Document>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Document>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+// DOMJIT emitters for attributes
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForDocumentDocumentElement(void);
+class DocumentDocumentElementDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    DocumentDocumentElementDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+JSC::DOMJIT::GetterSetter* domJITGetterSetterForDocumentBody(void);
+class DocumentBodyDOMJIT : public JSC::DOMJIT::GetterSetter {
+public:
+    DocumentBodyDOMJIT();
+#if ENABLE(JIT)
+    Ref<JSC::DOMJIT::Patchpoint> checkDOM() override;
+    Ref<JSC::DOMJIT::CallDOMGetterPatchpoint> callDOMGetter() override;
+#endif
+};
+
+template<> struct JSDOMWrapperConverterTraits<Document> {
+    using WrapperClass = JSDocument;
+    using ToWrappedReturnType = Document*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Document::VisibilityState);
+
+template<> std::optional<Document::VisibilityState> parseEnumeration<Document::VisibilityState>(JSC::ExecState&, JSC::JSValue);
+template<> Document::VisibilityState convertEnumeration<Document::VisibilityState>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Document::VisibilityState>();
 
 
 } // namespace WebCore
-
-#endif
 #include "JSDocumentCustom.h"

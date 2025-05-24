@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGMissingGlyphElement_h
-#define JSSVGMissingGlyphElement_h
+#pragma once
 
 #if ENABLE(SVG_FONTS)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSSVGMissingGlyphElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGMissingGlyphElement;
     static JSSVGMissingGlyphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMissingGlyphElement>&& impl)
     {
-        JSSVGMissingGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMissingGlyphElement>(globalObject->vm().heap)) JSSVGMissingGlyphElement(structure, globalObject, WTF::move(impl));
+        JSSVGMissingGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMissingGlyphElement>(globalObject->vm().heap)) JSSVGMissingGlyphElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,26 +49,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMissingGlyphElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGMissingGlyphElement& wrapped() const
     {
-        return static_cast<SVGMissingGlyphElement&>(Base::impl());
+        return static_cast<SVGMissingGlyphElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMissingGlyphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMissingGlyphElement>&&);
+    JSSVGMissingGlyphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMissingGlyphElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGMissingGlyphElement> {
+    using WrapperClass = JSSVGMissingGlyphElement;
+    using ToWrappedReturnType = SVGMissingGlyphElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SVG_FONTS)
-
-#endif

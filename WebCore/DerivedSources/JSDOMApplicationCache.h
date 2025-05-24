@@ -18,30 +18,28 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMApplicationCache_h
-#define JSDOMApplicationCache_h
+#pragma once
 
 #include "DOMApplicationCache.h"
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSDOMApplicationCache : public JSDOMWrapper {
+class JSDOMApplicationCache : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = DOMApplicationCache;
     static JSDOMApplicationCache* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMApplicationCache>&& impl)
     {
-        JSDOMApplicationCache* ptr = new (NotNull, JSC::allocateCell<JSDOMApplicationCache>(globalObject->vm().heap)) JSDOMApplicationCache(structure, globalObject, WTF::move(impl));
+        JSDOMApplicationCache* ptr = new (NotNull, JSC::allocateCell<JSDOMApplicationCache>(globalObject->vm().heap)) JSDOMApplicationCache(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMApplicationCache* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSDOMApplicationCache();
 
     DECLARE_INFO;
 
@@ -50,22 +48,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    DOMApplicationCache& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMApplicationCache* m_impl;
-protected:
-    JSDOMApplicationCache(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMApplicationCache>&&);
-
-    void finishCreation(JSC::VM& vm)
+    DOMApplicationCache& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<DOMApplicationCache&>(Base::wrapped());
     }
+protected:
+    JSDOMApplicationCache(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMApplicationCache>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMApplicationCacheOwner : public JSC::WeakHandleOwner {
@@ -80,10 +73,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMApplicationCache*
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMApplicationCache*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMApplicationCache& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMApplicationCache* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMApplicationCache&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMApplicationCache* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMApplicationCache>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMApplicationCache>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMApplicationCache> {
+    using WrapperClass = JSDOMApplicationCache;
+    using ToWrappedReturnType = DOMApplicationCache*;
+};
 
 } // namespace WebCore
-
-#endif

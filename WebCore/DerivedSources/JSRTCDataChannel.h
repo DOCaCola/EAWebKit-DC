@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCDataChannel_h
-#define JSRTCDataChannel_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "RTCDataChannel.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCDataChannel : public JSDOMWrapper {
+class JSRTCDataChannel : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = RTCDataChannel;
     static JSRTCDataChannel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDataChannel>&& impl)
     {
-        JSRTCDataChannel* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannel>(globalObject->vm().heap)) JSRTCDataChannel(structure, globalObject, WTF::move(impl));
+        JSRTCDataChannel* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannel>(globalObject->vm().heap)) JSRTCDataChannel(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCDataChannel* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSRTCDataChannel();
 
     DECLARE_INFO;
 
@@ -54,40 +51,26 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    RTCDataChannel& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCDataChannel* m_impl;
-protected:
-    JSRTCDataChannel(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDataChannel>&&);
-
-    void finishCreation(JSC::VM& vm)
+    RTCDataChannel& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<RTCDataChannel&>(Base::wrapped());
     }
+protected:
+    JSRTCDataChannel(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDataChannel>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
-class JSRTCDataChannelOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDataChannel&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCDataChannel* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCDataChannel>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCDataChannel>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCDataChannel> {
+    using WrapperClass = JSRTCDataChannel;
+    using ToWrappedReturnType = RTCDataChannel*;
 };
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCDataChannel*)
-{
-    static NeverDestroyed<JSRTCDataChannelOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDataChannel*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCDataChannel& impl) { return toJS(exec, globalObject, &impl); }
-
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

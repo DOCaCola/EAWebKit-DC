@@ -40,6 +40,6 @@
 #include "TextCodecUTF8.cpp"
 #include "TextCodecUserDefined.cpp"
 #include "TextEncoding.cpp"
+#include "TextEncodingDetectorICU.cpp"
 #include "TextEncodingRegistry.cpp"
 #include "TextStream.cpp"
-

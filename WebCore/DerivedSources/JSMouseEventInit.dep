@@ -1,0 +1,4 @@
+MouseEventInit.h : EventModifierInit.idl UIEventInit.idl EventInit.idl
+EventModifierInit.idl :
+UIEventInit.idl :
+EventInit.idl :

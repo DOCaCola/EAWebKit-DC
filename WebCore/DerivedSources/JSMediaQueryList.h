@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaQueryList_h
-#define JSMediaQueryList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "MediaQueryList.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSMediaQueryList : public JSDOMWrapper {
+class JSMediaQueryList : public JSDOMWrapper<MediaQueryList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<MediaQueryList>;
     static JSMediaQueryList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaQueryList>&& impl)
     {
-        JSMediaQueryList* ptr = new (NotNull, JSC::allocateCell<JSMediaQueryList>(globalObject->vm().heap)) JSMediaQueryList(structure, globalObject, WTF::move(impl));
+        JSMediaQueryList* ptr = new (NotNull, JSC::allocateCell<JSMediaQueryList>(globalObject->vm().heap)) JSMediaQueryList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaQueryList* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMediaQueryList();
 
     DECLARE_INFO;
 
@@ -51,22 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaQueryList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaQueryList* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSMediaQueryList(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaQueryList>&&);
+    JSMediaQueryList(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaQueryList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaQueryListOwner : public JSC::WeakHandleOwner {
@@ -81,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaQueryList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaQueryList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaQueryList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaQueryList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaQueryList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaQueryList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaQueryList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaQueryList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaQueryList> {
+    using WrapperClass = JSMediaQueryList;
+    using ToWrappedReturnType = MediaQueryList*;
+};
 
 } // namespace WebCore
-
-#endif

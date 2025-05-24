@@ -177,5 +177,4 @@ const double ForceAtForceClick = 2;
 
 } // namespace WebCore
 
-
 #endif // PlatformMouseEvent_h

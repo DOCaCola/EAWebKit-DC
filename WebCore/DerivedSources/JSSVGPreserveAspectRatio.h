@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPreserveAspectRatio_h
-#define JSSVGPreserveAspectRatio_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGPreserveAspectRatio.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGPreserveAspectRatio : public JSDOMWrapper {
+class JSSVGPreserveAspectRatio : public JSDOMWrapper<SVGPreserveAspectRatio> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGPreserveAspectRatio* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGPreserveAspectRatio>>&& impl)
+    using Base = JSDOMWrapper<SVGPreserveAspectRatio>;
+    static JSSVGPreserveAspectRatio* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPreserveAspectRatio>&& impl)
     {
-        JSSVGPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGPreserveAspectRatio>(globalObject->vm().heap)) JSSVGPreserveAspectRatio(structure, globalObject, WTF::move(impl));
+        JSSVGPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGPreserveAspectRatio>(globalObject->vm().heap)) JSSVGPreserveAspectRatio(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<SVGPreserveAspectRatio>* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGPreserveAspectRatio* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPreserveAspectRatio();
 
     DECLARE_INFO;
 
@@ -52,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGPreserveAspectRatio>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGPreserveAspectRatio>* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGPreserveAspectRatio>>&&);
+    JSSVGPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPreserveAspectRatio>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGPreserveAspectRatioOwner : public JSC::WeakHandleOwner {
@@ -75,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<SVGPreserveAspectRatio>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPreserveAspectRatio*)
 {
     static NeverDestroyed<JSSVGPreserveAspectRatioOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGPreserveAspectRatio>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGPreserveAspectRatio>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGPreserveAspectRatio* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPreserveAspectRatio&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPreserveAspectRatio* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGPreserveAspectRatio>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGPreserveAspectRatio>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGPreserveAspectRatio> {
+    using WrapperClass = JSSVGPreserveAspectRatio;
+    using ToWrappedReturnType = SVGPreserveAspectRatio*;
+};
 
 } // namespace WebCore
-
-#endif

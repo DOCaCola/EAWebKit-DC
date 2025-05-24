@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStyleSheetList_h
-#define JSStyleSheetList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "StyleSheetList.h"
@@ -27,23 +26,22 @@
 
 namespace WebCore {
 
-class JSStyleSheetList : public JSDOMWrapper {
+class JSStyleSheetList : public JSDOMWrapper<StyleSheetList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<StyleSheetList>;
     static JSStyleSheetList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleSheetList>&& impl)
     {
-        JSStyleSheetList* ptr = new (NotNull, JSC::allocateCell<JSStyleSheetList>(globalObject->vm().heap)) JSStyleSheetList(structure, globalObject, WTF::move(impl));
+        JSStyleSheetList* ptr = new (NotNull, JSC::allocateCell<JSStyleSheetList>(globalObject->vm().heap)) JSStyleSheetList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static StyleSheetList* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT StyleSheetList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSStyleSheetList();
 
     DECLARE_INFO;
 
@@ -53,26 +51,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    StyleSheetList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    StyleSheetList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSStyleSheetList(JSC::Structure*, JSDOMGlobalObject*, Ref<StyleSheetList>&&);
+    JSStyleSheetList(JSC::Structure*, JSDOMGlobalObject&, Ref<StyleSheetList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, StyleSheetList*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
 };
 
 class JSStyleSheetListOwner : public JSC::WeakHandleOwner {
@@ -87,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, StyleSheetList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheetList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, StyleSheetList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(StyleSheetList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheetList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleSheetList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<StyleSheetList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<StyleSheetList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<StyleSheetList> {
+    using WrapperClass = JSStyleSheetList;
+    using ToWrappedReturnType = StyleSheetList*;
+};
 
 } // namespace WebCore
-
-#endif

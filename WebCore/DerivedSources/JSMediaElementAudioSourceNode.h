@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaElementAudioSourceNode_h
-#define JSMediaElementAudioSourceNode_h
+#pragma once
 
 #if ENABLE(VIDEO) && ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSMediaElementAudioSourceNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = MediaElementAudioSourceNode;
     static JSMediaElementAudioSourceNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaElementAudioSourceNode>&& impl)
     {
-        JSMediaElementAudioSourceNode* ptr = new (NotNull, JSC::allocateCell<JSMediaElementAudioSourceNode>(globalObject->vm().heap)) JSMediaElementAudioSourceNode(structure, globalObject, WTF::move(impl));
+        JSMediaElementAudioSourceNode* ptr = new (NotNull, JSC::allocateCell<JSMediaElementAudioSourceNode>(globalObject->vm().heap)) JSMediaElementAudioSourceNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaElementAudioSourceNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    MediaElementAudioSourceNode& wrapped() const
     {
-        return static_cast<MediaElementAudioSourceNode&>(Base::impl());
+        return static_cast<MediaElementAudioSourceNode&>(Base::wrapped());
     }
 protected:
-    JSMediaElementAudioSourceNode(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaElementAudioSourceNode>&&);
+    JSMediaElementAudioSourceNode(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaElementAudioSourceNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaElementAudioSourceNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaElementAudioSourceNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaElementAudioSourceNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaElementAudioSourceNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaElementAudioSourceNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaElementAudioSourceNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<MediaElementAudioSourceNode> {
+    using WrapperClass = JSMediaElementAudioSourceNode;
+    using ToWrappedReturnType = MediaElementAudioSourceNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO) && ENABLE(WEB_AUDIO)
-
-#endif

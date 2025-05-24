@@ -20,207 +20,153 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCConfiguration.h"
 
-#include "JSDOMBinding.h"
 #include "JSRTCIceServer.h"
-#include "RTCConfiguration.h"
-#include "RTCIceServer.h"
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
-#include <wtf/GetPtr.h>
+#include <wtf/NeverDestroyed.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-// Attributes
-
-JSC::EncodedJSValue jsRTCConfigurationIceServers(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCConfigurationIceTransports(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCConfigurationRequestIdentity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-
-class JSRTCConfigurationPrototype : public JSC::JSNonFinalObject {
-public:
-    typedef JSC::JSNonFinalObject Base;
-    static JSRTCConfigurationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
-    {
-        JSRTCConfigurationPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCConfigurationPrototype>(vm.heap)) JSRTCConfigurationPrototype(vm, globalObject, structure);
-        ptr->finishCreation(vm);
-        return ptr;
+template<> RTCConfiguration convertDictionary<RTCConfiguration>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-
-private:
-    JSRTCConfigurationPrototype(JSC::VM& vm, JSC::JSGlobalObject*, JSC::Structure* structure)
-        : JSC::JSNonFinalObject(vm, structure)
-    {
+    RTCConfiguration result;
+    JSValue bundlePolicyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "bundlePolicy"));
+    if (!bundlePolicyValue.isUndefined()) {
+        result.bundlePolicy = convert<IDLEnumeration<RTCConfiguration::BundlePolicy>>(state, bundlePolicyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.bundlePolicy = RTCConfiguration::BundlePolicy::Balanced;
+    JSValue iceServersValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "iceServers"));
+    if (!iceServersValue.isUndefined()) {
+        result.iceServers = convert<IDLSequence<IDLDictionary<RTCIceServer>>>(state, iceServersValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
     }
-
-    void finishCreation(JSC::VM&);
-};
-
-/* Hash table for prototype */
-
-static const HashTableValue JSRTCConfigurationPrototypeTableValues[] =
-{
-    { "iceServers", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceServers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "iceTransports", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceTransports), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requestIdentity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationRequestIdentity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-const ClassInfo JSRTCConfigurationPrototype::s_info = { "RTCConfigurationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCConfigurationPrototype) };
-
-void JSRTCConfigurationPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSRTCConfigurationPrototypeTableValues, *this);
+    JSValue iceTransportPolicyValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "iceTransportPolicy"));
+    if (!iceTransportPolicyValue.isUndefined()) {
+        result.iceTransportPolicy = convert<IDLEnumeration<RTCConfiguration::IceTransportPolicy>>(state, iceTransportPolicyValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.iceTransportPolicy = RTCConfiguration::IceTransportPolicy::All;
+    return result;
 }
 
-const ClassInfo JSRTCConfiguration::s_info = { "RTCConfiguration", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCConfiguration) };
-
-JSRTCConfiguration::JSRTCConfiguration(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCConfiguration>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSC::JSObject* convertDictionaryToJS(JSC::ExecState& state, JSDOMGlobalObject& globalObject, const RTCConfiguration& dictionary)
 {
-}
+    auto& vm = state.vm();
 
-JSObject* JSRTCConfiguration::createPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return JSRTCConfigurationPrototype::create(vm, globalObject, JSRTCConfigurationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
-}
+    auto result = constructEmptyObject(&state);
 
-JSObject* JSRTCConfiguration::getPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMPrototype<JSRTCConfiguration>(vm, globalObject);
-}
-
-void JSRTCConfiguration::destroy(JSC::JSCell* cell)
-{
-    JSRTCConfiguration* thisObject = static_cast<JSRTCConfiguration*>(cell);
-    thisObject->JSRTCConfiguration::~JSRTCConfiguration();
-}
-
-JSRTCConfiguration::~JSRTCConfiguration()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsRTCConfigurationIceServers(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "iceServers");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "iceServers");
+    auto bundlePolicyValue = toJS<IDLEnumeration<RTCConfiguration::BundlePolicy>>(state, globalObject, dictionary.bundlePolicy);
+    result->putDirect(vm, JSC::Identifier::fromString(&vm, "bundlePolicy"), bundlePolicyValue);
+    if (!IDLSequence<IDLDictionary<RTCIceServer>>::isNullValue(dictionary.iceServers)) {
+        auto iceServersValue = toJS<IDLSequence<IDLDictionary<RTCIceServer>>>(state, globalObject, IDLSequence<IDLDictionary<RTCIceServer>>::extractValueFromNullable(dictionary.iceServers));
+        result->putDirect(vm, JSC::Identifier::fromString(&vm, "iceServers"), iceServersValue);
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.iceServers());
-    return JSValue::encode(result);
+    auto iceTransportPolicyValue = toJS<IDLEnumeration<RTCConfiguration::IceTransportPolicy>>(state, globalObject, dictionary.iceTransportPolicy);
+    result->putDirect(vm, JSC::Identifier::fromString(&vm, "iceTransportPolicy"), iceTransportPolicyValue);
+    return result;
 }
 
-
-EncodedJSValue jsRTCConfigurationIceTransports(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> JSString* convertEnumerationToJS(ExecState& state, RTCConfiguration::IceTransportPolicy enumerationValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "iceTransports");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "iceTransports");
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("relay"),
+        ASCIILiteral("all"),
+    };
+    static_assert(static_cast<size_t>(RTCConfiguration::IceTransportPolicy::Relay) == 0, "RTCConfiguration::IceTransportPolicy::Relay is not 0 as expected");
+    static_assert(static_cast<size_t>(RTCConfiguration::IceTransportPolicy::All) == 1, "RTCConfiguration::IceTransportPolicy::All is not 1 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<RTCConfiguration::IceTransportPolicy> parseEnumeration<RTCConfiguration::IceTransportPolicy>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "relay")
+        return RTCConfiguration::IceTransportPolicy::Relay;
+    if (stringValue == "all")
+        return RTCConfiguration::IceTransportPolicy::All;
+    return std::nullopt;
+}
+
+template<> RTCConfiguration::IceTransportPolicy convertEnumeration<RTCConfiguration::IceTransportPolicy>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<RTCConfiguration::IceTransportPolicy>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.iceTransports());
-    return JSValue::encode(result);
+    return result.value();
 }
 
-
-EncodedJSValue jsRTCConfigurationRequestIdentity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> const char* expectedEnumerationValues<RTCConfiguration::IceTransportPolicy>()
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "requestIdentity");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "requestIdentity");
+    return "\"relay\", \"all\"";
+}
+
+template<> JSString* convertEnumerationToJS(ExecState& state, RTCConfiguration::BundlePolicy enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("balanced"),
+        ASCIILiteral("max-compat"),
+        ASCIILiteral("max-bundle"),
+    };
+    static_assert(static_cast<size_t>(RTCConfiguration::BundlePolicy::Balanced) == 0, "RTCConfiguration::BundlePolicy::Balanced is not 0 as expected");
+    static_assert(static_cast<size_t>(RTCConfiguration::BundlePolicy::MaxCompat) == 1, "RTCConfiguration::BundlePolicy::MaxCompat is not 1 as expected");
+    static_assert(static_cast<size_t>(RTCConfiguration::BundlePolicy::MaxBundle) == 2, "RTCConfiguration::BundlePolicy::MaxBundle is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<RTCConfiguration::BundlePolicy> parseEnumeration<RTCConfiguration::BundlePolicy>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "balanced")
+        return RTCConfiguration::BundlePolicy::Balanced;
+    if (stringValue == "max-compat")
+        return RTCConfiguration::BundlePolicy::MaxCompat;
+    if (stringValue == "max-bundle")
+        return RTCConfiguration::BundlePolicy::MaxBundle;
+    return std::nullopt;
+}
+
+template<> RTCConfiguration::BundlePolicy convertEnumeration<RTCConfiguration::BundlePolicy>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<RTCConfiguration::BundlePolicy>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.requestIdentity());
-    return JSValue::encode(result);
+    return result.value();
 }
 
-
-bool JSRTCConfigurationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
+template<> const char* expectedEnumerationValues<RTCConfiguration::BundlePolicy>()
 {
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
+    return "\"balanced\", \"max-compat\", \"max-bundle\"";
 }
 
-void JSRTCConfigurationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsRTCConfiguration = jsCast<JSRTCConfiguration*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCConfiguration->impl(), jsRTCConfiguration);
-}
+} // namespace WebCore
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7RTCConfiguration@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore16RTCConfigurationE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCConfiguration* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCConfiguration>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCConfiguration@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore16RTCConfigurationE[2];
-#if COMPILER(CLANG)
-    // If this fails RTCConfiguration does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCConfiguration), RTCConfiguration_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // RTCConfiguration has subclasses. If RTCConfiguration has subclasses that get passed
-    // to toJS() we currently require RTCConfiguration you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSRTCConfiguration>(globalObject, impl);
-}
-
-RTCConfiguration* JSRTCConfiguration::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSRTCConfiguration*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
-
-}
-
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

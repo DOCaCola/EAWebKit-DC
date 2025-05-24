@@ -500,9 +500,6 @@ inline CSSSelector::CSSSelector()
 #if !ASSERT_WITH_SECURITY_IMPLICATION_DISABLED
     , m_destructorHasBeenCalled(false)
 #endif
-#if !ASSERT_WITH_SECURITY_IMPLICATION_DISABLED
-    , m_destructorHasBeenCalled(false)
-#endif
 {
 }
 
@@ -518,9 +515,6 @@ inline CSSSelector::CSSSelector(const CSSSelector& o)
     , m_isForPage(o.m_isForPage)
     , m_tagIsForNamespaceRule(o.m_tagIsForNamespaceRule)
     , m_caseInsensitiveAttributeValueMatching(o.m_caseInsensitiveAttributeValueMatching)
-#if !ASSERT_WITH_SECURITY_IMPLICATION_DISABLED
-    , m_destructorHasBeenCalled(false)
-#endif
 #if !ASSERT_WITH_SECURITY_IMPLICATION_DISABLED
     , m_destructorHasBeenCalled(false)
 #endif

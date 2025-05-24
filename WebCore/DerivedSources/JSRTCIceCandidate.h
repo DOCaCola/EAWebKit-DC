@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCIceCandidate_h
-#define JSRTCIceCandidate_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
+#include "JSDOMConvert.h"
 #include "JSDOMWrapper.h"
 #include "RTCIceCandidate.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCIceCandidate : public JSDOMWrapper {
+class JSRTCIceCandidate : public JSDOMWrapper<RTCIceCandidate> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<RTCIceCandidate>;
     static JSRTCIceCandidate* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidate>&& impl)
     {
-        JSRTCIceCandidate* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidate>(globalObject->vm().heap)) JSRTCIceCandidate(structure, globalObject, WTF::move(impl));
+        JSRTCIceCandidate* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidate>(globalObject->vm().heap)) JSRTCIceCandidate(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCIceCandidate* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCIceCandidate();
 
     DECLARE_INFO;
 
@@ -52,21 +51,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    RTCIceCandidate& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCIceCandidate* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSRTCIceCandidate(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceCandidate>&&);
+    JSRTCIceCandidate(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCIceCandidate>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCIceCandidateOwner : public JSC::WeakHandleOwner {
@@ -81,15 +70,23 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCIceCandidate*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCIceCandidate*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCIceCandidate& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCIceCandidate* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCIceCandidate(JSC::ExecState*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCIceCandidate&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCIceCandidate* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCIceCandidate>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCIceCandidate>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCIceCandidate> {
+    using WrapperClass = JSRTCIceCandidate;
+    using ToWrappedReturnType = RTCIceCandidate*;
+};
+template<> RTCIceCandidate::Init convertDictionary<RTCIceCandidate::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

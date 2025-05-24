@@ -25,25 +25,70 @@
 #include "JSWaveShaperNode.h"
 
 #include "JSDOMBinding.h"
-#include "WaveShaperNode.h"
+#include "JSDOMConstructor.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
+#include <wtf/NeverDestroyed.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, WaveShaperNode::OverSampleType enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("none"),
+        ASCIILiteral("2x"),
+        ASCIILiteral("4x"),
+    };
+    static_assert(static_cast<size_t>(WaveShaperNode::OverSampleType::None) == 0, "WaveShaperNode::OverSampleType::None is not 0 as expected");
+    static_assert(static_cast<size_t>(WaveShaperNode::OverSampleType::_2x) == 1, "WaveShaperNode::OverSampleType::_2x is not 1 as expected");
+    static_assert(static_cast<size_t>(WaveShaperNode::OverSampleType::_4x) == 2, "WaveShaperNode::OverSampleType::_4x is not 2 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<WaveShaperNode::OverSampleType> parseEnumeration<WaveShaperNode::OverSampleType>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "none")
+        return WaveShaperNode::OverSampleType::None;
+    if (stringValue == "2x")
+        return WaveShaperNode::OverSampleType::_2x;
+    if (stringValue == "4x")
+        return WaveShaperNode::OverSampleType::_4x;
+    return std::nullopt;
+}
+
+template<> WaveShaperNode::OverSampleType convertEnumeration<WaveShaperNode::OverSampleType>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<WaveShaperNode::OverSampleType>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<WaveShaperNode::OverSampleType>()
+{
+    return "\"none\", \"2x\", \"4x\"";
+}
+
 // Attributes
 
-JSC::EncodedJSValue jsWaveShaperNodeCurve(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWaveShaperNodeCurve(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWaveShaperNodeOversample(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWaveShaperNodeOversample(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWaveShaperNodeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWaveShaperNodeCurve(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWaveShaperNodeCurve(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWaveShaperNodeOversample(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWaveShaperNodeOversample(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWaveShaperNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWaveShaperNodeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWaveShaperNodePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWaveShaperNodePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWaveShaperNodePrototype* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNodePrototype>(vm.heap)) JSWaveShaperNodePrototype(vm, globalObject, structure);
@@ -66,50 +111,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWaveShaperNodeConstructor : public DOMConstructorObject {
-private:
-    JSWaveShaperNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWaveShaperNodeConstructor = JSDOMConstructorNotConstructable<JSWaveShaperNode>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWaveShaperNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWaveShaperNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNodeConstructor>(vm.heap)) JSWaveShaperNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWaveShaperNodeConstructor::s_info = { "WaveShaperNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWaveShaperNodeConstructor) };
-
-JSWaveShaperNodeConstructor::JSWaveShaperNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWaveShaperNodeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSAudioNode::getConstructor(vm, &globalObject);
 }
 
-void JSWaveShaperNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWaveShaperNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWaveShaperNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWaveShaperNode::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WaveShaperNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWaveShaperNodeConstructor::s_info = { "WaveShaperNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWaveShaperNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWaveShaperNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "curve", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeCurve), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWaveShaperNodeCurve) },
-    { "oversample", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeOversample), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWaveShaperNodeOversample) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWaveShaperNodeConstructor) } },
+    { "curve", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeCurve), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWaveShaperNodeCurve) } },
+    { "oversample", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWaveShaperNodeOversample), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWaveShaperNodeOversample) } },
 };
 
 const ClassInfo JSWaveShaperNodePrototype::s_info = { "WaveShaperNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWaveShaperNodePrototype) };
@@ -122,110 +146,140 @@ void JSWaveShaperNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWaveShaperNode::s_info = { "WaveShaperNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWaveShaperNode) };
 
-JSWaveShaperNode::JSWaveShaperNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WaveShaperNode>&& impl)
-    : JSAudioNode(structure, globalObject, WTF::move(impl))
+JSWaveShaperNode::JSWaveShaperNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WaveShaperNode>&& impl)
+    : JSAudioNode(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWaveShaperNode::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWaveShaperNode::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSWaveShaperNodePrototype::create(vm, globalObject, JSWaveShaperNodePrototype::createStructure(vm, globalObject, JSAudioNode::getPrototype(vm, globalObject)));
+    return JSWaveShaperNodePrototype::create(vm, globalObject, JSWaveShaperNodePrototype::createStructure(vm, globalObject, JSAudioNode::prototype(vm, globalObject)));
 }
 
-JSObject* JSWaveShaperNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWaveShaperNode::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWaveShaperNode>(vm, globalObject);
 }
 
-EncodedJSValue jsWaveShaperNodeCurve(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSWaveShaperNode* BindingCaller<JSWaveShaperNode>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWaveShaperNode* castedThis = jsDynamicCast<JSWaveShaperNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWaveShaperNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WaveShaperNode", "curve");
-        return throwGetterTypeError(*exec, "WaveShaperNode", "curve");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.curve()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSWaveShaperNode*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsWaveShaperNodeCurveGetter(ExecState&, JSWaveShaperNode&, ThrowScope& throwScope);
 
-EncodedJSValue jsWaveShaperNodeOversample(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWaveShaperNodeCurve(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWaveShaperNode* castedThis = jsDynamicCast<JSWaveShaperNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWaveShaperNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WaveShaperNode", "oversample");
-        return throwGetterTypeError(*exec, "WaveShaperNode", "oversample");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.oversample());
-    return JSValue::encode(result);
+    return BindingCaller<JSWaveShaperNode>::attribute<jsWaveShaperNodeCurveGetter>(state, thisValue, "curve");
 }
 
-
-EncodedJSValue jsWaveShaperNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsWaveShaperNodeCurveGetter(ExecState& state, JSWaveShaperNode& thisObject, ThrowScope& throwScope)
 {
-    JSWaveShaperNodePrototype* domObject = jsDynamicCast<JSWaveShaperNodePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWaveShaperNode::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<Float32Array>>(state, *thisObject.globalObject(), impl.curve());
+    return result;
 }
 
-void setJSWaveShaperNodeCurve(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsWaveShaperNodeOversampleGetter(ExecState&, JSWaveShaperNode&, ThrowScope& throwScope);
+
+EncodedJSValue jsWaveShaperNodeOversample(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSWaveShaperNode>::attribute<jsWaveShaperNodeOversampleGetter>(state, thisValue, "oversample");
+}
+
+static inline JSValue jsWaveShaperNodeOversampleGetter(ExecState& state, JSWaveShaperNode& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<WaveShaperNode::OverSampleType>>(state, impl.oversample());
+    return result;
+}
+
+EncodedJSValue jsWaveShaperNodeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWaveShaperNodePrototype* domObject = jsDynamicDowncast<JSWaveShaperNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWaveShaperNode::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWaveShaperNodeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWaveShaperNode* castedThis = jsDynamicCast<JSWaveShaperNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWaveShaperNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WaveShaperNode", "curve");
-        else
-            throwSetterTypeError(*exec, "WaveShaperNode", "curve");
-        return;
+    JSWaveShaperNodePrototype* domObject = jsDynamicDowncast<JSWaveShaperNodePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<Float32Array> nativeValue = toFloat32Array(value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setCurve(nativeValue.get());
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSWaveShaperNodeCurveFunction(ExecState&, JSWaveShaperNode&, JSValue, ThrowScope&);
+
+bool setJSWaveShaperNodeCurve(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSWaveShaperNode>::setAttribute<setJSWaveShaperNodeCurveFunction>(state, thisValue, encodedValue, "curve");
+}
+
+static inline bool setJSWaveShaperNodeCurveFunction(ExecState& state, JSWaveShaperNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLInterface<Float32Array>>(state, value, [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwAttributeTypeError(state, scope, "WaveShaperNode", "curve", "Float32Array"); });
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setCurve(nativeValue.releaseNonNull());
+    return true;
 }
 
 
-void setJSWaveShaperNodeOversample(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSWaveShaperNodeOversampleFunction(ExecState&, JSWaveShaperNode&, JSValue, ThrowScope&);
+
+bool setJSWaveShaperNodeOversample(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWaveShaperNode* castedThis = jsDynamicCast<JSWaveShaperNode*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWaveShaperNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WaveShaperNode", "oversample");
-        else
-            throwSetterTypeError(*exec, "WaveShaperNode", "oversample");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    if (nativeValue != "none" && nativeValue != "2x" && nativeValue != "4x")
-        return;
-    impl.setOversample(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSWaveShaperNode>::setAttribute<setJSWaveShaperNodeOversampleFunction>(state, thisValue, encodedValue, "oversample");
+}
+
+static inline bool setJSWaveShaperNodeOversampleFunction(ExecState& state, JSWaveShaperNode& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = parseEnumeration<WaveShaperNode::OverSampleType>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    if (UNLIKELY(!nativeValue))
+        return false;
+    impl.setOversample(nativeValue.value());
+    return true;
 }
 
 
-JSValue JSWaveShaperNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSWaveShaperNode::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWaveShaperNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWaveShaperNodeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSWaveShaperNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSWaveShaperNode*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -236,15 +290,12 @@ extern "C" { extern void (*const __identifier("??_7WaveShaperNode@WebCore@@6B@")
 extern "C" { extern void* _ZTVN7WebCore14WaveShaperNodeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WaveShaperNode* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WaveShaperNode>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWaveShaperNode>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WaveShaperNode@WebCore@@6B@"));
 #else
@@ -252,7 +303,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WaveShaperNo
 #if COMPILER(CLANG)
     // If this fails WaveShaperNode does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WaveShaperNode), WaveShaperNode_is_not_polymorphic);
+    static_assert(__is_polymorphic(WaveShaperNode), "WaveShaperNode is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -261,7 +312,12 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WaveShaperNo
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWaveShaperNode>(globalObject, impl);
+    return createWrapper<WaveShaperNode>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WaveShaperNode& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

@@ -21,13 +21,11 @@
 #include "config.h"
 #include "JSCSSMediaRule.h"
 
-#include "CSSMediaRule.h"
-#include "CSSRuleList.h"
-#include "ExceptionCode.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSMediaList.h"
-#include "MediaList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -42,13 +40,14 @@ JSC::EncodedJSValue JSC_HOST_CALL jsCSSMediaRulePrototypeFunctionDeleteRule(JSC:
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSMediaRuleMedia(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSMediaRuleCssRules(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSMediaRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSMediaRuleMedia(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSMediaRuleCssRules(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSMediaRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSMediaRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSMediaRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSMediaRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSMediaRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRulePrototype>(vm.heap)) JSCSSMediaRulePrototype(vm, globalObject, structure);
@@ -71,52 +70,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSMediaRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSMediaRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSMediaRuleConstructor = JSDOMConstructorNotConstructable<JSCSSMediaRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSMediaRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSMediaRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRuleConstructor>(vm.heap)) JSCSSMediaRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSMediaRuleConstructor::s_info = { "CSSMediaRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSMediaRuleConstructor) };
-
-JSCSSMediaRuleConstructor::JSCSSMediaRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCSSMediaRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSCSSMediaRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSMediaRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSMediaRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSMediaRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSMediaRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSMediaRuleConstructor::s_info = { "CSSMediaRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSMediaRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSMediaRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "media", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSMediaRulePrototypeFunctionInsertRule), (intptr_t) (0) },
-    { "deleteRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSMediaRulePrototypeFunctionDeleteRule), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSMediaRuleConstructor) } },
+    { "media", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSMediaRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSMediaRulePrototypeFunctionInsertRule), (intptr_t) (0) } },
+    { "deleteRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSMediaRulePrototypeFunctionDeleteRule), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSMediaRulePrototype::s_info = { "CSSMediaRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSMediaRulePrototype) };
@@ -129,103 +107,133 @@ void JSCSSMediaRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSMediaRule::s_info = { "CSSMediaRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSMediaRule) };
 
-JSCSSMediaRule::JSCSSMediaRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSMediaRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSCSSMediaRule::JSCSSMediaRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSMediaRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSMediaRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSMediaRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSMediaRulePrototype::create(vm, globalObject, JSCSSMediaRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSCSSMediaRulePrototype::create(vm, globalObject, JSCSSMediaRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSMediaRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSMediaRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSMediaRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSMediaRuleMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSMediaRule* BindingCaller<JSCSSMediaRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSMediaRule* castedThis = jsDynamicCast<JSCSSMediaRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSMediaRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSMediaRule", "media");
-        return throwGetterTypeError(*exec, "CSSMediaRule", "media");
+    return jsDynamicDowncast<JSCSSMediaRule*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSCSSMediaRule* BindingCaller<JSCSSMediaRule>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSCSSMediaRule*>(state.thisValue());
+}
+
+static inline JSValue jsCSSMediaRuleMediaGetter(ExecState&, JSCSSMediaRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSMediaRuleMedia(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSMediaRule>::attribute<jsCSSMediaRuleMediaGetter>(state, thisValue, "media");
+}
+
+static inline JSValue jsCSSMediaRuleMediaGetter(ExecState& state, JSCSSMediaRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<MediaList>>(state, *thisObject.globalObject(), impl.media());
+    return result;
+}
+
+static inline JSValue jsCSSMediaRuleCssRulesGetter(ExecState&, JSCSSMediaRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSMediaRuleCssRules(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSMediaRule>::attribute<jsCSSMediaRuleCssRulesGetter>(state, thisValue, "cssRules");
+}
+
+static inline JSValue jsCSSMediaRuleCssRulesGetter(ExecState& state, JSCSSMediaRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSRuleList>>(state, *thisObject.globalObject(), impl.cssRules());
+    return result;
+}
+
+EncodedJSValue jsCSSMediaRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSMediaRulePrototype* domObject = jsDynamicDowncast<JSCSSMediaRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSMediaRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSMediaRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCSSMediaRulePrototype* domObject = jsDynamicDowncast<JSCSSMediaRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.media()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsCSSMediaRuleCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSCSSMediaRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSMediaRule* castedThis = jsDynamicCast<JSCSSMediaRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSMediaRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSMediaRule", "cssRules");
-        return throwGetterTypeError(*exec, "CSSMediaRule", "cssRules");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSCSSMediaRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsCSSMediaRulePrototypeFunctionInsertRuleCaller(JSC::ExecState*, JSCSSMediaRule*, JSC::ThrowScope&);
 
-EncodedJSValue jsCSSMediaRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsCSSMediaRulePrototypeFunctionInsertRule(ExecState* state)
 {
-    JSCSSMediaRulePrototype* domObject = jsDynamicCast<JSCSSMediaRulePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSMediaRule::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSCSSMediaRule>::callOperation<jsCSSMediaRulePrototypeFunctionInsertRuleCaller>(state, "insertRule");
 }
 
-JSValue JSCSSMediaRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsCSSMediaRulePrototypeFunctionInsertRuleCaller(JSC::ExecState* state, JSCSSMediaRule* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSCSSMediaRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto rule = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto index = convert<IDLUnsignedLong>(*state, state->argument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(*state, throwScope, impl.insertRule(WTFMove(rule), WTFMove(index))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSMediaRulePrototypeFunctionInsertRule(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSCSSMediaRule* castedThis = jsDynamicCast<JSCSSMediaRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSMediaRule", "insertRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSMediaRule::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.insertRule(rule, index, ec));
+static inline JSC::EncodedJSValue jsCSSMediaRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState*, JSCSSMediaRule*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsCSSMediaRulePrototypeFunctionDeleteRule(ExecState* state)
+{
+    return BindingCaller<JSCSSMediaRule>::callOperation<jsCSSMediaRulePrototypeFunctionDeleteRuleCaller>(state, "deleteRule");
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSMediaRulePrototypeFunctionDeleteRule(ExecState* exec)
+static inline JSC::EncodedJSValue jsCSSMediaRulePrototypeFunctionDeleteRuleCaller(JSC::ExecState* state, JSCSSMediaRule* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSCSSMediaRule* castedThis = jsDynamicCast<JSCSSMediaRule*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSMediaRule", "deleteRule");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSMediaRule::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.deleteRule(index, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto index = convert<IDLUnsignedLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.deleteRule(WTFMove(index)));
     return JSValue::encode(jsUndefined());
 }
 

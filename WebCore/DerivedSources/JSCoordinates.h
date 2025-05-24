@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCoordinates_h
-#define JSCoordinates_h
+#pragma once
 
 #if ENABLE(GEOLOCATION)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSCoordinates : public JSDOMWrapper {
+class JSCoordinates : public JSDOMWrapper<Coordinates> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Coordinates>;
     static JSCoordinates* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Coordinates>&& impl)
     {
-        JSCoordinates* ptr = new (NotNull, JSC::allocateCell<JSCoordinates>(globalObject->vm().heap)) JSCoordinates(structure, globalObject, WTF::move(impl));
+        JSCoordinates* ptr = new (NotNull, JSC::allocateCell<JSCoordinates>(globalObject->vm().heap)) JSCoordinates(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Coordinates* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCoordinates();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Coordinates& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Coordinates* m_impl;
 protected:
-    JSCoordinates(JSC::Structure*, JSDOMGlobalObject*, Ref<Coordinates>&&);
+    JSCoordinates(JSC::Structure*, JSDOMGlobalObject&, Ref<Coordinates>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSCoordinatesOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Coordinates*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Coordinates*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Coordinates& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Coordinates* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Coordinates&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Coordinates* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Coordinates>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Coordinates>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Coordinates> {
+    using WrapperClass = JSCoordinates;
+    using ToWrappedReturnType = Coordinates*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(GEOLOCATION)
-
-#endif

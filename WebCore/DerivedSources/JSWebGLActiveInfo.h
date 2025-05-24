@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLActiveInfo_h
-#define JSWebGLActiveInfo_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLActiveInfo : public JSDOMWrapper {
+class JSWebGLActiveInfo : public JSDOMWrapper<WebGLActiveInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLActiveInfo>;
     static JSWebGLActiveInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLActiveInfo>&& impl)
     {
-        JSWebGLActiveInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfo>(globalObject->vm().heap)) JSWebGLActiveInfo(structure, globalObject, WTF::move(impl));
+        JSWebGLActiveInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfo>(globalObject->vm().heap)) JSWebGLActiveInfo(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLActiveInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLActiveInfo();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLActiveInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLActiveInfo* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLActiveInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLActiveInfo>&&);
+    JSWebGLActiveInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLActiveInfo>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLActiveInfoOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLActiveInfo*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLActiveInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLActiveInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLActiveInfo* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLActiveInfo&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLActiveInfo* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLActiveInfo>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLActiveInfo>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLActiveInfo> {
+    using WrapperClass = JSWebGLActiveInfo;
+    using ToWrappedReturnType = WebGLActiveInfo*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

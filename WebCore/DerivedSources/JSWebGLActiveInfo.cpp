@@ -25,9 +25,9 @@
 #include "JSWebGLActiveInfo.h"
 
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include "WebGLActiveInfo.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,14 +36,15 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsWebGLActiveInfoSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebGLActiveInfoType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebGLActiveInfoName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsWebGLActiveInfoConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLActiveInfoSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLActiveInfoType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLActiveInfoName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsWebGLActiveInfoConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSWebGLActiveInfoConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSWebGLActiveInfoPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLActiveInfoPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLActiveInfoPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfoPrototype>(vm.heap)) JSWebGLActiveInfoPrototype(vm, globalObject, structure);
@@ -66,51 +67,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLActiveInfoConstructor : public DOMConstructorObject {
-private:
-    JSWebGLActiveInfoConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSWebGLActiveInfoConstructor = JSDOMConstructorNotConstructable<JSWebGLActiveInfo>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLActiveInfoConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLActiveInfoConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfoConstructor>(vm.heap)) JSWebGLActiveInfoConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLActiveInfoConstructor::s_info = { "WebGLActiveInfoConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLActiveInfoConstructor) };
-
-JSWebGLActiveInfoConstructor::JSWebGLActiveInfoConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSWebGLActiveInfoConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSWebGLActiveInfoConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSWebGLActiveInfoConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLActiveInfo::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLActiveInfo::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLActiveInfo"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLActiveInfoConstructor::s_info = { "WebGLActiveInfo", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLActiveInfoConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLActiveInfoPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "size", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebGLActiveInfoConstructor) } },
+    { "size", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLActiveInfoName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLActiveInfoPrototype::s_info = { "WebGLActiveInfoPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLActiveInfoPrototype) };
@@ -123,10 +104,16 @@ void JSWebGLActiveInfoPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLActiveInfo::s_info = { "WebGLActiveInfo", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLActiveInfo) };
 
-JSWebGLActiveInfo::JSWebGLActiveInfo(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLActiveInfo>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLActiveInfo::JSWebGLActiveInfo(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLActiveInfo>&& impl)
+    : JSDOMWrapper<WebGLActiveInfo>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLActiveInfo::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLActiveInfo::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -134,7 +121,7 @@ JSObject* JSWebGLActiveInfo::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSWebGLActiveInfoPrototype::create(vm, globalObject, JSWebGLActiveInfoPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLActiveInfo::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLActiveInfo::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLActiveInfo>(vm, globalObject);
 }
@@ -145,73 +132,86 @@ void JSWebGLActiveInfo::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLActiveInfo::~JSWebGLActiveInfo();
 }
 
-JSWebGLActiveInfo::~JSWebGLActiveInfo()
+template<> inline JSWebGLActiveInfo* BindingCaller<JSWebGLActiveInfo>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSWebGLActiveInfo*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsWebGLActiveInfoSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsWebGLActiveInfoSizeGetter(ExecState&, JSWebGLActiveInfo&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebGLActiveInfoSize(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebGLActiveInfo* castedThis = jsDynamicCast<JSWebGLActiveInfo*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebGLActiveInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebGLActiveInfo", "size");
-        return throwGetterTypeError(*exec, "WebGLActiveInfo", "size");
+    return BindingCaller<JSWebGLActiveInfo>::attribute<jsWebGLActiveInfoSizeGetter>(state, thisValue, "size");
+}
+
+static inline JSValue jsWebGLActiveInfoSizeGetter(ExecState& state, JSWebGLActiveInfo& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.size());
+    return result;
+}
+
+static inline JSValue jsWebGLActiveInfoTypeGetter(ExecState&, JSWebGLActiveInfo&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebGLActiveInfoType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebGLActiveInfo>::attribute<jsWebGLActiveInfoTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsWebGLActiveInfoTypeGetter(ExecState& state, JSWebGLActiveInfo& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.type());
+    return result;
+}
+
+static inline JSValue jsWebGLActiveInfoNameGetter(ExecState&, JSWebGLActiveInfo&, ThrowScope& throwScope);
+
+EncodedJSValue jsWebGLActiveInfoName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSWebGLActiveInfo>::attribute<jsWebGLActiveInfoNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsWebGLActiveInfoNameGetter(ExecState& state, JSWebGLActiveInfo& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+EncodedJSValue jsWebGLActiveInfoConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSWebGLActiveInfoPrototype* domObject = jsDynamicDowncast<JSWebGLActiveInfoPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSWebGLActiveInfo::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSWebGLActiveInfoConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSWebGLActiveInfoPrototype* domObject = jsDynamicDowncast<JSWebGLActiveInfoPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.size());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsWebGLActiveInfoType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSWebGLActiveInfo::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebGLActiveInfo* castedThis = jsDynamicCast<JSWebGLActiveInfo*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebGLActiveInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebGLActiveInfo", "type");
-        return throwGetterTypeError(*exec, "WebGLActiveInfo", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.type());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWebGLActiveInfoName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSWebGLActiveInfo* castedThis = jsDynamicCast<JSWebGLActiveInfo*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSWebGLActiveInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebGLActiveInfo", "name");
-        return throwGetterTypeError(*exec, "WebGLActiveInfo", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsWebGLActiveInfoConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSWebGLActiveInfoPrototype* domObject = jsDynamicCast<JSWebGLActiveInfoPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLActiveInfo::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSWebGLActiveInfo::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSWebGLActiveInfoConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLActiveInfoConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLActiveInfoOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -223,31 +223,32 @@ bool JSWebGLActiveInfoOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSWebGLActiveInfoOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLActiveInfo = jsCast<JSWebGLActiveInfo*>(handle.slot()->asCell());
+    auto* jsWebGLActiveInfo = static_cast<JSWebGLActiveInfo*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLActiveInfo->impl(), jsWebGLActiveInfo);
+    uncacheWrapper(world, &jsWebGLActiveInfo->wrapped(), jsWebGLActiveInfo);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLActiveInfo* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLActiveInfo>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLActiveInfo>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to WebGLActiveInfo.
-    COMPILE_ASSERT(!__is_polymorphic(WebGLActiveInfo), WebGLActiveInfo_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(WebGLActiveInfo), "WebGLActiveInfo is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSWebGLActiveInfo>(globalObject, impl);
+    return createWrapper<WebGLActiveInfo>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLActiveInfo& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLActiveInfo* JSWebGLActiveInfo::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLActiveInfo*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLActiveInfo*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

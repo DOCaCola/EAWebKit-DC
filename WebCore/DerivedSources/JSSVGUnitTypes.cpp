@@ -22,7 +22,8 @@
 #include "JSSVGUnitTypes.h"
 
 #include "JSDOMBinding.h"
-#include "SVGUnitTypes.h"
+#include "JSDOMConstructor.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,11 +32,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGUnitTypesConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGUnitTypesConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGUnitTypesConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGUnitTypesPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGUnitTypesPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGUnitTypesPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypesPrototype>(vm.heap)) JSSVGUnitTypesPrototype(vm, globalObject, structure);
@@ -58,66 +60,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGUnitTypesConstructor : public DOMConstructorObject {
-private:
-    JSSVGUnitTypesConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGUnitTypesConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGUnitTypesConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypesConstructor>(vm.heap)) JSSVGUnitTypesConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGUnitTypesConstructor = JSDOMConstructorNotConstructable<JSSVGUnitTypes>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGUnitTypesConstructorTableValues[] =
 {
-    { "SVG_UNIT_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_UNIT_TYPE_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_UNIT_TYPE_OBJECTBOUNDINGBOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "SVG_UNIT_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_UNIT_TYPE_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_UNIT_TYPE_OBJECTBOUNDINGBOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
+static_assert(SVGUnitTypes::SVG_UNIT_TYPE_UNKNOWN == 0, "SVG_UNIT_TYPE_UNKNOWN in SVGUnitTypes does not match value from IDL");
+static_assert(SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE == 1, "SVG_UNIT_TYPE_USERSPACEONUSE in SVGUnitTypes does not match value from IDL");
+static_assert(SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX == 2, "SVG_UNIT_TYPE_OBJECTBOUNDINGBOX in SVGUnitTypes does not match value from IDL");
 
-COMPILE_ASSERT(0 == SVGUnitTypes::SVG_UNIT_TYPE_UNKNOWN, SVGUnitTypesEnumSVG_UNIT_TYPE_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE, SVGUnitTypesEnumSVG_UNIT_TYPE_USERSPACEONUSEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, SVGUnitTypesEnumSVG_UNIT_TYPE_OBJECTBOUNDINGBOXIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSSVGUnitTypesConstructor::s_info = { "SVGUnitTypesConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUnitTypesConstructor) };
-
-JSSVGUnitTypesConstructor::JSSVGUnitTypesConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGUnitTypesConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGUnitTypesConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGUnitTypesConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGUnitTypes::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGUnitTypes::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGUnitTypes"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGUnitTypesConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGUnitTypesConstructor::s_info = { "SVGUnitTypes", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUnitTypesConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGUnitTypesPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUnitTypesConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_UNIT_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_UNIT_TYPE_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_UNIT_TYPE_OBJECTBOUNDINGBOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUnitTypesConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGUnitTypesConstructor) } },
+    { "SVG_UNIT_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_UNIT_TYPE_USERSPACEONUSE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_UNIT_TYPE_OBJECTBOUNDINGBOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 };
 
 const ClassInfo JSSVGUnitTypesPrototype::s_info = { "SVGUnitTypesPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUnitTypesPrototype) };
@@ -130,10 +111,16 @@ void JSSVGUnitTypesPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGUnitTypes::s_info = { "SVGUnitTypes", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUnitTypes) };
 
-JSSVGUnitTypes::JSSVGUnitTypes(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGUnitTypes>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGUnitTypes::JSSVGUnitTypes(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGUnitTypes>&& impl)
+    : JSDOMWrapper<SVGUnitTypes>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGUnitTypes::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGUnitTypes::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -141,7 +128,7 @@ JSObject* JSSVGUnitTypes::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSVGUnitTypesPrototype::create(vm, globalObject, JSSVGUnitTypesPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSVGUnitTypes::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGUnitTypes::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGUnitTypes>(vm, globalObject);
 }
@@ -152,22 +139,33 @@ void JSSVGUnitTypes::destroy(JSC::JSCell* cell)
     thisObject->JSSVGUnitTypes::~JSSVGUnitTypes();
 }
 
-JSSVGUnitTypes::~JSSVGUnitTypes()
+EncodedJSValue jsSVGUnitTypesConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGUnitTypesPrototype* domObject = jsDynamicDowncast<JSSVGUnitTypesPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGUnitTypes::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue jsSVGUnitTypesConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+bool setJSSVGUnitTypesConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSSVGUnitTypesPrototype* domObject = jsDynamicCast<JSSVGUnitTypesPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGUnitTypes::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGUnitTypesPrototype* domObject = jsDynamicDowncast<JSSVGUnitTypesPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-JSValue JSSVGUnitTypes::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGUnitTypes::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGUnitTypesConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGUnitTypesConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGUnitTypesOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -179,15 +177,15 @@ bool JSSVGUnitTypesOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSSVGUnitTypesOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGUnitTypes = jsCast<JSSVGUnitTypes*>(handle.slot()->asCell());
+    auto* jsSVGUnitTypes = static_cast<JSSVGUnitTypes*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGUnitTypes->impl(), jsSVGUnitTypes);
+    uncacheWrapper(world, &jsSVGUnitTypes->wrapped(), jsSVGUnitTypes);
 }
 
 SVGUnitTypes* JSSVGUnitTypes::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGUnitTypes*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSVGUnitTypes*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

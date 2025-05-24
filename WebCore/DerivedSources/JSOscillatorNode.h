@@ -18,29 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOscillatorNode_h
-#define JSOscillatorNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
 #include "JSAudioNode.h"
+#include "JSDOMConvert.h"
 #include "OscillatorNode.h"
 
 namespace WebCore {
 
 class JSOscillatorNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = OscillatorNode;
     static JSOscillatorNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OscillatorNode>&& impl)
     {
-        JSOscillatorNode* ptr = new (NotNull, JSC::allocateCell<JSOscillatorNode>(globalObject->vm().heap)) JSOscillatorNode(structure, globalObject, WTF::move(impl));
+        JSOscillatorNode* ptr = new (NotNull, JSC::allocateCell<JSOscillatorNode>(globalObject->vm().heap)) JSOscillatorNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,33 +49,35 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setType(JSC::ExecState*, JSC::JSValue);
-    OscillatorNode& impl() const
+    OscillatorNode& wrapped() const
     {
-        return static_cast<OscillatorNode&>(Base::impl());
+        return static_cast<OscillatorNode&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSOscillatorNode(JSC::Structure*, JSDOMGlobalObject*, Ref<OscillatorNode>&&);
+    JSOscillatorNode(JSC::Structure*, JSDOMGlobalObject&, Ref<OscillatorNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OscillatorNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OscillatorNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OscillatorNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OscillatorNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OscillatorNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OscillatorNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OscillatorNode> {
+    using WrapperClass = JSOscillatorNode;
+    using ToWrappedReturnType = OscillatorNode*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, OscillatorNode::Type);
+
+template<> std::optional<OscillatorNode::Type> parseEnumeration<OscillatorNode::Type>(JSC::ExecState&, JSC::JSValue);
+template<> OscillatorNode::Type convertEnumeration<OscillatorNode::Type>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<OscillatorNode::Type>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

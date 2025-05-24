@@ -292,6 +292,9 @@ static void extendTextCodecMaps()
 {
     TextCodecReplacement::registerEncodingNames(addToTextEncodingNameMap);
     TextCodecReplacement::registerCodecs(addToTextCodecMap);
+//+EAWebKitChange
+//3/23/2015
+//TextCodecICU is excluded for us in TextAllInOne
 #if !PLATFORM(EA)
     TextCodecICU::registerEncodingNames(addToTextEncodingNameMap);
     TextCodecICU::registerCodecs(addToTextCodecMap);

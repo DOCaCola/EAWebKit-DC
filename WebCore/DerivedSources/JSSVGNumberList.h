@@ -18,33 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGNumberList_h
-#define JSSVGNumberList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedListPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGNumberList.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGNumberList : public JSDOMWrapper {
+class JSSVGNumberList : public JSDOMWrapper<SVGNumberList> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGNumberList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGListPropertyTearOff<SVGNumberList>>&& impl)
+    using Base = JSDOMWrapper<SVGNumberList>;
+    static JSSVGNumberList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGNumberList>&& impl)
     {
-        JSSVGNumberList* ptr = new (NotNull, JSC::allocateCell<JSSVGNumberList>(globalObject->vm().heap)) JSSVGNumberList(structure, globalObject, WTF::move(impl));
+        JSSVGNumberList* ptr = new (NotNull, JSC::allocateCell<JSSVGNumberList>(globalObject->vm().heap)) JSSVGNumberList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGListPropertyTearOff<SVGNumberList>* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGNumberList* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGNumberList();
 
     DECLARE_INFO;
 
@@ -53,23 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGListPropertyTearOff<SVGNumberList>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGListPropertyTearOff<SVGNumberList>* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGNumberList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGListPropertyTearOff<SVGNumberList>>&&);
+    JSSVGNumberList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGNumberList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGNumberListOwner : public JSC::WeakHandleOwner {
@@ -78,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGListPropertyTearOff<SVGNumberList>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGNumberList*)
 {
     static NeverDestroyed<JSSVGNumberListOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGListPropertyTearOff<SVGNumberList>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGListPropertyTearOff<SVGNumberList>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGNumberList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGNumberList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGNumberList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGNumberList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGNumberList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGNumberList> {
+    using WrapperClass = JSSVGNumberList;
+    using ToWrappedReturnType = SVGNumberList*;
+};
 
 } // namespace WebCore
-
-#endif

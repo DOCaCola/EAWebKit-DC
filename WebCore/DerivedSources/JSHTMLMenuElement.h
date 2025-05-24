@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMenuElement_h
-#define JSHTMLMenuElement_h
+#pragma once
 
 #include "HTMLMenuElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLMenuElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLMenuElement;
     static JSHTMLMenuElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMenuElement>&& impl)
     {
-        JSHTMLMenuElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMenuElement>(globalObject->vm().heap)) JSHTMLMenuElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMenuElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMenuElement>(globalObject->vm().heap)) JSHTMLMenuElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMenuElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLMenuElement& wrapped() const
     {
-        return static_cast<HTMLMenuElement&>(Base::impl());
+        return static_cast<HTMLMenuElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMenuElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMenuElement>&&);
+    JSHTMLMenuElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMenuElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLMenuElement> {
+    using WrapperClass = JSHTMLMenuElement;
+    using ToWrappedReturnType = HTMLMenuElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLHRElement_h
-#define JSHTMLHRElement_h
+#pragma once
 
 #include "HTMLHRElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLHRElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLHRElement;
     static JSHTMLHRElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLHRElement>&& impl)
     {
-        JSHTMLHRElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLHRElement>(globalObject->vm().heap)) JSHTMLHRElement(structure, globalObject, WTF::move(impl));
+        JSHTMLHRElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLHRElement>(globalObject->vm().heap)) JSHTMLHRElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLHRElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLHRElement& wrapped() const
     {
-        return static_cast<HTMLHRElement&>(Base::impl());
+        return static_cast<HTMLHRElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLHRElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLHRElement>&&);
+    JSHTMLHRElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLHRElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLHRElement> {
+    using WrapperClass = JSHTMLHRElement;
+    using ToWrappedReturnType = HTMLHRElement*;
+};
 
 } // namespace WebCore
-
-#endif

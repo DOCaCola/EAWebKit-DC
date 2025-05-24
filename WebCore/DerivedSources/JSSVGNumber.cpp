@@ -21,9 +21,10 @@
 #include "config.h"
 #include "JSSVGNumber.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include <runtime/Error.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -32,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGNumberValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGNumberValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGNumberConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGNumberValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGNumberValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGNumberConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGNumberConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGNumberPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGNumberPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGNumberPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGNumberPrototype>(vm.heap)) JSSVGNumberPrototype(vm, globalObject, structure);
@@ -61,49 +63,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGNumberConstructor : public DOMConstructorObject {
-private:
-    JSSVGNumberConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGNumberConstructor = JSDOMConstructorNotConstructable<JSSVGNumber>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGNumberConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGNumberConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGNumberConstructor>(vm.heap)) JSSVGNumberConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGNumberConstructor::s_info = { "SVGNumberConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGNumberConstructor) };
-
-JSSVGNumberConstructor::JSSVGNumberConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGNumberConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGNumberConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGNumberConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGNumber::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGNumber::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGNumber"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGNumberConstructor::s_info = { "SVGNumber", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGNumberConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGNumberPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGNumberConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGNumberValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGNumberValue) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGNumberConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGNumberConstructor) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGNumberValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGNumberValue) } },
 };
 
 const ClassInfo JSSVGNumberPrototype::s_info = { "SVGNumberPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGNumberPrototype) };
@@ -116,10 +98,16 @@ void JSSVGNumberPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGNumber::s_info = { "SVGNumber", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGNumber) };
 
-JSSVGNumber::JSSVGNumber(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<float>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGNumber::JSSVGNumber(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGNumber>&& impl)
+    : JSDOMWrapper<SVGNumber>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGNumber::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGNumber::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -127,7 +115,7 @@ JSObject* JSSVGNumber::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSVGNumberPrototype::create(vm, globalObject, JSSVGNumberPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSVGNumber::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGNumber::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGNumber>(vm, globalObject);
 }
@@ -138,65 +126,73 @@ void JSSVGNumber::destroy(JSC::JSCell* cell)
     thisObject->JSSVGNumber::~JSSVGNumber();
 }
 
-JSSVGNumber::~JSSVGNumber()
+template<> inline JSSVGNumber* BindingCaller<JSSVGNumber>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSVGNumber*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsSVGNumberValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGNumberValueGetter(ExecState&, JSSVGNumber&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGNumberValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGNumber* castedThis = jsDynamicCast<JSSVGNumber*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGNumberPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGNumber", "value");
-        return throwGetterTypeError(*exec, "SVGNumber", "value");
-    }
-    float& impl = castedThis->impl().propertyReference();
-    JSValue result = jsNumber(impl);
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGNumber>::attribute<jsSVGNumberValueGetter>(state, thisValue, "value");
 }
 
-
-EncodedJSValue jsSVGNumberConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsSVGNumberValueGetter(ExecState& state, JSSVGNumber& thisObject, ThrowScope& throwScope)
 {
-    JSSVGNumberPrototype* domObject = jsDynamicCast<JSSVGNumberPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGNumber::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.valueForBindings());
+    return result;
 }
 
-void setJSSVGNumberValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+EncodedJSValue jsSVGNumberConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGNumberPrototype* domObject = jsDynamicDowncast<JSSVGNumberPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGNumber::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGNumberConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGNumber* castedThis = jsDynamicCast<JSSVGNumber*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGNumberPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGNumber", "value");
-        else
-            throwSetterTypeError(*exec, "SVGNumber", "value");
-        return;
+    JSSVGNumberPrototype* domObject = jsDynamicDowncast<JSSVGNumberPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
-        return;
-    }
-    float& podImpl = impl.propertyReference();
-    podImpl = nativeValue;
-    impl.commitChange();
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGNumberValueFunction(ExecState&, JSSVGNumber&, JSValue, ThrowScope&);
+
+bool setJSSVGNumberValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGNumber>::setAttribute<setJSSVGNumberValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSSVGNumberValueFunction(ExecState& state, JSSVGNumber& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setValueForBindings(WTFMove(nativeValue)));
+    return true;
 }
 
 
-JSValue JSSVGNumber::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGNumber::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGNumberConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGNumberConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGNumberOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -208,24 +204,53 @@ bool JSSVGNumberOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> hand
 
 void JSSVGNumberOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGNumber = jsCast<JSSVGNumber*>(handle.slot()->asCell());
+    auto* jsSVGNumber = static_cast<JSSVGNumber*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGNumber->impl(), jsSVGNumber);
+    uncacheWrapper(world, &jsSVGNumber->wrapped(), jsSVGNumber);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<float>* impl)
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7SVGNumber@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore9SVGNumberE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SVGNumber>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSVGNumber, SVGPropertyTearOff<float>>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSSVGNumber, SVGPropertyTearOff<float>>(globalObject, impl);
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SVGNumber@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore9SVGNumberE[2];
+#if COMPILER(CLANG)
+    // If this fails SVGNumber does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(SVGNumber), "SVGNumber is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // SVGNumber has subclasses. If SVGNumber has subclasses that get passed
+    // to toJS() we currently require SVGNumber you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<SVGNumber>(globalObject, WTFMove(impl));
 }
 
-SVGPropertyTearOff<float>* JSSVGNumber::toWrapped(JSC::JSValue value)
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGNumber& impl)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGNumber*>(value))
-        return &wrapper->impl();
+    return wrap(state, globalObject, impl);
+}
+
+SVGNumber* JSSVGNumber::toWrapped(JSC::JSValue value)
+{
+    if (auto* wrapper = jsDynamicDowncast<JSSVGNumber*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

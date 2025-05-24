@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAttr_h
-#define JSAttr_h
+#pragma once
 
 #include "Attr.h"
 #include "JSNode.h"
@@ -28,46 +27,50 @@ namespace WebCore {
 
 class JSAttr : public JSNode {
 public:
-    typedef JSNode Base;
+    using Base = JSNode;
+    using DOMWrapped = Attr;
     static JSAttr* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Attr>&& impl)
     {
-        JSAttr* ptr = new (NotNull, JSC::allocateCell<JSAttr>(globalObject->vm().heap)) JSAttr(structure, globalObject, WTF::move(impl));
+        JSAttr* ptr = new (NotNull, JSC::allocateCell<JSAttr>(globalObject->vm().heap)) JSAttr(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Attr* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSAttrNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    Attr& impl() const
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    Attr& wrapped() const
     {
-        return static_cast<Attr&>(Base::impl());
+        return static_cast<Attr&>(Base::wrapped());
     }
 protected:
-    JSAttr(JSC::Structure*, JSDOMGlobalObject*, Ref<Attr>&&);
+    JSAttr(JSC::Structure*, JSDOMGlobalObject&, Ref<Attr>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Attr&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Attr* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Attr>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Attr>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<Attr> {
+    using WrapperClass = JSAttr;
+    using ToWrappedReturnType = Attr*;
+};
 
 } // namespace WebCore
-
-#endif

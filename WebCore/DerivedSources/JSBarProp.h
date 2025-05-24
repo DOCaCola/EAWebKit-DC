@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSBarProp_h
-#define JSBarProp_h
+#pragma once
 
 #include "BarProp.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSBarProp : public JSDOMWrapper {
+class JSBarProp : public JSDOMWrapper<BarProp> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<BarProp>;
     static JSBarProp* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BarProp>&& impl)
     {
-        JSBarProp* ptr = new (NotNull, JSC::allocateCell<JSBarProp>(globalObject->vm().heap)) JSBarProp(structure, globalObject, WTF::move(impl));
+        JSBarProp* ptr = new (NotNull, JSC::allocateCell<JSBarProp>(globalObject->vm().heap)) JSBarProp(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static BarProp* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSBarProp();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    BarProp& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    BarProp* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSBarProp(JSC::Structure*, JSDOMGlobalObject*, Ref<BarProp>&&);
+    JSBarProp(JSC::Structure*, JSDOMGlobalObject&, Ref<BarProp>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSBarPropOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, BarProp*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BarProp*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, BarProp& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(BarProp* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BarProp&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, BarProp* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<BarProp>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<BarProp>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<BarProp> {
+    using WrapperClass = JSBarProp;
+    using ToWrappedReturnType = BarProp*;
+};
 
 } // namespace WebCore
-
-#endif

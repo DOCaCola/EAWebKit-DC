@@ -18,75 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTestEventConstructor_h
-#define JSTestEventConstructor_h
+#pragma once
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEvent.h"
 #include "TestEventConstructor.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSDictionary;
-
-class JSTestEventConstructor : public JSDOMWrapper {
+class JSTestEventConstructor : public JSEvent {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEvent;
+    using DOMWrapped = TestEventConstructor;
     static JSTestEventConstructor* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TestEventConstructor>&& impl)
     {
-        JSTestEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSTestEventConstructor>(globalObject->vm().heap)) JSTestEventConstructor(structure, globalObject, WTF::move(impl));
+        JSTestEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSTestEventConstructor>(globalObject->vm().heap)) JSTestEventConstructor(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static TestEventConstructor* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSTestEventConstructor();
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TestEventConstructor& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TestEventConstructor* m_impl;
-protected:
-    JSTestEventConstructor(JSC::Structure*, JSDOMGlobalObject*, Ref<TestEventConstructor>&&);
-
-    void finishCreation(JSC::VM& vm)
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    TestEventConstructor& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<TestEventConstructor&>(Base::wrapped());
     }
+protected:
+    JSTestEventConstructor(JSC::Structure*, JSDOMGlobalObject&, Ref<TestEventConstructor>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
-class JSTestEventConstructorOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TestEventConstructor&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TestEventConstructor* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TestEventConstructor>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TestEventConstructor>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TestEventConstructor> {
+    using WrapperClass = JSTestEventConstructor;
+    using ToWrappedReturnType = TestEventConstructor*;
 };
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TestEventConstructor*)
-{
-    static NeverDestroyed<JSTestEventConstructorOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TestEventConstructor*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TestEventConstructor& impl) { return toJS(exec, globalObject, &impl); }
-
-bool fillTestEventConstructorInit(TestEventConstructorInit&, JSDictionary&);
+template<> TestEventConstructor::Init convertDictionary<TestEventConstructor::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

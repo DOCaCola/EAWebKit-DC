@@ -24,9 +24,9 @@
 
 #include "JSHTMLAttachmentElement.h"
 
-#include "File.h"
-#include "HTMLAttachmentElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSFile.h"
 #include <wtf/GetPtr.h>
 
@@ -36,13 +36,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLAttachmentElementFile(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAttachmentElementFile(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAttachmentElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLAttachmentElementFile(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAttachmentElementFile(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAttachmentElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAttachmentElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLAttachmentElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLAttachmentElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLAttachmentElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElementPrototype>(vm.heap)) JSHTMLAttachmentElementPrototype(vm, globalObject, structure);
@@ -65,49 +66,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLAttachmentElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLAttachmentElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLAttachmentElementConstructor = JSDOMConstructorNotConstructable<JSHTMLAttachmentElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLAttachmentElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLAttachmentElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElementConstructor>(vm.heap)) JSHTMLAttachmentElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLAttachmentElementConstructor::s_info = { "HTMLAttachmentElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementConstructor) };
-
-JSHTMLAttachmentElementConstructor::JSHTMLAttachmentElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLAttachmentElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLAttachmentElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLAttachmentElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLAttachmentElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLAttachmentElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLAttachmentElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLAttachmentElementConstructor::s_info = { "HTMLAttachmentElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLAttachmentElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "file", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAttachmentElementFile) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAttachmentElementConstructor) } },
+    { "file", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAttachmentElementFile) } },
 };
 
 const ClassInfo JSHTMLAttachmentElementPrototype::s_info = { "HTMLAttachmentElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementPrototype) };
@@ -120,69 +100,103 @@ void JSHTMLAttachmentElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLAttachmentElement::s_info = { "HTMLAttachmentElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElement) };
 
-JSHTMLAttachmentElement::JSHTMLAttachmentElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAttachmentElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLAttachmentElement::JSHTMLAttachmentElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLAttachmentElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLAttachmentElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLAttachmentElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLAttachmentElementPrototype::create(vm, globalObject, JSHTMLAttachmentElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLAttachmentElementPrototype::create(vm, globalObject, JSHTMLAttachmentElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLAttachmentElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLAttachmentElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLAttachmentElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLAttachmentElementFile(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLAttachmentElement* BindingCaller<JSHTMLAttachmentElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAttachmentElement* castedThis = jsDynamicCast<JSHTMLAttachmentElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAttachmentElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAttachmentElement", "file");
-        return throwGetterTypeError(*exec, "HTMLAttachmentElement", "file");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.file()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLAttachmentElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsHTMLAttachmentElementFileGetter(ExecState&, JSHTMLAttachmentElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAttachmentElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLAttachmentElementFile(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLAttachmentElementPrototype* domObject = jsDynamicCast<JSHTMLAttachmentElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLAttachmentElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSHTMLAttachmentElement>::attribute<jsHTMLAttachmentElementFileGetter>(state, thisValue, "file");
 }
 
-void setJSHTMLAttachmentElementFile(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLAttachmentElementFileGetter(ExecState& state, JSHTMLAttachmentElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLNullable<IDLInterface<File>>>(state, *thisObject.globalObject(), impl.file());
+    return result;
+}
+
+EncodedJSValue jsHTMLAttachmentElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLAttachmentElementPrototype* domObject = jsDynamicDowncast<JSHTMLAttachmentElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLAttachmentElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLAttachmentElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAttachmentElement* castedThis = jsDynamicCast<JSHTMLAttachmentElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAttachmentElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAttachmentElement", "file");
-        else
-            throwSetterTypeError(*exec, "HTMLAttachmentElement", "file");
-        return;
+    JSHTMLAttachmentElementPrototype* domObject = jsDynamicDowncast<JSHTMLAttachmentElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    File* nativeValue = JSFile::toWrapped(value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setFile(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLAttachmentElementFileFunction(ExecState&, JSHTMLAttachmentElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAttachmentElementFile(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLAttachmentElement>::setAttribute<setJSHTMLAttachmentElementFileFunction>(state, thisValue, encodedValue, "file");
+}
+
+static inline bool setJSHTMLAttachmentElementFileFunction(ExecState& state, JSHTMLAttachmentElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLNullable<IDLInterface<File>>>(state, value, [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwAttributeTypeError(state, scope, "HTMLAttachmentElement", "file", "File"); });
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setFile(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLAttachmentElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLAttachmentElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLAttachmentElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLAttachmentElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLAttachmentElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLAttachmentElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

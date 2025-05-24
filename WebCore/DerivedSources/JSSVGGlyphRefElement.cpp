@@ -25,11 +25,10 @@
 #include "JSSVGGlyphRefElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGGlyphRefElement.h"
 #include "SVGNames.h"
-#include "URL.h"
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -38,24 +37,25 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGGlyphRefElementGlyphRef(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementGlyphRef(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementFormat(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementFormat(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementDx(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementDx(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementDy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSSVGGlyphRefElementDy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsSVGGlyphRefElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGGlyphRefElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGGlyphRefElementGlyphRef(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementGlyphRef(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementFormat(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementFormat(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementDx(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementDx(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementDy(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementDy(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsSVGGlyphRefElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGGlyphRefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGGlyphRefElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGGlyphRefElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGGlyphRefElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGGlyphRefElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphRefElementPrototype>(vm.heap)) JSSVGGlyphRefElementPrototype(vm, globalObject, structure);
@@ -78,55 +78,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGGlyphRefElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGGlyphRefElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGGlyphRefElementConstructor = JSDOMConstructorNotConstructable<JSSVGGlyphRefElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGGlyphRefElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGGlyphRefElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphRefElementConstructor>(vm.heap)) JSSVGGlyphRefElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGGlyphRefElementConstructor::s_info = { "SVGGlyphRefElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphRefElementConstructor) };
-
-JSSVGGlyphRefElementConstructor::JSSVGGlyphRefElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGGlyphRefElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGGlyphRefElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGGlyphRefElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGGlyphRefElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGGlyphRefElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGGlyphRefElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGGlyphRefElementConstructor::s_info = { "SVGGlyphRefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphRefElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGGlyphRefElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "glyphRef", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementGlyphRef), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementGlyphRef) },
-    { "format", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementFormat), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementFormat) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementY) },
-    { "dx", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementDx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementDx) },
-    { "dy", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementDy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementDy) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementConstructor) } },
+    { "glyphRef", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementGlyphRef), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementGlyphRef) } },
+    { "format", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementFormat), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementFormat) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementY) } },
+    { "dx", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementDx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementDx) } },
+    { "dy", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementDy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGGlyphRefElementDy) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGGlyphRefElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGGlyphRefElementPrototype::s_info = { "SVGGlyphRefElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphRefElementPrototype) };
@@ -139,282 +118,294 @@ void JSSVGGlyphRefElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGGlyphRefElement::s_info = { "SVGGlyphRefElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGGlyphRefElement) };
 
-JSSVGGlyphRefElement::JSSVGGlyphRefElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGGlyphRefElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGGlyphRefElement::JSSVGGlyphRefElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGGlyphRefElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGGlyphRefElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGGlyphRefElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGGlyphRefElementPrototype::create(vm, globalObject, JSSVGGlyphRefElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGGlyphRefElementPrototype::create(vm, globalObject, JSSVGGlyphRefElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGGlyphRefElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGGlyphRefElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGGlyphRefElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGGlyphRefElementGlyphRef(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGGlyphRefElement* BindingCaller<JSSVGGlyphRefElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "glyphRef");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "glyphRef");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.glyphRef());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
 }
 
+static inline JSValue jsSVGGlyphRefElementGlyphRefGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGGlyphRefElementFormat(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGGlyphRefElementGlyphRef(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "format");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "format");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::SVGNames::formatAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementGlyphRefGetter>(state, thisValue, "glyphRef");
 }
 
-
-EncodedJSValue jsSVGGlyphRefElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGGlyphRefElementGlyphRefGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "x");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.x());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::SVGNames::glyphRefAttr));
+    return result;
 }
 
+static inline JSValue jsSVGGlyphRefElementFormatGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGGlyphRefElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGGlyphRefElementFormat(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "y");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.y());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementFormatGetter>(state, thisValue, "format");
 }
 
-
-EncodedJSValue jsSVGGlyphRefElementDx(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGGlyphRefElementFormatGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "dx");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "dx");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.dx());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::SVGNames::formatAttr));
+    return result;
 }
 
+static inline JSValue jsSVGGlyphRefElementXGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGGlyphRefElementDy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGGlyphRefElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "dy");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "dy");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.dy());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementXGetter>(state, thisValue, "x");
 }
 
-
-EncodedJSValue jsSVGGlyphRefElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGGlyphRefElementXGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGGlyphRefElement", "href");
-        return throwGetterTypeError(*exec, "SVGGlyphRefElement", "href");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.x());
+    return result;
 }
 
+static inline JSValue jsSVGGlyphRefElementYGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsSVGGlyphRefElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGGlyphRefElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGGlyphRefElementPrototype* domObject = jsDynamicCast<JSSVGGlyphRefElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGGlyphRefElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementYGetter>(state, thisValue, "y");
 }
 
-void setJSSVGGlyphRefElementGlyphRef(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsSVGGlyphRefElementYGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.y());
+    return result;
+}
+
+static inline JSValue jsSVGGlyphRefElementDxGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGGlyphRefElementDx(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementDxGetter>(state, thisValue, "dx");
+}
+
+static inline JSValue jsSVGGlyphRefElementDxGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.dx());
+    return result;
+}
+
+static inline JSValue jsSVGGlyphRefElementDyGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGGlyphRefElementDy(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementDyGetter>(state, thisValue, "dy");
+}
+
+static inline JSValue jsSVGGlyphRefElementDyGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.dy());
+    return result;
+}
+
+static inline JSValue jsSVGGlyphRefElementHrefGetter(ExecState&, JSSVGGlyphRefElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGGlyphRefElementHref(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGGlyphRefElement>::attribute<jsSVGGlyphRefElementHrefGetter>(state, thisValue, "href");
+}
+
+static inline JSValue jsSVGGlyphRefElementHrefGetter(ExecState& state, JSSVGGlyphRefElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.hrefAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGGlyphRefElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGGlyphRefElementPrototype* domObject = jsDynamicDowncast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGGlyphRefElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGGlyphRefElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "glyphRef");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "glyphRef");
-        return;
+    JSSVGGlyphRefElementPrototype* domObject = jsDynamicDowncast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setGlyphRef(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSSVGGlyphRefElementGlyphRefFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementGlyphRef(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementGlyphRefFunction>(state, thisValue, encodedValue, "glyphRef");
+}
+
+static inline bool setJSSVGGlyphRefElementGlyphRefFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::SVGNames::glyphRefAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGGlyphRefElementFormat(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGGlyphRefElementFormatFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementFormat(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "format");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "format");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::SVGNames::formatAttr, nativeValue);
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementFormatFunction>(state, thisValue, encodedValue, "format");
+}
+
+static inline bool setJSSVGGlyphRefElementFormatFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::SVGNames::formatAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGGlyphRefElementX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGGlyphRefElementXFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementX(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "x");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "x");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setX(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementXFunction>(state, thisValue, encodedValue, "x");
+}
+
+static inline bool setJSSVGGlyphRefElementXFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setX(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGGlyphRefElementY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGGlyphRefElementYFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementY(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "y");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "y");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setY(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementYFunction>(state, thisValue, encodedValue, "y");
+}
+
+static inline bool setJSSVGGlyphRefElementYFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setY(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGGlyphRefElementDx(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGGlyphRefElementDxFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementDx(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "dx");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "dx");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDx(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementDxFunction>(state, thisValue, encodedValue, "dx");
+}
+
+static inline bool setJSSVGGlyphRefElementDxFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDx(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSSVGGlyphRefElementDy(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSSVGGlyphRefElementDyFunction(ExecState&, JSSVGGlyphRefElement&, JSValue, ThrowScope&);
+
+bool setJSSVGGlyphRefElementDy(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSSVGGlyphRefElement* castedThis = jsDynamicCast<JSSVGGlyphRefElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGGlyphRefElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGGlyphRefElement", "dy");
-        else
-            throwSetterTypeError(*exec, "SVGGlyphRefElement", "dy");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDy(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSSVGGlyphRefElement>::setAttribute<setJSSVGGlyphRefElementDyFunction>(state, thisValue, encodedValue, "dy");
+}
+
+static inline bool setJSSVGGlyphRefElementDyFunction(ExecState& state, JSSVGGlyphRefElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setDy(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSSVGGlyphRefElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSSVGGlyphRefElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGGlyphRefElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGGlyphRefElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGGlyphRefElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGGlyphRefElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

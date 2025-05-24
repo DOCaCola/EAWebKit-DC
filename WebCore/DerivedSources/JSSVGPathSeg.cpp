@@ -22,9 +22,9 @@
 #include "JSSVGPathSeg.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSeg.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -33,13 +33,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGPathSegPathSegType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathSegPathSegTypeAsLetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathSegConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathSegPathSegType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathSegPathSegTypeAsLetter(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathSegConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGPathSegConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGPathSegPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGPathSegPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGPathSegPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegPrototype>(vm.heap)) JSSVGPathSegPrototype(vm, globalObject, structure);
@@ -62,119 +63,98 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegConstructor>(vm.heap)) JSSVGPathSegConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGPathSegConstructor = JSDOMConstructorNotConstructable<JSSVGPathSeg>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGPathSegConstructorTableValues[] =
 {
-    { "PATHSEG_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "PATHSEG_CLOSEPATH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "PATHSEG_MOVETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "PATHSEG_MOVETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "PATHSEG_LINETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "PATHSEG_LINETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "PATHSEG_ARC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "PATHSEG_ARC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(13), (intptr_t) (0) },
-    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(14), (intptr_t) (0) },
-    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(15), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(17), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(18), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(19), (intptr_t) (0) },
+    { "PATHSEG_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "PATHSEG_CLOSEPATH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "PATHSEG_MOVETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "PATHSEG_MOVETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "PATHSEG_LINETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "PATHSEG_LINETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "PATHSEG_ARC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "PATHSEG_ARC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(13) } },
+    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(14) } },
+    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(15) } },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(17) } },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(18) } },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(19) } },
 };
 
+static_assert(SVGPathSeg::PATHSEG_UNKNOWN == 0, "PATHSEG_UNKNOWN in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CLOSEPATH == 1, "PATHSEG_CLOSEPATH in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_MOVETO_ABS == 2, "PATHSEG_MOVETO_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_MOVETO_REL == 3, "PATHSEG_MOVETO_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_ABS == 4, "PATHSEG_LINETO_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_REL == 5, "PATHSEG_LINETO_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS == 6, "PATHSEG_CURVETO_CUBIC_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_CUBIC_REL == 7, "PATHSEG_CURVETO_CUBIC_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS == 8, "PATHSEG_CURVETO_QUADRATIC_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL == 9, "PATHSEG_CURVETO_QUADRATIC_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_ARC_ABS == 10, "PATHSEG_ARC_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_ARC_REL == 11, "PATHSEG_ARC_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS == 12, "PATHSEG_LINETO_HORIZONTAL_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL == 13, "PATHSEG_LINETO_HORIZONTAL_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS == 14, "PATHSEG_LINETO_VERTICAL_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_LINETO_VERTICAL_REL == 15, "PATHSEG_LINETO_VERTICAL_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS == 16, "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL == 17, "PATHSEG_CURVETO_CUBIC_SMOOTH_REL in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS == 18, "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS in SVGPathSeg does not match value from IDL");
+static_assert(SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL == 19, "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL in SVGPathSeg does not match value from IDL");
 
-COMPILE_ASSERT(0 == SVGPathSeg::PATHSEG_UNKNOWN, SVGPathSegEnumPATHSEG_UNKNOWNIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == SVGPathSeg::PATHSEG_CLOSEPATH, SVGPathSegEnumPATHSEG_CLOSEPATHIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == SVGPathSeg::PATHSEG_MOVETO_ABS, SVGPathSegEnumPATHSEG_MOVETO_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(3 == SVGPathSeg::PATHSEG_MOVETO_REL, SVGPathSegEnumPATHSEG_MOVETO_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(4 == SVGPathSeg::PATHSEG_LINETO_ABS, SVGPathSegEnumPATHSEG_LINETO_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(5 == SVGPathSeg::PATHSEG_LINETO_REL, SVGPathSegEnumPATHSEG_LINETO_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(6 == SVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS, SVGPathSegEnumPATHSEG_CURVETO_CUBIC_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(7 == SVGPathSeg::PATHSEG_CURVETO_CUBIC_REL, SVGPathSegEnumPATHSEG_CURVETO_CUBIC_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(8 == SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS, SVGPathSegEnumPATHSEG_CURVETO_QUADRATIC_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(9 == SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL, SVGPathSegEnumPATHSEG_CURVETO_QUADRATIC_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(10 == SVGPathSeg::PATHSEG_ARC_ABS, SVGPathSegEnumPATHSEG_ARC_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(11 == SVGPathSeg::PATHSEG_ARC_REL, SVGPathSegEnumPATHSEG_ARC_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(12 == SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS, SVGPathSegEnumPATHSEG_LINETO_HORIZONTAL_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(13 == SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL, SVGPathSegEnumPATHSEG_LINETO_HORIZONTAL_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(14 == SVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS, SVGPathSegEnumPATHSEG_LINETO_VERTICAL_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(15 == SVGPathSeg::PATHSEG_LINETO_VERTICAL_REL, SVGPathSegEnumPATHSEG_LINETO_VERTICAL_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(16 == SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, SVGPathSegEnumPATHSEG_CURVETO_CUBIC_SMOOTH_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(17 == SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL, SVGPathSegEnumPATHSEG_CURVETO_CUBIC_SMOOTH_RELIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(18 == SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, SVGPathSegEnumPATHSEG_CURVETO_QUADRATIC_SMOOTH_ABSIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(19 == SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, SVGPathSegEnumPATHSEG_CURVETO_QUADRATIC_SMOOTH_RELIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSSVGPathSegConstructor::s_info = { "SVGPathSegConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegConstructor) };
-
-JSSVGPathSegConstructor::JSSVGPathSegConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGPathSegConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSSVGPathSegConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGPathSegConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSeg::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSeg::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSeg"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGPathSegConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGPathSegConstructor::s_info = { "SVGPathSeg", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pathSegType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegPathSegType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pathSegTypeAsLetter", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegPathSegTypeAsLetter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "PATHSEG_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "PATHSEG_CLOSEPATH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "PATHSEG_MOVETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "PATHSEG_MOVETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "PATHSEG_LINETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "PATHSEG_LINETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "PATHSEG_ARC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "PATHSEG_ARC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(13), (intptr_t) (0) },
-    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(14), (intptr_t) (0) },
-    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(15), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(17), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(18), (intptr_t) (0) },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(19), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegConstructor) } },
+    { "pathSegType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegPathSegType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pathSegTypeAsLetter", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegPathSegTypeAsLetter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "PATHSEG_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "PATHSEG_CLOSEPATH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "PATHSEG_MOVETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "PATHSEG_MOVETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "PATHSEG_LINETO_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "PATHSEG_LINETO_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "PATHSEG_ARC_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "PATHSEG_ARC_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(13) } },
+    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(14) } },
+    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(15) } },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(17) } },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(18) } },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(19) } },
 };
 
 const ClassInfo JSSVGPathSegPrototype::s_info = { "SVGPathSegPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegPrototype) };
@@ -187,10 +167,16 @@ void JSSVGPathSegPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSeg::s_info = { "SVGPathSeg", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSeg) };
 
-JSSVGPathSeg::JSSVGPathSeg(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSeg>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGPathSeg::JSSVGPathSeg(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSeg>&& impl)
+    : JSDOMWrapper<SVGPathSeg>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGPathSeg::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGPathSeg::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -198,7 +184,7 @@ JSObject* JSSVGPathSeg::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSSVGPathSegPrototype::create(vm, globalObject, JSSVGPathSegPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSVGPathSeg::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGPathSeg::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGPathSeg>(vm, globalObject);
 }
@@ -209,56 +195,70 @@ void JSSVGPathSeg::destroy(JSC::JSCell* cell)
     thisObject->JSSVGPathSeg::~JSSVGPathSeg();
 }
 
-JSSVGPathSeg::~JSSVGPathSeg()
+template<> inline JSSVGPathSeg* BindingCaller<JSSVGPathSeg>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSVGPathSeg*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsSVGPathSegPathSegType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsSVGPathSegPathSegTypeGetter(ExecState&, JSSVGPathSeg&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathSegPathSegType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathSeg* castedThis = jsDynamicCast<JSSVGPathSeg*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathSegPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSeg", "pathSegType");
-        return throwGetterTypeError(*exec, "SVGPathSeg", "pathSegType");
+    return BindingCaller<JSSVGPathSeg>::attribute<jsSVGPathSegPathSegTypeGetter>(state, thisValue, "pathSegType");
+}
+
+static inline JSValue jsSVGPathSegPathSegTypeGetter(ExecState& state, JSSVGPathSeg& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.pathSegType());
+    return result;
+}
+
+static inline JSValue jsSVGPathSegPathSegTypeAsLetterGetter(ExecState&, JSSVGPathSeg&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathSegPathSegTypeAsLetter(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathSeg>::attribute<jsSVGPathSegPathSegTypeAsLetterGetter>(state, thisValue, "pathSegTypeAsLetter");
+}
+
+static inline JSValue jsSVGPathSegPathSegTypeAsLetterGetter(ExecState& state, JSSVGPathSeg& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.pathSegTypeAsLetter());
+    return result;
+}
+
+EncodedJSValue jsSVGPathSegConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGPathSegPrototype* domObject = jsDynamicDowncast<JSSVGPathSegPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGPathSeg::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGPathSegConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGPathSegPrototype* domObject = jsDynamicDowncast<JSSVGPathSegPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.pathSegType());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGPathSegPathSegTypeAsLetter(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGPathSeg::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathSeg* castedThis = jsDynamicCast<JSSVGPathSeg*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathSegPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSeg", "pathSegTypeAsLetter");
-        return throwGetterTypeError(*exec, "SVGPathSeg", "pathSegTypeAsLetter");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.pathSegTypeAsLetter());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGPathSegConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGPathSegPrototype* domObject = jsDynamicCast<JSSVGPathSegPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSeg::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGPathSeg::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGPathSegConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGPathSegOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -270,15 +270,15 @@ bool JSSVGPathSegOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> han
 
 void JSSVGPathSegOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSVGPathSeg = jsCast<JSSVGPathSeg*>(handle.slot()->asCell());
+    auto* jsSVGPathSeg = static_cast<JSSVGPathSeg*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGPathSeg->impl(), jsSVGPathSeg);
+    uncacheWrapper(world, &jsSVGPathSeg->wrapped(), jsSVGPathSeg);
 }
 
 SVGPathSeg* JSSVGPathSeg::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSVGPathSeg*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSVGPathSeg*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

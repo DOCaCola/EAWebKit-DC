@@ -24,19 +24,16 @@
 
 #include "JSMediaStream.h"
 
-#include "Event.h"
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
-#include "JSEvent.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSEventListener.h"
 #include "JSMediaStream.h"
 #include "JSMediaStreamTrack.h"
-#include "MediaStream.h"
-#include "MediaStreamTrack.h"
-#include "URL.h"
+#include "WebCoreJSClientData.h"
 #include <runtime/Error.h>
 #include <runtime/JSArray.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -52,27 +49,25 @@ JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetTrackById(JSC
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionAddTrack(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionRemoveTrack(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionClone(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaStreamId(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaStreamActive(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaStreamOnactive(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaStreamOnactive(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaStreamOninactive(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaStreamOninactive(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaStreamOnaddtrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaStreamOnaddtrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaStreamOnremovetrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaStreamOnremovetrack(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaStreamConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaStreamId(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaStreamActive(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaStreamOnactive(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamOnactive(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaStreamOninactive(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamOninactive(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaStreamOnaddtrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamOnaddtrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaStreamOnremovetrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamOnremovetrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaStreamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaStreamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaStreamPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaStreamPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaStreamPrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamPrototype>(vm.heap)) JSMediaStreamPrototype(vm, globalObject, structure);
@@ -95,129 +90,117 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaStreamConstructor : public DOMConstructorObject {
-private:
-    JSMediaStreamConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSMediaStreamConstructor = JSDOMConstructor<JSMediaStream>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaStreamConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaStreamConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamConstructor>(vm.heap)) JSMediaStreamConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
+static inline EncodedJSValue constructJSMediaStream1(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaStreamConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "MediaStream");
+    auto object = MediaStream::create(*context);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaStream>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+static inline EncodedJSValue constructJSMediaStream2(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaStreamConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto stream = convert<IDLInterface<MediaStream>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "stream", "MediaStream", nullptr, "MediaStream"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "MediaStream");
+    auto object = MediaStream::create(*context, *stream);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaStream>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+static inline EncodedJSValue constructJSMediaStream3(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaStreamConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto tracks = convert<IDLSequence<IDLInterface<MediaStreamTrack>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "MediaStream");
+    auto object = MediaStream::create(*context, WTFMove(tracks));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaStream>>(*state, *castedThis->globalObject(), WTFMove(object)));
+}
+
+#if ENABLE(MEDIA_STREAM)
+template<> EncodedJSValue JSC_HOST_CALL JSMediaStreamConstructor::construct(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    if (argsCount == 0) {
+#if ENABLE(MEDIA_STREAM)
+        return constructJSMediaStream1(state);
+#endif
     }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+#if ENABLE(MEDIA_STREAM)
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSMediaStream::info()))
+            return constructJSMediaStream2(state);
+#endif
+#if ENABLE(MEDIA_STREAM)
+        if (hasIteratorMethod(*state, distinguishingArg))
+            return constructJSMediaStream3(state);
+#endif
     }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaStream(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaStream1(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaStream2(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaStream3(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+    return throwVMTypeError(state, throwScope);
+}
+#endif
 
-EncodedJSValue JSC_HOST_CALL JSMediaStreamConstructor::constructJSMediaStream1(ExecState* exec)
+template<> JSValue JSMediaStreamConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    auto* castedThis = jsCast<JSMediaStreamConstructor*>(exec->callee());
-    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaStream");
-    RefPtr<MediaStream> object = MediaStream::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-EncodedJSValue JSC_HOST_CALL JSMediaStreamConstructor::constructJSMediaStream2(ExecState* exec)
+template<> void JSMediaStreamConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    auto* castedThis = jsCast<JSMediaStreamConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    MediaStream* stream = JSMediaStream::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaStream");
-    RefPtr<MediaStream> object = MediaStream::create(*context, stream);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
-}
-
-EncodedJSValue JSC_HOST_CALL JSMediaStreamConstructor::constructJSMediaStream3(ExecState* exec)
-{
-    auto* castedThis = jsCast<JSMediaStreamConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Vector<RefPtr<MediaStreamTrack>> tracks = (toRefPtrNativeArray<MediaStreamTrack, JSMediaStreamTrack>(exec, exec->argument(0), &JSMediaStreamTrack::toWrapped));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaStream");
-    RefPtr<MediaStream> object = MediaStream::create(*context, tracks);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
-}
-
-EncodedJSValue JSC_HOST_CALL JSMediaStreamConstructor::constructJSMediaStream(ExecState* exec)
-{
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    if (argsCount == 0)
-        return JSMediaStreamConstructor::constructJSMediaStream1(exec);
-    JSValue arg0(exec->argument(0));
-    if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSMediaStream::info())))))
-        return JSMediaStreamConstructor::constructJSMediaStream2(exec);
-    if ((argsCount == 1 && ((arg0.isObject() && isJSArray(arg0)))))
-        return JSMediaStreamConstructor::constructJSMediaStream3(exec);
-    return throwVMTypeError(exec);
-}
-
-const ClassInfo JSMediaStreamConstructor::s_info = { "MediaStreamConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamConstructor) };
-
-JSMediaStreamConstructor::JSMediaStreamConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
-}
-
-void JSMediaStreamConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaStream::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaStream::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaStream"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSMediaStreamConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaStream;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaStreamConstructor::s_info = { "MediaStream", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaStreamPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "id", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "active", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamActive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onactive", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnactive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnactive) },
-    { "oninactive", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOninactive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOninactive) },
-    { "onaddtrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnaddtrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnaddtrack) },
-    { "onremovetrack", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnremovetrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnremovetrack) },
-    { "getAudioTracks", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetAudioTracks), (intptr_t) (0) },
-    { "getVideoTracks", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetVideoTracks), (intptr_t) (0) },
-    { "getTracks", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetTracks), (intptr_t) (0) },
-    { "getTrackById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetTrackById), (intptr_t) (1) },
-    { "addTrack", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionAddTrack), (intptr_t) (1) },
-    { "removeTrack", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionRemoveTrack), (intptr_t) (1) },
-    { "clone", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionClone), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamConstructor) } },
+    { "id", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "active", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamActive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onactive", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnactive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnactive) } },
+    { "oninactive", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOninactive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOninactive) } },
+    { "onaddtrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnaddtrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnaddtrack) } },
+    { "onremovetrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamOnremovetrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamOnremovetrack) } },
+    { "getAudioTracks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetAudioTracks), (intptr_t) (0) } },
+    { "getVideoTracks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetVideoTracks), (intptr_t) (0) } },
+    { "getTracks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetTracks), (intptr_t) (0) } },
+    { "getTrackById", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionGetTrackById), (intptr_t) (1) } },
+    { "addTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionAddTrack), (intptr_t) (1) } },
+    { "removeTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionRemoveTrack), (intptr_t) (1) } },
+    { "clone", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamPrototypeFunctionClone), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaStreamPrototype::s_info = { "MediaStreamPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamPrototype) };
@@ -226,359 +209,341 @@ void JSMediaStreamPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSMediaStreamPrototypeTableValues, *this);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().getTracksPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsMediaStreamPrototypeFunctionGetTracks), ReadOnly | DontEnum);
 }
 
 const ClassInfo JSMediaStream::s_info = { "MediaStream", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStream) };
 
-JSMediaStream::JSMediaStream(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStream>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaStream::JSMediaStream(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaStream>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaStream::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaStream::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSMediaStreamPrototype::create(vm, globalObject, JSMediaStreamPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSMediaStreamPrototype::create(vm, globalObject, JSMediaStreamPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSMediaStream::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaStream::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaStream>(vm, globalObject);
 }
 
-void JSMediaStream::destroy(JSC::JSCell* cell)
+template<> inline JSMediaStream* BindingCaller<JSMediaStream>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSMediaStream* thisObject = static_cast<JSMediaStream*>(cell);
-    thisObject->JSMediaStream::~JSMediaStream();
+    return jsDynamicDowncast<JSMediaStream*>(JSValue::decode(thisValue));
 }
 
-JSMediaStream::~JSMediaStream()
+template<> inline JSMediaStream* BindingCaller<JSMediaStream>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSMediaStream*>(state.thisValue());
 }
 
-EncodedJSValue jsMediaStreamId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaStreamIdGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaStreamId(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "id");
-        return throwGetterTypeError(*exec, "MediaStream", "id");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamIdGetter>(state, thisValue, "id");
 }
 
-
-EncodedJSValue jsMediaStreamActive(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaStreamIdGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "active");
-        return throwGetterTypeError(*exec, "MediaStream", "active");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.active());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.id());
+    return result;
 }
 
+static inline JSValue jsMediaStreamActiveGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaStreamOnactive(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamActive(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "onactive");
-        return throwGetterTypeError(*exec, "MediaStream", "onactive");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().activeEvent));
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamActiveGetter>(state, thisValue, "active");
 }
 
-
-EncodedJSValue jsMediaStreamOninactive(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaStreamActiveGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "oninactive");
-        return throwGetterTypeError(*exec, "MediaStream", "oninactive");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().inactiveEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.active());
+    return result;
 }
 
+static inline JSValue jsMediaStreamOnactiveGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaStreamOnaddtrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamOnactive(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "onaddtrack");
-        return throwGetterTypeError(*exec, "MediaStream", "onaddtrack");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().addtrackEvent));
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamOnactiveGetter>(state, thisValue, "onactive");
 }
 
-
-EncodedJSValue jsMediaStreamOnremovetrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaStreamOnactiveGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStream", "onremovetrack");
-        return throwGetterTypeError(*exec, "MediaStream", "onremovetrack");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().removetrackEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().activeEvent);
 }
 
+static inline JSValue jsMediaStreamOninactiveGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaStreamConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMediaStreamOninactive(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSMediaStreamPrototype* domObject = jsDynamicCast<JSMediaStreamPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaStream::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamOninactiveGetter>(state, thisValue, "oninactive");
 }
 
-void setJSMediaStreamOnactive(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsMediaStreamOninactiveGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().inactiveEvent);
+}
+
+static inline JSValue jsMediaStreamOnaddtrackGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaStreamOnaddtrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamOnaddtrackGetter>(state, thisValue, "onaddtrack");
+}
+
+static inline JSValue jsMediaStreamOnaddtrackGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().addtrackEvent);
+}
+
+static inline JSValue jsMediaStreamOnremovetrackGetter(ExecState&, JSMediaStream&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaStreamOnremovetrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaStream>::attribute<jsMediaStreamOnremovetrackGetter>(state, thisValue, "onremovetrack");
+}
+
+static inline JSValue jsMediaStreamOnremovetrackGetter(ExecState& state, JSMediaStream& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().removetrackEvent);
+}
+
+EncodedJSValue jsMediaStreamConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaStreamPrototype* domObject = jsDynamicDowncast<JSMediaStreamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaStream::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaStreamConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStream", "onactive");
-        else
-            throwSetterTypeError(*exec, "MediaStream", "onactive");
-        return;
+    JSMediaStreamPrototype* domObject = jsDynamicDowncast<JSMediaStreamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().activeEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMediaStreamOnactiveFunction(ExecState&, JSMediaStream&, JSValue, ThrowScope&);
+
+bool setJSMediaStreamOnactive(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaStream>::setAttribute<setJSMediaStreamOnactiveFunction>(state, thisValue, encodedValue, "onactive");
+}
+
+static inline bool setJSMediaStreamOnactiveFunction(ExecState& state, JSMediaStream& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().activeEvent, value);
+    return true;
 }
 
 
-void setJSMediaStreamOninactive(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaStreamOninactiveFunction(ExecState&, JSMediaStream&, JSValue, ThrowScope&);
+
+bool setJSMediaStreamOninactive(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStream", "oninactive");
-        else
-            throwSetterTypeError(*exec, "MediaStream", "oninactive");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().inactiveEvent, value);
+    return BindingCaller<JSMediaStream>::setAttribute<setJSMediaStreamOninactiveFunction>(state, thisValue, encodedValue, "oninactive");
+}
+
+static inline bool setJSMediaStreamOninactiveFunction(ExecState& state, JSMediaStream& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().inactiveEvent, value);
+    return true;
 }
 
 
-void setJSMediaStreamOnaddtrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaStreamOnaddtrackFunction(ExecState&, JSMediaStream&, JSValue, ThrowScope&);
+
+bool setJSMediaStreamOnaddtrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStream", "onaddtrack");
-        else
-            throwSetterTypeError(*exec, "MediaStream", "onaddtrack");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().addtrackEvent, value);
+    return BindingCaller<JSMediaStream>::setAttribute<setJSMediaStreamOnaddtrackFunction>(state, thisValue, encodedValue, "onaddtrack");
+}
+
+static inline bool setJSMediaStreamOnaddtrackFunction(ExecState& state, JSMediaStream& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().addtrackEvent, value);
+    return true;
 }
 
 
-void setJSMediaStreamOnremovetrack(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSMediaStreamOnremovetrackFunction(ExecState&, JSMediaStream&, JSValue, ThrowScope&);
+
+bool setJSMediaStreamOnremovetrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaStreamPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStream", "onremovetrack");
-        else
-            throwSetterTypeError(*exec, "MediaStream", "onremovetrack");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().removetrackEvent, value);
+    return BindingCaller<JSMediaStream>::setAttribute<setJSMediaStreamOnremovetrackFunction>(state, thisValue, encodedValue, "onremovetrack");
+}
+
+static inline bool setJSMediaStreamOnremovetrackFunction(ExecState& state, JSMediaStream& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().removetrackEvent, value);
+    return true;
 }
 
 
-JSValue JSMediaStream::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSMediaStream::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMediaStreamConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMediaStreamConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetAudioTracks(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetAudioTracksCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetAudioTracks(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "getAudioTracks");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getAudioTracks());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionGetAudioTracksCaller>(state, "getAudioTracks");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetVideoTracks(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetAudioTracksCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "getVideoTracks");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getVideoTracks());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<MediaStreamTrack>>>(*state, *castedThis->globalObject(), impl.getAudioTracks()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetTracks(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetVideoTracksCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetVideoTracks(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "getTracks");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getTracks());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionGetVideoTracksCaller>(state, "getVideoTracks");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetTrackById(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetVideoTracksCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "getTrackById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String trackId = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getTrackById(trackId)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<MediaStreamTrack>>>(*state, *castedThis->globalObject(), impl.getVideoTracks()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionAddTrack(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetTracksCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetTracks(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "addTrack");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    MediaStreamTrack* track = JSMediaStreamTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.addTrack(track);
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionGetTracksCaller>(state, "getTracks");
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetTracksCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<MediaStreamTrack>>>(*state, *castedThis->globalObject(), impl.getTracks()));
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetTrackByIdCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionGetTrackById(ExecState* state)
+{
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionGetTrackByIdCaller>(state, "getTrackById");
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionGetTrackByIdCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto trackId = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<MediaStreamTrack>>(*state, *castedThis->globalObject(), impl.getTrackById(WTFMove(trackId))));
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionAddTrackCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionAddTrack(ExecState* state)
+{
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionAddTrackCaller>(state, "addTrack");
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionAddTrackCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLInterface<MediaStreamTrack>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "track", "MediaStream", "addTrack", "MediaStreamTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.addTrack(*track);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionRemoveTrack(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionRemoveTrackCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionRemoveTrack(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "removeTrack");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    MediaStreamTrack* track = JSMediaStreamTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.removeTrack(track);
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionRemoveTrackCaller>(state, "removeTrack");
+}
+
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionRemoveTrackCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLInterface<MediaStreamTrack>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "track", "MediaStream", "removeTrack", "MediaStreamTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.removeTrack(*track);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionClone(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionCloneCaller(JSC::ExecState*, JSMediaStream*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionClone(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "clone");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.clone()));
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaStream>::callOperation<jsMediaStreamPrototypeFunctionCloneCaller>(state, "clone");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionAddEventListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaStreamPrototypeFunctionCloneCaller(JSC::ExecState* state, JSMediaStream* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionRemoveEventListener(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsMediaStreamPrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSMediaStream* castedThis = jsDynamicCast<JSMediaStream*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStream", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStream::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLInterface<MediaStream>>(*state, *castedThis->globalObject(), impl.clone()));
 }
 
 void JSMediaStream::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -586,23 +551,7 @@ void JSMediaStream::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSMediaStream*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
-}
-
-bool JSMediaStreamOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    auto* jsMediaStream = jsCast<JSMediaStream*>(handle.slot()->asCell());
-    if (jsMediaStream->impl().isFiringEventListeners())
-        return true;
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSMediaStreamOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsMediaStream = jsCast<JSMediaStream*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaStream->impl(), jsMediaStream);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -613,15 +562,12 @@ extern "C" { extern void (*const __identifier("??_7MediaStream@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11MediaStreamE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStream* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaStream>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaStream>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaStream@WebCore@@6B@"));
 #else
@@ -629,7 +575,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStream*
 #if COMPILER(CLANG)
     // If this fails MediaStream does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(MediaStream), MediaStream_is_not_polymorphic);
+    static_assert(__is_polymorphic(MediaStream), "MediaStream is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -638,13 +584,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStream*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSMediaStream>(globalObject, impl);
+    return createWrapper<MediaStream>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStream& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaStream* JSMediaStream::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaStream*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaStream*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

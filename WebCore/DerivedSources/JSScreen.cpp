@@ -22,14 +22,10 @@
 #include "JSScreen.h"
 
 #include "JSDOMBinding.h"
-#include "Screen.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
-
-#if ENABLE(WEB_REPLAY)
-#include "MemoizedDOMResult.h"
-#include <replay/InputCursor.h>
-#include <wtf/NeverDestroyed.h>
-#endif
 
 using namespace JSC;
 
@@ -37,19 +33,20 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsScreenHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenColorDepth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenPixelDepth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenAvailLeft(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenAvailTop(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenAvailHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenAvailWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsScreenConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenColorDepth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenPixelDepth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenAvailLeft(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenAvailTop(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenAvailHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenAvailWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsScreenConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSScreenConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSScreenPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSScreenPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSScreenPrototype* ptr = new (NotNull, JSC::allocateCell<JSScreenPrototype>(vm.heap)) JSScreenPrototype(vm, globalObject, structure);
@@ -72,56 +69,36 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSScreenConstructor : public DOMConstructorObject {
-private:
-    JSScreenConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSScreenConstructor = JSDOMConstructorNotConstructable<JSScreen>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSScreenConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSScreenConstructor* ptr = new (NotNull, JSC::allocateCell<JSScreenConstructor>(vm.heap)) JSScreenConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSScreenConstructor::s_info = { "ScreenConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScreenConstructor) };
-
-JSScreenConstructor::JSScreenConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSScreenConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSScreenConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSScreenConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSScreen::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSScreen::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Screen"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSScreenConstructor::s_info = { "Screen", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScreenConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSScreenPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "colorDepth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenColorDepth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pixelDepth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenPixelDepth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "availLeft", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailLeft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "availTop", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailTop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "availHeight", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "availWidth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSScreenConstructor) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "colorDepth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenColorDepth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pixelDepth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenPixelDepth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "availLeft", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailLeft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "availTop", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailTop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "availHeight", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "availWidth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScreenAvailWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSScreenPrototype::s_info = { "ScreenPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScreenPrototype) };
@@ -134,10 +111,16 @@ void JSScreenPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSScreen::s_info = { "Screen", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScreen) };
 
-JSScreen::JSScreen(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Screen>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSScreen::JSScreen(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Screen>&& impl)
+    : JSDOMWrapper<Screen>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSScreen::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSScreen::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -145,7 +128,7 @@ JSObject* JSScreen::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSScreenPrototype::create(vm, globalObject, JSScreenPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSScreen::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSScreen::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSScreen>(vm, globalObject);
 }
@@ -156,324 +139,172 @@ void JSScreen::destroy(JSC::JSCell* cell)
     thisObject->JSScreen::~JSScreen();
 }
 
-JSScreen::~JSScreen()
+template<> inline JSScreen* BindingCaller<JSScreen>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSScreen*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsScreenHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "height");
-        return throwGetterTypeError(*exec, "Screen", "height");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.height", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().height();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
+static inline JSValue jsScreenHeightGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
 
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.height());
-    return JSValue::encode(result);
+EncodedJSValue jsScreenHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSScreen>::attribute<jsScreenHeightGetter>(state, thisValue, "height");
 }
 
-
-EncodedJSValue jsScreenWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsScreenHeightGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "width");
-        return throwGetterTypeError(*exec, "Screen", "width");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.width", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().width();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.width());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.height());
+    return result;
 }
 
+static inline JSValue jsScreenWidthGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
 
-EncodedJSValue jsScreenColorDepth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScreenWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "colorDepth");
-        return throwGetterTypeError(*exec, "Screen", "colorDepth");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.colorDepth", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().colorDepth();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.colorDepth());
-    return JSValue::encode(result);
+    return BindingCaller<JSScreen>::attribute<jsScreenWidthGetter>(state, thisValue, "width");
 }
 
-
-EncodedJSValue jsScreenPixelDepth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsScreenWidthGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "pixelDepth");
-        return throwGetterTypeError(*exec, "Screen", "pixelDepth");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.pixelDepth", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().pixelDepth();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.pixelDepth());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.width());
+    return result;
 }
 
+static inline JSValue jsScreenColorDepthGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
 
-EncodedJSValue jsScreenAvailLeft(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScreenColorDepth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "availLeft");
-        return throwGetterTypeError(*exec, "Screen", "availLeft");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.availLeft", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        int memoizedResult = castedThis->impl().availLeft();
-        cursor.appendInput<MemoizedDOMResult<int>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        int memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<int>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.availLeft());
-    return JSValue::encode(result);
+    return BindingCaller<JSScreen>::attribute<jsScreenColorDepthGetter>(state, thisValue, "colorDepth");
 }
 
-
-EncodedJSValue jsScreenAvailTop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsScreenColorDepthGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "availTop");
-        return throwGetterTypeError(*exec, "Screen", "availTop");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.availTop", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        int memoizedResult = castedThis->impl().availTop();
-        cursor.appendInput<MemoizedDOMResult<int>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        int memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<int>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.availTop());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.colorDepth());
+    return result;
 }
 
+static inline JSValue jsScreenPixelDepthGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
 
-EncodedJSValue jsScreenAvailHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScreenPixelDepth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "availHeight");
-        return throwGetterTypeError(*exec, "Screen", "availHeight");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.availHeight", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().availHeight();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.availHeight());
-    return JSValue::encode(result);
+    return BindingCaller<JSScreen>::attribute<jsScreenPixelDepthGetter>(state, thisValue, "pixelDepth");
 }
 
-
-EncodedJSValue jsScreenAvailWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsScreenPixelDepthGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSScreen* castedThis = jsDynamicCast<JSScreen*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSScreenPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Screen", "availWidth");
-        return throwGetterTypeError(*exec, "Screen", "availWidth");
-    }
-#if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
-    InputCursor& cursor = globalObject->inputCursor();
-    static NeverDestroyed<const AtomicString> bindingName("Screen.availWidth", AtomicString::ConstructFromLiteral);
-    if (cursor.isCapturing()) {
-        unsigned memoizedResult = castedThis->impl().availWidth();
-        cursor.appendInput<MemoizedDOMResult<unsigned>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsNumber(memoizedResult);
-        return JSValue::encode(result);
-    }
-
-    if (cursor.isReplaying()) {
-        unsigned memoizedResult;
-        MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
-        if (input && input->convertTo<unsigned>(memoizedResult)) {
-            JSValue result = jsNumber(memoizedResult);
-            return JSValue::encode(result);
-        }
-    }
-#endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.availWidth());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.pixelDepth());
+    return result;
 }
 
+static inline JSValue jsScreenAvailLeftGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
 
-EncodedJSValue jsScreenConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsScreenAvailLeft(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSScreenPrototype* domObject = jsDynamicCast<JSScreenPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSScreen::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSScreen>::attribute<jsScreenAvailLeftGetter>(state, thisValue, "availLeft");
 }
 
-JSValue JSScreen::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsScreenAvailLeftGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSScreenConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.availLeft());
+    return result;
+}
+
+static inline JSValue jsScreenAvailTopGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
+
+EncodedJSValue jsScreenAvailTop(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSScreen>::attribute<jsScreenAvailTopGetter>(state, thisValue, "availTop");
+}
+
+static inline JSValue jsScreenAvailTopGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLLong>(impl.availTop());
+    return result;
+}
+
+static inline JSValue jsScreenAvailHeightGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
+
+EncodedJSValue jsScreenAvailHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSScreen>::attribute<jsScreenAvailHeightGetter>(state, thisValue, "availHeight");
+}
+
+static inline JSValue jsScreenAvailHeightGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.availHeight());
+    return result;
+}
+
+static inline JSValue jsScreenAvailWidthGetter(ExecState&, JSScreen&, ThrowScope& throwScope);
+
+EncodedJSValue jsScreenAvailWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSScreen>::attribute<jsScreenAvailWidthGetter>(state, thisValue, "availWidth");
+}
+
+static inline JSValue jsScreenAvailWidthGetter(ExecState& state, JSScreen& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.availWidth());
+    return result;
+}
+
+EncodedJSValue jsScreenConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSScreenPrototype* domObject = jsDynamicDowncast<JSScreenPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSScreen::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSScreenConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSScreenPrototype* domObject = jsDynamicDowncast<JSScreenPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSScreen::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSScreenConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSScreenOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsScreen = jsCast<JSScreen*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsScreen->impl().frame());
+    Frame* root = WTF::getPtr(jsScreen->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -481,9 +312,9 @@ bool JSScreenOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle,
 
 void JSScreenOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsScreen = jsCast<JSScreen*>(handle.slot()->asCell());
+    auto* jsScreen = static_cast<JSScreen*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsScreen->impl(), jsScreen);
+    uncacheWrapper(world, &jsScreen->wrapped(), jsScreen);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -494,15 +325,12 @@ extern "C" { extern void (*const __identifier("??_7Screen@WebCore@@6B@")[])(); }
 extern "C" { extern void* _ZTVN7WebCore6ScreenE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Screen* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<Screen>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSScreen>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7Screen@WebCore@@6B@"));
 #else
@@ -510,7 +338,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Screen* impl
 #if COMPILER(CLANG)
     // If this fails Screen does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(Screen), Screen_is_not_polymorphic);
+    static_assert(__is_polymorphic(Screen), "Screen is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -519,13 +347,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Screen* impl
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSScreen>(globalObject, impl);
+    return createWrapper<Screen>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Screen& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 Screen* JSScreen::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSScreen*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSScreen*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

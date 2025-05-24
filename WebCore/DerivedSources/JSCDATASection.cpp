@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSCDATASection.h"
 
-#include "CDATASection.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,11 +31,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsCDATASectionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCDATASectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCDATASectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCDATASectionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCDATASectionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCDATASectionPrototype* ptr = new (NotNull, JSC::allocateCell<JSCDATASectionPrototype>(vm.heap)) JSCDATASectionPrototype(vm, globalObject, structure);
@@ -58,48 +59,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCDATASectionConstructor : public DOMConstructorObject {
-private:
-    JSCDATASectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCDATASectionConstructor = JSDOMConstructorNotConstructable<JSCDATASection>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCDATASectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCDATASectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSCDATASectionConstructor>(vm.heap)) JSCDATASectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCDATASectionConstructor::s_info = { "CDATASectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionConstructor) };
-
-JSCDATASectionConstructor::JSCDATASectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCDATASectionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSText::getConstructor(vm, &globalObject);
 }
 
-void JSCDATASectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCDATASectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCDATASection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCDATASection::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CDATASection"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCDATASectionConstructor::s_info = { "CDATASection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCDATASectionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCDATASectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCDATASectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCDATASectionConstructor) } },
 };
 
 const ClassInfo JSCDATASectionPrototype::s_info = { "CDATASectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionPrototype) };
@@ -112,32 +92,101 @@ void JSCDATASectionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCDATASection::s_info = { "CDATASection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASection) };
 
-JSCDATASection::JSCDATASection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CDATASection>&& impl)
-    : JSText(structure, globalObject, WTF::move(impl))
+JSCDATASection::JSCDATASection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CDATASection>&& impl)
+    : JSText(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCDATASection::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCDATASection::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCDATASectionPrototype::create(vm, globalObject, JSCDATASectionPrototype::createStructure(vm, globalObject, JSText::getPrototype(vm, globalObject)));
+    return JSCDATASectionPrototype::create(vm, globalObject, JSCDATASectionPrototype::createStructure(vm, globalObject, JSText::prototype(vm, globalObject)));
 }
 
-JSObject* JSCDATASection::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCDATASection::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCDATASection>(vm, globalObject);
 }
 
-EncodedJSValue jsCDATASectionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCDATASectionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSCDATASectionPrototype* domObject = jsDynamicCast<JSCDATASectionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCDATASection::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCDATASectionPrototype* domObject = jsDynamicDowncast<JSCDATASectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCDATASection::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSCDATASection::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSCDATASectionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSCDATASectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCDATASectionPrototype* domObject = jsDynamicDowncast<JSCDATASectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSCDATASection::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSCDATASectionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSCDATASection::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSCDATASection*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7CDATASection@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore12CDATASectionE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CDATASection>&& impl)
+{
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CDATASection@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore12CDATASectionE[2];
+#if COMPILER(CLANG)
+    // If this fails CDATASection does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    static_assert(__is_polymorphic(CDATASection), "CDATASection is not polymorphic");
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // CDATASection has subclasses. If CDATASection has subclasses that get passed
+    // to toJS() we currently require CDATASection you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createWrapper<CDATASection>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CDATASection& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 

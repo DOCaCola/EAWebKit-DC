@@ -1,0 +1,2 @@
+JSSVGPathSegLinetoAbs.h : SVGPathSeg.idl
+SVGPathSeg.idl :

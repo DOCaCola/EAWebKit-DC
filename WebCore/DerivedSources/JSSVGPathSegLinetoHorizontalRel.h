@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegLinetoHorizontalRel_h
-#define JSSVGPathSegLinetoHorizontalRel_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegLinetoHorizontalRel : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegLinetoHorizontalRel;
     static JSSVGPathSegLinetoHorizontalRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoHorizontalRel>&& impl)
     {
-        JSSVGPathSegLinetoHorizontalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoHorizontalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoHorizontalRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoHorizontalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoHorizontalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoHorizontalRel(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoHorizontalRel& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegLinetoHorizontalRel& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoHorizontalRel&>(Base::impl());
+        return static_cast<SVGPathSegLinetoHorizontalRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoHorizontalRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoHorizontalRel>&&);
+    JSSVGPathSegLinetoHorizontalRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoHorizontalRel>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegLinetoHorizontalRel> {
+    using WrapperClass = JSSVGPathSegLinetoHorizontalRel;
+    using ToWrappedReturnType = SVGPathSegLinetoHorizontalRel*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTextTrackCueList_h
-#define JSTextTrackCueList_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -29,23 +28,22 @@
 
 namespace WebCore {
 
-class JSTextTrackCueList : public JSDOMWrapper {
+class JSTextTrackCueList : public JSDOMWrapper<TextTrackCueList> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<TextTrackCueList>;
     static JSTextTrackCueList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackCueList>&& impl)
     {
-        JSTextTrackCueList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCueList>(globalObject->vm().heap)) JSTextTrackCueList(structure, globalObject, WTF::move(impl));
+        JSTextTrackCueList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCueList>(globalObject->vm().heap)) JSTextTrackCueList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static TextTrackCueList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTextTrackCueList();
 
     DECLARE_INFO;
 
@@ -55,23 +53,13 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TextTrackCueList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrackCueList* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSTextTrackCueList(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrackCueList>&&);
+    JSTextTrackCueList(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrackCueList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSTextTrackCueListOwner : public JSC::WeakHandleOwner {
@@ -86,12 +74,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrackCueList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCueList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrackCueList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(TextTrackCueList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCueList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrackCueList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<TextTrackCueList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<TextTrackCueList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<TextTrackCueList> {
+    using WrapperClass = JSTextTrackCueList;
+    using ToWrappedReturnType = TextTrackCueList*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

@@ -1,0 +1,2 @@
+JSSVGPathSegCurvetoCubicAbs.h : SVGPathSeg.idl
+SVGPathSeg.idl :

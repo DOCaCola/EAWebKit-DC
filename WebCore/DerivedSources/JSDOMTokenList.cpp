@@ -21,14 +21,17 @@
 #include "config.h"
 #include "JSDOMTokenList.h"
 
-#include "DOMTokenList.h"
+#include "CustomElementReactionQueue.h"
 #include "Element.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSDOMIterator.h"
 #include "JSNodeCustom.h"
 #include "URL.h"
+#include <builtins/BuiltinNames.h>
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
 
@@ -43,16 +46,21 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionContains(JSC::E
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionAdd(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionRemove(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToggle(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionReplace(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionSupports(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToString(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMTokenListLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMTokenListConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMTokenListLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMTokenListValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMTokenListValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsDOMTokenListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMTokenListConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMTokenListPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMTokenListPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMTokenListPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMTokenListPrototype>(vm.heap)) JSDOMTokenListPrototype(vm, globalObject, structure);
@@ -75,71 +83,38 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMTokenListConstructor : public DOMConstructorObject {
-private:
-    JSDOMTokenListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMTokenListConstructor = JSDOMConstructorNotConstructable<JSDOMTokenList>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMTokenListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMTokenListConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMTokenListConstructor>(vm.heap)) JSDOMTokenListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSDOMTokenListTableIndex[5] = {
-    { -1, -1 },
-    { 0, 4 },
-    { -1, -1 },
-    { -1, -1 },
-    { 1, -1 },
-};
-
-
-static const HashTableValue JSDOMTokenListTableValues[] =
+template<> JSValue JSDOMTokenListConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMTokenListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMTokenListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSDOMTokenListTable = { 2, 3, true, JSDOMTokenListTableValues, 0, JSDOMTokenListTableIndex };
-const ClassInfo JSDOMTokenListConstructor::s_info = { "DOMTokenListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMTokenListConstructor) };
-
-JSDOMTokenListConstructor::JSDOMTokenListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDOMTokenListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDOMTokenListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMTokenList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMTokenList::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMTokenList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMTokenListConstructor::s_info = { "DOMTokenList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMTokenListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMTokenListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionItem), (intptr_t) (1) },
-    { "contains", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionContains), (intptr_t) (1) },
-    { "add", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionAdd), (intptr_t) (1) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionRemove), (intptr_t) (1) },
-    { "toggle", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionToggle), (intptr_t) (1) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMTokenListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMTokenListConstructor) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMTokenListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMTokenListValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMTokenListValue) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionItem), (intptr_t) (1) } },
+    { "contains", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionContains), (intptr_t) (1) } },
+    { "add", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionAdd), (intptr_t) (0) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionRemove), (intptr_t) (0) } },
+    { "toggle", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionToggle), (intptr_t) (1) } },
+    { "replace", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionReplace), (intptr_t) (2) } },
+    { "supports", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionSupports), (intptr_t) (1) } },
+    { "toString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMTokenListPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDOMTokenListPrototype::s_info = { "DOMTokenListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMTokenListPrototype) };
@@ -148,14 +123,22 @@ void JSDOMTokenListPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSDOMTokenListPrototypeTableValues, *this);
+    putDirect(vm, vm.propertyNames->iteratorSymbol, globalObject()->arrayPrototype()->getDirect(vm, vm.propertyNames->builtinNames().valuesPrivateName()), DontEnum);
+    addValueIterableMethods(*globalObject(), *this);
 }
 
-const ClassInfo JSDOMTokenList::s_info = { "DOMTokenList", &Base::s_info, &JSDOMTokenListTable, CREATE_METHOD_TABLE(JSDOMTokenList) };
+const ClassInfo JSDOMTokenList::s_info = { "DOMTokenList", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMTokenList) };
 
-JSDOMTokenList::JSDOMTokenList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMTokenList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMTokenList::JSDOMTokenList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMTokenList>&& impl)
+    : JSDOMWrapper<DOMTokenList>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMTokenList::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMTokenList::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -163,7 +146,7 @@ JSObject* JSDOMTokenList::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDOMTokenListPrototype::create(vm, globalObject, JSDOMTokenListPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMTokenList::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMTokenList::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMTokenList>(vm, globalObject);
 }
@@ -174,195 +157,291 @@ void JSDOMTokenList::destroy(JSC::JSCell* cell)
     thisObject->JSDOMTokenList::~JSDOMTokenList();
 }
 
-JSDOMTokenList::~JSDOMTokenList()
-{
-    releaseImpl();
-}
-
-bool JSDOMTokenList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMTokenList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSDOMTokenList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
+    auto optionalIndex = parseIndex(propertyName);
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
+        auto index = optionalIndex.value();
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex) {
-        unsigned index = optionalIndex.value();
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (Base::getOwnPropertySlot(thisObject, state, propertyName, slot))
         return true;
-    }
-    return getStaticValueSlot<JSDOMTokenList, Base>(exec, JSDOMTokenListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSDOMTokenList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDOMTokenList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index <= MAX_ARRAY_INDEX) {
-        unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+    if (LIKELY(index < thisObject->wrapped().length())) {
+        slot.setValue(thisObject, ReadOnly, toJS<IDLNullable<IDLDOMString>>(*state, thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDOMTokenListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSDOMTokenList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.length());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMTokenListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
-{
-    JSDOMTokenList* domObject = jsDynamicCast<JSDOMTokenList*>(JSValue::decode(thisValue));
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMTokenList::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void JSDOMTokenList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSDOMTokenList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSDOMTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-JSValue JSDOMTokenList::getConstructor(VM& vm, JSGlobalObject* globalObject)
+template<> inline JSDOMTokenList* BindingCaller<JSDOMTokenList>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    return getDOMConstructor<JSDOMTokenListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return jsDynamicDowncast<JSDOMTokenList*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionItem(ExecState* exec)
+template<> inline JSDOMTokenList* BindingCaller<JSDOMTokenList>::castForOperation(ExecState& state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "item");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.item(index));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSDOMTokenList*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionContains(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "contains");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String token = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.contains(token, ec));
+static inline JSValue jsDOMTokenListLengthGetter(ExecState&, JSDOMTokenList&, ThrowScope& throwScope);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue jsDOMTokenListLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMTokenList>::attribute<jsDOMTokenListLengthGetter>(state, thisValue, "length");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionAdd(ExecState* exec)
+static inline JSValue jsDOMTokenListLengthGetter(ExecState& state, JSDOMTokenList& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "add");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Vector<String> tokens = toNativeArguments<String>(exec, 0);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.add(tokens, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLong>(impl.length());
+    return result;
+}
+
+static inline JSValue jsDOMTokenListValueGetter(ExecState&, JSDOMTokenList&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMTokenListValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMTokenList>::attribute<jsDOMTokenListValueGetter>(state, thisValue, "value");
+}
+
+static inline JSValue jsDOMTokenListValueGetter(ExecState& state, JSDOMTokenList& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.value());
+    return result;
+}
+
+EncodedJSValue jsDOMTokenListConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMTokenListPrototype* domObject = jsDynamicDowncast<JSDOMTokenListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMTokenList::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDOMTokenListConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMTokenListPrototype* domObject = jsDynamicDowncast<JSDOMTokenListPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSDOMTokenListValueFunction(ExecState&, JSDOMTokenList&, JSValue, ThrowScope&);
+
+bool setJSDOMTokenListValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSDOMTokenList>::setAttribute<setJSDOMTokenListValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSDOMTokenListValueFunction(ExecState& state, JSDOMTokenList& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSDOMTokenList::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSDOMTokenListConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionItemCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionItem(ExecState* state)
+{
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionItemCaller>(state, "item");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionItemCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto index = convert<IDLUnsignedLong>(*state, state->uncheckedArgument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLNullable<IDLDOMString>>(*state, impl.item(WTFMove(index))));
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionContainsCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionContains(ExecState* state)
+{
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionContainsCaller>(state, "contains");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionContainsCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto token = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.contains(WTFMove(token))));
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionAddCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionAdd(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionAddCaller>(state, "add");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionAddCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto tokens = convertVariadicArguments<IDLDOMString>(*state, 0);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.add(WTFMove(tokens.arguments.value())));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionRemove(ExecState* exec)
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionRemoveCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionRemove(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "remove");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Vector<String> tokens = toNativeArguments<String>(exec, 0);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.remove(tokens, ec);
-    setDOMException(exec, ec);
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionRemoveCaller>(state, "remove");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionRemoveCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto tokens = convertVariadicArguments<IDLDOMString>(*state, 0);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.remove(WTFMove(tokens.arguments.value())));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToggle(ExecState* exec)
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionToggleCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToggle(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "toggle");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String token = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = jsBoolean(impl.toggle(token, ec));
-
-        setDOMException(exec, ec);
-        return JSValue::encode(result);
-    }
-
-    bool force = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.toggle(token, force, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionToggleCaller>(state, "toggle");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToString(ExecState* exec)
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionToggleCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMTokenList* castedThis = jsDynamicCast<JSDOMTokenList*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMTokenList", "toString");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMTokenList::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto token = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto force = state->argument(1).isUndefined() ? std::optional<bool>() : convert<IDLBoolean>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(*state, throwScope, impl.toggle(WTFMove(token), WTFMove(force))));
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionReplaceCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionReplace(ExecState* state)
+{
+    CustomElementReactionStack customElementReactionStack;
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionReplaceCaller>(state, "replace");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionReplaceCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto token = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto newToken = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.replace(WTFMove(token), WTFMove(newToken)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionSupportsCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionSupports(ExecState* state)
+{
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionSupportsCaller>(state, "supports");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionSupportsCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto token = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(*state, throwScope, impl.supports(WTFMove(token))));
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionToStringCaller(JSC::ExecState*, JSDOMTokenList*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMTokenListPrototypeFunctionToString(ExecState* state)
+{
+    return BindingCaller<JSDOMTokenList>::callOperation<jsDOMTokenListPrototypeFunctionToStringCaller>(state, "toString");
+}
+
+static inline JSC::EncodedJSValue jsDOMTokenListPrototypeFunctionToStringCaller(JSC::ExecState* state, JSDOMTokenList* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.value()));
 }
 
 bool JSDOMTokenListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsDOMTokenList = jsCast<JSDOMTokenList*>(handle.slot()->asCell());
-    Element* element = WTF::getPtr(jsDOMTokenList->impl().element());
+    Element* element = WTF::getPtr(jsDOMTokenList->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -371,24 +450,25 @@ bool JSDOMTokenListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> h
 
 void JSDOMTokenListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMTokenList = jsCast<JSDOMTokenList*>(handle.slot()->asCell());
+    auto* jsDOMTokenList = static_cast<JSDOMTokenList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMTokenList->impl(), jsDOMTokenList);
+    uncacheWrapper(world, &jsDOMTokenList->wrapped(), jsDOMTokenList);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMTokenList* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMTokenList>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMTokenList>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSDOMTokenList>(globalObject, impl);
+    return createWrapper<DOMTokenList>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMTokenList& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMTokenList* JSDOMTokenList::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMTokenList*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMTokenList*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

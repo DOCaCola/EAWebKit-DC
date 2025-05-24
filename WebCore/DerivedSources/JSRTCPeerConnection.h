@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCPeerConnection_h
-#define JSRTCPeerConnection_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include "RTCPeerConnection.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSRTCPeerConnection : public JSDOMWrapper {
+class WEBCORE_EXPORT JSRTCPeerConnection : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = RTCPeerConnection;
     static JSRTCPeerConnection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCPeerConnection>&& impl)
     {
-        JSRTCPeerConnection* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnection>(globalObject->vm().heap)) JSRTCPeerConnection(structure, globalObject, WTF::move(impl));
+        JSRTCPeerConnection* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnection>(globalObject->vm().heap)) JSRTCPeerConnection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCPeerConnection* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSRTCPeerConnection();
 
     DECLARE_INFO;
 
@@ -52,23 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    RTCPeerConnection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCPeerConnection* m_impl;
-protected:
-    JSRTCPeerConnection(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCPeerConnection>&&);
-
-    void finishCreation(JSC::VM& vm)
+    RTCPeerConnection& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<RTCPeerConnection&>(Base::wrapped());
     }
+protected:
+    JSRTCPeerConnection(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCPeerConnection>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSRTCPeerConnectionOwner : public JSC::WeakHandleOwner {
@@ -83,15 +76,37 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCPeerConnection*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCPeerConnection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCPeerConnection& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(RTCPeerConnection* wrappableObject)
+{
+    return wrappableObject;
+}
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCPeerConnection(JSC::ExecState*);
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCPeerConnection&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCPeerConnection* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<RTCPeerConnection>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<RTCPeerConnection>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<RTCPeerConnection> {
+    using WrapperClass = JSRTCPeerConnection;
+    using ToWrappedReturnType = RTCPeerConnection*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, RTCPeerConnection::RtpTransceiverDirection);
+
+template<> std::optional<RTCPeerConnection::RtpTransceiverDirection> parseEnumeration<RTCPeerConnection::RtpTransceiverDirection>(JSC::ExecState&, JSC::JSValue);
+template<> RTCPeerConnection::RtpTransceiverDirection convertEnumeration<RTCPeerConnection::RtpTransceiverDirection>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<RTCPeerConnection::RtpTransceiverDirection>();
+
+template<> RTCPeerConnection::OfferAnswerOptions convertDictionary<RTCPeerConnection::OfferAnswerOptions>(JSC::ExecState&, JSC::JSValue);
+
+template<> RTCPeerConnection::OfferOptions convertDictionary<RTCPeerConnection::OfferOptions>(JSC::ExecState&, JSC::JSValue);
+
+template<> RTCPeerConnection::AnswerOptions convertDictionary<RTCPeerConnection::AnswerOptions>(JSC::ExecState&, JSC::JSValue);
+
+template<> RTCPeerConnection::DataChannelInit convertDictionary<RTCPeerConnection::DataChannelInit>(JSC::ExecState&, JSC::JSValue);
+
+template<> RTCPeerConnection::RtpTransceiverInit convertDictionary<RTCPeerConnection::RtpTransceiverInit>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

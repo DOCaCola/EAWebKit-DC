@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAltGlyphElement_h
-#define JSSVGAltGlyphElement_h
+#pragma once
 
 #if ENABLE(SVG_FONTS)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSSVGAltGlyphElement : public JSSVGTextPositioningElement {
 public:
-    typedef JSSVGTextPositioningElement Base;
+    using Base = JSSVGTextPositioningElement;
+    using DOMWrapped = SVGAltGlyphElement;
     static JSSVGAltGlyphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAltGlyphElement>&& impl)
     {
-        JSSVGAltGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphElement>(globalObject->vm().heap)) JSSVGAltGlyphElement(structure, globalObject, WTF::move(impl));
+        JSSVGAltGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphElement>(globalObject->vm().heap)) JSSVGAltGlyphElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -49,26 +49,25 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAltGlyphElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGAltGlyphElement& wrapped() const
     {
-        return static_cast<SVGAltGlyphElement&>(Base::impl());
+        return static_cast<SVGAltGlyphElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAltGlyphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAltGlyphElement>&&);
+    JSSVGAltGlyphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAltGlyphElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGAltGlyphElement> {
+    using WrapperClass = JSSVGAltGlyphElement;
+    using ToWrappedReturnType = SVGAltGlyphElement*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SVG_FONTS)
-
-#endif

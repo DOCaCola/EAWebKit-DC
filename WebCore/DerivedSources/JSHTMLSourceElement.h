@@ -18,10 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLSourceElement_h
-#define JSHTMLSourceElement_h
-
-#if ENABLE(VIDEO)
+#pragma once
 
 #include "HTMLSourceElement.h"
 #include "JSHTMLElement.h"
@@ -30,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLSourceElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLSourceElement;
     static JSHTMLSourceElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSourceElement>&& impl)
     {
-        JSHTMLSourceElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSourceElement>(globalObject->vm().heap)) JSHTMLSourceElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSourceElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSourceElement>(globalObject->vm().heap)) JSHTMLSourceElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLSourceElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLSourceElement& wrapped() const
     {
-        return static_cast<HTMLSourceElement&>(Base::impl());
+        return static_cast<HTMLSourceElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLSourceElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSourceElement>&&);
+    JSHTMLSourceElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSourceElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLSourceElement> {
+    using WrapperClass = JSHTMLSourceElement;
+    using ToWrappedReturnType = HTMLSourceElement*;
+};
 
 } // namespace WebCore
-
-#endif // ENABLE(VIDEO)
-
-#endif

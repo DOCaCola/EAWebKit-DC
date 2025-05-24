@@ -20,34 +20,27 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCPeerConnection.h"
 
-#include "Dictionary.h"
-#include "Event.h"
-#include "ExceptionCode.h"
+#include "Document.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
-#include "JSEvent.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMPromise.h"
 #include "JSEventListener.h"
 #include "JSMediaStream.h"
 #include "JSMediaStreamTrack.h"
 #include "JSRTCConfiguration.h"
-#include "JSRTCDTMFSender.h"
 #include "JSRTCDataChannel.h"
 #include "JSRTCIceCandidate.h"
-#include "JSRTCPeerConnectionErrorCallback.h"
+#include "JSRTCRtpReceiver.h"
+#include "JSRTCRtpSender.h"
+#include "JSRTCRtpTransceiver.h"
 #include "JSRTCSessionDescription.h"
-#include "JSRTCSessionDescriptionCallback.h"
-#include "JSRTCStatsCallback.h"
-#include "JSVoidCallback.h"
-#include "MediaStream.h"
-#include "RTCConfiguration.h"
-#include "RTCDTMFSender.h"
-#include "RTCDataChannel.h"
-#include "RTCPeerConnection.h"
-#include "RTCSessionDescription.h"
-#include "URL.h"
+#include "RTCPeerConnectionBuiltins.h"
+#include "WebCoreJSClientData.h"
 #include <runtime/Error.h>
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
@@ -57,54 +50,260 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, RTCPeerConnection::RtpTransceiverDirection enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("sendrecv"),
+        ASCIILiteral("sendonly"),
+        ASCIILiteral("recvonly"),
+        ASCIILiteral("inactive"),
+    };
+    static_assert(static_cast<size_t>(RTCPeerConnection::RtpTransceiverDirection::Sendrecv) == 0, "RTCPeerConnection::RtpTransceiverDirection::Sendrecv is not 0 as expected");
+    static_assert(static_cast<size_t>(RTCPeerConnection::RtpTransceiverDirection::Sendonly) == 1, "RTCPeerConnection::RtpTransceiverDirection::Sendonly is not 1 as expected");
+    static_assert(static_cast<size_t>(RTCPeerConnection::RtpTransceiverDirection::Recvonly) == 2, "RTCPeerConnection::RtpTransceiverDirection::Recvonly is not 2 as expected");
+    static_assert(static_cast<size_t>(RTCPeerConnection::RtpTransceiverDirection::Inactive) == 3, "RTCPeerConnection::RtpTransceiverDirection::Inactive is not 3 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<RTCPeerConnection::RtpTransceiverDirection> parseEnumeration<RTCPeerConnection::RtpTransceiverDirection>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "sendrecv")
+        return RTCPeerConnection::RtpTransceiverDirection::Sendrecv;
+    if (stringValue == "sendonly")
+        return RTCPeerConnection::RtpTransceiverDirection::Sendonly;
+    if (stringValue == "recvonly")
+        return RTCPeerConnection::RtpTransceiverDirection::Recvonly;
+    if (stringValue == "inactive")
+        return RTCPeerConnection::RtpTransceiverDirection::Inactive;
+    return std::nullopt;
+}
+
+template<> RTCPeerConnection::RtpTransceiverDirection convertEnumeration<RTCPeerConnection::RtpTransceiverDirection>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<RTCPeerConnection::RtpTransceiverDirection>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<RTCPeerConnection::RtpTransceiverDirection>()
+{
+    return "\"sendrecv\", \"sendonly\", \"recvonly\", \"inactive\"";
+}
+
+template<> RTCPeerConnection::OfferAnswerOptions convertDictionary<RTCPeerConnection::OfferAnswerOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCPeerConnection::OfferAnswerOptions result;
+    JSValue voiceActivityDetectionValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "voiceActivityDetection"));
+    if (!voiceActivityDetectionValue.isUndefined()) {
+        result.voiceActivityDetection = convert<IDLBoolean>(state, voiceActivityDetectionValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.voiceActivityDetection = true;
+    return result;
+}
+
+template<> RTCPeerConnection::OfferOptions convertDictionary<RTCPeerConnection::OfferOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCPeerConnection::OfferOptions result;
+    JSValue voiceActivityDetectionValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "voiceActivityDetection"));
+    if (!voiceActivityDetectionValue.isUndefined()) {
+        result.voiceActivityDetection = convert<IDLBoolean>(state, voiceActivityDetectionValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.voiceActivityDetection = true;
+    JSValue iceRestartValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "iceRestart"));
+    if (!iceRestartValue.isUndefined()) {
+        result.iceRestart = convert<IDLBoolean>(state, iceRestartValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.iceRestart = false;
+    return result;
+}
+
+template<> RTCPeerConnection::AnswerOptions convertDictionary<RTCPeerConnection::AnswerOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCPeerConnection::AnswerOptions result;
+    JSValue voiceActivityDetectionValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "voiceActivityDetection"));
+    if (!voiceActivityDetectionValue.isUndefined()) {
+        result.voiceActivityDetection = convert<IDLBoolean>(state, voiceActivityDetectionValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.voiceActivityDetection = true;
+    return result;
+}
+
+template<> RTCPeerConnection::DataChannelInit convertDictionary<RTCPeerConnection::DataChannelInit>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCPeerConnection::DataChannelInit result;
+    JSValue idValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "id"));
+    if (!idValue.isUndefined()) {
+        result.id = convert<IDLUnsignedShort>(state, idValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue maxRetransmitTimeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "maxRetransmitTime"));
+    if (!maxRetransmitTimeValue.isUndefined()) {
+        result.maxRetransmitTime = convert<IDLUnsignedShort>(state, maxRetransmitTimeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue maxRetransmitsValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "maxRetransmits"));
+    if (!maxRetransmitsValue.isUndefined()) {
+        result.maxRetransmits = convert<IDLUnsignedShort>(state, maxRetransmitsValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    }
+    JSValue negotiatedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "negotiated"));
+    if (!negotiatedValue.isUndefined()) {
+        result.negotiated = convert<IDLBoolean>(state, negotiatedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.negotiated = false;
+    JSValue orderedValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "ordered"));
+    if (!orderedValue.isUndefined()) {
+        result.ordered = convert<IDLBoolean>(state, orderedValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.ordered = true;
+    JSValue protocolValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "protocol"));
+    if (!protocolValue.isUndefined()) {
+        result.protocol = convert<IDLUSVString>(state, protocolValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.protocol = emptyString();
+    return result;
+}
+
+template<> RTCPeerConnection::RtpTransceiverInit convertDictionary<RTCPeerConnection::RtpTransceiverInit>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCPeerConnection::RtpTransceiverInit result;
+    JSValue directionValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "direction"));
+    if (!directionValue.isUndefined()) {
+        result.direction = convert<IDLEnumeration<RTCPeerConnection::RtpTransceiverDirection>>(state, directionValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.direction = RTCPeerConnection::RtpTransceiverDirection::Sendrecv;
+    return result;
+}
+
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateOffer(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateAnswer(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetLocalDescription(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetRemoteDescription(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionUpdateIce(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddIceCandidate(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetLocalStreams(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionInitializeWith(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetSenders(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetReceivers(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetTransceivers(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddTrack(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveTrack(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddTransceiver(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetStreamById(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetConfiguration(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddStream(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveStream(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetStats(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetConfiguration(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedCreateOffer(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswer(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescription(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescription(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidate(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionPrivateGetStats(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateDataChannel(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateDTMFSender(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionClose(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveEventListener(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsRTCPeerConnectionLocalDescription(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCPeerConnectionRemoteDescription(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCPeerConnectionSignalingState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCPeerConnectionIceGatheringState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCPeerConnectionIceConnectionState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCPeerConnectionOnnegotiationneeded(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOnnegotiationneeded(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOnicecandidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOnicecandidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOnsignalingstatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOnsignalingstatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOnaddstream(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOnaddstream(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOnremovestream(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOnremovestream(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOniceconnectionstatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOniceconnectionstatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionOndatachannel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCPeerConnectionOndatachannel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCPeerConnectionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionLocalDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionCurrentLocalDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionPendingLocalDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionRemoteDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionCurrentRemoteDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionPendingRemoteDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionSignalingState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionIceGatheringState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionIceConnectionState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCPeerConnectionOnnegotiationneeded(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOnnegotiationneeded(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOnicecandidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOnicecandidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOnsignalingstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOnsignalingstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOntrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOntrack(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOniceconnectionstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOniceconnectionstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOnicegatheringstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOnicegatheringstatechange(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOndatachannel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOndatachannel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionOnaddstream(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionOnaddstream(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsRTCPeerConnectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCPeerConnectionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSRTCPeerConnectionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCPeerConnectionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCPeerConnectionPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnectionPrototype>(vm.heap)) JSRTCPeerConnectionPrototype(vm, globalObject, structure);
@@ -127,818 +326,964 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSRTCPeerConnectionConstructor : public DOMConstructorObject {
-private:
-    JSRTCPeerConnectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSRTCPeerConnectionConstructor = JSBuiltinConstructor<JSRTCPeerConnection>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSRTCPeerConnectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSRTCPeerConnectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnectionConstructor>(vm.heap)) JSRTCPeerConnectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSRTCPeerConnectionConstructor::s_info = { "webkitRTCPeerConnectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnectionConstructor) };
-
-JSRTCPeerConnectionConstructor::JSRTCPeerConnectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSRTCPeerConnectionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSRTCPeerConnectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSRTCPeerConnectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSRTCPeerConnection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("webkitRTCPeerConnection"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSRTCPeerConnection::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("RTCPeerConnection"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSRTCPeerConnectionConstructor::getConstructData(JSCell*, ConstructData& constructData)
+template<> FunctionExecutable* JSRTCPeerConnectionConstructor::initializeExecutable(VM& vm)
 {
-    constructData.native.function = constructJSRTCPeerConnection;
-    return ConstructTypeHost;
+    return rtcPeerConnectionInitializeRTCPeerConnectionCodeGenerator(vm);
 }
+
+template<> const ClassInfo JSRTCPeerConnectionConstructor::s_info = { "RTCPeerConnection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSRTCPeerConnectionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "localDescription", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionLocalDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "remoteDescription", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionRemoteDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "signalingState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionSignalingState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "iceGatheringState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionIceGatheringState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "iceConnectionState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionIceConnectionState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onnegotiationneeded", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnnegotiationneeded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnnegotiationneeded) },
-    { "onicecandidate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnicecandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnicecandidate) },
-    { "onsignalingstatechange", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnsignalingstatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnsignalingstatechange) },
-    { "onaddstream", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnaddstream), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnaddstream) },
-    { "onremovestream", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnremovestream), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnremovestream) },
-    { "oniceconnectionstatechange", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOniceconnectionstatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOniceconnectionstatechange) },
-    { "ondatachannel", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOndatachannel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOndatachannel) },
-    { "createOffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionCreateOffer), (intptr_t) (2) },
-    { "createAnswer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionCreateAnswer), (intptr_t) (2) },
-    { "setLocalDescription", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionSetLocalDescription), (intptr_t) (3) },
-    { "setRemoteDescription", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionSetRemoteDescription), (intptr_t) (3) },
-    { "updateIce", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionUpdateIce), (intptr_t) (1) },
-    { "addIceCandidate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionAddIceCandidate), (intptr_t) (3) },
-    { "getLocalStreams", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetLocalStreams), (intptr_t) (0) },
-    { "getRemoteStreams", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams), (intptr_t) (0) },
-    { "getStreamById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetStreamById), (intptr_t) (1) },
-    { "getConfiguration", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetConfiguration), (intptr_t) (0) },
-    { "addStream", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionAddStream), (intptr_t) (1) },
-    { "removeStream", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionRemoveStream), (intptr_t) (1) },
-    { "getStats", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetStats), (intptr_t) (2) },
-    { "createDataChannel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionCreateDataChannel), (intptr_t) (1) },
-    { "createDTMFSender", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionCreateDTMFSender), (intptr_t) (1) },
-    { "close", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionClose), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionConstructor) } },
+    { "localDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionLocalDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentLocalDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionCurrentLocalDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pendingLocalDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionPendingLocalDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "remoteDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionRemoteDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentRemoteDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionCurrentRemoteDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pendingRemoteDescription", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionPendingRemoteDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "signalingState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionSignalingState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "iceGatheringState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionIceGatheringState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "iceConnectionState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionIceConnectionState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onnegotiationneeded", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnnegotiationneeded), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnnegotiationneeded) } },
+    { "onicecandidate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnicecandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnicecandidate) } },
+    { "onsignalingstatechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnsignalingstatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnsignalingstatechange) } },
+    { "ontrack", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOntrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOntrack) } },
+    { "oniceconnectionstatechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOniceconnectionstatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOniceconnectionstatechange) } },
+    { "onicegatheringstatechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnicegatheringstatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnicegatheringstatechange) } },
+    { "ondatachannel", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOndatachannel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOndatachannel) } },
+    { "onaddstream", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCPeerConnectionOnaddstream), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCPeerConnectionOnaddstream) } },
+    { "getSenders", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetSenders), (intptr_t) (0) } },
+    { "getReceivers", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetReceivers), (intptr_t) (0) } },
+    { "getTransceivers", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetTransceivers), (intptr_t) (0) } },
+    { "addTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionAddTrack), (intptr_t) (1) } },
+    { "removeTrack", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionRemoveTrack), (intptr_t) (1) } },
+    { "addTransceiver", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionAddTransceiver), (intptr_t) (1) } },
+    { "getLocalStreams", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionGetLocalStreamsCodeGenerator), (intptr_t) (0) } },
+    { "getRemoteStreams", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams), (intptr_t) (0) } },
+    { "getStreamById", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionGetStreamByIdCodeGenerator), (intptr_t) (1) } },
+    { "addStream", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionAddStreamCodeGenerator), (intptr_t) (1) } },
+    { "removeStream", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionRemoveStreamCodeGenerator), (intptr_t) (1) } },
+    { "createOffer", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionCreateOfferCodeGenerator), (intptr_t) (0) } },
+    { "createAnswer", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionCreateAnswerCodeGenerator), (intptr_t) (0) } },
+    { "setLocalDescription", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionSetLocalDescriptionCodeGenerator), (intptr_t) (1) } },
+    { "setRemoteDescription", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionSetRemoteDescriptionCodeGenerator), (intptr_t) (1) } },
+    { "addIceCandidate", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionAddIceCandidateCodeGenerator), (intptr_t) (1) } },
+    { "getConfiguration", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionGetConfiguration), (intptr_t) (0) } },
+    { "setConfiguration", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionSetConfiguration), (intptr_t) (1) } },
+    { "getStats", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(rtcPeerConnectionGetStatsCodeGenerator), (intptr_t) (0) } },
+    { "createDataChannel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionCreateDataChannel), (intptr_t) (1) } },
+    { "close", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCPeerConnectionPrototypeFunctionClose), (intptr_t) (0) } },
 };
 
-const ClassInfo JSRTCPeerConnectionPrototype::s_info = { "webkitRTCPeerConnectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnectionPrototype) };
+const ClassInfo JSRTCPeerConnectionPrototype::s_info = { "RTCPeerConnectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnectionPrototype) };
 
 void JSRTCPeerConnectionPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSRTCPeerConnectionPrototypeTableValues, *this);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().initializeWithPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionInitializeWith), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().getSendersPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionGetSenders), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().addTrackPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionAddTrack), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().removeTrackPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionRemoveTrack), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().getRemoteStreamsPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().queuedCreateOfferPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionQueuedCreateOffer), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().queuedCreateAnswerPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswer), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().queuedSetLocalDescriptionPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescription), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().queuedSetRemoteDescriptionPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescription), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().queuedAddIceCandidatePrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidate), ReadOnly | DontEnum);
+    putDirect(vm, static_cast<JSVMClientData*>(vm.clientData)->builtinNames().privateGetStatsPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsRTCPeerConnectionPrototypeFunctionPrivateGetStats), ReadOnly | DontEnum);
 }
 
-const ClassInfo JSRTCPeerConnection::s_info = { "webkitRTCPeerConnection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnection) };
+const ClassInfo JSRTCPeerConnection::s_info = { "RTCPeerConnection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCPeerConnection) };
 
-JSRTCPeerConnection::JSRTCPeerConnection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCPeerConnection>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCPeerConnection::JSRTCPeerConnection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCPeerConnection>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCPeerConnection::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCPeerConnection::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSRTCPeerConnectionPrototype::create(vm, globalObject, JSRTCPeerConnectionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
+    return JSRTCPeerConnectionPrototype::create(vm, globalObject, JSRTCPeerConnectionPrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSRTCPeerConnection::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCPeerConnection::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCPeerConnection>(vm, globalObject);
 }
 
-void JSRTCPeerConnection::destroy(JSC::JSCell* cell)
+template<> inline JSRTCPeerConnection* BindingCaller<JSRTCPeerConnection>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    JSRTCPeerConnection* thisObject = static_cast<JSRTCPeerConnection*>(cell);
-    thisObject->JSRTCPeerConnection::~JSRTCPeerConnection();
+    return jsDynamicDowncast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
 }
 
-JSRTCPeerConnection::~JSRTCPeerConnection()
+template<> inline JSRTCPeerConnection* BindingCaller<JSRTCPeerConnection>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSRTCPeerConnection*>(state.thisValue());
 }
 
-EncodedJSValue jsRTCPeerConnectionLocalDescription(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionLocalDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionLocalDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "localDescription");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "localDescription");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.localDescription(ec)));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionLocalDescriptionGetter>(state, thisValue, "localDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionRemoteDescription(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionLocalDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "remoteDescription");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "remoteDescription");
-    }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.remoteDescription(ec)));
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.localDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionCurrentLocalDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionSignalingState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionCurrentLocalDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "signalingState");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "signalingState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.signalingState());
-    return JSValue::encode(result);
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionCurrentLocalDescriptionGetter>(state, thisValue, "currentLocalDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionIceGatheringState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionCurrentLocalDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "iceGatheringState");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "iceGatheringState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.iceGatheringState());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.currentLocalDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionPendingLocalDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionIceConnectionState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionPendingLocalDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "iceConnectionState");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "iceConnectionState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.iceConnectionState());
-    return JSValue::encode(result);
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionPendingLocalDescriptionGetter>(state, thisValue, "pendingLocalDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionOnnegotiationneeded(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionPendingLocalDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "onnegotiationneeded");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "onnegotiationneeded");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().negotiationneededEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.pendingLocalDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionRemoteDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionOnicecandidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionRemoteDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "onicecandidate");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "onicecandidate");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().icecandidateEvent));
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionRemoteDescriptionGetter>(state, thisValue, "remoteDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionOnsignalingstatechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionRemoteDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "onsignalingstatechange");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "onsignalingstatechange");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().signalingstatechangeEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.remoteDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionCurrentRemoteDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionOnaddstream(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionCurrentRemoteDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "onaddstream");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "onaddstream");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().addstreamEvent));
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionCurrentRemoteDescriptionGetter>(state, thisValue, "currentRemoteDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionOnremovestream(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionCurrentRemoteDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "onremovestream");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "onremovestream");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().removestreamEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.currentRemoteDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionPendingRemoteDescriptionGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionOniceconnectionstatechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionPendingRemoteDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "oniceconnectionstatechange");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "oniceconnectionstatechange");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().iceconnectionstatechangeEvent));
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionPendingRemoteDescriptionGetter>(state, thisValue, "pendingRemoteDescription");
 }
 
-
-EncodedJSValue jsRTCPeerConnectionOndatachannel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsRTCPeerConnectionPendingRemoteDescriptionGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCPeerConnection", "ondatachannel");
-        return throwGetterTypeError(*exec, "RTCPeerConnection", "ondatachannel");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().datachannelEvent));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCSessionDescription>>(state, *thisObject.globalObject(), impl.pendingRemoteDescription());
+    return result;
 }
 
+static inline JSValue jsRTCPeerConnectionSignalingStateGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
 
-EncodedJSValue jsRTCPeerConnectionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsRTCPeerConnectionSignalingState(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSRTCPeerConnectionPrototype* domObject = jsDynamicCast<JSRTCPeerConnectionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSRTCPeerConnection::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionSignalingStateGetter>(state, thisValue, "signalingState");
 }
 
-void setJSRTCPeerConnectionOnnegotiationneeded(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsRTCPeerConnectionSignalingStateGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.signalingState());
+    return result;
+}
+
+static inline JSValue jsRTCPeerConnectionIceGatheringStateGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionIceGatheringState(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionIceGatheringStateGetter>(state, thisValue, "iceGatheringState");
+}
+
+static inline JSValue jsRTCPeerConnectionIceGatheringStateGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.iceGatheringState());
+    return result;
+}
+
+static inline JSValue jsRTCPeerConnectionIceConnectionStateGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionIceConnectionState(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionIceConnectionStateGetter>(state, thisValue, "iceConnectionState");
+}
+
+static inline JSValue jsRTCPeerConnectionIceConnectionStateGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.iceConnectionState());
+    return result;
+}
+
+static inline JSValue jsRTCPeerConnectionOnnegotiationneededGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOnnegotiationneeded(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOnnegotiationneededGetter>(state, thisValue, "onnegotiationneeded");
+}
+
+static inline JSValue jsRTCPeerConnectionOnnegotiationneededGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().negotiationneededEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOnicecandidateGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOnicecandidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOnicecandidateGetter>(state, thisValue, "onicecandidate");
+}
+
+static inline JSValue jsRTCPeerConnectionOnicecandidateGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().icecandidateEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOnsignalingstatechangeGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOnsignalingstatechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOnsignalingstatechangeGetter>(state, thisValue, "onsignalingstatechange");
+}
+
+static inline JSValue jsRTCPeerConnectionOnsignalingstatechangeGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().signalingstatechangeEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOntrackGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOntrack(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOntrackGetter>(state, thisValue, "ontrack");
+}
+
+static inline JSValue jsRTCPeerConnectionOntrackGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().trackEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOniceconnectionstatechangeGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOniceconnectionstatechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOniceconnectionstatechangeGetter>(state, thisValue, "oniceconnectionstatechange");
+}
+
+static inline JSValue jsRTCPeerConnectionOniceconnectionstatechangeGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().iceconnectionstatechangeEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOnicegatheringstatechangeGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOnicegatheringstatechange(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOnicegatheringstatechangeGetter>(state, thisValue, "onicegatheringstatechange");
+}
+
+static inline JSValue jsRTCPeerConnectionOnicegatheringstatechangeGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().icegatheringstatechangeEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOndatachannelGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOndatachannel(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOndatachannelGetter>(state, thisValue, "ondatachannel");
+}
+
+static inline JSValue jsRTCPeerConnectionOndatachannelGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().datachannelEvent);
+}
+
+static inline JSValue jsRTCPeerConnectionOnaddstreamGetter(ExecState&, JSRTCPeerConnection&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCPeerConnectionOnaddstream(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCPeerConnection>::attribute<jsRTCPeerConnectionOnaddstreamGetter>(state, thisValue, "onaddstream");
+}
+
+static inline JSValue jsRTCPeerConnectionOnaddstreamGetter(ExecState& state, JSRTCPeerConnection& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().addstreamEvent);
+}
+
+EncodedJSValue jsRTCPeerConnectionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSRTCPeerConnectionPrototype* domObject = jsDynamicDowncast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSRTCPeerConnection::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSRTCPeerConnectionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "onnegotiationneeded");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "onnegotiationneeded");
-        return;
+    JSRTCPeerConnectionPrototype* domObject = jsDynamicDowncast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().negotiationneededEvent, value);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSRTCPeerConnectionOnnegotiationneededFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOnnegotiationneeded(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOnnegotiationneededFunction>(state, thisValue, encodedValue, "onnegotiationneeded");
+}
+
+static inline bool setJSRTCPeerConnectionOnnegotiationneededFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().negotiationneededEvent, value);
+    return true;
 }
 
 
-void setJSRTCPeerConnectionOnicecandidate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSRTCPeerConnectionOnicecandidateFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOnicecandidate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "onicecandidate");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "onicecandidate");
-        return;
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOnicecandidateFunction>(state, thisValue, encodedValue, "onicecandidate");
+}
+
+static inline bool setJSRTCPeerConnectionOnicecandidateFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().icecandidateEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOnsignalingstatechangeFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOnsignalingstatechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOnsignalingstatechangeFunction>(state, thisValue, encodedValue, "onsignalingstatechange");
+}
+
+static inline bool setJSRTCPeerConnectionOnsignalingstatechangeFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().signalingstatechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOntrackFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOntrack(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOntrackFunction>(state, thisValue, encodedValue, "ontrack");
+}
+
+static inline bool setJSRTCPeerConnectionOntrackFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().trackEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOniceconnectionstatechangeFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOniceconnectionstatechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOniceconnectionstatechangeFunction>(state, thisValue, encodedValue, "oniceconnectionstatechange");
+}
+
+static inline bool setJSRTCPeerConnectionOniceconnectionstatechangeFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().iceconnectionstatechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOnicegatheringstatechangeFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOnicegatheringstatechange(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOnicegatheringstatechangeFunction>(state, thisValue, encodedValue, "onicegatheringstatechange");
+}
+
+static inline bool setJSRTCPeerConnectionOnicegatheringstatechangeFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().icegatheringstatechangeEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOndatachannelFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOndatachannel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOndatachannelFunction>(state, thisValue, encodedValue, "ondatachannel");
+}
+
+static inline bool setJSRTCPeerConnectionOndatachannelFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().datachannelEvent, value);
+    return true;
+}
+
+
+static inline bool setJSRTCPeerConnectionOnaddstreamFunction(ExecState&, JSRTCPeerConnection&, JSValue, ThrowScope&);
+
+bool setJSRTCPeerConnectionOnaddstream(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSRTCPeerConnection>::setAttribute<setJSRTCPeerConnectionOnaddstreamFunction>(state, thisValue, encodedValue, "onaddstream");
+}
+
+static inline bool setJSRTCPeerConnectionOnaddstreamFunction(ExecState& state, JSRTCPeerConnection& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().addstreamEvent, value);
+    return true;
+}
+
+
+JSValue JSRTCPeerConnection::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSRTCPeerConnectionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionInitializeWithCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionInitializeWith(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionInitializeWithCaller, CastedThisErrorBehavior::Assert>(state, "initializeWith");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionInitializeWithCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
+        return JSValue::encode(jsUndefined());
+    ASSERT(context->isDocument());
+    auto& document = downcast<Document>(*context);
+    auto configuration = convert<IDLDictionary<RTCConfiguration>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.initializeWith(document, WTFMove(configuration)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetSendersCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetSenders(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionGetSendersCaller>(state, "getSenders");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetSendersCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<RTCRtpSender>>>(*state, *castedThis->globalObject(), impl.getSenders()));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetReceiversCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetReceivers(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionGetReceiversCaller>(state, "getReceivers");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetReceiversCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<RTCRtpReceiver>>>(*state, *castedThis->globalObject(), impl.getReceivers()));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetTransceiversCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetTransceivers(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionGetTransceiversCaller>(state, "getTransceivers");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetTransceiversCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<RTCRtpTransceiver>>>(*state, *castedThis->globalObject(), impl.getTransceivers()));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTrackCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddTrack(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionAddTrackCaller>(state, "addTrack");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTrackCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLInterface<MediaStreamTrack>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "track", "RTCPeerConnection", "addTrack", "MediaStreamTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto streams = convertVariadicArguments<IDLInterface<MediaStream>>(*state, 1);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<RTCRtpSender>>(*state, *castedThis->globalObject(), throwScope, impl.addTrack(*track, WTFMove(streams.arguments.value()))));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionRemoveTrackCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveTrack(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionRemoveTrackCaller>(state, "removeTrack");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionRemoveTrackCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto sender = convert<IDLInterface<RTCRtpSender>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "sender", "RTCPeerConnection", "removeTrack", "RTCRtpSender"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.removeTrack(*sender));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver1Caller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver1(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionAddTransceiver1Caller>(state, "addTransceiver");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver1Caller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto track = convert<IDLInterface<MediaStreamTrack>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "track", "RTCPeerConnection", "addTransceiver", "MediaStreamTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto init = convert<IDLDictionary<RTCPeerConnection::RtpTransceiverInit>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<RTCRtpTransceiver>>(*state, *castedThis->globalObject(), throwScope, impl.addTransceiver(*track, WTFMove(init))));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver2Caller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver2(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionAddTransceiver2Caller>(state, "addTransceiver");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionAddTransceiver2Caller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto kind = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto init = convert<IDLDictionary<RTCPeerConnection::RtpTransceiverInit>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<RTCRtpTransceiver>>(*state, *castedThis->globalObject(), throwScope, impl.addTransceiver(WTFMove(kind), WTFMove(init))));
+}
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddTransceiver(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    if (argsCount == 1) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSMediaStreamTrack::info()))
+            return jsRTCPeerConnectionPrototypeFunctionAddTransceiver1(state);
+        return jsRTCPeerConnectionPrototypeFunctionAddTransceiver2(state);
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().icecandidateEvent, value);
-}
-
-
-void setJSRTCPeerConnectionOnsignalingstatechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "onsignalingstatechange");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "onsignalingstatechange");
-        return;
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(0);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSMediaStreamTrack::info()))
+            return jsRTCPeerConnectionPrototypeFunctionAddTransceiver1(state);
+        return jsRTCPeerConnectionPrototypeFunctionAddTransceiver2(state);
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().signalingstatechangeEvent, value);
+    return argsCount < 1 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
 }
 
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetRemoteStreamsCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
 
-void setJSRTCPeerConnectionOnaddstream(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams(ExecState* state)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "onaddstream");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "onaddstream");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().addstreamEvent, value);
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionGetRemoteStreamsCaller>(state, "getRemoteStreams");
 }
 
-
-void setJSRTCPeerConnectionOnremovestream(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetRemoteStreamsCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "onremovestream");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "onremovestream");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().removestreamEvent, value);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<MediaStream>>>(*state, *castedThis->globalObject(), impl.getRemoteStreams()));
 }
 
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetConfigurationCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
 
-void setJSRTCPeerConnectionOniceconnectionstatechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetConfiguration(ExecState* state)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "oniceconnectionstatechange");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "oniceconnectionstatechange");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().iceconnectionstatechangeEvent, value);
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionGetConfigurationCaller>(state, "getConfiguration");
 }
 
-
-void setJSRTCPeerConnectionOndatachannel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionGetConfigurationCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCPeerConnectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCPeerConnection", "ondatachannel");
-        else
-            throwSetterTypeError(*exec, "RTCPeerConnection", "ondatachannel");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().datachannelEvent, value);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDictionary<RTCConfiguration>>(*state, *castedThis->globalObject(), impl.getConfiguration()));
 }
 
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionSetConfigurationCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
 
-JSValue JSRTCPeerConnection::getConstructor(VM& vm, JSGlobalObject* globalObject)
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetConfiguration(ExecState* state)
 {
-    return getDOMConstructor<JSRTCPeerConnectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionSetConfigurationCaller>(state, "setConfiguration");
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateOffer(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionSetConfigurationCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "createOffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "successCallback", "RTCPeerConnection", "createOffer");
-    RefPtr<RTCSessionDescriptionCallback> successCallback = JSRTCSessionDescriptionCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "failureCallback", "RTCPeerConnection", "createOffer");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    Dictionary offerOptions = { exec, exec->argument(2) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.createOffer(successCallback, failureCallback, offerOptions, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto configuration = convert<IDLDictionary<RTCConfiguration>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.setConfiguration(WTFMove(configuration)));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateAnswer(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedCreateOffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "createAnswer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "successCallback", "RTCPeerConnection", "createAnswer");
-    RefPtr<RTCSessionDescriptionCallback> successCallback = JSRTCSessionDescriptionCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "failureCallback", "RTCPeerConnection", "createAnswer");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    Dictionary answerOptions = { exec, exec->argument(2) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.createAnswer(successCallback, failureCallback, answerOptions, ec);
-    setDOMException(exec, ec);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "queuedCreateOffer");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateOfferCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto offerOptions = convert<IDLDictionary<RTCPeerConnection::OfferOptions>>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.queuedCreateOffer(WTFMove(offerOptions), WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetLocalDescription(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "setLocalDescription");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    RTCSessionDescription* description = JSRTCSessionDescription::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "successCallback", "RTCPeerConnection", "setLocalDescription");
-    RefPtr<VoidCallback> successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    if (!exec->argument(2).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 2, "failureCallback", "RTCPeerConnection", "setLocalDescription");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
-    impl.setLocalDescription(description, successCallback, failureCallback, ec);
-    setDOMException(exec, ec);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "queuedCreateAnswer");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedCreateAnswerCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto answerOptions = convert<IDLDictionary<RTCPeerConnection::AnswerOptions>>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.queuedCreateAnswer(WTFMove(answerOptions), WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionSetRemoteDescription(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescription(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "setRemoteDescription");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    RTCSessionDescription* description = JSRTCSessionDescription::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "successCallback", "RTCPeerConnection", "setRemoteDescription");
-    RefPtr<VoidCallback> successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    if (!exec->argument(2).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 2, "failureCallback", "RTCPeerConnection", "setRemoteDescription");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
-    impl.setRemoteDescription(description, successCallback, failureCallback, ec);
-    setDOMException(exec, ec);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "queuedSetLocalDescription");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetLocalDescriptionCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto description = convert<IDLInterface<RTCSessionDescription>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "description", "RTCPeerConnection", "queuedSetLocalDescription", "RTCSessionDescription"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.queuedSetLocalDescription(*description, WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionUpdateIce(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescription(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "updateIce");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Dictionary configuration = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.updateIce(configuration, ec);
-    setDOMException(exec, ec);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionPromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionPromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "queuedSetRemoteDescription");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedSetRemoteDescriptionCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto description = convert<IDLInterface<RTCSessionDescription>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "description", "RTCPeerConnection", "queuedSetRemoteDescription", "RTCSessionDescription"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.queuedSetRemoteDescription(*description, WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddIceCandidate(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidateCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidatePromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "addIceCandidate");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    RTCIceCandidate* candidate = JSRTCIceCandidate::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "successCallback", "RTCPeerConnection", "addIceCandidate");
-    RefPtr<VoidCallback> successCallback = JSVoidCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    if (!exec->argument(2).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 2, "failureCallback", "RTCPeerConnection", "addIceCandidate");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(2)), castedThis->globalObject());
-    impl.addIceCandidate(candidate, successCallback, failureCallback, ec);
-    setDOMException(exec, ec);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidatePromise, PromiseExecutionScope::WindowOnly>(*state));
+}
+
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidatePromise(ExecState* state, Ref<DeferredPromise>&& promise)
+{
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidateCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "queuedAddIceCandidate");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionQueuedAddIceCandidateCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto candidate = convert<IDLInterface<RTCIceCandidate>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "candidate", "RTCPeerConnection", "queuedAddIceCandidate", "RTCIceCandidate"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.queuedAddIceCandidate(*candidate, WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetLocalStreams(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsCaller(JSC::ExecState*, JSRTCPeerConnection*, Ref<DeferredPromise>&&, JSC::ThrowScope&);
+
+static EncodedJSValue jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsPromise(ExecState*, Ref<DeferredPromise>&&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionPrivateGetStats(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "getLocalStreams");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getLocalStreams());
-    return JSValue::encode(result);
+    ASSERT(state);
+    return JSValue::encode(callPromiseFunction<jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsPromise, PromiseExecutionScope::WindowOnly>(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetRemoteStreams(ExecState* exec)
+static inline EncodedJSValue jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsPromise(ExecState* state, Ref<DeferredPromise>&& promise)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "getRemoteStreams");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getRemoteStreams());
-    return JSValue::encode(result);
+    return BindingCaller<JSRTCPeerConnection>::callPromiseOperation<jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsCaller, CastedThisErrorBehavior::Assert>(state, WTFMove(promise), "privateGetStats");
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetStreamById(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionPrivateGetStatsCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, Ref<DeferredPromise>&& promise, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "getStreamById");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String streamId = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getStreamById(streamId)));
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetConfiguration(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "getConfiguration");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getConfiguration()));
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddStream(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "addStream");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSMediaStream::info()))
-        return throwArgumentTypeError(*exec, 0, "stream", "RTCPeerConnection", "addStream", "MediaStream");
-    MediaStream* stream = JSMediaStream::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.addStream(stream, ec);
-    setDOMException(exec, ec);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto selector = convert<IDLNullable<IDLInterface<MediaStreamTrack>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "selector", "RTCPeerConnection", "privateGetStats", "MediaStreamTrack"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.privateGetStats(WTFMove(selector), WTFMove(promise));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveStream(ExecState* exec)
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionCreateDataChannelCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateDataChannel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "removeStream");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSMediaStream::info()))
-        return throwArgumentTypeError(*exec, 0, "stream", "RTCPeerConnection", "removeStream", "MediaStream");
-    MediaStream* stream = JSMediaStream::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionCreateDataChannelCaller>(state, "createDataChannel");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionCreateDataChannelCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto* context = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
+    if (!context)
         return JSValue::encode(jsUndefined());
-    impl.removeStream(stream, ec);
-    setDOMException(exec, ec);
+    auto label = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = convert<IDLDictionary<RTCPeerConnection::DataChannelInit>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<RTCDataChannel>>(*state, *castedThis->globalObject(), throwScope, impl.createDataChannel(*context, WTFMove(label), WTFMove(options))));
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionCloseCaller(JSC::ExecState*, JSRTCPeerConnection*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionClose(ExecState* state)
+{
+    return BindingCaller<JSRTCPeerConnection>::callOperation<jsRTCPeerConnectionPrototypeFunctionCloseCaller>(state, "close");
+}
+
+static inline JSC::EncodedJSValue jsRTCPeerConnectionPrototypeFunctionCloseCaller(JSC::ExecState* state, JSRTCPeerConnection* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    impl.close();
     return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionGetStats(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "getStats");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "successCallback", "RTCPeerConnection", "getStats");
-    RefPtr<RTCStatsCallback> successCallback = JSRTCStatsCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
-    if (!exec->argument(1).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 1, "failureCallback", "RTCPeerConnection", "getStats");
-    RefPtr<RTCPeerConnectionErrorCallback> failureCallback = JSRTCPeerConnectionErrorCallback::create(asObject(exec->uncheckedArgument(1)), castedThis->globalObject());
-    MediaStreamTrack* selector = JSMediaStreamTrack::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.getStats(successCallback, failureCallback, selector);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateDataChannel(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "createDataChannel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String label = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    Dictionary options = { exec, exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createDataChannel(label, options, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionCreateDTMFSender(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "createDTMFSender");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    MediaStreamTrack* track = JSMediaStreamTrack::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createDTMFSender(track, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionClose(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "close");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.close(ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionAddEventListener(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionRemoveEventListener(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsRTCPeerConnectionPrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRTCPeerConnection* castedThis = jsDynamicCast<JSRTCPeerConnection*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "RTCPeerConnection", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRTCPeerConnection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
 }
 
 void JSRTCPeerConnection::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -946,15 +1291,15 @@ void JSRTCPeerConnection::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSRTCPeerConnection*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSRTCPeerConnectionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsRTCPeerConnection = jsCast<JSRTCPeerConnection*>(handle.slot()->asCell());
-    if (jsRTCPeerConnection->impl().hasPendingActivity())
+    if (jsRTCPeerConnection->wrapped().hasPendingActivity())
         return true;
-    if (jsRTCPeerConnection->impl().isFiringEventListeners())
+    if (jsRTCPeerConnection->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -962,9 +1307,9 @@ bool JSRTCPeerConnectionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unkno
 
 void JSRTCPeerConnectionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsRTCPeerConnection = jsCast<JSRTCPeerConnection*>(handle.slot()->asCell());
+    auto* jsRTCPeerConnection = static_cast<JSRTCPeerConnection*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCPeerConnection->impl(), jsRTCPeerConnection);
+    uncacheWrapper(world, &jsRTCPeerConnection->wrapped(), jsRTCPeerConnection);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -975,15 +1320,12 @@ extern "C" { extern void (*const __identifier("??_7RTCPeerConnection@WebCore@@6B
 extern "C" { extern void* _ZTVN7WebCore17RTCPeerConnectionE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCPeerConnection* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<RTCPeerConnection>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCPeerConnection>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCPeerConnection@WebCore@@6B@"));
 #else
@@ -991,7 +1333,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCPeerConne
 #if COMPILER(CLANG)
     // If this fails RTCPeerConnection does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCPeerConnection), RTCPeerConnection_is_not_polymorphic);
+    static_assert(__is_polymorphic(RTCPeerConnection), "RTCPeerConnection is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -1000,16 +1342,21 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCPeerConne
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSRTCPeerConnection>(globalObject, impl);
+    return createWrapper<RTCPeerConnection>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCPeerConnection& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 RTCPeerConnection* JSRTCPeerConnection::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSRTCPeerConnection*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSRTCPeerConnection*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

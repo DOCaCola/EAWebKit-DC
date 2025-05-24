@@ -21,18 +21,78 @@
 #include "config.h"
 #include "JSEventTarget.h"
 
-#include "Event.h"
-#include "EventTarget.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
 namespace WebCore {
+
+template<> EventTarget::ListenerOptions convertDictionary<EventTarget::ListenerOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    EventTarget::ListenerOptions result;
+    JSValue captureValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "capture"));
+    if (!captureValue.isUndefined()) {
+        result.capture = convert<IDLBoolean>(state, captureValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.capture = false;
+    return result;
+}
+
+template<> EventTarget::AddEventListenerOptions convertDictionary<EventTarget::AddEventListenerOptions>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    EventTarget::AddEventListenerOptions result;
+    JSValue captureValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "capture"));
+    if (!captureValue.isUndefined()) {
+        result.capture = convert<IDLBoolean>(state, captureValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.capture = false;
+    JSValue onceValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "once"));
+    if (!onceValue.isUndefined()) {
+        result.once = convert<IDLBoolean>(state, onceValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.once = false;
+    JSValue passiveValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "passive"));
+    if (!passiveValue.isUndefined()) {
+        result.passive = convert<IDLBoolean>(state, passiveValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.passive = false;
+    return result;
+}
 
 // Functions
 
@@ -40,9 +100,14 @@ JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener
 JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(JSC::ExecState*);
 
+// Attributes
+
+JSC::EncodedJSValue jsEventTargetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSEventTargetConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+
 class JSEventTargetPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSEventTargetPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSEventTargetPrototype* ptr = new (NotNull, JSC::allocateCell<JSEventTargetPrototype>(vm.heap)) JSEventTargetPrototype(vm, globalObject, structure);
@@ -63,15 +128,35 @@ private:
     }
 
     void finishCreation(JSC::VM&);
+public:
+    static const unsigned StructureFlags = JSC::IsImmutablePrototypeExoticObject | Base::StructureFlags;
 };
+
+using JSEventTargetConstructor = JSDOMConstructorNotConstructable<JSEventTarget>;
+
+template<> JSValue JSEventTargetConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
+{
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSEventTargetConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSEventTarget::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("EventTarget"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSEventTargetConstructor::s_info = { "EventTarget", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTargetConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSEventTargetPrototypeTableValues[] =
 {
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTargetConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSEventTargetConstructor) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSEventTargetPrototype::s_info = { "EventTargetPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTargetPrototype) };
@@ -84,10 +169,16 @@ void JSEventTargetPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEventTarget::s_info = { "EventTarget", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTarget) };
 
-JSEventTarget::JSEventTarget(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EventTarget>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEventTarget::JSEventTarget(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EventTarget>&& impl)
+    : JSDOMWrapper<EventTarget>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSEventTarget::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSEventTarget::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -95,7 +186,7 @@ JSObject* JSEventTarget::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSEventTargetPrototype::create(vm, globalObject, JSEventTargetPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSEventTarget::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSEventTarget::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSEventTarget>(vm, globalObject);
 }
@@ -106,59 +197,100 @@ void JSEventTarget::destroy(JSC::JSCell* cell)
     thisObject->JSEventTarget::~JSEventTarget();
 }
 
-JSEventTarget::~JSEventTarget()
+EncodedJSValue jsEventTargetConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSEventTargetPrototype* domObject = jsDynamicDowncast<JSEventTargetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSEventTarget::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener(ExecState* exec)
+bool setJSEventTargetConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "addEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSEventTargetPrototype* domObject = jsDynamicDowncast<JSEventTargetPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSEventTarget::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSEventTargetConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionAddEventListenerCaller(JSC::ExecState*, JSEventTargetWrapper*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener(ExecState* state)
+{
+    return BindingCaller<JSEventTarget>::callOperation<jsEventTargetPrototypeFunctionAddEventListenerCaller>(state, "addEventListener");
+}
+
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionAddEventListenerCaller(JSC::ExecState* state, JSEventTargetWrapper* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = state->uncheckedArgument(0).toString(state)->toAtomicString(state);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto callback = convert<IDLNullable<IDLEventListener<JSEventListener>>>(*state, state->uncheckedArgument(1), *castedThis);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = state->argument(2).isUndefined() ? false : convert<IDLUnion<IDLDictionary<EventTarget::AddEventListenerOptions>, IDLBoolean>>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.addEventListenerForBindings(WTFMove(type), WTFMove(callback), WTFMove(options));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(ExecState* exec)
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionRemoveEventListenerCaller(JSC::ExecState*, JSEventTargetWrapper*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "removeEventListener");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
-    if (UNLIKELY(!listener.isObject()))
-        return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    return BindingCaller<JSEventTarget>::callOperation<jsEventTargetPrototypeFunctionRemoveEventListenerCaller>(state, "removeEventListener");
+}
+
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionRemoveEventListenerCaller(JSC::ExecState* state, JSEventTargetWrapper* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = state->uncheckedArgument(0).toString(state)->toAtomicString(state);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto callback = convert<IDLNullable<IDLEventListener<JSEventListener>>>(*state, state->uncheckedArgument(1), *castedThis);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = state->argument(2).isUndefined() ? false : convert<IDLUnion<IDLDictionary<EventTarget::ListenerOptions>, IDLBoolean>>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.removeEventListenerForBindings(WTFMove(type), WTFMove(callback), WTFMove(options));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "dispatchEvent");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionDispatchEventCaller(JSC::ExecState*, JSEventTargetWrapper*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(ExecState* state)
+{
+    return BindingCaller<JSEventTarget>::callOperation<jsEventTargetPrototypeFunctionDispatchEventCaller>(state, "dispatchEvent");
+}
+
+static inline JSC::EncodedJSValue jsEventTargetPrototypeFunctionDispatchEventCaller(JSC::ExecState* state, JSEventTargetWrapper* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto event = convert<IDLInterface<Event>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "event", "EventTarget", "dispatchEvent", "Event"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(*state, throwScope, impl.dispatchEventForBindings(*event)));
 }
 
 void JSEventTarget::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -166,13 +298,13 @@ void JSEventTarget::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSEventTarget*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSEventTargetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEventTarget = jsCast<JSEventTarget*>(handle.slot()->asCell());
-    if (jsEventTarget->impl().isFiringEventListeners())
+    if (jsEventTarget->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -180,9 +312,9 @@ bool JSEventTargetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSEventTargetOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsEventTarget = jsCast<JSEventTarget*>(handle.slot()->asCell());
+    auto* jsEventTarget = static_cast<JSEventTarget*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEventTarget->impl(), jsEventTarget);
+    uncacheWrapper(world, &jsEventTarget->wrapped(), jsEventTarget);
 }
 
 

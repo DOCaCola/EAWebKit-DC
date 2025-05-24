@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSChannelSplitterNode_h
-#define JSChannelSplitterNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSChannelSplitterNode : public JSAudioNode {
 public:
-    typedef JSAudioNode Base;
+    using Base = JSAudioNode;
+    using DOMWrapped = ChannelSplitterNode;
     static JSChannelSplitterNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelSplitterNode>&& impl)
     {
-        JSChannelSplitterNode* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNode>(globalObject->vm().heap)) JSChannelSplitterNode(structure, globalObject, WTF::move(impl));
+        JSChannelSplitterNode* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNode>(globalObject->vm().heap)) JSChannelSplitterNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,28 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ChannelSplitterNode& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    ChannelSplitterNode& wrapped() const
     {
-        return static_cast<ChannelSplitterNode&>(Base::impl());
+        return static_cast<ChannelSplitterNode&>(Base::wrapped());
     }
 protected:
-    JSChannelSplitterNode(JSC::Structure*, JSDOMGlobalObject*, Ref<ChannelSplitterNode>&&);
+    JSChannelSplitterNode(JSC::Structure*, JSDOMGlobalObject&, Ref<ChannelSplitterNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelSplitterNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ChannelSplitterNode& impl) { return toJS(exec, globalObject, &impl); }
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelSplitterNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ChannelSplitterNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<ChannelSplitterNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<ChannelSplitterNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<ChannelSplitterNode> {
+    using WrapperClass = JSChannelSplitterNode;
+    using ToWrappedReturnType = ChannelSplitterNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

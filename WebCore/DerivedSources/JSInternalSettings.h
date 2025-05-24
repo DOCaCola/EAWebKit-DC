@@ -18,26 +18,27 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSInternalSettings_h
-#define JSInternalSettings_h
+#pragma once
 
 #include "InternalSettings.h"
+#include "JSDOMConvert.h"
 #include "JSInternalSettingsGenerated.h"
 
 namespace WebCore {
 
 class WEBCORE_TESTSUPPORT_EXPORT JSInternalSettings : public JSInternalSettingsGenerated {
 public:
-    typedef JSInternalSettingsGenerated Base;
+    using Base = JSInternalSettingsGenerated;
+    using DOMWrapped = InternalSettings;
     static JSInternalSettings* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<InternalSettings>&& impl)
     {
-        JSInternalSettings* ptr = new (NotNull, JSC::allocateCell<JSInternalSettings>(globalObject->vm().heap)) JSInternalSettings(structure, globalObject, WTF::move(impl));
+        JSInternalSettings* ptr = new (NotNull, JSC::allocateCell<JSInternalSettings>(globalObject->vm().heap)) JSInternalSettings(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,25 +47,30 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    InternalSettings& impl() const
+    InternalSettings& wrapped() const
     {
-        return static_cast<InternalSettings&>(Base::impl());
+        return static_cast<InternalSettings&>(Base::wrapped());
     }
 protected:
-    JSInternalSettings(JSC::Structure*, JSDOMGlobalObject*, Ref<InternalSettings>&&);
+    JSInternalSettings(JSC::Structure*, JSDOMGlobalObject&, Ref<InternalSettings>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InternalSettings*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, InternalSettings& impl) { return toJS(exec, globalObject, &impl); }
+WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InternalSettings&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, InternalSettings* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<InternalSettings>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<InternalSettings>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<InternalSettings> {
+    using WrapperClass = JSInternalSettings;
+    using ToWrappedReturnType = InternalSettings*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, InternalSettings::ForcedAccessibilityValue);
+
+template<> std::optional<InternalSettings::ForcedAccessibilityValue> parseEnumeration<InternalSettings::ForcedAccessibilityValue>(JSC::ExecState&, JSC::JSValue);
+template<> InternalSettings::ForcedAccessibilityValue convertEnumeration<InternalSettings::ForcedAccessibilityValue>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<InternalSettings::ForcedAccessibilityValue>();
 
 
 } // namespace WebCore
-
-#endif

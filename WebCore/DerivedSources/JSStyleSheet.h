@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStyleSheet_h
-#define JSStyleSheet_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "StyleSheet.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSStyleSheet : public JSDOMWrapper {
+class JSStyleSheet : public JSDOMWrapper<StyleSheet> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<StyleSheet>;
     static JSStyleSheet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleSheet>&& impl)
     {
-        JSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSStyleSheet>(globalObject->vm().heap)) JSStyleSheet(structure, globalObject, WTF::move(impl));
+        JSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSStyleSheet>(globalObject->vm().heap)) JSStyleSheet(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static StyleSheet* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT StyleSheet* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSStyleSheet();
 
     DECLARE_INFO;
 
@@ -50,24 +48,16 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    StyleSheet& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    StyleSheet* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSStyleSheet(JSC::Structure*, JSDOMGlobalObject*, Ref<StyleSheet>&&);
+    JSStyleSheet(JSC::Structure*, JSDOMGlobalObject&, Ref<StyleSheet>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSStyleSheetOwner : public JSC::WeakHandleOwner {
@@ -82,11 +72,20 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, StyleSheet*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheet*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, StyleSheet& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(StyleSheet* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheet&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleSheet* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<StyleSheet>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<StyleSheet>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<StyleSheet> {
+    using WrapperClass = JSStyleSheet;
+    using ToWrappedReturnType = StyleSheet*;
+};
 
 } // namespace WebCore
-
-#endif
 #include "JSStyleSheetCustom.h"

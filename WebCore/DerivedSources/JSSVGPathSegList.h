@@ -18,33 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegList_h
-#define JSSVGPathSegList_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedListPropertyTearOff.h"
 #include "SVGElement.h"
-#include "SVGPathSegListPropertyTearOff.h"
+#include "SVGPathSegList.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGPathSegList : public JSDOMWrapper {
+class JSSVGPathSegList : public JSDOMWrapper<SVGPathSegList> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGPathSegList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegListPropertyTearOff>&& impl)
+    using Base = JSDOMWrapper<SVGPathSegList>;
+    static JSSVGPathSegList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegList>&& impl)
     {
-        JSSVGPathSegList* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegList>(globalObject->vm().heap)) JSSVGPathSegList(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegList* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegList>(globalObject->vm().heap)) JSSVGPathSegList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPathSegListPropertyTearOff* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGPathSegList* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPathSegList();
 
     DECLARE_INFO;
 
@@ -53,23 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegListPropertyTearOff& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPathSegListPropertyTearOff* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGPathSegList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegListPropertyTearOff>&&);
+    JSSVGPathSegList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGPathSegListOwner : public JSC::WeakHandleOwner {
@@ -78,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPathSegListPropertyTearOff*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPathSegList*)
 {
     static NeverDestroyed<JSSVGPathSegListOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSegListPropertyTearOff*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPathSegListPropertyTearOff& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGPathSegList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSegList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPathSegList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGPathSegList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGPathSegList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegList> {
+    using WrapperClass = JSSVGPathSegList;
+    using ToWrappedReturnType = SVGPathSegList*;
+};
 
 } // namespace WebCore
-
-#endif

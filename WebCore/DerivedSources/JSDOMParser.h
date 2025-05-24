@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMParser_h
-#define JSDOMParser_h
+#pragma once
 
 #include "DOMParser.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMParser : public JSDOMWrapper {
+class JSDOMParser : public JSDOMWrapper<DOMParser> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMParser>;
     static JSDOMParser* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMParser>&& impl)
     {
-        JSDOMParser* ptr = new (NotNull, JSC::allocateCell<JSDOMParser>(globalObject->vm().heap)) JSDOMParser(structure, globalObject, WTF::move(impl));
+        JSDOMParser* ptr = new (NotNull, JSC::allocateCell<JSDOMParser>(globalObject->vm().heap)) JSDOMParser(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMParser* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMParser();
 
     DECLARE_INFO;
 
@@ -50,21 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMParser& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMParser* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSDOMParser(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMParser>&&);
+    JSDOMParser(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMParser>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMParserOwner : public JSC::WeakHandleOwner {
@@ -79,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMParser*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMParser*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMParser& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMParser* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMParser&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMParser* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMParser>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMParser>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMParser> {
+    using WrapperClass = JSDOMParser;
+    using ToWrappedReturnType = DOMParser*;
+};
 
 } // namespace WebCore
-
-#endif

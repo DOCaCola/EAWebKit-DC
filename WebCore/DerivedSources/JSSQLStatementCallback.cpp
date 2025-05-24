@@ -21,6 +21,7 @@
 #include "config.h"
 #include "JSSQLStatementCallback.h"
 
+#include "JSDOMConvert.h"
 #include "JSSQLResultSet.h"
 #include "JSSQLTransaction.h"
 #include "ScriptExecutionContext.h"
@@ -33,7 +34,7 @@ namespace WebCore {
 JSSQLStatementCallback::JSSQLStatementCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : SQLStatementCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, globalObject, this))
 {
 }
 
@@ -47,30 +48,38 @@ JSSQLStatementCallback::~JSSQLStatementCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
-
-
-// Functions
 
 bool JSSQLStatementCallback::handleEvent(SQLTransaction* transaction, SQLResultSet* resultSet)
 {
     if (!canInvokeCallback())
         return true;
 
-    Ref<JSSQLStatementCallback> protect(*this);
+    Ref<JSSQLStatementCallback> protectedThis(*this);
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), transaction));
-    args.append(toJS(exec, m_data->globalObject(), resultSet));
+    args.append(toJS<IDLInterface<SQLTransaction>>(*state, *m_data->globalObject(), transaction));
+    args.append(toJS<IDLInterface<SQLResultSet>>(*state, *m_data->globalObject(), resultSet));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<JSC::Exception> returnedException;
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
 }
 
+JSC::JSValue toJS(SQLStatementCallback& impl)
+{
+    if (!static_cast<JSSQLStatementCallback&>(impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSSQLStatementCallback&>(impl).callbackData()->callback();
+
 }
+
+} // namespace WebCore

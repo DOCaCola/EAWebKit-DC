@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEPointLightElement_h
-#define JSSVGFEPointLightElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGFEPointLightElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGFEPointLightElement;
     static JSSVGFEPointLightElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEPointLightElement>&& impl)
     {
-        JSSVGFEPointLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEPointLightElement>(globalObject->vm().heap)) JSSVGFEPointLightElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEPointLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEPointLightElement>(globalObject->vm().heap)) JSSVGFEPointLightElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEPointLightElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGFEPointLightElement& wrapped() const
     {
-        return static_cast<SVGFEPointLightElement&>(Base::impl());
+        return static_cast<SVGFEPointLightElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEPointLightElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEPointLightElement>&&);
+    JSSVGFEPointLightElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEPointLightElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGFEPointLightElement> {
+    using WrapperClass = JSSVGFEPointLightElement;
+    using ToWrappedReturnType = SVGFEPointLightElement*;
+};
 
 } // namespace WebCore
-
-#endif

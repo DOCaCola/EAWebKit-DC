@@ -21,9 +21,13 @@
 #include "config.h"
 #include "JSDOMFormData.h"
 
-#include "DOMFormData.h"
+#include "JSBlob.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include "JSHTMLFormElement.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,11 +40,12 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDOMFormDataPrototypeFunctionAppend(JSC::Exec
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMFormDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMFormDataConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMFormDataConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMFormDataPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMFormDataPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMFormDataPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMFormDataPrototype>(vm.heap)) JSDOMFormDataPrototype(vm, globalObject, structure);
@@ -63,56 +68,42 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMFormDataConstructor : public DOMConstructorObject {
-private:
-    JSDOMFormDataConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMFormDataConstructor = JSDOMConstructor<JSDOMFormData>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMFormDataConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMFormDataConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMFormDataConstructor>(vm.heap)) JSDOMFormDataConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSDOMFormDataConstructor::s_info = { "FormDataConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMFormDataConstructor) };
-
-JSDOMFormDataConstructor::JSDOMFormDataConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> EncodedJSValue JSC_HOST_CALL JSDOMFormDataConstructor::construct(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSDOMFormDataConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    auto form = convert<IDLNullable<IDLInterface<HTMLFormElement>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "form", "FormData", nullptr, "HTMLFormElement"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = DOMFormData::create(WTFMove(form));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<DOMFormData>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSDOMFormDataConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSDOMFormDataConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMFormData::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSDOMFormDataConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSDOMFormData::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("FormData"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSDOMFormDataConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDOMFormData;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDOMFormDataConstructor::s_info = { "FormData", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMFormDataConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMFormDataPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMFormDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "append", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMFormDataPrototypeFunctionAppend), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMFormDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMFormDataConstructor) } },
+    { "append", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMFormDataPrototypeFunctionAppend), (intptr_t) (2) } },
 };
 
 const ClassInfo JSDOMFormDataPrototype::s_info = { "FormDataPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMFormDataPrototype) };
@@ -125,10 +116,16 @@ void JSDOMFormDataPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMFormData::s_info = { "FormData", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMFormData) };
 
-JSDOMFormData::JSDOMFormData(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMFormData>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMFormData::JSDOMFormData(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMFormData>&& impl)
+    : JSDOMWrapper<DOMFormData>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMFormData::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMFormData::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -136,7 +133,7 @@ JSObject* JSDOMFormData::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDOMFormDataPrototype::create(vm, globalObject, JSDOMFormDataPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMFormData::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMFormData::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMFormData>(vm, globalObject);
 }
@@ -147,32 +144,102 @@ void JSDOMFormData::destroy(JSC::JSCell* cell)
     thisObject->JSDOMFormData::~JSDOMFormData();
 }
 
-JSDOMFormData::~JSDOMFormData()
+template<> inline JSDOMFormData* BindingCaller<JSDOMFormData>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDOMFormData*>(state.thisValue());
 }
 
-EncodedJSValue jsDOMFormDataConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDOMFormDataConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSDOMFormDataPrototype* domObject = jsDynamicCast<JSDOMFormDataPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMFormData::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMFormDataPrototype* domObject = jsDynamicDowncast<JSDOMFormDataPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMFormData::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSDOMFormData::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSDOMFormDataConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSDOMFormDataConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMFormDataPrototype* domObject = jsDynamicDowncast<JSDOMFormDataPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMFormDataPrototypeFunctionAppend(ExecState* exec)
+JSValue JSDOMFormData::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMFormData* castedThis = jsDynamicCast<JSDOMFormData*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMFormData", "append");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMFormData::info());
-    return JSValue::encode(castedThis->append(exec));
+    return getDOMConstructor<JSDOMFormDataConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsDOMFormDataPrototypeFunctionAppend1Caller(JSC::ExecState*, JSDOMFormData*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsDOMFormDataPrototypeFunctionAppend1(ExecState* state)
+{
+    return BindingCaller<JSDOMFormData>::callOperation<jsDOMFormDataPrototypeFunctionAppend1Caller>(state, "append");
+}
+
+static inline JSC::EncodedJSValue jsDOMFormDataPrototypeFunctionAppend1Caller(JSC::ExecState* state, JSDOMFormData* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLUSVString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto value = convert<IDLUSVString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.append(WTFMove(name), WTFMove(value));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsDOMFormDataPrototypeFunctionAppend2Caller(JSC::ExecState*, JSDOMFormData*, JSC::ThrowScope&);
+
+static inline EncodedJSValue jsDOMFormDataPrototypeFunctionAppend2(ExecState* state)
+{
+    return BindingCaller<JSDOMFormData>::callOperation<jsDOMFormDataPrototypeFunctionAppend2Caller>(state, "append");
+}
+
+static inline JSC::EncodedJSValue jsDOMFormDataPrototypeFunctionAppend2Caller(JSC::ExecState* state, JSDOMFormData* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto name = convert<IDLUSVString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto value = convert<IDLInterface<Blob>>(*state, state->uncheckedArgument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "value", "FormData", "append", "Blob"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto filename = state->argument(2).isUndefined() ? String() : convert<IDLUSVString>(*state, state->uncheckedArgument(2), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.append(WTFMove(name), *value, WTFMove(filename));
+    return JSValue::encode(jsUndefined());
+}
+
+EncodedJSValue JSC_HOST_CALL jsDOMFormDataPrototypeFunctionAppend(ExecState* state)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    if (argsCount == 2) {
+        JSValue distinguishingArg = state->uncheckedArgument(1);
+        if (distinguishingArg.isObject() && asObject(distinguishingArg)->inherits(JSBlob::info()))
+            return jsDOMFormDataPrototypeFunctionAppend2(state);
+        return jsDOMFormDataPrototypeFunctionAppend1(state);
+    }
+    if (argsCount == 3) {
+        return jsDOMFormDataPrototypeFunctionAppend2(state);
+    }
+    return argsCount < 2 ? throwVMError(state, throwScope, createNotEnoughArgumentsError(state)) : throwVMTypeError(state, throwScope);
 }
 
 bool JSDOMFormDataOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -184,31 +251,32 @@ bool JSDOMFormDataOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSDOMFormDataOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMFormData = jsCast<JSDOMFormData*>(handle.slot()->asCell());
+    auto* jsDOMFormData = static_cast<JSDOMFormData*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMFormData->impl(), jsDOMFormData);
+    uncacheWrapper(world, &jsDOMFormData->wrapped(), jsDOMFormData);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMFormData* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMFormData>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMFormData>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to DOMFormData.
-    COMPILE_ASSERT(!__is_polymorphic(DOMFormData), DOMFormData_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(DOMFormData), "DOMFormData is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSDOMFormData>(globalObject, impl);
+    return createWrapper<DOMFormData>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMFormData& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMFormData* JSDOMFormData::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMFormData*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMFormData*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

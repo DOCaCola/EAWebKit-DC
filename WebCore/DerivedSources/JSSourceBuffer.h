@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSourceBuffer_h
-#define JSSourceBuffer_h
+#pragma once
 
 #if ENABLE(MEDIA_SOURCE)
 
+#include "JSDOMConvert.h"
 #include "JSEventTarget.h"
 #include "SourceBuffer.h"
 #include <wtf/NeverDestroyed.h>
@@ -31,16 +31,17 @@ namespace WebCore {
 
 class WEBCORE_EXPORT JSSourceBuffer : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = SourceBuffer;
     static JSSourceBuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBuffer>&& impl)
     {
-        JSSourceBuffer* ptr = new (NotNull, JSC::allocateCell<JSSourceBuffer>(globalObject->vm().heap)) JSSourceBuffer(structure, globalObject, WTF::move(impl));
+        JSSourceBuffer* ptr = new (NotNull, JSC::allocateCell<JSSourceBuffer>(globalObject->vm().heap)) JSSourceBuffer(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SourceBuffer* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,21 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    SourceBuffer& impl() const
+    SourceBuffer& wrapped() const
     {
-        return static_cast<SourceBuffer&>(Base::impl());
+        return static_cast<SourceBuffer&>(Base::wrapped());
     }
 protected:
-    JSSourceBuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<SourceBuffer>&&);
+    JSSourceBuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<SourceBuffer>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSourceBufferOwner : public JSC::WeakHandleOwner {
@@ -79,12 +76,31 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SourceBuffer*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SourceBuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SourceBuffer* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBuffer&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceBuffer* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SourceBuffer>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SourceBuffer>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SourceBuffer> {
+    using WrapperClass = JSSourceBuffer;
+    using ToWrappedReturnType = SourceBuffer*;
+};
+#if ENABLE(MEDIA_SOURCE)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, SourceBuffer::AppendMode);
+
+template<> std::optional<SourceBuffer::AppendMode> parseEnumeration<SourceBuffer::AppendMode>(JSC::ExecState&, JSC::JSValue);
+template<> SourceBuffer::AppendMode convertEnumeration<SourceBuffer::AppendMode>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<SourceBuffer::AppendMode>();
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_SOURCE)
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNotificationCenter_h
-#define JSNotificationCenter_h
+#pragma once
 
 #if ENABLE(LEGACY_NOTIFICATIONS)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSNotificationCenter : public JSDOMWrapper {
+class JSNotificationCenter : public JSDOMWrapper<NotificationCenter> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<NotificationCenter>;
     static JSNotificationCenter* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NotificationCenter>&& impl)
     {
-        JSNotificationCenter* ptr = new (NotNull, JSC::allocateCell<JSNotificationCenter>(globalObject->vm().heap)) JSNotificationCenter(structure, globalObject, WTF::move(impl));
+        JSNotificationCenter* ptr = new (NotNull, JSC::allocateCell<JSNotificationCenter>(globalObject->vm().heap)) JSNotificationCenter(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static NotificationCenter* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNotificationCenter();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    NotificationCenter& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NotificationCenter* m_impl;
 protected:
-    JSNotificationCenter(JSC::Structure*, JSDOMGlobalObject*, Ref<NotificationCenter>&&);
+    JSNotificationCenter(JSC::Structure*, JSDOMGlobalObject&, Ref<NotificationCenter>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSNotificationCenterOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NotificationCenter*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NotificationCenter*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NotificationCenter& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(NotificationCenter* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NotificationCenter&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NotificationCenter* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<NotificationCenter>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<NotificationCenter>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<NotificationCenter> {
+    using WrapperClass = JSNotificationCenter;
+    using ToWrappedReturnType = NotificationCenter*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(LEGACY_NOTIFICATIONS)
-
-#endif

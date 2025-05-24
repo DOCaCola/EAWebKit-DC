@@ -21,11 +21,10 @@
 #include "config.h"
 #include "JSCSSFontFaceRule.h"
 
-#include "CSSFontFaceRule.h"
-#include "CSSStyleDeclaration.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSDOMBinding.h"
-#include "StyleProperties.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,12 +33,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsCSSFontFaceRuleStyle(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsCSSFontFaceRuleConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSFontFaceRuleStyle(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsCSSFontFaceRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSCSSFontFaceRuleConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSCSSFontFaceRulePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSCSSFontFaceRulePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSCSSFontFaceRulePrototype* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceRulePrototype>(vm.heap)) JSCSSFontFaceRulePrototype(vm, globalObject, structure);
@@ -62,49 +62,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSFontFaceRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSFontFaceRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSCSSFontFaceRuleConstructor = JSDOMConstructorNotConstructable<JSCSSFontFaceRule>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSFontFaceRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSFontFaceRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceRuleConstructor>(vm.heap)) JSCSSFontFaceRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSFontFaceRuleConstructor::s_info = { "CSSFontFaceRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceRuleConstructor) };
-
-JSCSSFontFaceRuleConstructor::JSCSSFontFaceRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSCSSFontFaceRuleConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSCSSRule::getConstructor(vm, &globalObject);
 }
 
-void JSCSSFontFaceRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSCSSFontFaceRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSFontFaceRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSFontFaceRule::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSFontFaceRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSFontFaceRuleConstructor::s_info = { "CSSFontFaceRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSFontFaceRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "style", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSFontFaceRuleConstructor) } },
+    { "style", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSFontFaceRulePrototype::s_info = { "CSSFontFaceRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceRulePrototype) };
@@ -117,49 +96,76 @@ void JSCSSFontFaceRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSFontFaceRule::s_info = { "CSSFontFaceRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceRule) };
 
-JSCSSFontFaceRule::JSCSSFontFaceRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceRule>&& impl)
-    : JSCSSRule(structure, globalObject, WTF::move(impl))
+JSCSSFontFaceRule::JSCSSFontFaceRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSFontFaceRule>&& impl)
+    : JSCSSRule(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSCSSFontFaceRule::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSCSSFontFaceRule::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSCSSFontFaceRulePrototype::create(vm, globalObject, JSCSSFontFaceRulePrototype::createStructure(vm, globalObject, JSCSSRule::getPrototype(vm, globalObject)));
+    return JSCSSFontFaceRulePrototype::create(vm, globalObject, JSCSSFontFaceRulePrototype::createStructure(vm, globalObject, JSCSSRule::prototype(vm, globalObject)));
 }
 
-JSObject* JSCSSFontFaceRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSCSSFontFaceRule::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSCSSFontFaceRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSFontFaceRuleStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSCSSFontFaceRule* BindingCaller<JSCSSFontFaceRule>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSCSSFontFaceRule* castedThis = jsDynamicCast<JSCSSFontFaceRule*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSCSSFontFaceRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSFontFaceRule", "style");
-        return throwGetterTypeError(*exec, "CSSFontFaceRule", "style");
+    return jsDynamicDowncast<JSCSSFontFaceRule*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsCSSFontFaceRuleStyleGetter(ExecState&, JSCSSFontFaceRule&, ThrowScope& throwScope);
+
+EncodedJSValue jsCSSFontFaceRuleStyle(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSCSSFontFaceRule>::attribute<jsCSSFontFaceRuleStyleGetter>(state, thisValue, "style");
+}
+
+static inline JSValue jsCSSFontFaceRuleStyleGetter(ExecState& state, JSCSSFontFaceRule& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<CSSStyleDeclaration>>(state, *thisObject.globalObject(), impl.style());
+    return result;
+}
+
+EncodedJSValue jsCSSFontFaceRuleConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSCSSFontFaceRulePrototype* domObject = jsDynamicDowncast<JSCSSFontFaceRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSCSSFontFaceRule::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSCSSFontFaceRuleConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSCSSFontFaceRulePrototype* domObject = jsDynamicDowncast<JSCSSFontFaceRulePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.style()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsCSSFontFaceRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSCSSFontFaceRule::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSCSSFontFaceRulePrototype* domObject = jsDynamicCast<JSCSSFontFaceRulePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSFontFaceRule::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSCSSFontFaceRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSCSSFontFaceRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSFontFaceRuleConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -170,15 +176,12 @@ extern "C" { extern void (*const __identifier("??_7CSSFontFaceRule@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15CSSFontFaceRuleE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSFontFaceRule* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceRule>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCSSFontFaceRule>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CSSFontFaceRule@WebCore@@6B@"));
 #else
@@ -186,7 +189,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSFontFaceR
 #if COMPILER(CLANG)
     // If this fails CSSFontFaceRule does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(CSSFontFaceRule), CSSFontFaceRule_is_not_polymorphic);
+    static_assert(__is_polymorphic(CSSFontFaceRule), "CSSFontFaceRule is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -195,13 +198,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSFontFaceR
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSCSSFontFaceRule>(globalObject, impl);
+    return createWrapper<CSSFontFaceRule>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSFontFaceRule& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 CSSFontFaceRule* JSCSSFontFaceRule::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSCSSFontFaceRule*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSCSSFontFaceRule*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

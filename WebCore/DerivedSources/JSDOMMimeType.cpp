@@ -21,12 +21,11 @@
 #include "config.h"
 #include "JSDOMMimeType.h"
 
-#include "DOMMimeType.h"
-#include "DOMPlugin.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDOMPlugin.h"
-#include "URL.h"
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -35,15 +34,16 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMMimeTypeType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMMimeTypeSuffixes(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMMimeTypeDescription(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMMimeTypeEnabledPlugin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsDOMMimeTypeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMMimeTypeType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMMimeTypeSuffixes(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMMimeTypeDescription(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMMimeTypeEnabledPlugin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMMimeTypeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMMimeTypeConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMMimeTypePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMMimeTypePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMMimeTypePrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypePrototype>(vm.heap)) JSDOMMimeTypePrototype(vm, globalObject, structure);
@@ -66,52 +66,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMMimeTypeConstructor : public DOMConstructorObject {
-private:
-    JSDOMMimeTypeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMMimeTypeConstructor = JSDOMConstructorNotConstructable<JSDOMMimeType>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMMimeTypeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMMimeTypeConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypeConstructor>(vm.heap)) JSDOMMimeTypeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSDOMMimeTypeConstructor::s_info = { "MimeTypeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMMimeTypeConstructor) };
-
-JSDOMMimeTypeConstructor::JSDOMMimeTypeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSDOMMimeTypeConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDOMMimeTypeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDOMMimeTypeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMMimeType::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMMimeType::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MimeType"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMMimeTypeConstructor::s_info = { "MimeType", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMMimeTypeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMMimeTypePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "suffixes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeSuffixes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "description", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "enabledPlugin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeEnabledPlugin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMMimeTypeConstructor) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "suffixes", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeSuffixes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "description", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeDescription), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "enabledPlugin", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMMimeTypeEnabledPlugin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSDOMMimeTypePrototype::s_info = { "MimeTypePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMMimeTypePrototype) };
@@ -124,10 +104,16 @@ void JSDOMMimeTypePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMMimeType::s_info = { "MimeType", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMMimeType) };
 
-JSDOMMimeType::JSDOMMimeType(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMMimeType>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMMimeType::JSDOMMimeType(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMMimeType>&& impl)
+    : JSDOMWrapper<DOMMimeType>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMMimeType::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMMimeType::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -135,7 +121,7 @@ JSObject* JSDOMMimeType::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSDOMMimeTypePrototype::create(vm, globalObject, JSDOMMimeTypePrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMMimeType::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMMimeType::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMMimeType>(vm, globalObject);
 }
@@ -146,90 +132,102 @@ void JSDOMMimeType::destroy(JSC::JSCell* cell)
     thisObject->JSDOMMimeType::~JSDOMMimeType();
 }
 
-JSDOMMimeType::~JSDOMMimeType()
+template<> inline JSDOMMimeType* BindingCaller<JSDOMMimeType>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDOMMimeType*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsDOMMimeTypeType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsDOMMimeTypeTypeGetter(ExecState&, JSDOMMimeType&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMMimeTypeType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDOMMimeType* castedThis = jsDynamicCast<JSDOMMimeType*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDOMMimeTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMMimeType", "type");
-        return throwGetterTypeError(*exec, "DOMMimeType", "type");
+    return BindingCaller<JSDOMMimeType>::attribute<jsDOMMimeTypeTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsDOMMimeTypeTypeGetter(ExecState& state, JSDOMMimeType& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
+}
+
+static inline JSValue jsDOMMimeTypeSuffixesGetter(ExecState&, JSDOMMimeType&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMMimeTypeSuffixes(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMMimeType>::attribute<jsDOMMimeTypeSuffixesGetter>(state, thisValue, "suffixes");
+}
+
+static inline JSValue jsDOMMimeTypeSuffixesGetter(ExecState& state, JSDOMMimeType& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.suffixes());
+    return result;
+}
+
+static inline JSValue jsDOMMimeTypeDescriptionGetter(ExecState&, JSDOMMimeType&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMMimeTypeDescription(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMMimeType>::attribute<jsDOMMimeTypeDescriptionGetter>(state, thisValue, "description");
+}
+
+static inline JSValue jsDOMMimeTypeDescriptionGetter(ExecState& state, JSDOMMimeType& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.description());
+    return result;
+}
+
+static inline JSValue jsDOMMimeTypeEnabledPluginGetter(ExecState&, JSDOMMimeType&, ThrowScope& throwScope);
+
+EncodedJSValue jsDOMMimeTypeEnabledPlugin(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSDOMMimeType>::attribute<jsDOMMimeTypeEnabledPluginGetter>(state, thisValue, "enabledPlugin");
+}
+
+static inline JSValue jsDOMMimeTypeEnabledPluginGetter(ExecState& state, JSDOMMimeType& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMPlugin>>(state, *thisObject.globalObject(), impl.enabledPlugin());
+    return result;
+}
+
+EncodedJSValue jsDOMMimeTypeConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMMimeTypePrototype* domObject = jsDynamicDowncast<JSDOMMimeTypePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMMimeType::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSDOMMimeTypeConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMMimeTypePrototype* domObject = jsDynamicDowncast<JSDOMMimeTypePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsDOMMimeTypeSuffixes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSDOMMimeType::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDOMMimeType* castedThis = jsDynamicCast<JSDOMMimeType*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDOMMimeTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMMimeType", "suffixes");
-        return throwGetterTypeError(*exec, "DOMMimeType", "suffixes");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.suffixes());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMMimeTypeDescription(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDOMMimeType* castedThis = jsDynamicCast<JSDOMMimeType*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDOMMimeTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMMimeType", "description");
-        return throwGetterTypeError(*exec, "DOMMimeType", "description");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.description());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMMimeTypeEnabledPlugin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDOMMimeType* castedThis = jsDynamicCast<JSDOMMimeType*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDOMMimeTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMMimeType", "enabledPlugin");
-        return throwGetterTypeError(*exec, "DOMMimeType", "enabledPlugin");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.enabledPlugin()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsDOMMimeTypeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSDOMMimeTypePrototype* domObject = jsDynamicCast<JSDOMMimeTypePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMMimeType::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSDOMMimeType::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSDOMMimeTypeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMMimeTypeConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSDOMMimeTypeOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -241,9 +239,9 @@ bool JSDOMMimeTypeOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSDOMMimeTypeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMMimeType = jsCast<JSDOMMimeType*>(handle.slot()->asCell());
+    auto* jsDOMMimeType = static_cast<JSDOMMimeType*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMMimeType->impl(), jsDOMMimeType);
+    uncacheWrapper(world, &jsDOMMimeType->wrapped(), jsDOMMimeType);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -254,15 +252,12 @@ extern "C" { extern void (*const __identifier("??_7DOMMimeType@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11DOMMimeTypeE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMMimeType* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMMimeType>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMMimeType>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7DOMMimeType@WebCore@@6B@"));
 #else
@@ -270,7 +265,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMMimeType*
 #if COMPILER(CLANG)
     // If this fails DOMMimeType does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(DOMMimeType), DOMMimeType_is_not_polymorphic);
+    static_assert(__is_polymorphic(DOMMimeType), "DOMMimeType is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -279,13 +274,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMMimeType*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSDOMMimeType>(globalObject, impl);
+    return createWrapper<DOMMimeType>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMMimeType& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMMimeType* JSDOMMimeType::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMMimeType*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMMimeType*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

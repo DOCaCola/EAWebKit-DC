@@ -18,32 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGNumber_h
-#define JSSVGNumber_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
-#include "float.h"
+#include "SVGNumber.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGNumber : public JSDOMWrapper {
+class JSSVGNumber : public JSDOMWrapper<SVGNumber> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGNumber* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<float>>&& impl)
+    using Base = JSDOMWrapper<SVGNumber>;
+    static JSSVGNumber* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGNumber>&& impl)
     {
-        JSSVGNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGNumber>(globalObject->vm().heap)) JSSVGNumber(structure, globalObject, WTF::move(impl));
+        JSSVGNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGNumber>(globalObject->vm().heap)) JSSVGNumber(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<float>* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGNumber* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGNumber();
 
     DECLARE_INFO;
 
@@ -52,21 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<float>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<float>* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGNumber(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<float>>&&);
+    JSSVGNumber(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGNumber>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGNumberOwner : public JSC::WeakHandleOwner {
@@ -75,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<float>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGNumber*)
 {
     static NeverDestroyed<JSSVGNumberOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<float>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<float>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGNumber* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGNumber&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGNumber* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGNumber>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGNumber>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGNumber> {
+    using WrapperClass = JSSVGNumber;
+    using ToWrappedReturnType = SVGNumber*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPeriodicWave_h
-#define JSPeriodicWave_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSPeriodicWave : public JSDOMWrapper {
+class JSPeriodicWave : public JSDOMWrapper<PeriodicWave> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<PeriodicWave>;
     static JSPeriodicWave* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PeriodicWave>&& impl)
     {
-        JSPeriodicWave* ptr = new (NotNull, JSC::allocateCell<JSPeriodicWave>(globalObject->vm().heap)) JSPeriodicWave(structure, globalObject, WTF::move(impl));
+        JSPeriodicWave* ptr = new (NotNull, JSC::allocateCell<JSPeriodicWave>(globalObject->vm().heap)) JSPeriodicWave(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static PeriodicWave* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPeriodicWave();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PeriodicWave& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PeriodicWave* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSPeriodicWave(JSC::Structure*, JSDOMGlobalObject*, Ref<PeriodicWave>&&);
+    JSPeriodicWave(JSC::Structure*, JSDOMGlobalObject&, Ref<PeriodicWave>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSPeriodicWaveOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PeriodicWave*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PeriodicWave*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PeriodicWave& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(PeriodicWave* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PeriodicWave&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PeriodicWave* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<PeriodicWave>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<PeriodicWave>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<PeriodicWave> {
+    using WrapperClass = JSPeriodicWave;
+    using ToWrappedReturnType = PeriodicWave*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

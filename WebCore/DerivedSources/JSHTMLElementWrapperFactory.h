@@ -34,11 +34,11 @@
 
 namespace WebCore {
 
-    class JSDOMWrapper;
+    class JSDOMObject;
     class JSDOMGlobalObject;
     class HTMLElement;
 
-    JSDOMWrapper* createJSHTMLWrapper(JSDOMGlobalObject*, PassRefPtr<HTMLElement>);
+    JSDOMObject* createJSHTMLWrapper(JSDOMGlobalObject*, Ref<HTMLElement>&&);
 
 }
  

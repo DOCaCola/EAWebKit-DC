@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLIFrameElement_h
-#define JSHTMLIFrameElement_h
+#pragma once
 
 #include "HTMLIFrameElement.h"
 #include "JSHTMLElement.h"
@@ -28,17 +27,17 @@ namespace WebCore {
 
 class JSHTMLIFrameElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLIFrameElement;
     static JSHTMLIFrameElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLIFrameElement>&& impl)
     {
-        JSHTMLIFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLIFrameElement>(globalObject->vm().heap)) JSHTMLIFrameElement(structure, globalObject, WTF::move(impl));
+        JSHTMLIFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLIFrameElement>(globalObject->vm().heap)) JSHTMLIFrameElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,26 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLIFrameElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLIFrameElement& wrapped() const
     {
-        return static_cast<HTMLIFrameElement&>(Base::impl());
+        return static_cast<HTMLIFrameElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLIFrameElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLIFrameElement>&&);
+    JSHTMLIFrameElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLIFrameElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLIFrameElement> {
+    using WrapperClass = JSHTMLIFrameElement;
+    using ToWrappedReturnType = HTMLIFrameElement*;
+};
 
 } // namespace WebCore
-
-#endif

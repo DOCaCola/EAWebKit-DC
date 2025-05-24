@@ -20,31 +20,115 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCSessionDescription.h"
 
 #include "JSDOMBinding.h"
-#include "RTCSessionDescription.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <runtime/JSString.h>
+#include <runtime/ObjectConstructor.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, RTCSessionDescription::SdpType enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("offer"),
+        ASCIILiteral("pranswer"),
+        ASCIILiteral("answer"),
+        ASCIILiteral("rollback"),
+    };
+    static_assert(static_cast<size_t>(RTCSessionDescription::SdpType::Offer) == 0, "RTCSessionDescription::SdpType::Offer is not 0 as expected");
+    static_assert(static_cast<size_t>(RTCSessionDescription::SdpType::Pranswer) == 1, "RTCSessionDescription::SdpType::Pranswer is not 1 as expected");
+    static_assert(static_cast<size_t>(RTCSessionDescription::SdpType::Answer) == 2, "RTCSessionDescription::SdpType::Answer is not 2 as expected");
+    static_assert(static_cast<size_t>(RTCSessionDescription::SdpType::Rollback) == 3, "RTCSessionDescription::SdpType::Rollback is not 3 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<RTCSessionDescription::SdpType> parseEnumeration<RTCSessionDescription::SdpType>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "offer")
+        return RTCSessionDescription::SdpType::Offer;
+    if (stringValue == "pranswer")
+        return RTCSessionDescription::SdpType::Pranswer;
+    if (stringValue == "answer")
+        return RTCSessionDescription::SdpType::Answer;
+    if (stringValue == "rollback")
+        return RTCSessionDescription::SdpType::Rollback;
+    return std::nullopt;
+}
+
+template<> RTCSessionDescription::SdpType convertEnumeration<RTCSessionDescription::SdpType>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<RTCSessionDescription::SdpType>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<RTCSessionDescription::SdpType>()
+{
+    return "\"offer\", \"pranswer\", \"answer\", \"rollback\"";
+}
+
+template<> RTCSessionDescription::Init convertDictionary<RTCSessionDescription::Init>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    bool isNullOrUndefined = value.isUndefinedOrNull();
+    auto* object = isNullOrUndefined ? nullptr : value.getObject();
+    if (UNLIKELY(!isNullOrUndefined && !object)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    if (UNLIKELY(object && object->type() == RegExpObjectType)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    RTCSessionDescription::Init result;
+    JSValue sdpValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "sdp"));
+    if (!sdpValue.isUndefined()) {
+        result.sdp = convert<IDLDOMString>(state, sdpValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else
+        result.sdp = emptyString();
+    JSValue typeValue = isNullOrUndefined ? jsUndefined() : object->get(&state, Identifier::fromString(&state, "type"));
+    if (!typeValue.isUndefined()) {
+        result.type = convert<IDLEnumeration<RTCSessionDescription::SdpType>>(state, typeValue);
+        RETURN_IF_EXCEPTION(throwScope, { });
+    } else {
+        throwRequiredMemberTypeError(state, throwScope, "type", "RTCSessionDescriptionInit", "RTCSdpType");
+        return { };
+    }
+    return result;
+}
+
+// Functions
+
+JSC::EncodedJSValue JSC_HOST_CALL jsRTCSessionDescriptionPrototypeFunctionToJSON(JSC::ExecState*);
+
 // Attributes
 
-JSC::EncodedJSValue jsRTCSessionDescriptionType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCSessionDescriptionType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCSessionDescriptionSdp(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSRTCSessionDescriptionSdp(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsRTCSessionDescriptionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCSessionDescriptionType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCSessionDescriptionSdp(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCSessionDescriptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCSessionDescriptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSRTCSessionDescriptionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCSessionDescriptionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCSessionDescriptionPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescriptionPrototype>(vm.heap)) JSRTCSessionDescriptionPrototype(vm, globalObject, structure);
@@ -67,57 +151,46 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSRTCSessionDescriptionConstructor : public DOMConstructorObject {
-private:
-    JSRTCSessionDescriptionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSRTCSessionDescriptionConstructor = JSDOMConstructor<JSRTCSessionDescription>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSRTCSessionDescriptionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSRTCSessionDescriptionConstructor* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescriptionConstructor>(vm.heap)) JSRTCSessionDescriptionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSRTCSessionDescriptionConstructor::s_info = { "RTCSessionDescriptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCSessionDescriptionConstructor) };
-
-JSRTCSessionDescriptionConstructor::JSRTCSessionDescriptionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> EncodedJSValue JSC_HOST_CALL JSRTCSessionDescriptionConstructor::construct(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSRTCSessionDescriptionConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto descriptionInitDict = convert<IDLDictionary<RTCSessionDescription::Init>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = RTCSessionDescription::create(WTFMove(descriptionInitDict));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<RTCSessionDescription>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSRTCSessionDescriptionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSRTCSessionDescriptionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSRTCSessionDescription::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSRTCSessionDescriptionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSRTCSessionDescription::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("RTCSessionDescription"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSRTCSessionDescriptionConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSRTCSessionDescription;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSRTCSessionDescriptionConstructor::s_info = { "RTCSessionDescription", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCSessionDescriptionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSRTCSessionDescriptionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCSessionDescriptionType) },
-    { "sdp", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionSdp), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCSessionDescriptionSdp) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSRTCSessionDescriptionConstructor) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sdp", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCSessionDescriptionSdp), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "toJSON", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRTCSessionDescriptionPrototypeFunctionToJSON), (intptr_t) (0) } },
 };
 
 const ClassInfo JSRTCSessionDescriptionPrototype::s_info = { "RTCSessionDescriptionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCSessionDescriptionPrototype) };
@@ -130,10 +203,16 @@ void JSRTCSessionDescriptionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCSessionDescription::s_info = { "RTCSessionDescription", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCSessionDescription) };
 
-JSRTCSessionDescription::JSRTCSessionDescription(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCSessionDescription>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCSessionDescription::JSRTCSessionDescription(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCSessionDescription>&& impl)
+    : JSDOMWrapper<RTCSessionDescription>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCSessionDescription::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCSessionDescription::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -141,7 +220,7 @@ JSObject* JSRTCSessionDescription::createPrototype(VM& vm, JSGlobalObject* globa
     return JSRTCSessionDescriptionPrototype::create(vm, globalObject, JSRTCSessionDescriptionPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSRTCSessionDescription::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCSessionDescription::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCSessionDescription>(vm, globalObject);
 }
@@ -152,98 +231,96 @@ void JSRTCSessionDescription::destroy(JSC::JSCell* cell)
     thisObject->JSRTCSessionDescription::~JSRTCSessionDescription();
 }
 
-JSRTCSessionDescription::~JSRTCSessionDescription()
+template<> inline JSRTCSessionDescription* BindingCaller<JSRTCSessionDescription>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSRTCSessionDescription*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsRTCSessionDescriptionType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSRTCSessionDescription* BindingCaller<JSRTCSessionDescription>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCSessionDescription* castedThis = jsDynamicCast<JSRTCSessionDescription*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCSessionDescriptionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCSessionDescription", "type");
-        return throwGetterTypeError(*exec, "RTCSessionDescription", "type");
+    return jsDynamicDowncast<JSRTCSessionDescription*>(state.thisValue());
+}
+
+static inline JSValue jsRTCSessionDescriptionTypeGetter(ExecState&, JSRTCSessionDescription&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCSessionDescriptionType(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCSessionDescription>::attribute<jsRTCSessionDescriptionTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsRTCSessionDescriptionTypeGetter(ExecState& state, JSRTCSessionDescription& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLEnumeration<RTCSessionDescription::SdpType>>(state, impl.type());
+    return result;
+}
+
+static inline JSValue jsRTCSessionDescriptionSdpGetter(ExecState&, JSRTCSessionDescription&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCSessionDescriptionSdp(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCSessionDescription>::attribute<jsRTCSessionDescriptionSdpGetter>(state, thisValue, "sdp");
+}
+
+static inline JSValue jsRTCSessionDescriptionSdpGetter(ExecState& state, JSRTCSessionDescription& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.sdp());
+    return result;
+}
+
+EncodedJSValue jsRTCSessionDescriptionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSRTCSessionDescriptionPrototype* domObject = jsDynamicDowncast<JSRTCSessionDescriptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSRTCSessionDescription::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSRTCSessionDescriptionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSRTCSessionDescriptionPrototype* domObject = jsDynamicDowncast<JSRTCSessionDescriptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSRTCSessionDescription::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSRTCSessionDescriptionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline EncodedJSValue jsRTCSessionDescriptionPrototypeFunctionToJSONCaller(ExecState* state, JSRTCSessionDescription* thisObject, JSC::ThrowScope& throwScope)
+{
+    auto& vm = state->vm();
+    auto* result = constructEmptyObject(state);
+
+    auto typeValue = jsRTCSessionDescriptionTypeGetter(*state, *thisObject, throwScope);
+    ASSERT(!throwScope.exception());
+    result->putDirect(vm, Identifier::fromString(&vm, "type"), typeValue);
+
+    auto sdpValue = jsRTCSessionDescriptionSdpGetter(*state, *thisObject, throwScope);
+    ASSERT(!throwScope.exception());
+    result->putDirect(vm, Identifier::fromString(&vm, "sdp"), sdpValue);
+
     return JSValue::encode(result);
 }
 
-
-EncodedJSValue jsRTCSessionDescriptionSdp(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsRTCSessionDescriptionPrototypeFunctionToJSON(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCSessionDescription* castedThis = jsDynamicCast<JSRTCSessionDescription*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCSessionDescriptionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCSessionDescription", "sdp");
-        return throwGetterTypeError(*exec, "RTCSessionDescription", "sdp");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.sdp());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsRTCSessionDescriptionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSRTCSessionDescriptionPrototype* domObject = jsDynamicCast<JSRTCSessionDescriptionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSRTCSessionDescription::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-void setJSRTCSessionDescriptionType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCSessionDescription* castedThis = jsDynamicCast<JSRTCSessionDescription*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCSessionDescriptionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCSessionDescription", "type");
-        else
-            throwSetterTypeError(*exec, "RTCSessionDescription", "type");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setType(nativeValue, ec);
-    setDOMException(exec, ec);
-}
-
-
-void setJSRTCSessionDescriptionSdp(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSRTCSessionDescription* castedThis = jsDynamicCast<JSRTCSessionDescription*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCSessionDescriptionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "RTCSessionDescription", "sdp");
-        else
-            throwSetterTypeError(*exec, "RTCSessionDescription", "sdp");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSdp(nativeValue);
-}
-
-
-JSValue JSRTCSessionDescription::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSRTCSessionDescriptionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSRTCSessionDescription>::callOperation<jsRTCSessionDescriptionPrototypeFunctionToJSONCaller>(state, "toJSON");
 }
 
 bool JSRTCSessionDescriptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -255,54 +332,35 @@ bool JSRTCSessionDescriptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::U
 
 void JSRTCSessionDescriptionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsRTCSessionDescription = jsCast<JSRTCSessionDescription*>(handle.slot()->asCell());
+    auto* jsRTCSessionDescription = static_cast<JSRTCSessionDescription*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCSessionDescription->impl(), jsRTCSessionDescription);
+    uncacheWrapper(world, &jsRTCSessionDescription->wrapped(), jsRTCSessionDescription);
 }
 
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7RTCSessionDescription@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore21RTCSessionDescriptionE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCSessionDescription* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<RTCSessionDescription>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSRTCSessionDescription>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7RTCSessionDescription@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore21RTCSessionDescriptionE[2];
 #if COMPILER(CLANG)
-    // If this fails RTCSessionDescription does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(RTCSessionDescription), RTCSessionDescription_is_not_polymorphic);
+    // If you hit this failure the interface definition has the ImplementationLacksVTable
+    // attribute. You should remove that attribute. If the class has subclasses
+    // that may be passed through this toJS() function you should use the SkipVTableValidation
+    // attribute to RTCSessionDescription.
+    static_assert(!__is_polymorphic(RTCSessionDescription), "RTCSessionDescription is polymorphic but the IDL claims it is not");
 #endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // RTCSessionDescription has subclasses. If RTCSessionDescription has subclasses that get passed
-    // to toJS() we currently require RTCSessionDescription you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSRTCSessionDescription>(globalObject, impl);
+    return createWrapper<RTCSessionDescription>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCSessionDescription& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 RTCSessionDescription* JSRTCSessionDescription::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSRTCSessionDescription*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSRTCSessionDescription*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

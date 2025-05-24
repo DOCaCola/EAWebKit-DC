@@ -21,14 +21,16 @@
 #include "config.h"
 #include "JSBlob.h"
 
-#include "Blob.h"
-#include "ExceptionCode.h"
 #include "JSBlob.h"
+#include "JSBlobPropertyBag.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
+#include <wtf/Variant.h>
 
 using namespace JSC;
 
@@ -40,13 +42,14 @@ JSC::EncodedJSValue JSC_HOST_CALL jsBlobPrototypeFunctionSlice(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsBlobSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsBlobType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsBlobConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsBlobSize(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsBlobType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsBlobConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSBlobConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSBlobPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSBlobPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSBlobPrototype* ptr = new (NotNull, JSC::allocateCell<JSBlobPrototype>(vm.heap)) JSBlobPrototype(vm, globalObject, structure);
@@ -69,58 +72,46 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSBlobConstructor : public DOMConstructorObject {
-private:
-    JSBlobConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSBlobConstructor = JSDOMConstructor<JSBlob>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSBlobConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSBlobConstructor* ptr = new (NotNull, JSC::allocateCell<JSBlobConstructor>(vm.heap)) JSBlobConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSBlobConstructor::s_info = { "BlobConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBlobConstructor) };
-
-JSBlobConstructor::JSBlobConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> EncodedJSValue JSC_HOST_CALL JSBlobConstructor::construct(ExecState* state)
 {
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSBlobConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
+    auto blobParts = state->argument(0).isUndefined() ? Converter<IDLSequence<IDLUnion<IDLInterface<ArrayBufferView>, IDLInterface<ArrayBuffer>, IDLInterface<Blob>, IDLUSVString>>>::ReturnType{ } : convert<IDLSequence<IDLUnion<IDLInterface<ArrayBufferView>, IDLInterface<ArrayBuffer>, IDLInterface<Blob>, IDLUSVString>>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto options = convert<IDLDictionary<BlobPropertyBag>>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto object = Blob::create(WTFMove(blobParts), WTFMove(options));
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<Blob>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-void JSBlobConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> JSValue JSBlobConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSBlob::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
+}
+
+template<> void JSBlobConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSBlob::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Blob"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSBlobConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSBlob;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSBlobConstructor::s_info = { "Blob", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBlobConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSBlobPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "size", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "slice", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsBlobPrototypeFunctionSlice), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSBlobConstructor) } },
+    { "size", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBlobType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "slice", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsBlobPrototypeFunctionSlice), (intptr_t) (0) } },
 };
 
 const ClassInfo JSBlobPrototype::s_info = { "BlobPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBlobPrototype) };
@@ -133,10 +124,16 @@ void JSBlobPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSBlob::s_info = { "Blob", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBlob) };
 
-JSBlob::JSBlob(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Blob>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSBlob::JSBlob(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Blob>&& impl)
+    : JSDOMWrapper<Blob>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSBlob::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSBlob::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -144,7 +141,7 @@ JSObject* JSBlob::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSBlobPrototype::create(vm, globalObject, JSBlobPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSBlob::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSBlob::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSBlob>(vm, globalObject);
 }
@@ -155,114 +152,116 @@ void JSBlob::destroy(JSC::JSCell* cell)
     thisObject->JSBlob::~JSBlob();
 }
 
-JSBlob::~JSBlob()
+template<> inline JSBlob* BindingCaller<JSBlob>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSBlob*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsBlobSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSBlob* BindingCaller<JSBlob>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSBlob* castedThis = jsDynamicCast<JSBlob*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSBlobPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Blob", "size");
-        return throwGetterTypeError(*exec, "Blob", "size");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.size());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSBlob*>(state.thisValue());
 }
 
+static inline JSValue jsBlobSizeGetter(ExecState&, JSBlob&, ThrowScope& throwScope);
 
-EncodedJSValue jsBlobType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsBlobSize(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSBlob* castedThis = jsDynamicCast<JSBlob*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSBlobPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Blob", "type");
-        return throwGetterTypeError(*exec, "Blob", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    return BindingCaller<JSBlob>::attribute<jsBlobSizeGetter>(state, thisValue, "size");
 }
 
-
-EncodedJSValue jsBlobConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsBlobSizeGetter(ExecState& state, JSBlob& thisObject, ThrowScope& throwScope)
 {
-    JSBlobPrototype* domObject = jsDynamicCast<JSBlobPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSBlob::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedLongLong>(impl.size());
+    return result;
 }
 
-JSValue JSBlob::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsBlobTypeGetter(ExecState&, JSBlob&, ThrowScope& throwScope);
+
+EncodedJSValue jsBlobType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSBlobConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSBlob>::attribute<jsBlobTypeGetter>(state, thisValue, "type");
 }
 
-EncodedJSValue JSC_HOST_CALL jsBlobPrototypeFunctionSlice(ExecState* exec)
+static inline JSValue jsBlobTypeGetter(ExecState& state, JSBlob& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSBlob* castedThis = jsDynamicCast<JSBlob*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Blob", "slice");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSBlob::info());
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
+}
 
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.slice()));
-        return JSValue::encode(result);
+EncodedJSValue jsBlobConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSBlobPrototype* domObject = jsDynamicDowncast<JSBlobPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSBlob::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSBlobConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSBlobPrototype* domObject = jsDynamicDowncast<JSBlobPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
 
-    long long start = toInt64(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.slice(start)));
-        return JSValue::encode(result);
-    }
+JSValue JSBlob::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSBlobConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
 
-    long long end = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    if (argsCount <= 2) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.slice(start, end)));
-        return JSValue::encode(result);
-    }
+static inline JSC::EncodedJSValue jsBlobPrototypeFunctionSliceCaller(JSC::ExecState*, JSBlob*, JSC::ThrowScope&);
 
-    String contentType = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.slice(start, end, contentType)));
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsBlobPrototypeFunctionSlice(ExecState* state)
+{
+    return BindingCaller<JSBlob>::callOperation<jsBlobPrototypeFunctionSliceCaller>(state, "slice");
+}
+
+static inline JSC::EncodedJSValue jsBlobPrototypeFunctionSliceCaller(JSC::ExecState* state, JSBlob* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto start = convert<IDLLongLong>(*state, state->argument(0), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto end = state->argument(1).isUndefined() ? 0x7FFFFFFFFFFFFFFF : convert<IDLLongLong>(*state, state->uncheckedArgument(1), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto contentType = state->argument(2).isUndefined() ? String() : convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(2), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<Blob>>(*state, *castedThis->globalObject(), impl.slice(WTFMove(start), WTFMove(end), WTFMove(contentType))));
 }
 
 bool JSBlobOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsBlob = jsCast<JSBlob*>(handle.slot()->asCell());
-    Blob* root = &jsBlob->impl();
+    Blob* root = &jsBlob->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSBlobOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsBlob = jsCast<JSBlob*>(handle.slot()->asCell());
+    auto* jsBlob = static_cast<JSBlob*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsBlob->impl(), jsBlob);
+    uncacheWrapper(world, &jsBlob->wrapped(), jsBlob);
 }
 
 Blob* JSBlob::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSBlob*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSBlob*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

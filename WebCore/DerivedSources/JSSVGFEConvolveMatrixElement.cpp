@@ -22,6 +22,8 @@
 #include "JSSVGFEConvolveMatrixElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedInteger.h"
@@ -29,7 +31,6 @@
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedNumberList.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEConvolveMatrixElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -38,28 +39,29 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementIn1(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementOrderX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementOrderY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelMatrix(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementDivisor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementBias(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementTargetX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementTargetY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementEdgeMode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementPreserveAlpha(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementHeight(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementResult(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGFEConvolveMatrixElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementIn1(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementOrderX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementOrderY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelMatrix(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementDivisor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementBias(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementTargetX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementTargetY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementEdgeMode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementPreserveAlpha(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementHeight(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementResult(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFEConvolveMatrixElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFEConvolveMatrixElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFEConvolveMatrixElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFEConvolveMatrixElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFEConvolveMatrixElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElementPrototype>(vm.heap)) JSSVGFEConvolveMatrixElementPrototype(vm, globalObject, structure);
@@ -82,80 +84,59 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEConvolveMatrixElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEConvolveMatrixElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEConvolveMatrixElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEConvolveMatrixElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElementConstructor>(vm.heap)) JSSVGFEConvolveMatrixElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSSVGFEConvolveMatrixElementConstructor = JSDOMConstructorNotConstructable<JSSVGFEConvolveMatrixElement>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGFEConvolveMatrixElementConstructorTableValues[] =
 {
-    { "SVG_EDGEMODE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_EDGEMODE_DUPLICATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_EDGEMODE_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_EDGEMODE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "SVG_EDGEMODE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_EDGEMODE_DUPLICATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_EDGEMODE_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_EDGEMODE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
-const ClassInfo JSSVGFEConvolveMatrixElementConstructor::s_info = { "SVGFEConvolveMatrixElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEConvolveMatrixElementConstructor) };
-
-JSSVGFEConvolveMatrixElementConstructor::JSSVGFEConvolveMatrixElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFEConvolveMatrixElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFEConvolveMatrixElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFEConvolveMatrixElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEConvolveMatrixElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEConvolveMatrixElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEConvolveMatrixElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGFEConvolveMatrixElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGFEConvolveMatrixElementConstructor::s_info = { "SVGFEConvolveMatrixElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEConvolveMatrixElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEConvolveMatrixElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "orderX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementOrderX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "orderY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementOrderY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kernelMatrix", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelMatrix), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "divisor", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementDivisor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "bias", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementBias), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "targetX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementTargetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "targetY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementTargetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "edgeMode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementEdgeMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kernelUnitLengthX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelUnitLengthX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kernelUnitLengthY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelUnitLengthY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAlpha", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementPreserveAlpha), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_EDGEMODE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_EDGEMODE_DUPLICATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_EDGEMODE_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_EDGEMODE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFEConvolveMatrixElementConstructor) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "orderX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementOrderX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "orderY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementOrderY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kernelMatrix", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelMatrix), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "divisor", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementDivisor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "bias", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementBias), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "targetX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementTargetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "targetY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementTargetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "edgeMode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementEdgeMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kernelUnitLengthX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelUnitLengthX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kernelUnitLengthY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementKernelUnitLengthY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAlpha", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementPreserveAlpha), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEConvolveMatrixElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_EDGEMODE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_EDGEMODE_DUPLICATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_EDGEMODE_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_EDGEMODE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSSVGFEConvolveMatrixElementPrototype::s_info = { "SVGFEConvolveMatrixElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEConvolveMatrixElementPrototype) };
@@ -168,338 +149,340 @@ void JSSVGFEConvolveMatrixElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEConvolveMatrixElement::s_info = { "SVGFEConvolveMatrixElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEConvolveMatrixElement) };
 
-JSSVGFEConvolveMatrixElement::JSSVGFEConvolveMatrixElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEConvolveMatrixElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFEConvolveMatrixElement::JSSVGFEConvolveMatrixElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEConvolveMatrixElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFEConvolveMatrixElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFEConvolveMatrixElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFEConvolveMatrixElementPrototype::create(vm, globalObject, JSSVGFEConvolveMatrixElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFEConvolveMatrixElementPrototype::create(vm, globalObject, JSSVGFEConvolveMatrixElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFEConvolveMatrixElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFEConvolveMatrixElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFEConvolveMatrixElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEConvolveMatrixElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGFEConvolveMatrixElement* BindingCaller<JSSVGFEConvolveMatrixElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "in1");
+    return jsDynamicDowncast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementIn1Getter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementIn1(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementIn1Getter>(state, thisValue, "in1");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementIn1Getter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.in1Animated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementOrderXGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementOrderX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementOrderXGetter>(state, thisValue, "orderX");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementOrderXGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedInteger>>(state, *thisObject.globalObject(), impl.orderXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementOrderYGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementOrderY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementOrderYGetter>(state, thisValue, "orderY");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementOrderYGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedInteger>>(state, *thisObject.globalObject(), impl.orderYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelMatrixGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementKernelMatrix(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementKernelMatrixGetter>(state, thisValue, "kernelMatrix");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelMatrixGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumberList>>(state, *thisObject.globalObject(), impl.kernelMatrixAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementDivisorGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementDivisor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementDivisorGetter>(state, thisValue, "divisor");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementDivisorGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.divisorAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementBiasGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementBias(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementBiasGetter>(state, thisValue, "bias");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementBiasGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.biasAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementTargetXGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementTargetX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementTargetXGetter>(state, thisValue, "targetX");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementTargetXGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedInteger>>(state, *thisObject.globalObject(), impl.targetXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementTargetYGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementTargetY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementTargetYGetter>(state, thisValue, "targetY");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementTargetYGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedInteger>>(state, *thisObject.globalObject(), impl.targetYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementEdgeModeGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementEdgeMode(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementEdgeModeGetter>(state, thisValue, "edgeMode");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementEdgeModeGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedEnumeration>>(state, *thisObject.globalObject(), impl.edgeModeAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelUnitLengthXGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementKernelUnitLengthXGetter>(state, thisValue, "kernelUnitLengthX");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelUnitLengthXGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.kernelUnitLengthXAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelUnitLengthYGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementKernelUnitLengthYGetter>(state, thisValue, "kernelUnitLengthY");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementKernelUnitLengthYGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.kernelUnitLengthYAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementPreserveAlphaGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementPreserveAlpha(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementPreserveAlphaGetter>(state, thisValue, "preserveAlpha");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementPreserveAlphaGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.preserveAlphaAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementXGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementXGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementYGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementYGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementWidthGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementWidthGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.widthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementHeightGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementHeight(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementHeightGetter>(state, thisValue, "height");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementHeightGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.heightAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementResultGetter(ExecState&, JSSVGFEConvolveMatrixElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGFEConvolveMatrixElementResult(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGFEConvolveMatrixElement>::attribute<jsSVGFEConvolveMatrixElementResultGetter>(state, thisValue, "result");
+}
+
+static inline JSValue jsSVGFEConvolveMatrixElementResultGetter(ExecState& state, JSSVGFEConvolveMatrixElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.resultAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGFEConvolveMatrixElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFEConvolveMatrixElementPrototype* domObject = jsDynamicDowncast<JSSVGFEConvolveMatrixElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFEConvolveMatrixElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGFEConvolveMatrixElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFEConvolveMatrixElementPrototype* domObject = jsDynamicDowncast<JSSVGFEConvolveMatrixElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGFEConvolveMatrixElementOrderX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGFEConvolveMatrixElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "orderX");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "orderX");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedInteger> obj = impl.orderXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGFEConvolveMatrixElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-
-EncodedJSValue jsSVGFEConvolveMatrixElementOrderY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGFEConvolveMatrixElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "orderY");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "orderY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedInteger> obj = impl.orderYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementKernelMatrix(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "kernelMatrix");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "kernelMatrix");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumberList> obj = impl.kernelMatrixAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementDivisor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "divisor");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "divisor");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.divisorAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementBias(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "bias");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "bias");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.biasAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementTargetX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "targetX");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "targetX");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedInteger> obj = impl.targetXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementTargetY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "targetY");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "targetY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedInteger> obj = impl.targetYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementEdgeMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "edgeMode");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "edgeMode");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedEnumeration> obj = impl.edgeModeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "kernelUnitLengthX");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "kernelUnitLengthX");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.kernelUnitLengthXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementKernelUnitLengthY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "kernelUnitLengthY");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "kernelUnitLengthY");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.kernelUnitLengthYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementPreserveAlpha(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "preserveAlpha");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "preserveAlpha");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.preserveAlphaAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "x");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "width");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "height");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGFEConvolveMatrixElement* castedThis = jsDynamicCast<JSSVGFEConvolveMatrixElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEConvolveMatrixElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEConvolveMatrixElement", "result");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGFEConvolveMatrixElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGFEConvolveMatrixElementPrototype* domObject = jsDynamicCast<JSSVGFEConvolveMatrixElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEConvolveMatrixElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGFEConvolveMatrixElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGFEConvolveMatrixElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    auto* thisObject = jsCast<JSSVGFEConvolveMatrixElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

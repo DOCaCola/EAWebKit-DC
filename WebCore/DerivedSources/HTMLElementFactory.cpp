@@ -37,8 +37,8 @@
 #include "HTMLAppletElement.h"
 #include "HTMLAreaElement.h"
 #include "HTMLBaseElement.h"
-#include "HTMLBaseFontElement.h"
 #include "HTMLBDIElement.h"
+#include "HTMLUnknownElement.h"
 #include "HTMLQuoteElement.h"
 #include "HTMLBodyElement.h"
 #include "HTMLBRElement.h"
@@ -46,7 +46,9 @@
 #include "HTMLCanvasElement.h"
 #include "HTMLTableCaptionElement.h"
 #include "HTMLTableColElement.h"
+#include "HTMLDataElement.h"
 #include "HTMLModElement.h"
+#include "HTMLDetailsElement.h"
 #include "HTMLDirectoryElement.h"
 #include "HTMLDivElement.h"
 #include "HTMLDListElement.h"
@@ -61,7 +63,6 @@
 #include "HTMLHRElement.h"
 #include "HTMLHtmlElement.h"
 #include "HTMLIFrameElement.h"
-#include "HTMLUnknownElement.h"
 #include "HTMLImageElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLKeygenElement.h"
@@ -81,17 +82,23 @@
 #include "HTMLOutputElement.h"
 #include "HTMLParagraphElement.h"
 #include "HTMLParamElement.h"
+#include "HTMLPictureElement.h"
 #include "HTMLProgressElement.h"
 #include "RubyTextElement.h"
 #include "RubyElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLSelectElement.h"
+#include "HTMLSlotElement.h"
+#include "HTMLSourceElement.h"
 #include "HTMLSpanElement.h"
 #include "HTMLStyleElement.h"
+#include "HTMLSummaryElement.h"
 #include "HTMLTableElement.h"
 #include "HTMLTableSectionElement.h"
 #include "HTMLTableCellElement.h"
+#include "HTMLTemplateElement.h"
 #include "HTMLTextAreaElement.h"
+#include "HTMLTimeElement.h"
 #include "HTMLTitleElement.h"
 #include "HTMLTableRowElement.h"
 #include "HTMLUListElement.h"
@@ -106,22 +113,12 @@
 #include "HTMLDataListElement.h"
 #endif
 
-#if ENABLE(DETAILS_ELEMENT)
-#include "HTMLDetailsElement.h"
-#include "HTMLSummaryElement.h"
-#endif
-
 #if ENABLE(METER_ELEMENT)
 #include "HTMLMeterElement.h"
 #endif
 
-#if ENABLE(TEMPLATE_ELEMENT)
-#include "HTMLTemplateElement.h"
-#endif
-
 #if ENABLE(VIDEO)
 #include "HTMLAudioElement.h"
-#include "HTMLSourceElement.h"
 #include "HTMLVideoElement.h"
 #endif
 
@@ -187,14 +184,14 @@ static Ref<HTMLElement> baseConstructor(const QualifiedName& tagName, Document& 
     return HTMLBaseElement::create(tagName, document);
 }
 
-static Ref<HTMLElement> basefontConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
-{
-    return HTMLBaseFontElement::create(tagName, document);
-}
-
 static Ref<HTMLElement> bdiConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLBDIElement::create(tagName, document);
+}
+
+static Ref<HTMLElement> unknownConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLUnknownElement::create(tagName, document);
 }
 
 static Ref<HTMLElement> quoteConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
@@ -232,6 +229,11 @@ static Ref<HTMLElement> tablecolConstructor(const QualifiedName& tagName, Docume
     return HTMLTableColElement::create(tagName, document);
 }
 
+static Ref<HTMLElement> dataConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLDataElement::create(tagName, document);
+}
+
 #if ENABLE(DATALIST_ELEMENT)
 static Ref<HTMLElement> datalistConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
@@ -244,12 +246,10 @@ static Ref<HTMLElement> modConstructor(const QualifiedName& tagName, Document& d
     return HTMLModElement::create(tagName, document);
 }
 
-#if ENABLE(DETAILS_ELEMENT)
 static Ref<HTMLElement> detailsConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLDetailsElement::create(tagName, document);
 }
-#endif
 
 static Ref<HTMLElement> directoryConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
@@ -319,11 +319,6 @@ static Ref<HTMLElement> htmlConstructor(const QualifiedName& tagName, Document& 
 static Ref<HTMLElement> iframeConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLIFrameElement::create(tagName, document);
-}
-
-static Ref<HTMLElement> unknownConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
-{
-    return HTMLUnknownElement::create(tagName, document);
 }
 
 static Ref<HTMLElement> imageConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement* formElement, bool)
@@ -428,6 +423,11 @@ static Ref<HTMLElement> paramConstructor(const QualifiedName& tagName, Document&
     return HTMLParamElement::create(tagName, document);
 }
 
+static Ref<HTMLElement> pictureConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLPictureElement::create(tagName, document);
+}
+
 static Ref<HTMLElement> progressConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLProgressElement::create(tagName, document);
@@ -453,16 +453,15 @@ static Ref<HTMLElement> selectConstructor(const QualifiedName& tagName, Document
     return HTMLSelectElement::create(tagName, document, formElement);
 }
 
-#if ENABLE(VIDEO)
+static Ref<HTMLElement> slotConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLSlotElement::create(tagName, document);
+}
+
 static Ref<HTMLElement> sourceConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
-    Settings* settings = document.settings();
-    if (!MediaPlayer::isAvailable() || (settings && !settings->mediaEnabled()))
-        return HTMLUnknownElement::create(tagName, document);
-    
     return HTMLSourceElement::create(tagName, document);
 }
-#endif
 
 static Ref<HTMLElement> spanConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
@@ -474,12 +473,10 @@ static Ref<HTMLElement> styleConstructor(const QualifiedName& tagName, Document&
     return HTMLStyleElement::create(tagName, document, createdByParser);
 }
 
-#if ENABLE(DETAILS_ELEMENT)
 static Ref<HTMLElement> summaryConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLSummaryElement::create(tagName, document);
 }
-#endif
 
 static Ref<HTMLElement> tableConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
@@ -496,16 +493,19 @@ static Ref<HTMLElement> tablecellConstructor(const QualifiedName& tagName, Docum
     return HTMLTableCellElement::create(tagName, document);
 }
 
-#if ENABLE(TEMPLATE_ELEMENT)
 static Ref<HTMLElement> templateConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLTemplateElement::create(tagName, document);
 }
-#endif
 
 static Ref<HTMLElement> textareaConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement* formElement, bool)
 {
     return HTMLTextAreaElement::create(tagName, document, formElement);
+}
+
+static Ref<HTMLElement> timeConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLTimeElement::create(tagName, document);
 }
 
 static Ref<HTMLElement> titleConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
@@ -550,7 +550,23 @@ static Ref<HTMLElement> wbrConstructor(const QualifiedName& tagName, Document& d
     return HTMLWBRElement::create(tagName, document);
 }
 
-static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLConstructorFunction>& map)
+
+struct ConstructorFunctionMapEntry {
+    ConstructorFunctionMapEntry(HTMLConstructorFunction function, const QualifiedName& name)
+        : function(function)
+        , qualifiedName(&name)
+    { }
+
+    ConstructorFunctionMapEntry()
+        : function(nullptr)
+        , qualifiedName(nullptr)
+    { }
+
+    HTMLConstructorFunction function;
+    const QualifiedName* qualifiedName; // Use pointer instead of reference so that emptyValue() in HashMap is cheap to create.
+};
+
+static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>& map)
 {
     struct TableEntry {
         const QualifiedName& name;
@@ -574,10 +590,10 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
 #endif
         { bTag, Constructor },
         { baseTag, baseConstructor },
-        { basefontTag, basefontConstructor },
+        { basefontTag, Constructor },
         { bdiTag, bdiConstructor },
         { bdoTag, Constructor },
-        { bgsoundTag, Constructor },
+        { bgsoundTag, unknownConstructor },
         { bigTag, Constructor },
         { blockquoteTag, quoteConstructor },
         { bodyTag, bodyConstructor },
@@ -590,15 +606,14 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { codeTag, Constructor },
         { colTag, tablecolConstructor },
         { colgroupTag, tablecolConstructor },
-        { commandTag, Constructor },
+        { commandTag, unknownConstructor },
+        { dataTag, dataConstructor },
 #if ENABLE(DATALIST_ELEMENT)
         { datalistTag, datalistConstructor },
 #endif
         { ddTag, Constructor },
         { delTag, modConstructor },
-#if ENABLE(DETAILS_ELEMENT)
         { detailsTag, detailsConstructor },
-#endif
         { dfnTag, Constructor },
         { dirTag, directoryConstructor },
         { divTag, divConstructor },
@@ -631,7 +646,6 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { imgTag, imageConstructor },
         { inputTag, inputConstructor },
         { insTag, modConstructor },
-        { isindexTag, unknownConstructor },
         { kbdTag, Constructor },
         { keygenTag, keygenConstructor },
         { labelTag, labelConstructor },
@@ -662,6 +676,7 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { outputTag, outputConstructor },
         { pTag, paragraphConstructor },
         { paramTag, paramConstructor },
+        { pictureTag, pictureConstructor },
         { plaintextTag, Constructor },
         { preTag, preConstructor },
         { progressTag, progressConstructor },
@@ -676,30 +691,25 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { scriptTag, scriptConstructor },
         { sectionTag, Constructor },
         { selectTag, selectConstructor },
+        { slotTag, slotConstructor },
         { smallTag, Constructor },
-#if ENABLE(VIDEO)
         { sourceTag, sourceConstructor },
-#endif
         { spanTag, spanConstructor },
         { strikeTag, Constructor },
         { strongTag, Constructor },
         { styleTag, styleConstructor },
         { subTag, Constructor },
-#if ENABLE(DETAILS_ELEMENT)
         { summaryTag, summaryConstructor },
-#endif
         { supTag, Constructor },
         { tableTag, tableConstructor },
         { tbodyTag, tablesectionConstructor },
         { tdTag, tablecellConstructor },
-#if ENABLE(TEMPLATE_ELEMENT)
         { templateTag, templateConstructor },
-#endif
         { textareaTag, textareaConstructor },
         { tfootTag, tablesectionConstructor },
         { thTag, tablecellConstructor },
         { theadTag, tablesectionConstructor },
-        { timeTag, Constructor },
+        { timeTag, timeConstructor },
         { titleTag, titleConstructor },
         { trTag, tablerowConstructor },
 #if ENABLE(VIDEO_TRACK)
@@ -717,16 +727,53 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
     };
 
     for (unsigned i = 0; i < WTF_ARRAY_LENGTH(table); ++i)
-        map.add(table[i].name.localName().impl(), table[i].function);
+        map.add(table[i].name.localName().impl(), ConstructorFunctionMapEntry(table[i].function, table[i].name));
+}
+
+
+static ConstructorFunctionMapEntry findHTMLElementConstructorFunction(const AtomicString& localName)
+{
+    static NeverDestroyed<HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>> map;
+    if (map.get().isEmpty())
+        populateHTMLFactoryMap(map);
+    return map.get().get(localName.impl());
+}
+
+RefPtr<HTMLElement> HTMLElementFactory::createKnownElement(const AtomicString& localName, Document& document, HTMLFormElement* formElement, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findHTMLElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, formElement, createdByParser);
+    }
+    return nullptr;
+}
+
+RefPtr<HTMLElement> HTMLElementFactory::createKnownElement(const QualifiedName& name, Document& document, HTMLFormElement* formElement, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findHTMLElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, formElement, createdByParser);
+    return nullptr;
+}
+
+Ref<HTMLElement> HTMLElementFactory::createElement(const AtomicString& localName, Document& document, HTMLFormElement* formElement, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findHTMLElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, formElement, createdByParser);
+    }
+    return HTMLUnknownElement::create(QualifiedName(nullAtom, localName, xhtmlNamespaceURI), document);
 }
 
 Ref<HTMLElement> HTMLElementFactory::createElement(const QualifiedName& name, Document& document, HTMLFormElement* formElement, bool createdByParser)
 {
-    static NeverDestroyed<HashMap<AtomicStringImpl*, HTMLConstructorFunction>> functions;
-    if (functions.get().isEmpty())
-        populateHTMLFactoryMap(functions);
-    if (HTMLConstructorFunction function = functions.get().get(name.localName().impl()))
-        return function(name, document, formElement, createdByParser);
+    const ConstructorFunctionMapEntry& entry = findHTMLElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, formElement, createdByParser);
     return HTMLUnknownElement::create(name, document);
 }
 

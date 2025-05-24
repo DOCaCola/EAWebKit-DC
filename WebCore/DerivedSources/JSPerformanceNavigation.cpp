@@ -25,7 +25,9 @@
 #include "JSPerformanceNavigation.h"
 
 #include "JSDOMBinding.h"
-#include "PerformanceNavigation.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,13 +36,14 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsPerformanceNavigationType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsPerformanceNavigationRedirectCount(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsPerformanceNavigationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceNavigationType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceNavigationRedirectCount(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsPerformanceNavigationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSPerformanceNavigationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSPerformanceNavigationPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSPerformanceNavigationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSPerformanceNavigationPrototype* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigationPrototype>(vm.heap)) JSPerformanceNavigationPrototype(vm, globalObject, structure);
@@ -63,71 +66,50 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSPerformanceNavigationConstructor : public DOMConstructorObject {
-private:
-    JSPerformanceNavigationConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSPerformanceNavigationConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSPerformanceNavigationConstructor* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigationConstructor>(vm.heap)) JSPerformanceNavigationConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSPerformanceNavigationConstructor = JSDOMConstructorNotConstructable<JSPerformanceNavigation>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSPerformanceNavigationConstructorTableValues[] =
 {
-    { "TYPE_NAVIGATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "TYPE_RELOAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "TYPE_BACK_FORWARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TYPE_RESERVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(255), (intptr_t) (0) },
+    { "TYPE_NAVIGATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "TYPE_RELOAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "TYPE_BACK_FORWARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TYPE_RESERVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(255) } },
 };
 
+static_assert(PerformanceNavigation::TYPE_NAVIGATE == 0, "TYPE_NAVIGATE in PerformanceNavigation does not match value from IDL");
+static_assert(PerformanceNavigation::TYPE_RELOAD == 1, "TYPE_RELOAD in PerformanceNavigation does not match value from IDL");
+static_assert(PerformanceNavigation::TYPE_BACK_FORWARD == 2, "TYPE_BACK_FORWARD in PerformanceNavigation does not match value from IDL");
+static_assert(PerformanceNavigation::TYPE_RESERVED == 255, "TYPE_RESERVED in PerformanceNavigation does not match value from IDL");
 
-COMPILE_ASSERT(0 == PerformanceNavigation::TYPE_NAVIGATE, PerformanceNavigationEnumTYPE_NAVIGATEIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(1 == PerformanceNavigation::TYPE_RELOAD, PerformanceNavigationEnumTYPE_RELOADIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(2 == PerformanceNavigation::TYPE_BACK_FORWARD, PerformanceNavigationEnumTYPE_BACK_FORWARDIsWrongUseDoNotCheckConstants);
-COMPILE_ASSERT(255 == PerformanceNavigation::TYPE_RESERVED, PerformanceNavigationEnumTYPE_RESERVEDIsWrongUseDoNotCheckConstants);
-
-const ClassInfo JSPerformanceNavigationConstructor::s_info = { "PerformanceNavigationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceNavigationConstructor) };
-
-JSPerformanceNavigationConstructor::JSPerformanceNavigationConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSPerformanceNavigationConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSPerformanceNavigationConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSPerformanceNavigationConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSPerformanceNavigation::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSPerformanceNavigation::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("PerformanceNavigation"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSPerformanceNavigationConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSPerformanceNavigationConstructor::s_info = { "PerformanceNavigation", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceNavigationConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSPerformanceNavigationPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "redirectCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationRedirectCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "TYPE_NAVIGATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "TYPE_RELOAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "TYPE_BACK_FORWARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TYPE_RESERVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(255), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSPerformanceNavigationConstructor) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "redirectCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigationRedirectCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "TYPE_NAVIGATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "TYPE_RELOAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "TYPE_BACK_FORWARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TYPE_RESERVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(255) } },
 };
 
 const ClassInfo JSPerformanceNavigationPrototype::s_info = { "PerformanceNavigationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceNavigationPrototype) };
@@ -140,10 +122,16 @@ void JSPerformanceNavigationPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSPerformanceNavigation::s_info = { "PerformanceNavigation", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceNavigation) };
 
-JSPerformanceNavigation::JSPerformanceNavigation(Structure* structure, JSDOMGlobalObject* globalObject, Ref<PerformanceNavigation>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPerformanceNavigation::JSPerformanceNavigation(Structure* structure, JSDOMGlobalObject& globalObject, Ref<PerformanceNavigation>&& impl)
+    : JSDOMWrapper<PerformanceNavigation>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSPerformanceNavigation::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSPerformanceNavigation::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -151,7 +139,7 @@ JSObject* JSPerformanceNavigation::createPrototype(VM& vm, JSGlobalObject* globa
     return JSPerformanceNavigationPrototype::create(vm, globalObject, JSPerformanceNavigationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSPerformanceNavigation::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSPerformanceNavigation::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSPerformanceNavigation>(vm, globalObject);
 }
@@ -162,56 +150,70 @@ void JSPerformanceNavigation::destroy(JSC::JSCell* cell)
     thisObject->JSPerformanceNavigation::~JSPerformanceNavigation();
 }
 
-JSPerformanceNavigation::~JSPerformanceNavigation()
+template<> inline JSPerformanceNavigation* BindingCaller<JSPerformanceNavigation>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSPerformanceNavigation*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsPerformanceNavigationType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsPerformanceNavigationTypeGetter(ExecState&, JSPerformanceNavigation&, ThrowScope& throwScope);
+
+EncodedJSValue jsPerformanceNavigationType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSPerformanceNavigation* castedThis = jsDynamicCast<JSPerformanceNavigation*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSPerformanceNavigationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "PerformanceNavigation", "type");
-        return throwGetterTypeError(*exec, "PerformanceNavigation", "type");
+    return BindingCaller<JSPerformanceNavigation>::attribute<jsPerformanceNavigationTypeGetter>(state, thisValue, "type");
+}
+
+static inline JSValue jsPerformanceNavigationTypeGetter(ExecState& state, JSPerformanceNavigation& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.type());
+    return result;
+}
+
+static inline JSValue jsPerformanceNavigationRedirectCountGetter(ExecState&, JSPerformanceNavigation&, ThrowScope& throwScope);
+
+EncodedJSValue jsPerformanceNavigationRedirectCount(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSPerformanceNavigation>::attribute<jsPerformanceNavigationRedirectCountGetter>(state, thisValue, "redirectCount");
+}
+
+static inline JSValue jsPerformanceNavigationRedirectCountGetter(ExecState& state, JSPerformanceNavigation& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.redirectCount());
+    return result;
+}
+
+EncodedJSValue jsPerformanceNavigationConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSPerformanceNavigationPrototype* domObject = jsDynamicDowncast<JSPerformanceNavigationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSPerformanceNavigation::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSPerformanceNavigationConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSPerformanceNavigationPrototype* domObject = jsDynamicDowncast<JSPerformanceNavigationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.type());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsPerformanceNavigationRedirectCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSPerformanceNavigation::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSPerformanceNavigation* castedThis = jsDynamicCast<JSPerformanceNavigation*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSPerformanceNavigationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "PerformanceNavigation", "redirectCount");
-        return throwGetterTypeError(*exec, "PerformanceNavigation", "redirectCount");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.redirectCount());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsPerformanceNavigationConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSPerformanceNavigationPrototype* domObject = jsDynamicCast<JSPerformanceNavigationPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSPerformanceNavigation::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSPerformanceNavigation::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSPerformanceNavigationConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSPerformanceNavigationConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSPerformanceNavigationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -223,9 +225,9 @@ bool JSPerformanceNavigationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::U
 
 void JSPerformanceNavigationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsPerformanceNavigation = jsCast<JSPerformanceNavigation*>(handle.slot()->asCell());
+    auto* jsPerformanceNavigation = static_cast<JSPerformanceNavigation*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPerformanceNavigation->impl(), jsPerformanceNavigation);
+    uncacheWrapper(world, &jsPerformanceNavigation->wrapped(), jsPerformanceNavigation);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -236,15 +238,12 @@ extern "C" { extern void (*const __identifier("??_7PerformanceNavigation@WebCore
 extern "C" { extern void* _ZTVN7WebCore21PerformanceNavigationE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PerformanceNavigation* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<PerformanceNavigation>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSPerformanceNavigation>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7PerformanceNavigation@WebCore@@6B@"));
 #else
@@ -252,7 +251,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PerformanceN
 #if COMPILER(CLANG)
     // If this fails PerformanceNavigation does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(PerformanceNavigation), PerformanceNavigation_is_not_polymorphic);
+    static_assert(__is_polymorphic(PerformanceNavigation), "PerformanceNavigation is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -261,13 +260,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PerformanceN
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSPerformanceNavigation>(globalObject, impl);
+    return createWrapper<PerformanceNavigation>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PerformanceNavigation& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 PerformanceNavigation* JSPerformanceNavigation::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSPerformanceNavigation*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSPerformanceNavigation*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

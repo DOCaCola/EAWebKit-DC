@@ -24,8 +24,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XPathStep_h
-#define XPathStep_h
+#pragma once
 
 #include <wtf/Vector.h>
 #include <wtf/text/AtomicString.h>
@@ -65,17 +64,17 @@ public:
 
         NodeTest(NodeTest&& other)
             : m_kind(other.m_kind)
-            , m_data(WTF::move(other.m_data))
-            , m_namespaceURI(WTF::move(other.m_namespaceURI))
-            , m_mergedPredicates(WTF::move(other.m_mergedPredicates))
+            , m_data(WTFMove(other.m_data))
+            , m_namespaceURI(WTFMove(other.m_namespaceURI))
+            , m_mergedPredicates(WTFMove(other.m_mergedPredicates))
         {
         }
         NodeTest& operator=(NodeTest&& other)
         {
             m_kind = other.m_kind;
-            m_data = WTF::move(other.m_data);
-            m_namespaceURI = WTF::move(other.m_namespaceURI);
-            m_mergedPredicates = WTF::move(other.m_mergedPredicates);
+            m_data = WTFMove(other.m_data);
+            m_namespaceURI = WTFMove(other.m_namespaceURI);
+            m_mergedPredicates = WTFMove(other.m_mergedPredicates);
             return *this;
         }
 #endif
@@ -118,7 +117,4 @@ private:
 void optimizeStepPair(Step&, Step&, bool& dropSecondStep);
 
 } // namespace XPath
-
 } // namespace WebCore
-
-#endif // XPathStep_h

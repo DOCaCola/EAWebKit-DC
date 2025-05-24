@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCDATASection_h
-#define JSCDATASection_h
+#pragma once
 
 #include "CDATASection.h"
 #include "JSText.h"
@@ -28,43 +27,46 @@ namespace WebCore {
 
 class JSCDATASection : public JSText {
 public:
-    typedef JSText Base;
+    using Base = JSText;
+    using DOMWrapped = CDATASection;
     static JSCDATASection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CDATASection>&& impl)
     {
-        JSCDATASection* ptr = new (NotNull, JSC::allocateCell<JSCDATASection>(globalObject->vm().heap)) JSCDATASection(structure, globalObject, WTF::move(impl));
+        JSCDATASection* ptr = new (NotNull, JSC::allocateCell<JSCDATASection>(globalObject->vm().heap)) JSCDATASection(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSCDATASectionNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CDATASection& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    CDATASection& wrapped() const
     {
-        return static_cast<CDATASection&>(Base::impl());
+        return static_cast<CDATASection&>(Base::wrapped());
     }
 protected:
-    JSCDATASection(JSC::Structure*, JSDOMGlobalObject*, Ref<CDATASection>&&);
+    JSCDATASection(JSC::Structure*, JSDOMGlobalObject&, Ref<CDATASection>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CDATASection*);
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CDATASection&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CDATASection* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<CDATASection>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<CDATASection>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<CDATASection> {
+    using WrapperClass = JSCDATASection;
+    using ToWrappedReturnType = CDATASection*;
+};
 
 } // namespace WebCore
-
-#endif

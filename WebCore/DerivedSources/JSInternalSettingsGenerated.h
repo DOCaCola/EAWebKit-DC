@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSInternalSettingsGenerated_h
-#define JSInternalSettingsGenerated_h
+#pragma once
 
 #include "InternalSettingsGenerated.h"
 #include "JSDOMWrapper.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSInternalSettingsGenerated : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSInternalSettingsGenerated : public JSDOMWrapper<InternalSettingsGenerated> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<InternalSettingsGenerated>;
     static JSInternalSettingsGenerated* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<InternalSettingsGenerated>&& impl)
     {
-        JSInternalSettingsGenerated* ptr = new (NotNull, JSC::allocateCell<JSInternalSettingsGenerated>(globalObject->vm().heap)) JSInternalSettingsGenerated(structure, globalObject, WTF::move(impl));
+        JSInternalSettingsGenerated* ptr = new (NotNull, JSC::allocateCell<JSInternalSettingsGenerated>(globalObject->vm().heap)) JSInternalSettingsGenerated(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static InternalSettingsGenerated* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSInternalSettingsGenerated();
 
     DECLARE_INFO;
 
@@ -50,20 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    InternalSettingsGenerated& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    InternalSettingsGenerated* m_impl;
 protected:
-    JSInternalSettingsGenerated(JSC::Structure*, JSDOMGlobalObject*, Ref<InternalSettingsGenerated>&&);
+    JSInternalSettingsGenerated(JSC::Structure*, JSDOMGlobalObject&, Ref<InternalSettingsGenerated>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSInternalSettingsGeneratedOwner : public JSC::WeakHandleOwner {
@@ -78,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, InternalSettingsGene
     return &owner.get();
 }
 
-WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InternalSettingsGenerated*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, InternalSettingsGenerated& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(InternalSettingsGenerated* wrappableObject)
+{
+    return wrappableObject;
+}
 
+WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InternalSettingsGenerated&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, InternalSettingsGenerated* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<InternalSettingsGenerated>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<InternalSettingsGenerated>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<InternalSettingsGenerated> {
+    using WrapperClass = JSInternalSettingsGenerated;
+    using ToWrappedReturnType = InternalSettingsGenerated*;
+};
 
 } // namespace WebCore
-
-#endif

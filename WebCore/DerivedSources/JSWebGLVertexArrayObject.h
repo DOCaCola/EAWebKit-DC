@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebGLVertexArrayObject_h
-#define JSWebGLVertexArrayObject_h
+#pragma once
 
 #if ENABLE(WEBGL2)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSWebGLVertexArrayObject : public JSDOMWrapper {
+class JSWebGLVertexArrayObject : public JSDOMWrapper<WebGLVertexArrayObject> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<WebGLVertexArrayObject>;
     static JSWebGLVertexArrayObject* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLVertexArrayObject>&& impl)
     {
-        JSWebGLVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSWebGLVertexArrayObject>(globalObject->vm().heap)) JSWebGLVertexArrayObject(structure, globalObject, WTF::move(impl));
+        JSWebGLVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSWebGLVertexArrayObject>(globalObject->vm().heap)) JSWebGLVertexArrayObject(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLVertexArrayObject* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLVertexArrayObject();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLVertexArrayObject& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLVertexArrayObject* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSWebGLVertexArrayObject(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLVertexArrayObject>&&);
+    JSWebGLVertexArrayObject(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLVertexArrayObject>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSWebGLVertexArrayObjectOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLVertexArrayObje
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLVertexArrayObject*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(WebGLVertexArrayObject* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLVertexArrayObject&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<WebGLVertexArrayObject>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<WebGLVertexArrayObject>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<WebGLVertexArrayObject> {
+    using WrapperClass = JSWebGLVertexArrayObject;
+    using ToWrappedReturnType = WebGLVertexArrayObject*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL2)
-
-#endif

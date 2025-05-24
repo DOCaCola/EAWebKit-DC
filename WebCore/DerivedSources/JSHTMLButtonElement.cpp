@@ -21,20 +21,15 @@
 #include "config.h"
 #include "JSHTMLButtonElement.h"
 
-#include "ExceptionCode.h"
-#include "HTMLButtonElement.h"
-#include "HTMLFormElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSHTMLFormElement.h"
 #include "JSNodeList.h"
 #include "JSValidityState.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
-#include "URL.h"
-#include "ValidityState.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -44,40 +39,42 @@ namespace WebCore {
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionCheckValidity(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionReportValidity(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionSetCustomValidity(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLButtonElementAutofocus(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementAutofocus(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementDisabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementForm(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLButtonElementFormAction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementFormAction(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementFormEnctype(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementFormEnctype(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementFormMethod(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementFormMethod(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementFormNoValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementFormNoValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementFormTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementFormTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLButtonElementValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLButtonElementWillValidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLButtonElementValidity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLButtonElementValidationMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLButtonElementLabels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLButtonElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementAutofocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementAutofocus(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementDisabled(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementForm(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementFormAction(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementFormAction(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementFormEnctype(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementFormEnctype(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementFormMethod(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementFormMethod(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementFormNoValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementFormNoValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementFormTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementFormTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLButtonElementWillValidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementValidity(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementValidationMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementLabels(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLButtonElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLButtonElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLButtonElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLButtonElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLButtonElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElementPrototype>(vm.heap)) JSHTMLButtonElementPrototype(vm, globalObject, structure);
@@ -100,65 +97,45 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLButtonElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLButtonElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLButtonElementConstructor = JSDOMConstructorNotConstructable<JSHTMLButtonElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLButtonElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLButtonElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElementConstructor>(vm.heap)) JSHTMLButtonElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLButtonElementConstructor::s_info = { "HTMLButtonElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLButtonElementConstructor) };
-
-JSHTMLButtonElementConstructor::JSHTMLButtonElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLButtonElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLButtonElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLButtonElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLButtonElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLButtonElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLButtonElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLButtonElementConstructor::s_info = { "HTMLButtonElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLButtonElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLButtonElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "autofocus", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementAutofocus) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementDisabled) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "formAction", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormAction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormAction) },
-    { "formEnctype", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormEnctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormEnctype) },
-    { "formMethod", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormMethod), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormMethod) },
-    { "formNoValidate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormNoValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormNoValidate) },
-    { "formTarget", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormTarget) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementName) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementType) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementValue) },
-    { "willValidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validationMessage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLButtonElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
-    { "setCustomValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLButtonElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementConstructor) } },
+    { "autofocus", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementAutofocus) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementDisabled) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "formAction", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormAction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormAction) } },
+    { "formEnctype", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormEnctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormEnctype) } },
+    { "formMethod", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormMethod), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormMethod) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementType) } },
+    { "formNoValidate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormNoValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormNoValidate) } },
+    { "formTarget", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementFormTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementFormTarget) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementName) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLButtonElementValue) } },
+    { "willValidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validationMessage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLButtonElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLButtonElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "reportValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLButtonElementPrototypeFunctionReportValidity), (intptr_t) (0) } },
+    { "setCustomValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLButtonElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) } },
 };
 
 const ClassInfo JSHTMLButtonElementPrototype::s_info = { "HTMLButtonElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLButtonElementPrototype) };
@@ -167,520 +144,562 @@ void JSHTMLButtonElementPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSHTMLButtonElementPrototypeTableValues, *this);
+    if (!RuntimeEnabledFeatures::sharedFeatures().interactiveFormValidationEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("reportValidity"), strlen("reportValidity"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
 }
 
 const ClassInfo JSHTMLButtonElement::s_info = { "HTMLButtonElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLButtonElement) };
 
-JSHTMLButtonElement::JSHTMLButtonElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLButtonElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLButtonElement::JSHTMLButtonElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLButtonElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLButtonElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLButtonElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLButtonElementPrototype::create(vm, globalObject, JSHTMLButtonElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLButtonElementPrototype::create(vm, globalObject, JSHTMLButtonElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLButtonElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLButtonElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLButtonElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLButtonElementAutofocus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLButtonElement* BindingCaller<JSHTMLButtonElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "autofocus");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "autofocus");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::autofocusAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsHTMLButtonElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLButtonElement* BindingCaller<JSHTMLButtonElement>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "disabled");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLButtonElement*>(state.thisValue());
 }
 
+static inline JSValue jsHTMLButtonElementAutofocusGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementAutofocus(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "form");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "form");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementAutofocusGetter>(state, thisValue, "autofocus");
 }
 
-
-EncodedJSValue jsHTMLButtonElementFormAction(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementAutofocusGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "formAction");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "formAction");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::formactionAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::autofocusAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementDisabledGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementFormEnctype(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementDisabled(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "formEnctype");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "formEnctype");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.formEnctype());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementDisabledGetter>(state, thisValue, "disabled");
 }
 
-
-EncodedJSValue jsHTMLButtonElementFormMethod(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementDisabledGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "formMethod");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "formMethod");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.formMethod());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::disabledAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementFormGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementFormNoValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementForm(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "formNoValidate");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "formNoValidate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::formnovalidateAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormGetter>(state, thisValue, "form");
 }
 
-
-EncodedJSValue jsHTMLButtonElementFormTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementFormGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "formTarget");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "formTarget");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::formtargetAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<HTMLFormElement>>(state, *thisObject.globalObject(), impl.form());
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementFormActionGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementFormAction(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "name");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormActionGetter>(state, thisValue, "formAction");
 }
 
-
-EncodedJSValue jsHTMLButtonElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementFormActionGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "type");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.formAction());
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementFormEnctypeGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementFormEnctype(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "value");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "value");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::valueAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormEnctypeGetter>(state, thisValue, "formEnctype");
 }
 
-
-EncodedJSValue jsHTMLButtonElementWillValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementFormEnctypeGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "willValidate");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "willValidate");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.willValidate());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.formEnctype());
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementFormMethodGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementValidity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementFormMethod(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "validity");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "validity");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.validity()));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormMethodGetter>(state, thisValue, "formMethod");
 }
 
-
-EncodedJSValue jsHTMLButtonElementValidationMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLButtonElementFormMethodGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "validationMessage");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "validationMessage");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.validationMessage());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.formMethod());
+    return result;
 }
 
+static inline JSValue jsHTMLButtonElementTypeGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLButtonElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLButtonElementType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLButtonElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLButtonElement", "labels");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementTypeGetter>(state, thisValue, "type");
 }
 
-
-EncodedJSValue jsHTMLButtonElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLButtonElementTypeGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLButtonElementPrototype* domObject = jsDynamicCast<JSHTMLButtonElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLButtonElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.type());
+    return result;
 }
 
-void setJSHTMLButtonElementAutofocus(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLButtonElementFormNoValidateGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementFormNoValidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormNoValidateGetter>(state, thisValue, "formNoValidate");
+}
+
+static inline JSValue jsHTMLButtonElementFormNoValidateGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.hasAttributeWithoutSynchronization(WebCore::HTMLNames::formnovalidateAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementFormTargetGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementFormTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementFormTargetGetter>(state, thisValue, "formTarget");
+}
+
+static inline JSValue jsHTMLButtonElementFormTargetGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::formtargetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementNameGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsHTMLButtonElementNameGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getNameAttribute());
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementValueGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementValueGetter>(state, thisValue, "value");
+}
+
+static inline JSValue jsHTMLButtonElementValueGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::valueAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementWillValidateGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementWillValidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementWillValidateGetter>(state, thisValue, "willValidate");
+}
+
+static inline JSValue jsHTMLButtonElementWillValidateGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.willValidate());
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementValidityGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementValidity(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementValidityGetter>(state, thisValue, "validity");
+}
+
+static inline JSValue jsHTMLButtonElementValidityGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<ValidityState>>(state, *thisObject.globalObject(), impl.validity());
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementValidationMessageGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementValidationMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementValidationMessageGetter>(state, thisValue, "validationMessage");
+}
+
+static inline JSValue jsHTMLButtonElementValidationMessageGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.validationMessage());
+    return result;
+}
+
+static inline JSValue jsHTMLButtonElementLabelsGetter(ExecState&, JSHTMLButtonElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLButtonElementLabels(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLButtonElement>::attribute<jsHTMLButtonElementLabelsGetter>(state, thisValue, "labels");
+}
+
+static inline JSValue jsHTMLButtonElementLabelsGetter(ExecState& state, JSHTMLButtonElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<NodeList>>(state, *thisObject.globalObject(), impl.labels());
+    return result;
+}
+
+EncodedJSValue jsHTMLButtonElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLButtonElementPrototype* domObject = jsDynamicDowncast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLButtonElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLButtonElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "autofocus");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "autofocus");
-        return;
+    JSHTMLButtonElementPrototype* domObject = jsDynamicDowncast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::autofocusAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLButtonElementAutofocusFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementAutofocus(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementAutofocusFunction>(state, thisValue, encodedValue, "autofocus");
+}
+
+static inline bool setJSHTMLButtonElementAutofocusFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::autofocusAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementDisabledFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementDisabled(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "disabled");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "disabled");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementDisabledFunction>(state, thisValue, encodedValue, "disabled");
+}
+
+static inline bool setJSHTMLButtonElementDisabledFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementFormAction(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementFormActionFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementFormAction(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "formAction");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "formAction");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::formactionAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementFormActionFunction>(state, thisValue, encodedValue, "formAction");
+}
+
+static inline bool setJSHTMLButtonElementFormActionFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setFormAction(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementFormEnctype(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementFormEnctypeFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementFormEnctype(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "formEnctype");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "formEnctype");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setFormEnctype(nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementFormEnctypeFunction>(state, thisValue, encodedValue, "formEnctype");
+}
+
+static inline bool setJSHTMLButtonElementFormEnctypeFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setFormEnctype(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementFormMethod(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementFormMethodFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementFormMethod(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "formMethod");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "formMethod");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setFormMethod(nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementFormMethodFunction>(state, thisValue, encodedValue, "formMethod");
+}
+
+static inline bool setJSHTMLButtonElementFormMethodFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setFormMethod(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementFormNoValidate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementTypeFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "formNoValidate");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "formNoValidate");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setBooleanAttribute(WebCore::HTMLNames::formnovalidateAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementTypeFunction>(state, thisValue, encodedValue, "type");
+}
+
+static inline bool setJSHTMLButtonElementTypeFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setType(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementFormTarget(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementFormNoValidateFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementFormNoValidate(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "formTarget");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "formTarget");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::formtargetAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementFormNoValidateFunction>(state, thisValue, encodedValue, "formNoValidate");
+}
+
+static inline bool setJSHTMLButtonElementFormNoValidateFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLBoolean>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setBooleanAttribute(WebCore::HTMLNames::formnovalidateAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementFormTargetFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementFormTarget(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "name");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "name");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementFormTargetFunction>(state, thisValue, encodedValue, "formTarget");
+}
+
+static inline bool setJSHTMLButtonElementFormTargetFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::formtargetAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementNameFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "type");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "type");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setType(nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSHTMLButtonElementNameFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLButtonElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLButtonElementValueFunction(ExecState&, JSHTMLButtonElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLButtonElementValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLButtonElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLButtonElement", "value");
-        else
-            throwSetterTypeError(*exec, "HTMLButtonElement", "value");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::valueAttr, nativeValue);
+    return BindingCaller<JSHTMLButtonElement>::setAttribute<setJSHTMLButtonElementValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSHTMLButtonElementValueFunction(ExecState& state, JSHTMLButtonElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::valueAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLButtonElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSHTMLButtonElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLButtonElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLButtonElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionCheckValidity(ExecState* exec)
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionCheckValidityCaller(JSC::ExecState*, JSHTMLButtonElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionCheckValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLButtonElement", "checkValidity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLButtonElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.checkValidity());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLButtonElement>::callOperation<jsHTMLButtonElementPrototypeFunctionCheckValidityCaller>(state, "checkValidity");
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionSetCustomValidity(ExecState* exec)
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionCheckValidityCaller(JSC::ExecState* state, JSHTMLButtonElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLButtonElement* castedThis = jsDynamicCast<JSHTMLButtonElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLButtonElement", "setCustomValidity");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLButtonElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String error = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setCustomValidity(error);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.checkValidity()));
+}
+
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionReportValidityCaller(JSC::ExecState*, JSHTMLButtonElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionReportValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLButtonElement>::callOperation<jsHTMLButtonElementPrototypeFunctionReportValidityCaller>(state, "reportValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionReportValidityCaller(JSC::ExecState* state, JSHTMLButtonElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.reportValidity()));
+}
+
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionSetCustomValidityCaller(JSC::ExecState*, JSHTMLButtonElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLButtonElementPrototypeFunctionSetCustomValidity(ExecState* state)
+{
+    return BindingCaller<JSHTMLButtonElement>::callOperation<jsHTMLButtonElementPrototypeFunctionSetCustomValidityCaller>(state, "setCustomValidity");
+}
+
+static inline JSC::EncodedJSValue jsHTMLButtonElementPrototypeFunctionSetCustomValidityCaller(JSC::ExecState* state, JSHTMLButtonElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto error = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setCustomValidity(WTFMove(error));
     return JSValue::encode(jsUndefined());
+}
+
+void JSHTMLButtonElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLButtonElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPolylineElement_h
-#define JSSVGPolylineElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPolylineElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGPolylineElement;
     static JSSVGPolylineElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPolylineElement>&& impl)
     {
-        JSSVGPolylineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolylineElement>(globalObject->vm().heap)) JSSVGPolylineElement(structure, globalObject, WTF::move(impl));
+        JSSVGPolylineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolylineElement>(globalObject->vm().heap)) JSSVGPolylineElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPolylineElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGPolylineElement& wrapped() const
     {
-        return static_cast<SVGPolylineElement&>(Base::impl());
+        return static_cast<SVGPolylineElement&>(Base::wrapped());
     }
 protected:
-    JSSVGPolylineElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPolylineElement>&&);
+    JSSVGPolylineElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPolylineElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPolylineElement> {
+    using WrapperClass = JSSVGPolylineElement;
+    using ToWrappedReturnType = SVGPolylineElement*;
+};
 
 } // namespace WebCore
-
-#endif

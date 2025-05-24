@@ -18,56 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOverflowEvent_h
-#define JSOverflowEvent_h
+#pragma once
 
+#include "JSDOMConvert.h"
 #include "JSEvent.h"
 #include "OverflowEvent.h"
 
 namespace WebCore {
 
-class JSDictionary;
-
 class JSOverflowEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = OverflowEvent;
     static JSOverflowEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OverflowEvent>&& impl)
     {
-        JSOverflowEvent* ptr = new (NotNull, JSC::allocateCell<JSOverflowEvent>(globalObject->vm().heap)) JSOverflowEvent(structure, globalObject, WTF::move(impl));
+        JSOverflowEvent* ptr = new (NotNull, JSC::allocateCell<JSOverflowEvent>(globalObject->vm().heap)) JSOverflowEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    OverflowEvent& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    OverflowEvent& wrapped() const
     {
-        return static_cast<OverflowEvent&>(Base::impl());
+        return static_cast<OverflowEvent&>(Base::wrapped());
     }
 protected:
-    JSOverflowEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<OverflowEvent>&&);
+    JSOverflowEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<OverflowEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OverflowEvent&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OverflowEvent* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OverflowEvent>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OverflowEvent>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-bool fillOverflowEventInit(OverflowEventInit&, JSDictionary&);
+template<> struct JSDOMWrapperConverterTraits<OverflowEvent> {
+    using WrapperClass = JSOverflowEvent;
+    using ToWrappedReturnType = OverflowEvent*;
+};
+template<> OverflowEvent::Init convertDictionary<OverflowEvent::Init>(JSC::ExecState&, JSC::JSValue);
 
 
 } // namespace WebCore
-
-#endif

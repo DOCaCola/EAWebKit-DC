@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSpeechSynthesis_h
-#define JSSpeechSynthesis_h
+#pragma once
 
 #if ENABLE(SPEECH_SYNTHESIS)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSSpeechSynthesis : public JSDOMWrapper {
+class JSSpeechSynthesis : public JSDOMWrapper<SpeechSynthesis> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SpeechSynthesis>;
     static JSSpeechSynthesis* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesis>&& impl)
     {
-        JSSpeechSynthesis* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesis>(globalObject->vm().heap)) JSSpeechSynthesis(structure, globalObject, WTF::move(impl));
+        JSSpeechSynthesis* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesis>(globalObject->vm().heap)) JSSpeechSynthesis(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SpeechSynthesis* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSpeechSynthesis();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    SpeechSynthesis& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SpeechSynthesis* m_impl;
 protected:
-    JSSpeechSynthesis(JSC::Structure*, JSDOMGlobalObject*, Ref<SpeechSynthesis>&&);
+    JSSpeechSynthesis(JSC::Structure*, JSDOMGlobalObject&, Ref<SpeechSynthesis>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSpeechSynthesisOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SpeechSynthesis*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SpeechSynthesis*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SpeechSynthesis& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SpeechSynthesis* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SpeechSynthesis&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SpeechSynthesis* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SpeechSynthesis>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SpeechSynthesis>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SpeechSynthesis> {
+    using WrapperClass = JSSpeechSynthesis;
+    using ToWrappedReturnType = SpeechSynthesis*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(SPEECH_SYNTHESIS)
-
-#endif

@@ -60,9 +60,11 @@ struct SelectorPseudoTypeEntry;
 %%
 "after", CSSSelector::PseudoElementAfter
 "before", CSSSelector::PseudoElementBefore
-"cue", CSSSelector::PseudoElementWebKitCustom
+"cue", CSSSelector::PseudoElementCue
 "first-letter", CSSSelector::PseudoElementFirstLetter
 "first-line", CSSSelector::PseudoElementFirstLine
+"placeholder", CSSSelector::PseudoElementWebKitCustom
+"-webkit-input-placeholder", CSSSelector::PseudoElementWebKitCustomLegacyPrefixed
 "-webkit-resizer", CSSSelector::PseudoElementResizer
 "-webkit-scrollbar", CSSSelector::PseudoElementScrollbar
 "-webkit-scrollbar-button", CSSSelector::PseudoElementScrollbarButton

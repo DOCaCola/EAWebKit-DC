@@ -25,7 +25,6 @@
 #include "JSOESTextureHalfFloatLinear.h"
 
 #include "JSDOMBinding.h"
-#include "OESTextureHalfFloatLinear.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,7 +33,7 @@ namespace WebCore {
 
 class JSOESTextureHalfFloatLinearPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSOESTextureHalfFloatLinearPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSOESTextureHalfFloatLinearPrototype* ptr = new (NotNull, JSC::allocateCell<JSOESTextureHalfFloatLinearPrototype>(vm.heap)) JSOESTextureHalfFloatLinearPrototype(vm, globalObject, structure);
@@ -53,31 +52,23 @@ private:
         : JSC::JSNonFinalObject(vm, structure)
     {
     }
-
-    void finishCreation(JSC::VM&);
 };
 
 /* Hash table for prototype */
-
-static const HashTableValue JSOESTextureHalfFloatLinearPrototypeTableValues[] =
-{
-    { 0, 0, NoIntrinsic, 0, 0 }
-};
-
 const ClassInfo JSOESTextureHalfFloatLinearPrototype::s_info = { "OESTextureHalfFloatLinearPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureHalfFloatLinearPrototype) };
-
-void JSOESTextureHalfFloatLinearPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSOESTextureHalfFloatLinearPrototypeTableValues, *this);
-}
 
 const ClassInfo JSOESTextureHalfFloatLinear::s_info = { "OESTextureHalfFloatLinear", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureHalfFloatLinear) };
 
-JSOESTextureHalfFloatLinear::JSOESTextureHalfFloatLinear(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureHalfFloatLinear>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSOESTextureHalfFloatLinear::JSOESTextureHalfFloatLinear(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OESTextureHalfFloatLinear>&& impl)
+    : JSDOMWrapper<OESTextureHalfFloatLinear>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSOESTextureHalfFloatLinear::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSOESTextureHalfFloatLinear::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -85,7 +76,7 @@ JSObject* JSOESTextureHalfFloatLinear::createPrototype(VM& vm, JSGlobalObject* g
     return JSOESTextureHalfFloatLinearPrototype::create(vm, globalObject, JSOESTextureHalfFloatLinearPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSOESTextureHalfFloatLinear::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSOESTextureHalfFloatLinear::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSOESTextureHalfFloatLinear>(vm, globalObject);
 }
@@ -96,23 +87,18 @@ void JSOESTextureHalfFloatLinear::destroy(JSC::JSCell* cell)
     thisObject->JSOESTextureHalfFloatLinear::~JSOESTextureHalfFloatLinear();
 }
 
-JSOESTextureHalfFloatLinear::~JSOESTextureHalfFloatLinear()
-{
-    releaseImpl();
-}
-
 bool JSOESTextureHalfFloatLinearOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsOESTextureHalfFloatLinear = jsCast<JSOESTextureHalfFloatLinear*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureHalfFloatLinear->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureHalfFloatLinear->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSOESTextureHalfFloatLinearOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsOESTextureHalfFloatLinear = jsCast<JSOESTextureHalfFloatLinear*>(handle.slot()->asCell());
+    auto* jsOESTextureHalfFloatLinear = static_cast<JSOESTextureHalfFloatLinear*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsOESTextureHalfFloatLinear->impl(), jsOESTextureHalfFloatLinear);
+    uncacheWrapper(world, &jsOESTextureHalfFloatLinear->wrapped(), jsOESTextureHalfFloatLinear);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,15 +109,12 @@ extern "C" { extern void (*const __identifier("??_7OESTextureHalfFloatLinear@Web
 extern "C" { extern void* _ZTVN7WebCore25OESTextureHalfFloatLinearE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureHalfFloatLinear* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<OESTextureHalfFloatLinear>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSOESTextureHalfFloatLinear>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7OESTextureHalfFloatLinear@WebCore@@6B@"));
 #else
@@ -139,7 +122,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureHa
 #if COMPILER(CLANG)
     // If this fails OESTextureHalfFloatLinear does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(OESTextureHalfFloatLinear), OESTextureHalfFloatLinear_is_not_polymorphic);
+    static_assert(__is_polymorphic(OESTextureHalfFloatLinear), "OESTextureHalfFloatLinear is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -148,13 +131,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureHa
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSOESTextureHalfFloatLinear>(globalObject, impl);
+    return createWrapper<OESTextureHalfFloatLinear>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESTextureHalfFloatLinear& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 OESTextureHalfFloatLinear* JSOESTextureHalfFloatLinear::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSOESTextureHalfFloatLinear*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSOESTextureHalfFloatLinear*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -21,15 +21,14 @@
 #include "config.h"
 #include "JSHTMLAnchorElement.h"
 
-#include "DOMTokenList.h"
-#include "ExceptionCode.h"
-#include "HTMLAnchorElement.h"
+#include "CustomElementReactionQueue.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDOMTokenList.h"
-#include "URL.h"
+#include "RuntimeEnabledFeatures.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -42,55 +41,61 @@ JSC::EncodedJSValue JSC_HOST_CALL jsHTMLAnchorElementPrototypeFunctionToString(J
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLAnchorElementCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementCharset(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementCoords(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementCoords(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementCharset(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementCoords(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementCoords(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(DOWNLOAD_ATTRIBUTE)
-JSC::EncodedJSValue jsHTMLAnchorElementDownload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementDownload(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementDownload(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementDownload(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
-JSC::EncodedJSValue jsHTMLAnchorElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementHreflang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementHreflang(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementPing(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementPing(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementRel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementRel(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementRev(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementRev(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementShape(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementShape(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementTarget(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementType(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementHash(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementHash(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementHost(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementHost(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementHostname(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementHostname(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementPathname(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementPathname(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementPort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementPort(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementProtocol(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementProtocol(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementSearch(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementSearch(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementOrigin(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLAnchorElementText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSHTMLAnchorElementText(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsHTMLAnchorElementRelList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLAnchorElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLAnchorElementHreflang(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementHreflang(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementName(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementPing(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementPing(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementRel(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementRel(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementRev(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementRev(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementShape(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementShape(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementTarget(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementType(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementText(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementText(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementRelList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementRelList(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementOrigin(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLAnchorElementProtocol(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementProtocol(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementUsername(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementUsername(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementPassword(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementPassword(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementHost(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementHost(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementHostname(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementHostname(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementPort(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementPort(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementPathname(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementPathname(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementSearch(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementSearch(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementHash(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementHash(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsHTMLAnchorElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLAnchorElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLAnchorElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLAnchorElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLAnchorElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElementPrototype>(vm.heap)) JSHTMLAnchorElementPrototype(vm, globalObject, structure);
@@ -113,75 +118,56 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLAnchorElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLAnchorElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLAnchorElementConstructor = JSDOMConstructorNotConstructable<JSHTMLAnchorElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLAnchorElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLAnchorElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElementConstructor>(vm.heap)) JSHTMLAnchorElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLAnchorElementConstructor::s_info = { "HTMLAnchorElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAnchorElementConstructor) };
-
-JSHTMLAnchorElementConstructor::JSHTMLAnchorElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSHTMLAnchorElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLAnchorElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLAnchorElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLAnchorElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLAnchorElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLAnchorElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLAnchorElementConstructor::s_info = { "HTMLAnchorElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAnchorElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLAnchorElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "charset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementCharset) },
-    { "coords", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementCoords), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementCoords) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementConstructor) } },
+    { "charset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementCharset) } },
+    { "coords", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementCoords), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementCoords) } },
 #if ENABLE(DOWNLOAD_ATTRIBUTE)
-    { "download", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementDownload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementDownload) },
+    { "download", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementDownload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementDownload) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "href", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHref) },
-    { "hreflang", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHreflang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHreflang) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementName) },
-    { "ping", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPing), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPing) },
-    { "rel", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementRel) },
-    { "rev", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRev), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementRev) },
-    { "shape", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementShape), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementShape) },
-    { "target", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementTarget) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementType) },
-    { "hash", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHash) },
-    { "host", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHost) },
-    { "hostname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHostname) },
-    { "pathname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPathname) },
-    { "port", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPort) },
-    { "protocol", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementProtocol) },
-    { "search", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementSearch) },
-    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "text", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementText) },
-    { "relList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRelList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLAnchorElementPrototypeFunctionToString), (intptr_t) (0) },
+    { "hreflang", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHreflang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHreflang) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementName) } },
+    { "ping", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPing), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPing) } },
+    { "rel", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementRel) } },
+    { "rev", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRev), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementRev) } },
+    { "shape", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementShape), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementShape) } },
+    { "target", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementTarget) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementType) } },
+    { "text", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementText) } },
+    { "relList", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementRelList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementRelList) } },
+    { "href", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHref) } },
+    { "origin", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "protocol", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementProtocol) } },
+    { "username", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementUsername) } },
+    { "password", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPassword), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPassword) } },
+    { "host", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHost) } },
+    { "hostname", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHostname) } },
+    { "port", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPort) } },
+    { "pathname", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementPathname) } },
+    { "search", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementSearch) } },
+    { "hash", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAnchorElementHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAnchorElementHash) } },
+    { "toString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLAnchorElementPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLAnchorElementPrototype::s_info = { "HTMLAnchorElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAnchorElementPrototype) };
@@ -190,828 +176,928 @@ void JSHTMLAnchorElementPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSHTMLAnchorElementPrototypeTableValues, *this);
+#if ENABLE(DOWNLOAD_ATTRIBUTE)
+    if (!RuntimeEnabledFeatures::sharedFeatures().downloadAttributeEnabled()) {
+        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("download"), strlen("download"));
+        VM::DeletePropertyModeScope scope(vm, VM::DeletePropertyMode::IgnoreConfigurable);
+        JSObject::deleteProperty(this, globalObject()->globalExec(), propertyName);
+    }
+#endif
 }
 
 const ClassInfo JSHTMLAnchorElement::s_info = { "HTMLAnchorElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAnchorElement) };
 
-JSHTMLAnchorElement::JSHTMLAnchorElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAnchorElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLAnchorElement::JSHTMLAnchorElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLAnchorElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLAnchorElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLAnchorElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLAnchorElementPrototype::create(vm, globalObject, JSHTMLAnchorElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLAnchorElementPrototype::create(vm, globalObject, JSHTMLAnchorElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLAnchorElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLAnchorElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLAnchorElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLAnchorElementCharset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLAnchorElement* BindingCaller<JSHTMLAnchorElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "charset");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "charset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::charsetAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsHTMLAnchorElementCoords(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSHTMLAnchorElement* BindingCaller<JSHTMLAnchorElement>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "coords");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "coords");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::coordsAttr));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSHTMLAnchorElement*>(state.thisValue());
 }
 
+static inline JSValue jsHTMLAnchorElementCharsetGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementCharset(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementCharsetGetter>(state, thisValue, "charset");
+}
+
+static inline JSValue jsHTMLAnchorElementCharsetGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementCoordsGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementCoords(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementCoordsGetter>(state, thisValue, "coords");
+}
+
+static inline JSValue jsHTMLAnchorElementCoordsGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::coordsAttr));
+    return result;
+}
 
 #if ENABLE(DOWNLOAD_ATTRIBUTE)
-EncodedJSValue jsHTMLAnchorElementDownload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementDownloadGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementDownload(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "download");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "download");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::downloadAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementDownloadGetter>(state, thisValue, "download");
+}
+
+static inline JSValue jsHTMLAnchorElementDownloadGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::downloadAttr));
+    return result;
 }
 
 #endif
 
-EncodedJSValue jsHTMLAnchorElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementHreflangGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementHreflang(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "href");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "href");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::hrefAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementHreflangGetter>(state, thisValue, "hreflang");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementHreflang(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementHreflangGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "hreflang");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "hreflang");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::hreflangAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementNameGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "name");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementNameGetter>(state, thisValue, "name");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementPing(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementNameGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "ping");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "ping");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::pingAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.getNameAttribute());
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementPingGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementRel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementPing(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "rel");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "rel");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::relAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementPingGetter>(state, thisValue, "ping");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementRev(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementPingGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "rev");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "rev");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::revAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::pingAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementRelGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementShape(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementRel(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "shape");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "shape");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::shapeAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementRelGetter>(state, thisValue, "rel");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementRelGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "target");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "target");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::targetAttr));
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::relAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementRevGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementRev(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "type");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "type");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementRevGetter>(state, thisValue, "rev");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementHash(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementRevGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "hash");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "hash");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hash());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::revAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementShapeGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementHost(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementShape(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "host");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "host");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.host());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementShapeGetter>(state, thisValue, "shape");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementHostname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementShapeGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "hostname");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "hostname");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hostname());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::shapeAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementTargetGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementPathname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementTarget(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "pathname");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "pathname");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.pathname());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementTargetGetter>(state, thisValue, "target");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementPort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementTargetGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "port");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "port");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.port());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::targetAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementTypeGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementProtocol(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementType(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "protocol");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "protocol");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.protocol());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementTypeGetter>(state, thisValue, "type");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementSearch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementTypeGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "search");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "search");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.search());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.attributeWithoutSynchronization(WebCore::HTMLNames::typeAttr));
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementTextGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementText(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "origin");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "origin");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.origin());
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementTextGetter>(state, thisValue, "text");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementTextGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "text");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "text");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.text());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.text());
+    return result;
 }
 
+static inline JSValue jsHTMLAnchorElementRelListGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
 
-EncodedJSValue jsHTMLAnchorElementRelList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAnchorElementRelList(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAnchorElement", "relList");
-        return throwGetterTypeError(*exec, "HTMLAnchorElement", "relList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.relList()));
-    return JSValue::encode(result);
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementRelListGetter>(state, thisValue, "relList");
 }
 
-
-EncodedJSValue jsHTMLAnchorElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsHTMLAnchorElementRelListGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
 {
-    JSHTMLAnchorElementPrototype* domObject = jsDynamicCast<JSHTMLAnchorElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLAnchorElement::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<DOMTokenList>>(state, *thisObject.globalObject(), impl.relList());
+    return result;
 }
 
-void setJSHTMLAnchorElementCharset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsHTMLAnchorElementHrefGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementHref(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementHrefGetter>(state, thisValue, "href");
+}
+
+static inline JSValue jsHTMLAnchorElementHrefGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.getURLAttribute(WebCore::HTMLNames::hrefAttr));
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementOriginGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementOrigin(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementOriginGetter>(state, thisValue, "origin");
+}
+
+static inline JSValue jsHTMLAnchorElementOriginGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.origin());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementProtocolGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementProtocol(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementProtocolGetter>(state, thisValue, "protocol");
+}
+
+static inline JSValue jsHTMLAnchorElementProtocolGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.protocol());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementUsernameGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementUsername(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementUsernameGetter>(state, thisValue, "username");
+}
+
+static inline JSValue jsHTMLAnchorElementUsernameGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.username());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementPasswordGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementPassword(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementPasswordGetter>(state, thisValue, "password");
+}
+
+static inline JSValue jsHTMLAnchorElementPasswordGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.password());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementHostGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementHost(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementHostGetter>(state, thisValue, "host");
+}
+
+static inline JSValue jsHTMLAnchorElementHostGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.host());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementHostnameGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementHostname(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementHostnameGetter>(state, thisValue, "hostname");
+}
+
+static inline JSValue jsHTMLAnchorElementHostnameGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.hostname());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementPortGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementPort(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementPortGetter>(state, thisValue, "port");
+}
+
+static inline JSValue jsHTMLAnchorElementPortGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.port());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementPathnameGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementPathname(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementPathnameGetter>(state, thisValue, "pathname");
+}
+
+static inline JSValue jsHTMLAnchorElementPathnameGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.pathname());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementSearchGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementSearch(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementSearchGetter>(state, thisValue, "search");
+}
+
+static inline JSValue jsHTMLAnchorElementSearchGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.search());
+    return result;
+}
+
+static inline JSValue jsHTMLAnchorElementHashGetter(ExecState&, JSHTMLAnchorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLAnchorElementHash(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLAnchorElement>::attribute<jsHTMLAnchorElementHashGetter>(state, thisValue, "hash");
+}
+
+static inline JSValue jsHTMLAnchorElementHashGetter(ExecState& state, JSHTMLAnchorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUSVString>(state, impl.hash());
+    return result;
+}
+
+EncodedJSValue jsHTMLAnchorElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLAnchorElementPrototype* domObject = jsDynamicDowncast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLAnchorElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLAnchorElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "charset");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "charset");
-        return;
+    JSHTMLAnchorElementPrototype* domObject = jsDynamicDowncast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr, nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSHTMLAnchorElementCharsetFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementCharset(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementCharsetFunction>(state, thisValue, encodedValue, "charset");
+}
+
+static inline bool setJSHTMLAnchorElementCharsetFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::charsetAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementCoords(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementCoordsFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementCoords(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "coords");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "coords");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::coordsAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementCoordsFunction>(state, thisValue, encodedValue, "coords");
+}
+
+static inline bool setJSHTMLAnchorElementCoordsFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::coordsAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
 #if ENABLE(DOWNLOAD_ATTRIBUTE)
-void setJSHTMLAnchorElementDownload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementDownloadFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementDownload(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "download");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "download");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::downloadAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementDownloadFunction>(state, thisValue, encodedValue, "download");
+}
+
+static inline bool setJSHTMLAnchorElementDownloadFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::downloadAttr, WTFMove(nativeValue));
+    return true;
 }
 
 #endif
 
-void setJSHTMLAnchorElementHref(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementHreflangFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementHreflang(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "href");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "href");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hrefAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementHreflangFunction>(state, thisValue, encodedValue, "hreflang");
+}
+
+static inline bool setJSHTMLAnchorElementHreflangFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementHreflang(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementNameFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementName(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "hreflang");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "hreflang");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hreflangAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementNameFunction>(state, thisValue, encodedValue, "name");
+}
+
+static inline bool setJSHTMLAnchorElementNameFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementPingFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementPing(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "name");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "name");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementPingFunction>(state, thisValue, encodedValue, "ping");
+}
+
+static inline bool setJSHTMLAnchorElementPingFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::pingAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementPing(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementRelFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementRel(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "ping");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "ping");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::pingAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementRelFunction>(state, thisValue, encodedValue, "rel");
+}
+
+static inline bool setJSHTMLAnchorElementRelFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::relAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementRel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementRevFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementRev(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "rel");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "rel");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::relAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementRevFunction>(state, thisValue, encodedValue, "rev");
+}
+
+static inline bool setJSHTMLAnchorElementRevFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::revAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementRev(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementShapeFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementShape(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "rev");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "rev");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::revAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementShapeFunction>(state, thisValue, encodedValue, "shape");
+}
+
+static inline bool setJSHTMLAnchorElementShapeFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::shapeAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementShape(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementTargetFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementTarget(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "shape");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "shape");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::shapeAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementTargetFunction>(state, thisValue, encodedValue, "target");
+}
+
+static inline bool setJSHTMLAnchorElementTargetFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementTarget(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementTypeFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementType(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "target");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "target");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementTypeFunction>(state, thisValue, encodedValue, "type");
+}
+
+static inline bool setJSHTMLAnchorElementTypeFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementTextFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementText(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "type");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "type");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementTextFunction>(state, thisValue, encodedValue, "text");
+}
+
+static inline bool setJSHTMLAnchorElementTextFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setText(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementHash(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementRelListFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementRelList(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "hash");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "hash");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHash(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementRelListFunction>(state, thisValue, encodedValue, "relList");
+}
+
+static inline bool setJSHTMLAnchorElementRelListFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    CustomElementReactionStack customElementReactionStack;
+    Ref<DOMTokenList> forwardedImpl = thisObject.wrapped().relList();
+    auto& impl = forwardedImpl.get();
+    auto nativeValue = convert<IDLDOMString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementHost(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementHrefFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementHref(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "host");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "host");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHost(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementHrefFunction>(state, thisValue, encodedValue, "href");
+}
+
+static inline bool setJSHTMLAnchorElementHrefFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hrefAttr, WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementHostname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementProtocolFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementProtocol(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "hostname");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "hostname");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setHostname(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementProtocolFunction>(state, thisValue, encodedValue, "protocol");
+}
+
+static inline bool setJSHTMLAnchorElementProtocolFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setProtocol(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementPathname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementUsernameFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementUsername(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "pathname");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "pathname");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setPathname(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementUsernameFunction>(state, thisValue, encodedValue, "username");
+}
+
+static inline bool setJSHTMLAnchorElementUsernameFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setUsername(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementPort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementPasswordFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementPassword(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "port");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "port");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setPort(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementPasswordFunction>(state, thisValue, encodedValue, "password");
+}
+
+static inline bool setJSHTMLAnchorElementPasswordFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setPassword(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementProtocol(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementHostFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementHost(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "protocol");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "protocol");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setProtocol(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementHostFunction>(state, thisValue, encodedValue, "host");
+}
+
+static inline bool setJSHTMLAnchorElementHostFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setHost(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementSearch(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementHostnameFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementHostname(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "search");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "search");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSearch(nativeValue);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementHostnameFunction>(state, thisValue, encodedValue, "hostname");
+}
+
+static inline bool setJSHTMLAnchorElementHostnameFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setHostname(WTFMove(nativeValue));
+    return true;
 }
 
 
-void setJSHTMLAnchorElementText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline bool setJSHTMLAnchorElementPortFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementPort(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLAnchorElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAnchorElement", "text");
-        else
-            throwSetterTypeError(*exec, "HTMLAnchorElement", "text");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setText(nativeValue, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementPortFunction>(state, thisValue, encodedValue, "port");
+}
+
+static inline bool setJSHTMLAnchorElementPortFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setPort(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSHTMLAnchorElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSHTMLAnchorElementPathnameFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementPathname(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLAnchorElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementPathnameFunction>(state, thisValue, encodedValue, "pathname");
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLAnchorElementPrototypeFunctionToString(ExecState* exec)
+static inline bool setJSHTMLAnchorElementPathnameFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSHTMLAnchorElement* castedThis = jsDynamicCast<JSHTMLAnchorElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLAnchorElement", "toString");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLAnchorElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setPathname(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLAnchorElementSearchFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementSearch(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementSearchFunction>(state, thisValue, encodedValue, "search");
+}
+
+static inline bool setJSHTMLAnchorElementSearchFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setSearch(WTFMove(nativeValue));
+    return true;
+}
+
+
+static inline bool setJSHTMLAnchorElementHashFunction(ExecState&, JSHTMLAnchorElement&, JSValue, ThrowScope&);
+
+bool setJSHTMLAnchorElementHash(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSHTMLAnchorElement>::setAttribute<setJSHTMLAnchorElementHashFunction>(state, thisValue, encodedValue, "hash");
+}
+
+static inline bool setJSHTMLAnchorElementHashFunction(ExecState& state, JSHTMLAnchorElement& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUSVString>(state, value, StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setHash(WTFMove(nativeValue));
+    return true;
+}
+
+
+JSValue JSHTMLAnchorElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLAnchorElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsHTMLAnchorElementPrototypeFunctionToStringCaller(JSC::ExecState*, JSHTMLAnchorElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsHTMLAnchorElementPrototypeFunctionToString(ExecState* state)
+{
+    return BindingCaller<JSHTMLAnchorElement>::callOperation<jsHTMLAnchorElementPrototypeFunctionToStringCaller>(state, "toString");
+}
+
+static inline JSC::EncodedJSValue jsHTMLAnchorElementPrototypeFunctionToStringCaller(JSC::ExecState* state, JSHTMLAnchorElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLUSVString>(*state, impl.href()));
+}
+
+void JSHTMLAnchorElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLAnchorElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

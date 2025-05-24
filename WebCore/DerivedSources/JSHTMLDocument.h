@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDocument_h
-#define JSHTMLDocument_h
+#pragma once
 
 #include "HTMLDocument.h"
 #include "JSDocument.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLDocument : public JSDocument {
 public:
-    typedef JSDocument Base;
+    using Base = JSDocument;
+    using DOMWrapped = HTMLDocument;
     static JSHTMLDocument* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDocument>&& impl)
     {
-        JSHTMLDocument* ptr = new (NotNull, JSC::allocateCell<JSHTMLDocument>(globalObject->vm().heap)) JSHTMLDocument(structure, globalObject, WTF::move(impl));
+        JSHTMLDocument* ptr = new (NotNull, JSC::allocateCell<JSHTMLDocument>(globalObject->vm().heap)) JSHTMLDocument(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
 
@@ -48,42 +48,43 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSDocumentWrapperType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
 
     // Custom attributes
-    JSC::JSValue all(JSC::ExecState*) const;
-    void setAll(JSC::ExecState*, JSC::JSValue);
+    JSC::JSValue all(JSC::ExecState&) const;
+    void setAll(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue write(JSC::ExecState*);
-    JSC::JSValue writeln(JSC::ExecState*);
-    HTMLDocument& impl() const
+    JSC::JSValue open(JSC::ExecState&);
+    JSC::JSValue write(JSC::ExecState&);
+    JSC::JSValue writeln(JSC::ExecState&);
+    HTMLDocument& wrapped() const
     {
-        return static_cast<HTMLDocument&>(Base::impl());
+        return static_cast<HTMLDocument&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::NewImpurePropertyFiresWatchpoints | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpure | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::NewImpurePropertyFiresWatchpoints | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLDocument(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDocument>&&);
+    JSHTMLDocument(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDocument>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
-private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLDocument*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    void finishCreation(JSC::VM&);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HTMLDocument&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLDocument* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<HTMLDocument>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<HTMLDocument>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsHTMLDocumentPrototypeFunctionOpen(JSC::ExecState*);
 
+template<> struct JSDOMWrapperConverterTraits<HTMLDocument> {
+    using WrapperClass = JSHTMLDocument;
+    using ToWrappedReturnType = HTMLDocument*;
+};
 
 } // namespace WebCore
-
-#endif

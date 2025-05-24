@@ -24,12 +24,10 @@
 
 #include "JSSpeechSynthesis.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSSpeechSynthesisUtterance.h"
 #include "JSSpeechSynthesisVoice.h"
-#include "SpeechSynthesis.h"
-#include "SpeechSynthesisVoice.h"
 #include <runtime/Error.h>
 #include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
@@ -48,13 +46,14 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionGetVoices(JS
 
 // Attributes
 
-JSC::EncodedJSValue jsSpeechSynthesisPending(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSpeechSynthesisSpeaking(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSpeechSynthesisPaused(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSpeechSynthesisPending(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSpeechSynthesisSpeaking(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSpeechSynthesisPaused(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSpeechSynthesisConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSpeechSynthesisPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSpeechSynthesisPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSpeechSynthesisPrototype* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisPrototype>(vm.heap)) JSSpeechSynthesisPrototype(vm, globalObject, structure);
@@ -81,14 +80,14 @@ private:
 
 static const HashTableValue JSSpeechSynthesisPrototypeTableValues[] =
 {
-    { "pending", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisPending), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "speaking", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisSpeaking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "paused", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisPaused), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "speak", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionSpeak), (intptr_t) (1) },
-    { "cancel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionCancel), (intptr_t) (0) },
-    { "pause", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionPause), (intptr_t) (0) },
-    { "resume", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionResume), (intptr_t) (0) },
-    { "getVoices", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionGetVoices), (intptr_t) (0) },
+    { "pending", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisPending), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "speaking", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisSpeaking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "paused", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSpeechSynthesisPaused), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "speak", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionSpeak), (intptr_t) (1) } },
+    { "cancel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionCancel), (intptr_t) (0) } },
+    { "pause", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionPause), (intptr_t) (0) } },
+    { "resume", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionResume), (intptr_t) (0) } },
+    { "getVoices", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSpeechSynthesisPrototypeFunctionGetVoices), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSpeechSynthesisPrototype::s_info = { "SpeechSynthesisPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSpeechSynthesisPrototype) };
@@ -101,10 +100,16 @@ void JSSpeechSynthesisPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSpeechSynthesis::s_info = { "SpeechSynthesis", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSpeechSynthesis) };
 
-JSSpeechSynthesis::JSSpeechSynthesis(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesis>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSpeechSynthesis::JSSpeechSynthesis(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SpeechSynthesis>&& impl)
+    : JSDOMWrapper<SpeechSynthesis>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSpeechSynthesis::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSpeechSynthesis::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -112,7 +117,7 @@ JSObject* JSSpeechSynthesis::createPrototype(VM& vm, JSGlobalObject* globalObjec
     return JSSpeechSynthesisPrototype::create(vm, globalObject, JSSpeechSynthesisPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSSpeechSynthesis::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSpeechSynthesis::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSpeechSynthesis>(vm, globalObject);
 }
@@ -123,125 +128,159 @@ void JSSpeechSynthesis::destroy(JSC::JSCell* cell)
     thisObject->JSSpeechSynthesis::~JSSpeechSynthesis();
 }
 
-JSSpeechSynthesis::~JSSpeechSynthesis()
+template<> inline JSSpeechSynthesis* BindingCaller<JSSpeechSynthesis>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSSpeechSynthesis*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsSpeechSynthesisPending(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSpeechSynthesis* BindingCaller<JSSpeechSynthesis>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSpeechSynthesisPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SpeechSynthesis", "pending");
-        return throwGetterTypeError(*exec, "SpeechSynthesis", "pending");
+    return jsDynamicDowncast<JSSpeechSynthesis*>(state.thisValue());
+}
+
+static inline JSValue jsSpeechSynthesisPendingGetter(ExecState&, JSSpeechSynthesis&, ThrowScope& throwScope);
+
+EncodedJSValue jsSpeechSynthesisPending(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSpeechSynthesis>::attribute<jsSpeechSynthesisPendingGetter>(state, thisValue, "pending");
+}
+
+static inline JSValue jsSpeechSynthesisPendingGetter(ExecState& state, JSSpeechSynthesis& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.pending());
+    return result;
+}
+
+static inline JSValue jsSpeechSynthesisSpeakingGetter(ExecState&, JSSpeechSynthesis&, ThrowScope& throwScope);
+
+EncodedJSValue jsSpeechSynthesisSpeaking(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSpeechSynthesis>::attribute<jsSpeechSynthesisSpeakingGetter>(state, thisValue, "speaking");
+}
+
+static inline JSValue jsSpeechSynthesisSpeakingGetter(ExecState& state, JSSpeechSynthesis& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.speaking());
+    return result;
+}
+
+static inline JSValue jsSpeechSynthesisPausedGetter(ExecState&, JSSpeechSynthesis&, ThrowScope& throwScope);
+
+EncodedJSValue jsSpeechSynthesisPaused(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSpeechSynthesis>::attribute<jsSpeechSynthesisPausedGetter>(state, thisValue, "paused");
+}
+
+static inline JSValue jsSpeechSynthesisPausedGetter(ExecState& state, JSSpeechSynthesis& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLBoolean>(impl.paused());
+    return result;
+}
+
+bool setJSSpeechSynthesisConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSpeechSynthesisPrototype* domObject = jsDynamicDowncast<JSSpeechSynthesisPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.pending());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionSpeakCaller(JSC::ExecState*, JSSpeechSynthesis*, JSC::ThrowScope&);
 
-EncodedJSValue jsSpeechSynthesisSpeaking(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionSpeak(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSpeechSynthesisPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SpeechSynthesis", "speaking");
-        return throwGetterTypeError(*exec, "SpeechSynthesis", "speaking");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.speaking());
-    return JSValue::encode(result);
+    return BindingCaller<JSSpeechSynthesis>::callOperation<jsSpeechSynthesisPrototypeFunctionSpeakCaller>(state, "speak");
 }
 
-
-EncodedJSValue jsSpeechSynthesisPaused(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionSpeakCaller(JSC::ExecState* state, JSSpeechSynthesis* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSpeechSynthesisPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SpeechSynthesis", "paused");
-        return throwGetterTypeError(*exec, "SpeechSynthesis", "paused");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.paused());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionSpeak(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SpeechSynthesis", "speak");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSpeechSynthesis::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    SpeechSynthesisUtterance* utterance = JSSpeechSynthesisUtterance::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.speak(utterance);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto utterance = convert<IDLInterface<SpeechSynthesisUtterance>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "utterance", "SpeechSynthesis", "speak", "SpeechSynthesisUtterance"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.speak(*utterance);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionCancel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionCancelCaller(JSC::ExecState*, JSSpeechSynthesis*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionCancel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SpeechSynthesis", "cancel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSpeechSynthesis::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSpeechSynthesis>::callOperation<jsSpeechSynthesisPrototypeFunctionCancelCaller>(state, "cancel");
+}
+
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionCancelCaller(JSC::ExecState* state, JSSpeechSynthesis* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.cancel();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionPause(ExecState* exec)
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionPauseCaller(JSC::ExecState*, JSSpeechSynthesis*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionPause(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SpeechSynthesis", "pause");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSpeechSynthesis::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSpeechSynthesis>::callOperation<jsSpeechSynthesisPrototypeFunctionPauseCaller>(state, "pause");
+}
+
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionPauseCaller(JSC::ExecState* state, JSSpeechSynthesis* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.pause();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionResume(ExecState* exec)
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionResumeCaller(JSC::ExecState*, JSSpeechSynthesis*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionResume(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SpeechSynthesis", "resume");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSpeechSynthesis::info());
-    auto& impl = castedThis->impl();
+    return BindingCaller<JSSpeechSynthesis>::callOperation<jsSpeechSynthesisPrototypeFunctionResumeCaller>(state, "resume");
+}
+
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionResumeCaller(JSC::ExecState* state, JSSpeechSynthesis* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
     impl.resume();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionGetVoices(ExecState* exec)
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionGetVoicesCaller(JSC::ExecState*, JSSpeechSynthesis*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSpeechSynthesisPrototypeFunctionGetVoices(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSpeechSynthesis* castedThis = jsDynamicCast<JSSpeechSynthesis*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SpeechSynthesis", "getVoices");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSpeechSynthesis::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getVoices());
-    return JSValue::encode(result);
+    return BindingCaller<JSSpeechSynthesis>::callOperation<jsSpeechSynthesisPrototypeFunctionGetVoicesCaller>(state, "getVoices");
+}
+
+static inline JSC::EncodedJSValue jsSpeechSynthesisPrototypeFunctionGetVoicesCaller(JSC::ExecState* state, JSSpeechSynthesis* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLSequence<IDLInterface<SpeechSynthesisVoice>>>(*state, *castedThis->globalObject(), impl.getVoices()));
 }
 
 bool JSSpeechSynthesisOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -253,9 +292,9 @@ bool JSSpeechSynthesisOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown
 
 void JSSpeechSynthesisOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsSpeechSynthesis = jsCast<JSSpeechSynthesis*>(handle.slot()->asCell());
+    auto* jsSpeechSynthesis = static_cast<JSSpeechSynthesis*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSpeechSynthesis->impl(), jsSpeechSynthesis);
+    uncacheWrapper(world, &jsSpeechSynthesis->wrapped(), jsSpeechSynthesis);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -266,15 +305,12 @@ extern "C" { extern void (*const __identifier("??_7SpeechSynthesis@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15SpeechSynthesisE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SpeechSynthesis* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesis>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSSpeechSynthesis>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7SpeechSynthesis@WebCore@@6B@"));
 #else
@@ -282,7 +318,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SpeechSynthe
 #if COMPILER(CLANG)
     // If this fails SpeechSynthesis does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(SpeechSynthesis), SpeechSynthesis_is_not_polymorphic);
+    static_assert(__is_polymorphic(SpeechSynthesis), "SpeechSynthesis is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -291,13 +327,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SpeechSynthe
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSSpeechSynthesis>(globalObject, impl);
+    return createWrapper<SpeechSynthesis>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SpeechSynthesis& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 SpeechSynthesis* JSSpeechSynthesis::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSSpeechSynthesis*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSSpeechSynthesis*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

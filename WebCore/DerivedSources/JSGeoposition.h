@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSGeoposition_h
-#define JSGeoposition_h
+#pragma once
 
 #if ENABLE(GEOLOCATION)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSGeoposition : public JSDOMWrapper {
+class JSGeoposition : public JSDOMWrapper<Geoposition> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Geoposition>;
     static JSGeoposition* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Geoposition>&& impl)
     {
-        JSGeoposition* ptr = new (NotNull, JSC::allocateCell<JSGeoposition>(globalObject->vm().heap)) JSGeoposition(structure, globalObject, WTF::move(impl));
+        JSGeoposition* ptr = new (NotNull, JSC::allocateCell<JSGeoposition>(globalObject->vm().heap)) JSGeoposition(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Geoposition* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSGeoposition();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Geoposition& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Geoposition* m_impl;
 protected:
-    JSGeoposition(JSC::Structure*, JSDOMGlobalObject*, Ref<Geoposition>&&);
+    JSGeoposition(JSC::Structure*, JSDOMGlobalObject&, Ref<Geoposition>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSGeopositionOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Geoposition*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Geoposition*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Geoposition& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Geoposition* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Geoposition&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Geoposition* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Geoposition>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Geoposition>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Geoposition> {
+    using WrapperClass = JSGeoposition;
+    using ToWrappedReturnType = Geoposition*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(GEOLOCATION)
-
-#endif

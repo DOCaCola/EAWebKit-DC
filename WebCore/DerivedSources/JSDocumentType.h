@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDocumentType_h
-#define JSDocumentType_h
+#pragma once
 
 #include "DocumentType.h"
 #include "JSNode.h"
@@ -28,48 +27,47 @@ namespace WebCore {
 
 class JSDocumentType : public JSNode {
 public:
-    typedef JSNode Base;
+    using Base = JSNode;
+    using DOMWrapped = DocumentType;
     static JSDocumentType* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentType>&& impl)
     {
-        JSDocumentType* ptr = new (NotNull, JSC::allocateCell<JSDocumentType>(globalObject->vm().heap)) JSDocumentType(structure, globalObject, WTF::move(impl));
+        JSDocumentType* ptr = new (NotNull, JSC::allocateCell<JSDocumentType>(globalObject->vm().heap)) JSDocumentType(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DocumentType* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSNodeType), StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSDocumentTypeNodeType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue before(JSC::ExecState*);
-    JSC::JSValue after(JSC::ExecState*);
-    JSC::JSValue replaceWith(JSC::ExecState*);
-    DocumentType& impl() const
+    DocumentType& wrapped() const
     {
-        return static_cast<DocumentType&>(Base::impl());
+        return static_cast<DocumentType&>(Base::wrapped());
     }
 protected:
-    JSDocumentType(JSC::Structure*, JSDOMGlobalObject*, Ref<DocumentType>&&);
+    JSDocumentType(JSC::Structure*, JSDOMGlobalObject&, Ref<DocumentType>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DocumentType&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DocumentType* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DocumentType>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DocumentType>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<DocumentType> {
+    using WrapperClass = JSDocumentType;
+    using ToWrappedReturnType = DocumentType*;
+};
 
 } // namespace WebCore
-
-#endif

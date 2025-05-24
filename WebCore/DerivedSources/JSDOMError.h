@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMError_h
-#define JSDOMError_h
+#pragma once
 
 #include "DOMError.h"
 #include "JSDOMWrapper.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSDOMError : public JSDOMWrapper {
+class JSDOMError : public JSDOMWrapper<DOMError> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<DOMError>;
     static JSDOMError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMError>&& impl)
     {
-        JSDOMError* ptr = new (NotNull, JSC::allocateCell<JSDOMError>(globalObject->vm().heap)) JSDOMError(structure, globalObject, WTF::move(impl));
+        JSDOMError* ptr = new (NotNull, JSC::allocateCell<JSDOMError>(globalObject->vm().heap)) JSDOMError(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMError* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMError();
 
     DECLARE_INFO;
 
@@ -51,22 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    DOMError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMError* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDOMError(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMError>&&);
+    JSDOMError(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMError>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSDOMErrorOwner : public JSC::WeakHandleOwner {
@@ -81,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMError*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMError& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(DOMError* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMError&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMError* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DOMError>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DOMError>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<DOMError> {
+    using WrapperClass = JSDOMError;
+    using ToWrappedReturnType = DOMError*;
+};
 
 } // namespace WebCore
-
-#endif

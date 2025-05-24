@@ -22,7 +22,9 @@
 #include "JSTextMetrics.h"
 
 #include "JSDOMBinding.h"
-#include "TextMetrics.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,12 +33,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsTextMetricsWidth(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTextMetricsConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTextMetricsWidth(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsTextMetricsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSTextMetricsConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSTextMetricsPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSTextMetricsPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSTextMetricsPrototype* ptr = new (NotNull, JSC::allocateCell<JSTextMetricsPrototype>(vm.heap)) JSTextMetricsPrototype(vm, globalObject, structure);
@@ -59,49 +62,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTextMetricsConstructor : public DOMConstructorObject {
-private:
-    JSTextMetricsConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSTextMetricsConstructor = JSDOMConstructorNotConstructable<JSTextMetrics>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTextMetricsConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTextMetricsConstructor* ptr = new (NotNull, JSC::allocateCell<JSTextMetricsConstructor>(vm.heap)) JSTextMetricsConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSTextMetricsConstructor::s_info = { "TextMetricsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextMetricsConstructor) };
-
-JSTextMetricsConstructor::JSTextMetricsConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSTextMetricsConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSTextMetricsConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSTextMetricsConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTextMetrics::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTextMetrics::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TextMetrics"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTextMetricsConstructor::s_info = { "TextMetrics", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextMetricsConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTextMetricsPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextMetricsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextMetricsWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextMetricsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextMetricsConstructor) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextMetricsWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSTextMetricsPrototype::s_info = { "TextMetricsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextMetricsPrototype) };
@@ -114,10 +97,16 @@ void JSTextMetricsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTextMetrics::s_info = { "TextMetrics", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextMetrics) };
 
-JSTextMetrics::JSTextMetrics(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextMetrics>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTextMetrics::JSTextMetrics(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TextMetrics>&& impl)
+    : JSDOMWrapper<TextMetrics>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSTextMetrics::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSTextMetrics::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -125,7 +114,7 @@ JSObject* JSTextMetrics::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSTextMetricsPrototype::create(vm, globalObject, JSTextMetricsPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSTextMetrics::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSTextMetrics::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTextMetrics>(vm, globalObject);
 }
@@ -136,39 +125,54 @@ void JSTextMetrics::destroy(JSC::JSCell* cell)
     thisObject->JSTextMetrics::~JSTextMetrics();
 }
 
-JSTextMetrics::~JSTextMetrics()
+template<> inline JSTextMetrics* BindingCaller<JSTextMetrics>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSTextMetrics*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsTextMetricsWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsTextMetricsWidthGetter(ExecState&, JSTextMetrics&, ThrowScope& throwScope);
+
+EncodedJSValue jsTextMetricsWidth(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTextMetrics* castedThis = jsDynamicCast<JSTextMetrics*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTextMetricsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextMetrics", "width");
-        return throwGetterTypeError(*exec, "TextMetrics", "width");
+    return BindingCaller<JSTextMetrics>::attribute<jsTextMetricsWidthGetter>(state, thisValue, "width");
+}
+
+static inline JSValue jsTextMetricsWidthGetter(ExecState& state, JSTextMetrics& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.width());
+    return result;
+}
+
+EncodedJSValue jsTextMetricsConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSTextMetricsPrototype* domObject = jsDynamicDowncast<JSTextMetricsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSTextMetrics::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSTextMetricsConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSTextMetricsPrototype* domObject = jsDynamicDowncast<JSTextMetricsPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.width());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsTextMetricsConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+JSValue JSTextMetrics::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSTextMetricsPrototype* domObject = jsDynamicCast<JSTextMetricsPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTextMetrics::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSTextMetrics::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSTextMetricsConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTextMetricsConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSTextMetricsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -180,31 +184,32 @@ bool JSTextMetricsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSTextMetricsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsTextMetrics = jsCast<JSTextMetrics*>(handle.slot()->asCell());
+    auto* jsTextMetrics = static_cast<JSTextMetrics*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTextMetrics->impl(), jsTextMetrics);
+    uncacheWrapper(world, &jsTextMetrics->wrapped(), jsTextMetrics);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TextMetrics* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<TextMetrics>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSTextMetrics>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to TextMetrics.
-    COMPILE_ASSERT(!__is_polymorphic(TextMetrics), TextMetrics_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(TextMetrics), "TextMetrics is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSTextMetrics>(globalObject, impl);
+    return createWrapper<TextMetrics>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextMetrics& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 TextMetrics* JSTextMetrics::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSTextMetrics*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSTextMetrics*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

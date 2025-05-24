@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNavigator_h
-#define JSNavigator_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "Navigator.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSNavigator : public JSDOMWrapper {
+class JSNavigator : public JSDOMWrapper<Navigator> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<Navigator>;
     static JSNavigator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Navigator>&& impl)
     {
-        JSNavigator* ptr = new (NotNull, JSC::allocateCell<JSNavigator>(globalObject->vm().heap)) JSNavigator(structure, globalObject, WTF::move(impl));
+        JSNavigator* ptr = new (NotNull, JSC::allocateCell<JSNavigator>(globalObject->vm().heap)) JSNavigator(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Navigator* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSNavigator();
 
     DECLARE_INFO;
 
@@ -51,28 +48,14 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 
-    // Custom functions
-#if ENABLE(MEDIA_STREAM)
-    JSC::JSValue webkitGetUserMedia(JSC::ExecState*);
-#endif
-    Navigator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Navigator* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    // Custom attributes
+    JSC::JSValue webdriver(JSC::ExecState&) const;
 protected:
-    JSNavigator(JSC::Structure*, JSDOMGlobalObject*, Ref<Navigator>&&);
+    JSNavigator(JSC::Structure*, JSDOMGlobalObject&, Ref<Navigator>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSNavigatorOwner : public JSC::WeakHandleOwner {
@@ -87,10 +70,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Navigator*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Navigator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Navigator& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Navigator* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Navigator&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Navigator* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Navigator>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Navigator>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Navigator> {
+    using WrapperClass = JSNavigator;
+    using ToWrappedReturnType = Navigator*;
+};
 
 } // namespace WebCore
-
-#endif

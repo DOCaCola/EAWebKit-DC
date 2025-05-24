@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGDefsElement_h
-#define JSSVGDefsElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGDefsElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGDefsElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGDefsElement;
     static JSSVGDefsElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGDefsElement>&& impl)
     {
-        JSSVGDefsElement* ptr = new (NotNull, JSC::allocateCell<JSSVGDefsElement>(globalObject->vm().heap)) JSSVGDefsElement(structure, globalObject, WTF::move(impl));
+        JSSVGDefsElement* ptr = new (NotNull, JSC::allocateCell<JSSVGDefsElement>(globalObject->vm().heap)) JSSVGDefsElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGDefsElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGDefsElement& wrapped() const
     {
-        return static_cast<SVGDefsElement&>(Base::impl());
+        return static_cast<SVGDefsElement&>(Base::wrapped());
     }
 protected:
-    JSSVGDefsElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGDefsElement>&&);
+    JSSVGDefsElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGDefsElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGDefsElement> {
+    using WrapperClass = JSSVGDefsElement;
+    using ToWrappedReturnType = SVGDefsElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -22,7 +22,7 @@
 #include "JSSVGAnimateMotionElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGAnimateMotionElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -31,11 +31,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGAnimateMotionElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGAnimateMotionElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGAnimateMotionElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGAnimateMotionElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGAnimateMotionElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGAnimateMotionElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateMotionElementPrototype>(vm.heap)) JSSVGAnimateMotionElementPrototype(vm, globalObject, structure);
@@ -58,48 +59,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAnimateMotionElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGAnimateMotionElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGAnimateMotionElementConstructor = JSDOMConstructorNotConstructable<JSSVGAnimateMotionElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAnimateMotionElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAnimateMotionElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateMotionElementConstructor>(vm.heap)) JSSVGAnimateMotionElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAnimateMotionElementConstructor::s_info = { "SVGAnimateMotionElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateMotionElementConstructor) };
-
-JSSVGAnimateMotionElementConstructor::JSSVGAnimateMotionElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGAnimateMotionElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGAnimationElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGAnimateMotionElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGAnimateMotionElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateMotionElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateMotionElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAnimateMotionElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAnimateMotionElementConstructor::s_info = { "SVGAnimateMotionElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateMotionElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnimateMotionElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateMotionElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateMotionElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAnimateMotionElementConstructor) } },
 };
 
 const ClassInfo JSSVGAnimateMotionElementPrototype::s_info = { "SVGAnimateMotionElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateMotionElementPrototype) };
@@ -112,32 +92,63 @@ void JSSVGAnimateMotionElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAnimateMotionElement::s_info = { "SVGAnimateMotionElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateMotionElement) };
 
-JSSVGAnimateMotionElement::JSSVGAnimateMotionElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateMotionElement>&& impl)
-    : JSSVGAnimationElement(structure, globalObject, WTF::move(impl))
+JSSVGAnimateMotionElement::JSSVGAnimateMotionElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAnimateMotionElement>&& impl)
+    : JSSVGAnimationElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGAnimateMotionElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGAnimateMotionElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGAnimateMotionElementPrototype::create(vm, globalObject, JSSVGAnimateMotionElementPrototype::createStructure(vm, globalObject, JSSVGAnimationElement::getPrototype(vm, globalObject)));
+    return JSSVGAnimateMotionElementPrototype::create(vm, globalObject, JSSVGAnimateMotionElementPrototype::createStructure(vm, globalObject, JSSVGAnimationElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGAnimateMotionElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGAnimateMotionElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGAnimateMotionElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGAnimateMotionElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAnimateMotionElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGAnimateMotionElementPrototype* domObject = jsDynamicCast<JSSVGAnimateMotionElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAnimateMotionElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGAnimateMotionElementPrototype* domObject = jsDynamicDowncast<JSSVGAnimateMotionElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGAnimateMotionElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGAnimateMotionElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGAnimateMotionElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGAnimateMotionElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGAnimateMotionElementPrototype* domObject = jsDynamicDowncast<JSSVGAnimateMotionElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGAnimateMotionElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGAnimateMotionElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGAnimateMotionElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGAnimateMotionElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

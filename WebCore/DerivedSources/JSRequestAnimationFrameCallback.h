@@ -18,10 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRequestAnimationFrameCallback_h
-#define JSRequestAnimationFrameCallback_h
-
-#if ENABLE(REQUEST_ANIMATION_FRAME)
+#pragma once
 
 #include "ActiveDOMCallback.h"
 #include "JSCallbackData.h"
@@ -40,18 +37,18 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSRequestAnimationFrameCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(double highResTime);
 
 private:
-    JSRequestAnimationFrameCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
+    JSRequestAnimationFrameCallback(JSC::JSObject*, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
 
+JSC::JSValue toJS(RequestAnimationFrameCallback&);
+inline JSC::JSValue toJS(RequestAnimationFrameCallback* impl) { return impl ? toJS(*impl) : JSC::jsNull(); }
+
 } // namespace WebCore
-
-#endif // ENABLE(REQUEST_ANIMATION_FRAME)
-
-#endif

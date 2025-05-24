@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSPerformanceNavigation_h
-#define JSPerformanceNavigation_h
+#pragma once
 
 #if ENABLE(WEB_TIMING)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSPerformanceNavigation : public JSDOMWrapper {
+class JSPerformanceNavigation : public JSDOMWrapper<PerformanceNavigation> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<PerformanceNavigation>;
     static JSPerformanceNavigation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PerformanceNavigation>&& impl)
     {
-        JSPerformanceNavigation* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigation>(globalObject->vm().heap)) JSPerformanceNavigation(structure, globalObject, WTF::move(impl));
+        JSPerformanceNavigation* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigation>(globalObject->vm().heap)) JSPerformanceNavigation(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static PerformanceNavigation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPerformanceNavigation();
 
     DECLARE_INFO;
 
@@ -52,21 +50,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PerformanceNavigation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PerformanceNavigation* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSPerformanceNavigation(JSC::Structure*, JSDOMGlobalObject*, Ref<PerformanceNavigation>&&);
+    JSPerformanceNavigation(JSC::Structure*, JSDOMGlobalObject&, Ref<PerformanceNavigation>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSPerformanceNavigationOwner : public JSC::WeakHandleOwner {
@@ -81,12 +69,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PerformanceNavigatio
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PerformanceNavigation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PerformanceNavigation& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(PerformanceNavigation* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PerformanceNavigation&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PerformanceNavigation* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<PerformanceNavigation>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<PerformanceNavigation>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<PerformanceNavigation> {
+    using WrapperClass = JSPerformanceNavigation;
+    using ToWrappedReturnType = PerformanceNavigation*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_TIMING)
-
-#endif

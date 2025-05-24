@@ -18,31 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXMLHttpRequest_h
-#define JSXMLHttpRequest_h
+#pragma once
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSXMLHttpRequestEventTarget.h"
 #include "XMLHttpRequest.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSXMLHttpRequest : public JSDOMWrapper {
+class WEBCORE_EXPORT JSXMLHttpRequest : public JSXMLHttpRequestEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSXMLHttpRequestEventTarget;
+    using DOMWrapped = XMLHttpRequest;
     static JSXMLHttpRequest* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequest>&& impl)
     {
-        JSXMLHttpRequest* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequest>(globalObject->vm().heap)) JSXMLHttpRequest(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequest* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequest>(globalObject->vm().heap)) JSXMLHttpRequest(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static XMLHttpRequest* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSXMLHttpRequest();
 
     DECLARE_INFO;
 
@@ -51,35 +49,27 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_response;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 
     // Custom attributes
-    JSC::JSValue responseText(JSC::ExecState*) const;
-    JSC::JSValue response(JSC::ExecState*) const;
+    JSC::JSValue responseText(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue send(JSC::ExecState*);
-    XMLHttpRequest& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLHttpRequest* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
-protected:
-    JSXMLHttpRequest(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequest>&&);
-
-    void finishCreation(JSC::VM& vm)
+    JSC::JSValue send(JSC::ExecState&);
+    JSC::JSValue retrieveResponse(JSC::ExecState&);
+    XMLHttpRequest& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<XMLHttpRequest&>(Base::wrapped());
     }
+protected:
+    JSXMLHttpRequest(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequest>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSXMLHttpRequestOwner : public JSC::WeakHandleOwner {
@@ -94,10 +84,25 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLHttpRequest*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequest*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLHttpRequest& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XMLHttpRequest* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequest&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLHttpRequest* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XMLHttpRequest>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XMLHttpRequest>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XMLHttpRequest> {
+    using WrapperClass = JSXMLHttpRequest;
+    using ToWrappedReturnType = XMLHttpRequest*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, XMLHttpRequest::ResponseType);
+
+template<> std::optional<XMLHttpRequest::ResponseType> parseEnumeration<XMLHttpRequest::ResponseType>(JSC::ExecState&, JSC::JSValue);
+template<> XMLHttpRequest::ResponseType convertEnumeration<XMLHttpRequest::ResponseType>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<XMLHttpRequest::ResponseType>();
 
 
 } // namespace WebCore
-
-#endif

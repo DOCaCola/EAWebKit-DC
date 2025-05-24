@@ -21,8 +21,9 @@
 #include "config.h"
 #include "JSSVGPathElement.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGPathSegArcAbs.h"
@@ -46,28 +47,6 @@
 #include "JSSVGPathSegMovetoAbs.h"
 #include "JSSVGPathSegMovetoRel.h"
 #include "JSSVGPoint.h"
-#include "SVGPathElement.h"
-#include "SVGPathSegArcAbs.h"
-#include "SVGPathSegArcRel.h"
-#include "SVGPathSegClosePath.h"
-#include "SVGPathSegCurvetoCubicAbs.h"
-#include "SVGPathSegCurvetoCubicRel.h"
-#include "SVGPathSegCurvetoCubicSmoothAbs.h"
-#include "SVGPathSegCurvetoCubicSmoothRel.h"
-#include "SVGPathSegCurvetoQuadraticAbs.h"
-#include "SVGPathSegCurvetoQuadraticRel.h"
-#include "SVGPathSegCurvetoQuadraticSmoothAbs.h"
-#include "SVGPathSegCurvetoQuadraticSmoothRel.h"
-#include "SVGPathSegLinetoAbs.h"
-#include "SVGPathSegLinetoHorizontalAbs.h"
-#include "SVGPathSegLinetoHorizontalRel.h"
-#include "SVGPathSegLinetoRel.h"
-#include "SVGPathSegLinetoVerticalAbs.h"
-#include "SVGPathSegLinetoVerticalRel.h"
-#include "SVGPathSegList.h"
-#include "SVGPathSegMovetoAbs.h"
-#include "SVGPathSegMovetoRel.h"
-#include "SVGPoint.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -102,17 +81,18 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPath
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGPathElementPathLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementPathSegList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementNormalizedPathSegList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementAnimatedPathSegList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementAnimatedNormalizedPathSegList(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGPathElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementPathLength(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementPathSegList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementNormalizedPathSegList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementAnimatedPathSegList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementAnimatedNormalizedPathSegList(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGPathElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGPathElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGPathElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGPathElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGPathElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGPathElementPrototype>(vm.heap)) JSSVGPathElementPrototype(vm, globalObject, structure);
@@ -135,76 +115,55 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGPathElementConstructor = JSDOMConstructorNotConstructable<JSSVGPathElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathElementConstructor>(vm.heap)) JSSVGPathElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathElementConstructor::s_info = { "SVGPathElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathElementConstructor) };
-
-JSSVGPathElementConstructor::JSSVGPathElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGPathElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGGraphicsElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGPathElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGPathElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathElementConstructor::s_info = { "SVGPathElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pathLength", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementPathLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pathSegList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "normalizedPathSegList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementNormalizedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animatedPathSegList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementAnimatedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animatedNormalizedPathSegList", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementAnimatedNormalizedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "getTotalLength", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetTotalLength), (intptr_t) (0) },
-    { "getPointAtLength", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetPointAtLength), (intptr_t) (0) },
-    { "getPathSegAtLength", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetPathSegAtLength), (intptr_t) (0) },
-    { "createSVGPathSegClosePath", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePath), (intptr_t) (0) },
-    { "createSVGPathSegMovetoAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbs), (intptr_t) (0) },
-    { "createSVGPathSegMovetoRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRel), (intptr_t) (0) },
-    { "createSVGPathSegLinetoAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbs), (intptr_t) (0) },
-    { "createSVGPathSegLinetoRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRel), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoCubicAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbs), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoCubicRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRel), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoQuadraticAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbs), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoQuadraticRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRel), (intptr_t) (0) },
-    { "createSVGPathSegArcAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbs), (intptr_t) (0) },
-    { "createSVGPathSegArcRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRel), (intptr_t) (0) },
-    { "createSVGPathSegLinetoHorizontalAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbs), (intptr_t) (0) },
-    { "createSVGPathSegLinetoHorizontalRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRel), (intptr_t) (0) },
-    { "createSVGPathSegLinetoVerticalAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbs), (intptr_t) (0) },
-    { "createSVGPathSegLinetoVerticalRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRel), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoCubicSmoothAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbs), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoCubicSmoothRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRel), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoQuadraticSmoothAbs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbs), (intptr_t) (0) },
-    { "createSVGPathSegCurvetoQuadraticSmoothRel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRel), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathElementConstructor) } },
+    { "pathLength", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementPathLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pathSegList", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "normalizedPathSegList", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementNormalizedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animatedPathSegList", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementAnimatedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animatedNormalizedPathSegList", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementAnimatedNormalizedPathSegList), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "getTotalLength", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetTotalLength), (intptr_t) (0) } },
+    { "getPointAtLength", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetPointAtLength), (intptr_t) (0) } },
+    { "getPathSegAtLength", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionGetPathSegAtLength), (intptr_t) (0) } },
+    { "createSVGPathSegClosePath", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePath), (intptr_t) (0) } },
+    { "createSVGPathSegMovetoAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbs), (intptr_t) (0) } },
+    { "createSVGPathSegMovetoRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRel), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbs), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRel), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoCubicAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbs), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoCubicRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRel), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoQuadraticAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbs), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoQuadraticRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRel), (intptr_t) (0) } },
+    { "createSVGPathSegArcAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbs), (intptr_t) (0) } },
+    { "createSVGPathSegArcRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRel), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoHorizontalAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbs), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoHorizontalRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRel), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoVerticalAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbs), (intptr_t) (0) } },
+    { "createSVGPathSegLinetoVerticalRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRel), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoCubicSmoothAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbs), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoCubicSmoothRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRel), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoQuadraticSmoothAbs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbs), (intptr_t) (0) } },
+    { "createSVGPathSegCurvetoQuadraticSmoothRel", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRel), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGPathElementPrototype::s_info = { "SVGPathElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathElementPrototype) };
@@ -217,580 +176,619 @@ void JSSVGPathElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathElement::s_info = { "SVGPathElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathElement) };
 
-JSSVGPathElement::JSSVGPathElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathElement>&& impl)
-    : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
+JSSVGPathElement::JSSVGPathElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathElement>&& impl)
+    : JSSVGGraphicsElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGPathElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGPathElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGPathElementPrototype::create(vm, globalObject, JSSVGPathElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::getPrototype(vm, globalObject)));
+    return JSSVGPathElementPrototype::create(vm, globalObject, JSSVGPathElementPrototype::createStructure(vm, globalObject, JSSVGGraphicsElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGPathElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGPathElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGPathElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathElementPathLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGPathElement* BindingCaller<JSSVGPathElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "pathLength");
-        return throwGetterTypeError(*exec, "SVGPathElement", "pathLength");
+    return jsDynamicDowncast<JSSVGPathElement*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSSVGPathElement* BindingCaller<JSSVGPathElement>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSSVGPathElement*>(state.thisValue());
+}
+
+static inline JSValue jsSVGPathElementPathLengthGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementPathLength(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementPathLengthGetter>(state, thisValue, "pathLength");
+}
+
+static inline JSValue jsSVGPathElementPathLengthGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedNumber>>(state, *thisObject.globalObject(), impl.pathLengthAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGPathElementPathSegListGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementPathSegList(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementPathSegListGetter>(state, thisValue, "pathSegList");
+}
+
+static inline JSValue jsSVGPathElementPathSegListGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGPathSegList>>(state, *thisObject.globalObject(), impl.pathSegList());
+    return result;
+}
+
+static inline JSValue jsSVGPathElementNormalizedPathSegListGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementNormalizedPathSegList(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementNormalizedPathSegListGetter>(state, thisValue, "normalizedPathSegList");
+}
+
+static inline JSValue jsSVGPathElementNormalizedPathSegListGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGPathSegList>>(state, *thisObject.globalObject(), impl.normalizedPathSegList());
+    return result;
+}
+
+static inline JSValue jsSVGPathElementAnimatedPathSegListGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementAnimatedPathSegList(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementAnimatedPathSegListGetter>(state, thisValue, "animatedPathSegList");
+}
+
+static inline JSValue jsSVGPathElementAnimatedPathSegListGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGPathSegList>>(state, *thisObject.globalObject(), impl.animatedPathSegList());
+    return result;
+}
+
+static inline JSValue jsSVGPathElementAnimatedNormalizedPathSegListGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementAnimatedNormalizedPathSegList(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementAnimatedNormalizedPathSegListGetter>(state, thisValue, "animatedNormalizedPathSegList");
+}
+
+static inline JSValue jsSVGPathElementAnimatedNormalizedPathSegListGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGPathSegList>>(state, *thisObject.globalObject(), impl.animatedNormalizedPathSegList());
+    return result;
+}
+
+static inline JSValue jsSVGPathElementExternalResourcesRequiredGetter(ExecState&, JSSVGPathElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGPathElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGPathElement>::attribute<jsSVGPathElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGPathElementExternalResourcesRequiredGetter(ExecState& state, JSSVGPathElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGPathElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGPathElementPrototype* domObject = jsDynamicDowncast<JSSVGPathElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGPathElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGPathElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGPathElementPrototype* domObject = jsDynamicDowncast<JSSVGPathElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedNumber> obj = impl.pathLengthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGPathElementPathSegList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGPathElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "pathSegList");
-        return throwGetterTypeError(*exec, "SVGPathElement", "pathSegList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPathSegListPropertyTearOff*>(impl.pathSegList().get())));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGPathElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetTotalLengthCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGPathElementNormalizedPathSegList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetTotalLength(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "normalizedPathSegList");
-        return throwGetterTypeError(*exec, "SVGPathElement", "normalizedPathSegList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPathSegListPropertyTearOff*>(impl.normalizedPathSegList().get())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionGetTotalLengthCaller>(state, "getTotalLength");
 }
 
-
-EncodedJSValue jsSVGPathElementAnimatedPathSegList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetTotalLengthCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "animatedPathSegList");
-        return throwGetterTypeError(*exec, "SVGPathElement", "animatedPathSegList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPathSegListPropertyTearOff*>(impl.animatedPathSegList().get())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLUnrestrictedFloat>(impl.getTotalLength()));
 }
 
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetPointAtLengthCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGPathElementAnimatedNormalizedPathSegList(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetPointAtLength(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "animatedNormalizedPathSegList");
-        return throwGetterTypeError(*exec, "SVGPathElement", "animatedNormalizedPathSegList");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPathSegListPropertyTearOff*>(impl.animatedNormalizedPathSegList().get())));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionGetPointAtLengthCaller>(state, "getPointAtLength");
 }
 
-
-EncodedJSValue jsSVGPathElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetPointAtLengthCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGPathElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto distance = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<SVGPoint>>(*state, *castedThis->globalObject(), impl.getPointAtLength(WTFMove(distance))));
 }
 
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetPathSegAtLengthCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGPathElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetPathSegAtLength(ExecState* state)
 {
-    JSSVGPathElementPrototype* domObject = jsDynamicCast<JSSVGPathElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathElement::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionGetPathSegAtLengthCaller>(state, "getPathSegAtLength");
 }
 
-JSValue JSSVGPathElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionGetPathSegAtLengthCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    return getDOMConstructor<JSSVGPathElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto distance = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLUnsignedLong>(impl.getPathSegAtLength(WTFMove(distance))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetTotalLength(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePathCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePath(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "getTotalLength");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.getTotalLength());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePathCaller>(state, "createSVGPathSegClosePath");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetPointAtLength(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePathCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "getPointAtLength");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float distance = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGPoint>::create(impl.getPointAtLength(distance))));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegClosePath>>(*state, *castedThis->globalObject(), impl.createSVGPathSegClosePath()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionGetPathSegAtLength(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "getPathSegAtLength");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float distance = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.getPathSegAtLength(distance));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbsCaller>(state, "createSVGPathSegMovetoAbs");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePath(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegClosePath");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegClosePath()));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegMovetoAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegMovetoAbs(WTFMove(x), WTFMove(y))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegMovetoAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegMovetoAbs(x, y)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRelCaller>(state, "createSVGPathSegMovetoRel");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegMovetoRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegMovetoRel(x, y)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegMovetoRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegMovetoRel(WTFMove(x), WTFMove(y))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoAbs(x, y)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbsCaller>(state, "createSVGPathSegLinetoAbs");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoRel(x, y)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoAbs(WTFMove(x), WTFMove(y))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoCubicAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x2 = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y2 = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoCubicAbs(x, y, x1, y1, x2, y2)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRelCaller>(state, "createSVGPathSegLinetoRel");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoCubicRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x2 = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y2 = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoCubicRel(x, y, x1, y1, x2, y2)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoRel(WTFMove(x), WTFMove(y))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoQuadraticAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoQuadraticAbs(x, y, x1, y1)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbsCaller>(state, "createSVGPathSegCurvetoCubicAbs");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoQuadraticRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoQuadraticRel(x, y, x1, y1)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y1 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x2 = convert<IDLUnrestrictedFloat>(*state, state->argument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y2 = convert<IDLUnrestrictedFloat>(*state, state->argument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoCubicAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoCubicAbs(WTFMove(x), WTFMove(y), WTFMove(x1), WTFMove(y1), WTFMove(x2), WTFMove(y2))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegArcAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float r1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float r2 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float angle = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool largeArcFlag = exec->argument(5).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool sweepFlag = exec->argument(6).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegArcAbs(x, y, r1, r2, angle, largeArcFlag, sweepFlag)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRelCaller>(state, "createSVGPathSegCurvetoCubicRel");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegArcRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float r1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float r2 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float angle = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool largeArcFlag = exec->argument(5).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool sweepFlag = exec->argument(6).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegArcRel(x, y, r1, r2, angle, largeArcFlag, sweepFlag)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y1 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x2 = convert<IDLUnrestrictedFloat>(*state, state->argument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y2 = convert<IDLUnrestrictedFloat>(*state, state->argument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoCubicRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoCubicRel(WTFMove(x), WTFMove(y), WTFMove(x1), WTFMove(y1), WTFMove(x2), WTFMove(y2))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoHorizontalAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoHorizontalAbs(x)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbsCaller>(state, "createSVGPathSegCurvetoQuadraticAbs");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoHorizontalRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoHorizontalRel(x)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y1 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoQuadraticAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoQuadraticAbs(WTFMove(x), WTFMove(y), WTFMove(x1), WTFMove(y1))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoVerticalAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float y = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoVerticalAbs(y)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRelCaller>(state, "createSVGPathSegCurvetoQuadraticRel");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegLinetoVerticalRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float y = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegLinetoVerticalRel(y)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y1 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoQuadraticRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoQuadraticRel(WTFMove(x), WTFMove(y), WTFMove(x1), WTFMove(y1))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoCubicSmoothAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x2 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y2 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoCubicSmoothAbs(x, y, x2, y2)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbsCaller>(state, "createSVGPathSegArcAbs");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoCubicSmoothRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float x2 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y2 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoCubicSmoothRel(x, y, x2, y2)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto r1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto r2 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto angle = convert<IDLUnrestrictedFloat>(*state, state->argument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto largeArcFlag = convert<IDLBoolean>(*state, state->argument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto sweepFlag = convert<IDLBoolean>(*state, state->argument(6));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegArcAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegArcAbs(WTFMove(x), WTFMove(y), WTFMove(r1), WTFMove(r2), WTFMove(angle), WTFMove(largeArcFlag), WTFMove(sweepFlag))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbs(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRel(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoQuadraticSmoothAbs");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoQuadraticSmoothAbs(x, y)));
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRelCaller>(state, "createSVGPathSegArcRel");
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRel(ExecState* exec)
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSSVGPathElement* castedThis = jsDynamicCast<JSSVGPathElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPathElement", "createSVGPathSegCurvetoQuadraticSmoothRel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPathElement::info());
-    auto& impl = castedThis->impl();
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGPathSegCurvetoQuadraticSmoothRel(x, y)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto r1 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto r2 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto angle = convert<IDLUnrestrictedFloat>(*state, state->argument(4));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto largeArcFlag = convert<IDLBoolean>(*state, state->argument(5));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto sweepFlag = convert<IDLBoolean>(*state, state->argument(6));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegArcRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegArcRel(WTFMove(x), WTFMove(y), WTFMove(r1), WTFMove(r2), WTFMove(angle), WTFMove(largeArcFlag), WTFMove(sweepFlag))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbs(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbsCaller>(state, "createSVGPathSegLinetoHorizontalAbs");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoHorizontalAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoHorizontalAbs(WTFMove(x))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRel(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRelCaller>(state, "createSVGPathSegLinetoHorizontalRel");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoHorizontalRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoHorizontalRel(WTFMove(x))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbs(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbsCaller>(state, "createSVGPathSegLinetoVerticalAbs");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoVerticalAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoVerticalAbs(WTFMove(y))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRel(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRelCaller>(state, "createSVGPathSegLinetoVerticalRel");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegLinetoVerticalRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegLinetoVerticalRel(WTFMove(y))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbs(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbsCaller>(state, "createSVGPathSegCurvetoCubicSmoothAbs");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x2 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y2 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoCubicSmoothAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoCubicSmoothAbs(WTFMove(x), WTFMove(y), WTFMove(x2), WTFMove(y2))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRel(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRelCaller>(state, "createSVGPathSegCurvetoCubicSmoothRel");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto x2 = convert<IDLUnrestrictedFloat>(*state, state->argument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y2 = convert<IDLUnrestrictedFloat>(*state, state->argument(3));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoCubicSmoothRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoCubicSmoothRel(WTFMove(x), WTFMove(y), WTFMove(x2), WTFMove(y2))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbsCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbs(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbsCaller>(state, "createSVGPathSegCurvetoQuadraticSmoothAbs");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbsCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoQuadraticSmoothAbs>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoQuadraticSmoothAbs(WTFMove(x), WTFMove(y))));
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRelCaller(JSC::ExecState*, JSSVGPathElement*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRel(ExecState* state)
+{
+    return BindingCaller<JSSVGPathElement>::callOperation<jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRelCaller>(state, "createSVGPathSegCurvetoQuadraticSmoothRel");
+}
+
+static inline JSC::EncodedJSValue jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRelCaller(JSC::ExecState* state, JSSVGPathElement* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto x = convert<IDLUnrestrictedFloat>(*state, state->argument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto y = convert<IDLUnrestrictedFloat>(*state, state->argument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SVGPathSegCurvetoQuadraticSmoothRel>>(*state, *castedThis->globalObject(), impl.createSVGPathSegCurvetoQuadraticSmoothRel(WTFMove(x), WTFMove(y))));
+}
+
+void JSSVGPathElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGPathElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSIDBOpenDBRequest_h
-#define JSIDBOpenDBRequest_h
+#pragma once
 
 #if ENABLE(INDEXED_DATABASE)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSIDBOpenDBRequest : public JSIDBRequest {
 public:
-    typedef JSIDBRequest Base;
+    using Base = JSIDBRequest;
+    using DOMWrapped = IDBOpenDBRequest;
     static JSIDBOpenDBRequest* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBOpenDBRequest>&& impl)
     {
-        JSIDBOpenDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequest>(globalObject->vm().heap)) JSIDBOpenDBRequest(structure, globalObject, WTF::move(impl));
+        JSIDBOpenDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequest>(globalObject->vm().heap)) JSIDBOpenDBRequest(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBOpenDBRequest* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,22 +50,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    IDBOpenDBRequest& impl() const
+    IDBOpenDBRequest& wrapped() const
     {
-        return static_cast<IDBOpenDBRequest&>(Base::impl());
+        return static_cast<IDBOpenDBRequest&>(Base::wrapped());
     }
 protected:
-    JSIDBOpenDBRequest(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBOpenDBRequest>&&);
+    JSIDBOpenDBRequest(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBOpenDBRequest>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSIDBOpenDBRequestOwner : public JSC::WeakHandleOwner {
@@ -80,12 +75,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBOpenDBRequest*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBOpenDBRequest*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBOpenDBRequest& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(IDBOpenDBRequest* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBOpenDBRequest&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBOpenDBRequest* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<IDBOpenDBRequest>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<IDBOpenDBRequest>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<IDBOpenDBRequest> {
+    using WrapperClass = JSIDBOpenDBRequest;
+    using ToWrappedReturnType = IDBOpenDBRequest*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(INDEXED_DATABASE)
-
-#endif

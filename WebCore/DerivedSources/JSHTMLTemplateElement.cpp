@@ -19,13 +19,10 @@
 */
 
 #include "config.h"
-
-#if ENABLE(TEMPLATE_ELEMENT)
-
 #include "JSHTMLTemplateElement.h"
 
-#include "HTMLTemplateElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,12 +31,13 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsHTMLTemplateElementContent(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsHTMLTemplateElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLTemplateElementContent(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLTemplateElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSHTMLTemplateElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSHTMLTemplateElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSHTMLTemplateElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSHTMLTemplateElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElementPrototype>(vm.heap)) JSHTMLTemplateElementPrototype(vm, globalObject, structure);
@@ -62,62 +60,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLTemplateElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLTemplateElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSHTMLTemplateElementConstructor = JSDOMConstructorNotConstructable<JSHTMLTemplateElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLTemplateElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLTemplateElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElementConstructor>(vm.heap)) JSHTMLTemplateElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSHTMLTemplateElementTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSHTMLTemplateElementTableValues[] =
+template<> JSValue JSHTMLTemplateElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
-    { "content", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTemplateElementContent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSHTMLTemplateElementTable = { 1, 1, true, JSHTMLTemplateElementTableValues, 0, JSHTMLTemplateElementTableIndex };
-const ClassInfo JSHTMLTemplateElementConstructor::s_info = { "HTMLTemplateElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTemplateElementConstructor) };
-
-JSHTMLTemplateElementConstructor::JSHTMLTemplateElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return JSHTMLElement::getConstructor(vm, &globalObject);
 }
 
-void JSHTMLTemplateElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSHTMLTemplateElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLTemplateElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLTemplateElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLTemplateElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLTemplateElementConstructor::s_info = { "HTMLTemplateElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTemplateElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLTemplateElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTemplateElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTemplateElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTemplateElementConstructor) } },
+    { "content", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTemplateElementContent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLTemplateElementPrototype::s_info = { "HTMLTemplateElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTemplateElementPrototype) };
@@ -128,54 +92,85 @@ void JSHTMLTemplateElementPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSHTMLTemplateElementPrototypeTableValues, *this);
 }
 
-const ClassInfo JSHTMLTemplateElement::s_info = { "HTMLTemplateElement", &Base::s_info, &JSHTMLTemplateElementTable, CREATE_METHOD_TABLE(JSHTMLTemplateElement) };
+const ClassInfo JSHTMLTemplateElement::s_info = { "HTMLTemplateElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTemplateElement) };
 
-JSHTMLTemplateElement::JSHTMLTemplateElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTemplateElement>&& impl)
-    : JSHTMLElement(structure, globalObject, WTF::move(impl))
+JSHTMLTemplateElement::JSHTMLTemplateElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLTemplateElement>&& impl)
+    : JSHTMLElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSHTMLTemplateElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSHTMLTemplateElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSHTMLTemplateElementPrototype::create(vm, globalObject, JSHTMLTemplateElementPrototype::createStructure(vm, globalObject, JSHTMLElement::getPrototype(vm, globalObject)));
+    return JSHTMLTemplateElementPrototype::create(vm, globalObject, JSHTMLTemplateElementPrototype::createStructure(vm, globalObject, JSHTMLElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSHTMLTemplateElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSHTMLTemplateElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSHTMLTemplateElement>(vm, globalObject);
 }
 
-bool JSHTMLTemplateElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSHTMLTemplateElement* BindingCaller<JSHTMLTemplateElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    auto* thisObject = jsCast<JSHTMLTemplateElement*>(object);
+    return jsDynamicDowncast<JSHTMLTemplateElement*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsHTMLTemplateElementContentGetter(ExecState&, JSHTMLTemplateElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsHTMLTemplateElementContent(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSHTMLTemplateElement>::attribute<jsHTMLTemplateElementContentGetter>(state, thisValue, "content");
+}
+
+static inline JSValue jsHTMLTemplateElementContentGetter(ExecState& state, JSHTMLTemplateElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return thisObject.content(state);
+}
+
+EncodedJSValue jsHTMLTemplateElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSHTMLTemplateElementPrototype* domObject = jsDynamicDowncast<JSHTMLTemplateElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSHTMLTemplateElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSHTMLTemplateElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSHTMLTemplateElementPrototype* domObject = jsDynamicDowncast<JSHTMLTemplateElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSHTMLTemplateElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSHTMLTemplateElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSHTMLTemplateElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSHTMLTemplateElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSHTMLTemplateElement, Base>(exec, JSHTMLTemplateElementTable, thisObject, propertyName, slot);
-}
-
-EncodedJSValue jsHTMLTemplateElementContent(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSHTMLTemplateElement*>(slotBase);
-    return JSValue::encode(castedThis->content(exec));
-}
-
-
-EncodedJSValue jsHTMLTemplateElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSHTMLTemplateElementPrototype* domObject = jsDynamicCast<JSHTMLTemplateElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLTemplateElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSHTMLTemplateElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSHTMLTemplateElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 
 }
-
-#endif // ENABLE(TEMPLATE_ELEMENT)

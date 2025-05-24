@@ -24,10 +24,10 @@
 
 #include "JSWebGLDrawBuffers.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "WebGLDrawBuffers.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
+#include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -40,7 +40,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsWebGLDrawBuffersPrototypeFunctionDrawBuffers
 
 class JSWebGLDrawBuffersPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSWebGLDrawBuffersPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSWebGLDrawBuffersPrototype* ptr = new (NotNull, JSC::allocateCell<JSWebGLDrawBuffersPrototype>(vm.heap)) JSWebGLDrawBuffersPrototype(vm, globalObject, structure);
@@ -67,41 +67,41 @@ private:
 
 static const HashTableValue JSWebGLDrawBuffersPrototypeTableValues[] =
 {
-    { "COLOR_ATTACHMENT0_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE0), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT1_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE1), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT2_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE2), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT3_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE3), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT4_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE4), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT5_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE5), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT6_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE6), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT7_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE7), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE8), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT9_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE9), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT10_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEA), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT11_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEB), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT12_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEC), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT13_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CED), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT14_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEE), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT15_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEF), (intptr_t) (0) },
-    { "DRAW_BUFFER0_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8825), (intptr_t) (0) },
-    { "DRAW_BUFFER1_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8826), (intptr_t) (0) },
-    { "DRAW_BUFFER2_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8827), (intptr_t) (0) },
-    { "DRAW_BUFFER3_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8828), (intptr_t) (0) },
-    { "DRAW_BUFFER4_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8829), (intptr_t) (0) },
-    { "DRAW_BUFFER5_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882A), (intptr_t) (0) },
-    { "DRAW_BUFFER6_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882B), (intptr_t) (0) },
-    { "DRAW_BUFFER7_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882C), (intptr_t) (0) },
-    { "DRAW_BUFFER8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882D), (intptr_t) (0) },
-    { "DRAW_BUFFER9_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882E), (intptr_t) (0) },
-    { "DRAW_BUFFER10_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882F), (intptr_t) (0) },
-    { "DRAW_BUFFER11_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8830), (intptr_t) (0) },
-    { "DRAW_BUFFER12_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8831), (intptr_t) (0) },
-    { "DRAW_BUFFER13_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8832), (intptr_t) (0) },
-    { "DRAW_BUFFER14_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8833), (intptr_t) (0) },
-    { "DRAW_BUFFER15_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8834), (intptr_t) (0) },
-    { "MAX_COLOR_ATTACHMENTS_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CDF), (intptr_t) (0) },
-    { "MAX_DRAW_BUFFERS_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8824), (intptr_t) (0) },
-    { "drawBuffersWEBGL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGL), (intptr_t) (1) },
+    { "drawBuffersWEBGL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGL), (intptr_t) (1) } },
+    { "COLOR_ATTACHMENT0_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE0) } },
+    { "COLOR_ATTACHMENT1_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE1) } },
+    { "COLOR_ATTACHMENT2_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE2) } },
+    { "COLOR_ATTACHMENT3_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE3) } },
+    { "COLOR_ATTACHMENT4_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE4) } },
+    { "COLOR_ATTACHMENT5_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE5) } },
+    { "COLOR_ATTACHMENT6_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE6) } },
+    { "COLOR_ATTACHMENT7_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE7) } },
+    { "COLOR_ATTACHMENT8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE8) } },
+    { "COLOR_ATTACHMENT9_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE9) } },
+    { "COLOR_ATTACHMENT10_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEA) } },
+    { "COLOR_ATTACHMENT11_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEB) } },
+    { "COLOR_ATTACHMENT12_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEC) } },
+    { "COLOR_ATTACHMENT13_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CED) } },
+    { "COLOR_ATTACHMENT14_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEE) } },
+    { "COLOR_ATTACHMENT15_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEF) } },
+    { "DRAW_BUFFER0_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8825) } },
+    { "DRAW_BUFFER1_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8826) } },
+    { "DRAW_BUFFER2_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8827) } },
+    { "DRAW_BUFFER3_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8828) } },
+    { "DRAW_BUFFER4_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8829) } },
+    { "DRAW_BUFFER5_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882A) } },
+    { "DRAW_BUFFER6_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882B) } },
+    { "DRAW_BUFFER7_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882C) } },
+    { "DRAW_BUFFER8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882D) } },
+    { "DRAW_BUFFER9_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882E) } },
+    { "DRAW_BUFFER10_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882F) } },
+    { "DRAW_BUFFER11_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8830) } },
+    { "DRAW_BUFFER12_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8831) } },
+    { "DRAW_BUFFER13_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8832) } },
+    { "DRAW_BUFFER14_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8833) } },
+    { "DRAW_BUFFER15_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8834) } },
+    { "MAX_COLOR_ATTACHMENTS_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CDF) } },
+    { "MAX_DRAW_BUFFERS_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8824) } },
 };
 
 const ClassInfo JSWebGLDrawBuffersPrototype::s_info = { "WebGLDrawBuffersPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDrawBuffersPrototype) };
@@ -114,10 +114,16 @@ void JSWebGLDrawBuffersPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLDrawBuffers::s_info = { "WebGLDrawBuffers", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDrawBuffers) };
 
-JSWebGLDrawBuffers::JSWebGLDrawBuffers(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDrawBuffers>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLDrawBuffers::JSWebGLDrawBuffers(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLDrawBuffers>&& impl)
+    : JSDOMWrapper<WebGLDrawBuffers>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSWebGLDrawBuffers::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSWebGLDrawBuffers::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -125,7 +131,7 @@ JSObject* JSWebGLDrawBuffers::createPrototype(VM& vm, JSGlobalObject* globalObje
     return JSWebGLDrawBuffersPrototype::create(vm, globalObject, JSWebGLDrawBuffersPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSWebGLDrawBuffers::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSWebGLDrawBuffers::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSWebGLDrawBuffers>(vm, globalObject);
 }
@@ -136,40 +142,43 @@ void JSWebGLDrawBuffers::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLDrawBuffers::~JSWebGLDrawBuffers();
 }
 
-JSWebGLDrawBuffers::~JSWebGLDrawBuffers()
+template<> inline JSWebGLDrawBuffers* BindingCaller<JSWebGLDrawBuffers>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSWebGLDrawBuffers*>(state.thisValue());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGL(ExecState* exec)
+static inline JSC::EncodedJSValue jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGLCaller(JSC::ExecState*, JSWebGLDrawBuffers*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGL(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSWebGLDrawBuffers* castedThis = jsDynamicCast<JSWebGLDrawBuffers*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLDrawBuffers", "drawBuffersWEBGL");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLDrawBuffers::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Vector<unsigned> buffers = toNativeArray<unsigned>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.drawBuffersWEBGL(buffers);
+    return BindingCaller<JSWebGLDrawBuffers>::callOperation<jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGLCaller>(state, "drawBuffersWEBGL");
+}
+
+static inline JSC::EncodedJSValue jsWebGLDrawBuffersPrototypeFunctionDrawBuffersWEBGLCaller(JSC::ExecState* state, JSWebGLDrawBuffers* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto buffers = convert<IDLSequence<IDLUnsignedLong>>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.drawBuffersWEBGL(WTFMove(buffers));
     return JSValue::encode(jsUndefined());
 }
 
 bool JSWebGLDrawBuffersOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLDrawBuffers = jsCast<JSWebGLDrawBuffers*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDrawBuffers->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDrawBuffers->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
 void JSWebGLDrawBuffersOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsWebGLDrawBuffers = jsCast<JSWebGLDrawBuffers*>(handle.slot()->asCell());
+    auto* jsWebGLDrawBuffers = static_cast<JSWebGLDrawBuffers*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLDrawBuffers->impl(), jsWebGLDrawBuffers);
+    uncacheWrapper(world, &jsWebGLDrawBuffers->wrapped(), jsWebGLDrawBuffers);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -180,15 +189,12 @@ extern "C" { extern void (*const __identifier("??_7WebGLDrawBuffers@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16WebGLDrawBuffersE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDrawBuffers* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<WebGLDrawBuffers>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSWebGLDrawBuffers>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7WebGLDrawBuffers@WebCore@@6B@"));
 #else
@@ -196,7 +202,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDrawBuf
 #if COMPILER(CLANG)
     // If this fails WebGLDrawBuffers does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(WebGLDrawBuffers), WebGLDrawBuffers_is_not_polymorphic);
+    static_assert(__is_polymorphic(WebGLDrawBuffers), "WebGLDrawBuffers is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -205,13 +211,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDrawBuf
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSWebGLDrawBuffers>(globalObject, impl);
+    return createWrapper<WebGLDrawBuffers>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDrawBuffers& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 WebGLDrawBuffers* JSWebGLDrawBuffers::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSWebGLDrawBuffers*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSWebGLDrawBuffers*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSPageRule_h
-#define JSCSSPageRule_h
+#pragma once
 
 #include "CSSPageRule.h"
 #include "JSCSSRule.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSCSSPageRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = CSSPageRule;
     static JSCSSPageRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSPageRule>&& impl)
     {
-        JSCSSPageRule* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRule>(globalObject->vm().heap)) JSCSSPageRule(structure, globalObject, WTF::move(impl));
+        JSCSSPageRule* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRule>(globalObject->vm().heap)) JSCSSPageRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSPageRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    CSSPageRule& wrapped() const
     {
-        return static_cast<CSSPageRule&>(Base::impl());
+        return static_cast<CSSPageRule&>(Base::wrapped());
     }
 protected:
-    JSCSSPageRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSPageRule>&&);
+    JSCSSPageRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSPageRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<CSSPageRule> {
+    using WrapperClass = JSCSSPageRule;
+    using ToWrappedReturnType = CSSPageRule*;
+};
 
 } // namespace WebCore
-
-#endif

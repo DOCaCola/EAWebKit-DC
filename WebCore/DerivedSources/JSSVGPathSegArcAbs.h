@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegArcAbs_h
-#define JSSVGPathSegArcAbs_h
+#pragma once
 
 #include "JSSVGPathSeg.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGPathSegArcAbs : public JSSVGPathSeg {
 public:
-    typedef JSSVGPathSeg Base;
+    using Base = JSSVGPathSeg;
+    using DOMWrapped = SVGPathSegArcAbs;
     static JSSVGPathSegArcAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegArcAbs>&& impl)
     {
-        JSSVGPathSegArcAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegArcAbs>(globalObject->vm().heap)) JSSVGPathSegArcAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegArcAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegArcAbs>(globalObject->vm().heap)) JSSVGPathSegArcAbs(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,21 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegArcAbs& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    SVGPathSegArcAbs& wrapped() const
     {
-        return static_cast<SVGPathSegArcAbs&>(Base::impl());
+        return static_cast<SVGPathSegArcAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegArcAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegArcAbs>&&);
+    JSSVGPathSegArcAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegArcAbs>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGPathSegArcAbs> {
+    using WrapperClass = JSSVGPathSegArcAbs;
+    using ToWrappedReturnType = SVGPathSegArcAbs*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -80,6 +80,32 @@
 #define DASHBOARD_SUPPORT_SETTINGS_SETTER_BODIES
 #endif
 
+#if ENABLE(DATA_DETECTION)
+#define DATA_DETECTION_SETTINGS_GETTER_AND_SETTERS \
+    const DataDetectorTypes& dataDetectorTypes() { return m_dataDetectorTypes; } \
+     void setDataDetectorTypes(const DataDetectorTypes& dataDetectorTypes) { m_dataDetectorTypes = dataDetectorTypes; } \
+// End of DATA_DETECTION_SETTINGS_GETTER_AND_SETTERS
+#define DATA_DETECTION_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
+    DataDetectorTypes m_dataDetectorTypes; \
+// End of DATA_DETECTION_SETTINGS_NON_BOOL_MEMBER_VARIABLES
+#define DATA_DETECTION_SETTINGS_BOOL_MEMBER_VARIABLES \
+// End of DATA_DETECTION_SETTINGS_BOOL_MEMBER_VARIABLES
+#define DATA_DETECTION_SETTINGS_NON_BOOL_INITIALIZERS \
+    , m_dataDetectorTypes(DataDetectorTypeNone) \
+// End of DATA_DETECTION_SETTINGS_NON_BOOL_INITIALIZERS
+#define DATA_DETECTION_SETTINGS_BOOL_INITIALIZERS \
+// End of DATA_DETECTION_SETTINGS_BOOL_INITIALIZERS
+#define DATA_DETECTION_SETTINGS_SETTER_BODIES \
+// End of DATA_DETECTION_SETTINGS_SETTER_BODIES
+#else
+#define DATA_DETECTION_SETTINGS_GETTER_AND_SETTERS
+#define DATA_DETECTION_SETTINGS_NON_BOOL_MEMBER_VARIABLES
+#define DATA_DETECTION_SETTINGS_BOOL_MEMBER_VARIABLES
+#define DATA_DETECTION_SETTINGS_NON_BOOL_INITIALIZERS
+#define DATA_DETECTION_SETTINGS_BOOL_INITIALIZERS
+#define DATA_DETECTION_SETTINGS_SETTER_BODIES
+#endif
+
 #if ENABLE(FULLSCREEN_API)
 #define FULLSCREEN_API_SETTINGS_GETTER_AND_SETTERS \
     bool fullScreenEnabled() const { return m_fullScreenEnabled; } \
@@ -104,32 +130,6 @@
 #define FULLSCREEN_API_SETTINGS_NON_BOOL_INITIALIZERS
 #define FULLSCREEN_API_SETTINGS_BOOL_INITIALIZERS
 #define FULLSCREEN_API_SETTINGS_SETTER_BODIES
-#endif
-
-#if ENABLE(IOS_TEXT_AUTOSIZING)
-#define IOS_TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS \
-    float minimumZoomFontSize() const { return m_minimumZoomFontSize; } \
-     void setMinimumZoomFontSize(float minimumZoomFontSize) { m_minimumZoomFontSize = minimumZoomFontSize; } \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
-    float m_minimumZoomFontSize; \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES
-#define IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES
-#define IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS \
-    , m_minimumZoomFontSize(15) \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES \
-// End of IOS_TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES
-#else
-#define IOS_TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES
-#define IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES
-#define IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS
-#define IOS_TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES
 #endif
 
 #if ENABLE(MEDIA_SOURCE)
@@ -244,6 +244,53 @@
 #define SMOOTH_SCROLLING_SETTINGS_SETTER_BODIES
 #endif
 
+#if ENABLE(TEXT_AUTOSIZING)
+#define TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS \
+    float minimumZoomFontSize() const { return m_minimumZoomFontSize; } \
+     void setMinimumZoomFontSize(float minimumZoomFontSize) { m_minimumZoomFontSize = minimumZoomFontSize; } \
+    bool textAutosizingEnabled() const { return m_textAutosizingEnabled; } \
+    WEBCORE_EXPORT void setTextAutosizingEnabled(bool textAutosizingEnabled); \
+    const IntSize& textAutosizingWindowSizeOverride() { return m_textAutosizingWindowSizeOverride; } \
+    WEBCORE_EXPORT void setTextAutosizingWindowSizeOverride(const IntSize& textAutosizingWindowSizeOverride); \
+// End of TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS
+#define TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
+    float m_minimumZoomFontSize; \
+    IntSize m_textAutosizingWindowSizeOverride; \
+// End of TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES
+#define TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES \
+    bool m_textAutosizingEnabled : 1; \
+// End of TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES
+#define TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS \
+    , m_minimumZoomFontSize(defaultMinimumZoomFontSize()) \
+// End of TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS
+#define TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS \
+    , m_textAutosizingEnabled(defaultTextAutosizingEnabled()) \
+// End of TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS
+#define TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES \
+void Settings::setTextAutosizingEnabled(bool textAutosizingEnabled) \
+{ \
+    if (m_textAutosizingEnabled == textAutosizingEnabled) \
+        return; \
+    m_textAutosizingEnabled = textAutosizingEnabled; \
+    m_page->setNeedsRecalcStyleInAllFrames(); \
+} \
+void Settings::setTextAutosizingWindowSizeOverride(const IntSize& textAutosizingWindowSizeOverride) \
+{ \
+    if (m_textAutosizingWindowSizeOverride == textAutosizingWindowSizeOverride) \
+        return; \
+    m_textAutosizingWindowSizeOverride = textAutosizingWindowSizeOverride; \
+    m_page->setNeedsRecalcStyleInAllFrames(); \
+} \
+// End of TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES
+#else
+#define TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS
+#define TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES
+#define TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES
+#define TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS
+#define TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS
+#define TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES
+#endif
+
 #if ENABLE(VIDEO_TRACK)
 #define VIDEO_TRACK_SETTINGS_GETTER_AND_SETTERS \
     bool shouldDisplayCaptions() const { return m_shouldDisplayCaptions; } \
@@ -349,8 +396,8 @@
      void setAcceleratedFiltersEnabled(bool acceleratedFiltersEnabled) { m_acceleratedFiltersEnabled = acceleratedFiltersEnabled; } \
     bool aggressiveTileRetentionEnabled() const { return m_aggressiveTileRetentionEnabled; } \
      void setAggressiveTileRetentionEnabled(bool aggressiveTileRetentionEnabled) { m_aggressiveTileRetentionEnabled = aggressiveTileRetentionEnabled; } \
-    bool allowCustomScrollbarInMainFrame() const { return m_allowCustomScrollbarInMainFrame; } \
-     void setAllowCustomScrollbarInMainFrame(bool allowCustomScrollbarInMainFrame) { m_allowCustomScrollbarInMainFrame = allowCustomScrollbarInMainFrame; } \
+    bool allowContentSecurityPolicySourceStarToMatchAnyProtocol() const { return m_allowContentSecurityPolicySourceStarToMatchAnyProtocol; } \
+     void setAllowContentSecurityPolicySourceStarToMatchAnyProtocol(bool allowContentSecurityPolicySourceStarToMatchAnyProtocol) { m_allowContentSecurityPolicySourceStarToMatchAnyProtocol = allowContentSecurityPolicySourceStarToMatchAnyProtocol; } \
     bool allowDisplayOfInsecureContent() const { return m_allowDisplayOfInsecureContent; } \
      void setAllowDisplayOfInsecureContent(bool allowDisplayOfInsecureContent) { m_allowDisplayOfInsecureContent = allowDisplayOfInsecureContent; } \
     bool allowFileAccessFromFileURLs() const { return m_allowFileAccessFromFileURLs; } \
@@ -365,16 +412,16 @@
      void setAllowUniversalAccessFromFileURLs(bool allowUniversalAccessFromFileURLs) { m_allowUniversalAccessFromFileURLs = allowUniversalAccessFromFileURLs; } \
     bool allowsInlineMediaPlayback() const { return m_allowsInlineMediaPlayback; } \
      void setAllowsInlineMediaPlayback(bool allowsInlineMediaPlayback) { m_allowsInlineMediaPlayback = allowsInlineMediaPlayback; } \
+    bool allowsInlineMediaPlaybackAfterFullscreen() const { return m_allowsInlineMediaPlaybackAfterFullscreen; } \
+     void setAllowsInlineMediaPlaybackAfterFullscreen(bool allowsInlineMediaPlaybackAfterFullscreen) { m_allowsInlineMediaPlaybackAfterFullscreen = allowsInlineMediaPlaybackAfterFullscreen; } \
     bool allowsPictureInPictureMediaPlayback() const { return m_allowsPictureInPictureMediaPlayback; } \
      void setAllowsPictureInPictureMediaPlayback(bool allowsPictureInPictureMediaPlayback) { m_allowsPictureInPictureMediaPlayback = allowsPictureInPictureMediaPlayback; } \
     bool alwaysUseAcceleratedOverflowScroll() const { return m_alwaysUseAcceleratedOverflowScroll; } \
      void setAlwaysUseAcceleratedOverflowScroll(bool alwaysUseAcceleratedOverflowScroll) { m_alwaysUseAcceleratedOverflowScroll = alwaysUseAcceleratedOverflowScroll; } \
-    bool antialiased2dCanvasEnabled() const { return m_antialiased2dCanvasEnabled; } \
-     void setAntialiased2dCanvasEnabled(bool antialiased2dCanvasEnabled) { m_antialiased2dCanvasEnabled = antialiased2dCanvasEnabled; } \
+    bool animatedImageAsyncDecodingEnabled() const { return m_animatedImageAsyncDecodingEnabled; } \
+     void setAnimatedImageAsyncDecodingEnabled(bool animatedImageAsyncDecodingEnabled) { m_animatedImageAsyncDecodingEnabled = animatedImageAsyncDecodingEnabled; } \
     bool appleMailPaginationQuirkEnabled() const { return m_appleMailPaginationQuirkEnabled; } \
      void setAppleMailPaginationQuirkEnabled(bool appleMailPaginationQuirkEnabled) { m_appleMailPaginationQuirkEnabled = appleMailPaginationQuirkEnabled; } \
-    bool applyDeviceScaleFactorInCompositor() const { return m_applyDeviceScaleFactorInCompositor; } \
-     void setApplyDeviceScaleFactorInCompositor(bool applyDeviceScaleFactorInCompositor) { m_applyDeviceScaleFactorInCompositor = applyDeviceScaleFactorInCompositor; } \
     bool asynchronousSpellCheckingEnabled() const { return m_asynchronousSpellCheckingEnabled; } \
      void setAsynchronousSpellCheckingEnabled(bool asynchronousSpellCheckingEnabled) { m_asynchronousSpellCheckingEnabled = asynchronousSpellCheckingEnabled; } \
     bool audioPlaybackRequiresUserGesture() const { return m_audioPlaybackRequiresUserGesture; } \
@@ -393,6 +440,8 @@
      void setCanvasUsesAcceleratedDrawing(bool canvasUsesAcceleratedDrawing) { m_canvasUsesAcceleratedDrawing = canvasUsesAcceleratedDrawing; } \
     bool caretBrowsingEnabled() const { return m_caretBrowsingEnabled; } \
      void setCaretBrowsingEnabled(bool caretBrowsingEnabled) { m_caretBrowsingEnabled = caretBrowsingEnabled; } \
+    const ClipboardAccessPolicy& clipboardAccessPolicy() { return m_clipboardAccessPolicy; } \
+     void setClipboardAccessPolicy(const ClipboardAccessPolicy& clipboardAccessPolicy) { m_clipboardAccessPolicy = clipboardAccessPolicy; } \
     bool contentDispositionAttachmentSandboxEnabled() const { return m_contentDispositionAttachmentSandboxEnabled; } \
      void setContentDispositionAttachmentSandboxEnabled(bool contentDispositionAttachmentSandboxEnabled) { m_contentDispositionAttachmentSandboxEnabled = contentDispositionAttachmentSandboxEnabled; } \
     bool cookieEnabled() const { return m_cookieEnabled; } \
@@ -407,6 +456,8 @@
      void setDefaultTextEncodingName(const String& defaultTextEncodingName) { m_defaultTextEncodingName = defaultTextEncodingName; } \
     const String& defaultVideoPosterURL() { return m_defaultVideoPosterURL; } \
      void setDefaultVideoPosterURL(const String& defaultVideoPosterURL) { m_defaultVideoPosterURL = defaultVideoPosterURL; } \
+    bool deferredCSSParserEnabled() const { return m_deferredCSSParserEnabled; } \
+     void setDeferredCSSParserEnabled(bool deferredCSSParserEnabled) { m_deferredCSSParserEnabled = deferredCSSParserEnabled; } \
     bool delegatesPageScaling() const { return m_delegatesPageScaling; } \
      void setDelegatesPageScaling(bool delegatesPageScaling) { m_delegatesPageScaling = delegatesPageScaling; } \
     bool developerExtrasEnabled() const { return m_developerExtrasEnabled; } \
@@ -417,6 +468,8 @@
      void setDeviceWidth(int deviceWidth) { m_deviceWidth = deviceWidth; } \
     bool diagnosticLoggingEnabled() const { return m_diagnosticLoggingEnabled; } \
      void setDiagnosticLoggingEnabled(bool diagnosticLoggingEnabled) { m_diagnosticLoggingEnabled = diagnosticLoggingEnabled; } \
+    bool displayListDrawingEnabled() const { return m_displayListDrawingEnabled; } \
+     void setDisplayListDrawingEnabled(bool displayListDrawingEnabled) { m_displayListDrawingEnabled = displayListDrawingEnabled; } \
     bool domTimersThrottlingEnabled() const { return m_domTimersThrottlingEnabled; } \
      void setDOMTimersThrottlingEnabled(bool domTimersThrottlingEnabled) { m_domTimersThrottlingEnabled = domTimersThrottlingEnabled; } \
     bool downloadableBinaryFontsEnabled() const { return m_downloadableBinaryFontsEnabled; } \
@@ -445,6 +498,12 @@
      void setForceSoftwareWebGLRendering(bool forceSoftwareWebGLRendering) { m_forceSoftwareWebGLRendering = forceSoftwareWebGLRendering; } \
     bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const { return m_forceUpdateScrollbarsOnMainThreadForPerformanceTesting; } \
      void setForceUpdateScrollbarsOnMainThreadForPerformanceTesting(bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting) { m_forceUpdateScrollbarsOnMainThreadForPerformanceTesting = forceUpdateScrollbarsOnMainThreadForPerformanceTesting; } \
+    const ForcedAccessibilityValue& forcedColorsAreInvertedAccessibilityValue() { return m_forcedColorsAreInvertedAccessibilityValue; } \
+     void setForcedColorsAreInvertedAccessibilityValue(const ForcedAccessibilityValue& forcedColorsAreInvertedAccessibilityValue) { m_forcedColorsAreInvertedAccessibilityValue = forcedColorsAreInvertedAccessibilityValue; } \
+    const ForcedAccessibilityValue& forcedDisplayIsMonochromeAccessibilityValue() { return m_forcedDisplayIsMonochromeAccessibilityValue; } \
+     void setForcedDisplayIsMonochromeAccessibilityValue(const ForcedAccessibilityValue& forcedDisplayIsMonochromeAccessibilityValue) { m_forcedDisplayIsMonochromeAccessibilityValue = forcedDisplayIsMonochromeAccessibilityValue; } \
+    const ForcedAccessibilityValue& forcedPrefersReducedMotionAccessibilityValue() { return m_forcedPrefersReducedMotionAccessibilityValue; } \
+     void setForcedPrefersReducedMotionAccessibilityValue(const ForcedAccessibilityValue& forcedPrefersReducedMotionAccessibilityValue) { m_forcedPrefersReducedMotionAccessibilityValue = forcedPrefersReducedMotionAccessibilityValue; } \
     bool frameFlatteningEnabled() const { return m_frameFlatteningEnabled; } \
      void setFrameFlatteningEnabled(bool frameFlatteningEnabled) { m_frameFlatteningEnabled = frameFlatteningEnabled; } \
     const String& ftpDirectoryTemplatePath() { return m_ftpDirectoryTemplatePath; } \
@@ -453,20 +512,28 @@
      void setHttpEquivEnabled(bool httpEquivEnabled) { m_httpEquivEnabled = httpEquivEnabled; } \
     bool hyperlinkAuditingEnabled() const { return m_hyperlinkAuditingEnabled; } \
      void setHyperlinkAuditingEnabled(bool hyperlinkAuditingEnabled) { m_hyperlinkAuditingEnabled = hyperlinkAuditingEnabled; } \
-    bool ignoreViewportScalingConstraints() const { return m_ignoreViewportScalingConstraints; } \
-     void setIgnoreViewportScalingConstraints(bool ignoreViewportScalingConstraints) { m_ignoreViewportScalingConstraints = ignoreViewportScalingConstraints; } \
     bool imageSubsamplingEnabled() const { return m_imageSubsamplingEnabled; } \
      void setImageSubsamplingEnabled(bool imageSubsamplingEnabled) { m_imageSubsamplingEnabled = imageSubsamplingEnabled; } \
     double incrementalRenderingSuppressionTimeoutInSeconds() const { return m_incrementalRenderingSuppressionTimeoutInSeconds; } \
      void setIncrementalRenderingSuppressionTimeoutInSeconds(double incrementalRenderingSuppressionTimeoutInSeconds) { m_incrementalRenderingSuppressionTimeoutInSeconds = incrementalRenderingSuppressionTimeoutInSeconds; } \
+    bool inlineMediaPlaybackRequiresPlaysInlineAttribute() const { return m_inlineMediaPlaybackRequiresPlaysInlineAttribute; } \
+     void setInlineMediaPlaybackRequiresPlaysInlineAttribute(bool inlineMediaPlaybackRequiresPlaysInlineAttribute) { m_inlineMediaPlaybackRequiresPlaysInlineAttribute = inlineMediaPlaybackRequiresPlaysInlineAttribute; } \
+    bool inputEventsEnabled() const { return m_inputEventsEnabled; } \
+     void setInputEventsEnabled(bool inputEventsEnabled) { m_inputEventsEnabled = inputEventsEnabled; } \
     bool interactiveFormValidationEnabled() const { return m_interactiveFormValidationEnabled; } \
      void setInteractiveFormValidationEnabled(bool interactiveFormValidationEnabled) { m_interactiveFormValidationEnabled = interactiveFormValidationEnabled; } \
+    bool invisibleAutoplayNotPermitted() const { return m_invisibleAutoplayNotPermitted; } \
+     void setInvisibleAutoplayNotPermitted(bool invisibleAutoplayNotPermitted) { m_invisibleAutoplayNotPermitted = invisibleAutoplayNotPermitted; } \
     bool javaScriptCanAccessClipboard() const { return m_javaScriptCanAccessClipboard; } \
      void setJavaScriptCanAccessClipboard(bool javaScriptCanAccessClipboard) { m_javaScriptCanAccessClipboard = javaScriptCanAccessClipboard; } \
     bool javaScriptCanOpenWindowsAutomatically() const { return m_javaScriptCanOpenWindowsAutomatically; } \
      void setJavaScriptCanOpenWindowsAutomatically(bool javaScriptCanOpenWindowsAutomatically) { m_javaScriptCanOpenWindowsAutomatically = javaScriptCanOpenWindowsAutomatically; } \
     const JSC::RuntimeFlags& javaScriptRuntimeFlags() { return m_javaScriptRuntimeFlags; } \
      void setJavaScriptRuntimeFlags(const JSC::RuntimeFlags& javaScriptRuntimeFlags) { m_javaScriptRuntimeFlags = javaScriptRuntimeFlags; } \
+    bool langAttributeAwareFormControlUIEnabled() const { return m_langAttributeAwareFormControlUIEnabled; } \
+     void setLangAttributeAwareFormControlUIEnabled(bool langAttributeAwareFormControlUIEnabled) { m_langAttributeAwareFormControlUIEnabled = langAttributeAwareFormControlUIEnabled; } \
+    bool largeImageAsyncDecodingEnabled() const { return m_largeImageAsyncDecodingEnabled; } \
+     void setLargeImageAsyncDecodingEnabled(bool largeImageAsyncDecodingEnabled) { m_largeImageAsyncDecodingEnabled = largeImageAsyncDecodingEnabled; } \
     int layoutFallbackWidth() const { return m_layoutFallbackWidth; } \
      void setLayoutFallbackWidth(int layoutFallbackWidth) { m_layoutFallbackWidth = layoutFallbackWidth; } \
     bool loadDeferringEnabled() const { return m_loadDeferringEnabled; } \
@@ -481,8 +548,8 @@
      void setLocalStorageEnabled(bool localStorageEnabled) { m_localStorageEnabled = localStorageEnabled; } \
     bool logsPageMessagesToSystemConsoleEnabled() const { return m_logsPageMessagesToSystemConsoleEnabled; } \
      void setLogsPageMessagesToSystemConsoleEnabled(bool logsPageMessagesToSystemConsoleEnabled) { m_logsPageMessagesToSystemConsoleEnabled = logsPageMessagesToSystemConsoleEnabled; } \
-    bool longMousePressEnabled() const { return m_longMousePressEnabled; } \
-     void setLongMousePressEnabled(bool longMousePressEnabled) { m_longMousePressEnabled = longMousePressEnabled; } \
+    bool mainContentUserGestureOverrideEnabled() const { return m_mainContentUserGestureOverrideEnabled; } \
+     void setMainContentUserGestureOverrideEnabled(bool mainContentUserGestureOverrideEnabled) { m_mainContentUserGestureOverrideEnabled = mainContentUserGestureOverrideEnabled; } \
     double maxParseDuration() const { return m_maxParseDuration; } \
      void setMaxParseDuration(double maxParseDuration) { m_maxParseDuration = maxParseDuration; } \
     unsigned maximumHTMLParserDOMTreeDepth() const { return m_maximumHTMLParserDOMTreeDepth; } \
@@ -495,8 +562,6 @@
      void setMediaDataLoadsAutomatically(bool mediaDataLoadsAutomatically) { m_mediaDataLoadsAutomatically = mediaDataLoadsAutomatically; } \
     bool mediaEnabled() const { return m_mediaEnabled; } \
      void setMediaEnabled(bool mediaEnabled) { m_mediaEnabled = mediaEnabled; } \
-    bool mediaStreamEnabled() const { return m_mediaStreamEnabled; } \
-     void setMediaStreamEnabled(bool mediaStreamEnabled) { m_mediaStreamEnabled = mediaStreamEnabled; } \
     int minimumAccelerated2dCanvasSize() const { return m_minimumAccelerated2dCanvasSize; } \
      void setMinimumAccelerated2dCanvasSize(int minimumAccelerated2dCanvasSize) { m_minimumAccelerated2dCanvasSize = minimumAccelerated2dCanvasSize; } \
     int minimumFontSize() const { return m_minimumFontSize; } \
@@ -509,14 +574,14 @@
      void setNeedsKeyboardEventDisambiguationQuirks(bool needsKeyboardEventDisambiguationQuirks) { m_needsKeyboardEventDisambiguationQuirks = needsKeyboardEventDisambiguationQuirks; } \
     bool needsSiteSpecificQuirks() const { return m_needsSiteSpecificQuirks; } \
      void setNeedsSiteSpecificQuirks(bool needsSiteSpecificQuirks) { m_needsSiteSpecificQuirks = needsSiteSpecificQuirks; } \
+    bool needsStorageAccessFromFileURLsQuirk() const { return m_needsStorageAccessFromFileURLsQuirk; } \
+     void setNeedsStorageAccessFromFileURLsQuirk(bool needsStorageAccessFromFileURLsQuirk) { m_needsStorageAccessFromFileURLsQuirk = needsStorageAccessFromFileURLsQuirk; } \
     bool newBlockInsideInlineModelEnabled() const { return m_newBlockInsideInlineModelEnabled; } \
     WEBCORE_EXPORT void setNewBlockInsideInlineModelEnabled(bool newBlockInsideInlineModelEnabled); \
     bool notificationsEnabled() const { return m_notificationsEnabled; } \
      void setNotificationsEnabled(bool notificationsEnabled) { m_notificationsEnabled = notificationsEnabled; } \
     bool offlineWebApplicationCacheEnabled() const { return m_offlineWebApplicationCacheEnabled; } \
      void setOfflineWebApplicationCacheEnabled(bool offlineWebApplicationCacheEnabled) { m_offlineWebApplicationCacheEnabled = offlineWebApplicationCacheEnabled; } \
-    bool openGLMultisamplingEnabled() const { return m_openGLMultisamplingEnabled; } \
-     void setOpenGLMultisamplingEnabled(bool openGLMultisamplingEnabled) { m_openGLMultisamplingEnabled = openGLMultisamplingEnabled; } \
     bool pageCacheSupportsPlugins() const { return m_pageCacheSupportsPlugins; } \
      void setPageCacheSupportsPlugins(bool pageCacheSupportsPlugins) { m_pageCacheSupportsPlugins = pageCacheSupportsPlugins; } \
     bool paginateDuringLayoutEnabled() const { return m_paginateDuringLayoutEnabled; } \
@@ -525,18 +590,22 @@
      void setPasswordEchoDurationInSeconds(double passwordEchoDurationInSeconds) { m_passwordEchoDurationInSeconds = passwordEchoDurationInSeconds; } \
     bool passwordEchoEnabled() const { return m_passwordEchoEnabled; } \
      void setPasswordEchoEnabled(bool passwordEchoEnabled) { m_passwordEchoEnabled = passwordEchoEnabled; } \
+    const PDFImageCachingPolicy& pdfImageCachingPolicy() { return m_pdfImageCachingPolicy; } \
+     void setPdfImageCachingPolicy(const PDFImageCachingPolicy& pdfImageCachingPolicy) { m_pdfImageCachingPolicy = pdfImageCachingPolicy; } \
     bool plugInSnapshottingEnabled() const { return m_plugInSnapshottingEnabled; } \
      void setPlugInSnapshottingEnabled(bool plugInSnapshottingEnabled) { m_plugInSnapshottingEnabled = plugInSnapshottingEnabled; } \
+    bool preferLowPowerWebGLRendering() const { return m_preferLowPowerWebGLRendering; } \
+     void setPreferLowPowerWebGLRendering(bool preferLowPowerWebGLRendering) { m_preferLowPowerWebGLRendering = preferLowPowerWebGLRendering; } \
     bool preventKeyboardDOMEventDispatch() const { return m_preventKeyboardDOMEventDispatch; } \
      void setPreventKeyboardDOMEventDispatch(bool preventKeyboardDOMEventDispatch) { m_preventKeyboardDOMEventDispatch = preventKeyboardDOMEventDispatch; } \
     bool primaryPlugInSnapshotDetectionEnabled() const { return m_primaryPlugInSnapshotDetectionEnabled; } \
      void setPrimaryPlugInSnapshotDetectionEnabled(bool primaryPlugInSnapshotDetectionEnabled) { m_primaryPlugInSnapshotDetectionEnabled = primaryPlugInSnapshotDetectionEnabled; } \
-    bool privilegedWebGLExtensionsEnabled() const { return m_privilegedWebGLExtensionsEnabled; } \
-     void setPrivilegedWebGLExtensionsEnabled(bool privilegedWebGLExtensionsEnabled) { m_privilegedWebGLExtensionsEnabled = privilegedWebGLExtensionsEnabled; } \
+    bool quickTimePluginReplacementEnabled() const { return m_quickTimePluginReplacementEnabled; } \
+     void setQuickTimePluginReplacementEnabled(bool quickTimePluginReplacementEnabled) { m_quickTimePluginReplacementEnabled = quickTimePluginReplacementEnabled; } \
     bool requestAnimationFrameEnabled() const { return m_requestAnimationFrameEnabled; } \
      void setRequestAnimationFrameEnabled(bool requestAnimationFrameEnabled) { m_requestAnimationFrameEnabled = requestAnimationFrameEnabled; } \
-    bool requiresUserGestureForMediaPlayback() const { return m_requiresUserGestureForMediaPlayback; } \
-     void setRequiresUserGestureForMediaPlayback(bool requiresUserGestureForMediaPlayback) { m_requiresUserGestureForMediaPlayback = requiresUserGestureForMediaPlayback; } \
+    bool requiresUserGestureToLoadVideo() const { return m_requiresUserGestureToLoadVideo; } \
+     void setRequiresUserGestureToLoadVideo(bool requiresUserGestureToLoadVideo) { m_requiresUserGestureToLoadVideo = requiresUserGestureToLoadVideo; } \
     bool scriptMarkupEnabled() const { return m_scriptMarkupEnabled; } \
      void setScriptMarkupEnabled(bool scriptMarkupEnabled) { m_scriptMarkupEnabled = scriptMarkupEnabled; } \
     bool scrollingCoordinatorEnabled() const { return m_scrollingCoordinatorEnabled; } \
@@ -545,10 +614,12 @@
      void setScrollingTreeIncludesFrames(bool scrollingTreeIncludesFrames) { m_scrollingTreeIncludesFrames = scrollingTreeIncludesFrames; } \
     bool selectTrailingWhitespaceEnabled() const { return m_selectTrailingWhitespaceEnabled; } \
      void setSelectTrailingWhitespaceEnabled(bool selectTrailingWhitespaceEnabled) { m_selectTrailingWhitespaceEnabled = selectTrailingWhitespaceEnabled; } \
-    bool selectionIncludesAltImageText() const { return m_selectionIncludesAltImageText; } \
-     void setSelectionIncludesAltImageText(bool selectionIncludesAltImageText) { m_selectionIncludesAltImageText = selectionIncludesAltImageText; } \
+    bool selectionPaintingWithoutSelectionGapsEnabled() const { return m_selectionPaintingWithoutSelectionGapsEnabled; } \
+     void setSelectionPaintingWithoutSelectionGapsEnabled(bool selectionPaintingWithoutSelectionGapsEnabled) { m_selectionPaintingWithoutSelectionGapsEnabled = selectionPaintingWithoutSelectionGapsEnabled; } \
     unsigned sessionStorageQuota() const { return m_sessionStorageQuota; } \
      void setSessionStorageQuota(unsigned sessionStorageQuota) { m_sessionStorageQuota = sessionStorageQuota; } \
+    bool shouldConvertInvalidURLsToBlank() const { return m_shouldConvertInvalidURLsToBlank; } \
+     void setShouldConvertInvalidURLsToBlank(bool shouldConvertInvalidURLsToBlank) { m_shouldConvertInvalidURLsToBlank = shouldConvertInvalidURLsToBlank; } \
     bool shouldConvertPositionStyleOnCopy() const { return m_shouldConvertPositionStyleOnCopy; } \
      void setShouldConvertPositionStyleOnCopy(bool shouldConvertPositionStyleOnCopy) { m_shouldConvertPositionStyleOnCopy = shouldConvertPositionStyleOnCopy; } \
     bool shouldDispatchJavaScriptWindowOnErrorEvents() const { return m_shouldDispatchJavaScriptWindowOnErrorEvents; } \
@@ -559,6 +630,8 @@
      void setShouldPrintBackgrounds(bool shouldPrintBackgrounds) { m_shouldPrintBackgrounds = shouldPrintBackgrounds; } \
     bool shouldRespectImageOrientation() const { return m_shouldRespectImageOrientation; } \
      void setShouldRespectImageOrientation(bool shouldRespectImageOrientation) { m_shouldRespectImageOrientation = shouldRespectImageOrientation; } \
+    bool shouldSuppressKeyboardInputDuringProvisionalNavigation() const { return m_shouldSuppressKeyboardInputDuringProvisionalNavigation; } \
+     void setShouldSuppressKeyboardInputDuringProvisionalNavigation(bool shouldSuppressKeyboardInputDuringProvisionalNavigation) { m_shouldSuppressKeyboardInputDuringProvisionalNavigation = shouldSuppressKeyboardInputDuringProvisionalNavigation; } \
     bool shouldTransformsAffectOverflow() const { return m_shouldTransformsAffectOverflow; } \
      void setShouldTransformsAffectOverflow(bool shouldTransformsAffectOverflow) { m_shouldTransformsAffectOverflow = shouldTransformsAffectOverflow; } \
     bool showDebugBorders() const { return m_showDebugBorders; } \
@@ -581,14 +654,16 @@
      void setSnapshotAllPlugIns(bool snapshotAllPlugIns) { m_snapshotAllPlugIns = snapshotAllPlugIns; } \
     bool spatialNavigationEnabled() const { return m_spatialNavigationEnabled; } \
      void setSpatialNavigationEnabled(bool spatialNavigationEnabled) { m_spatialNavigationEnabled = spatialNavigationEnabled; } \
+    bool springTimingFunctionEnabled() const { return m_springTimingFunctionEnabled; } \
+     void setSpringTimingFunctionEnabled(bool springTimingFunctionEnabled) { m_springTimingFunctionEnabled = springTimingFunctionEnabled; } \
     bool standalone() const { return m_standalone; } \
      void setStandalone(bool standalone) { m_standalone = standalone; } \
     bool subpixelCSSOMElementMetricsEnabled() const { return m_subpixelCSSOMElementMetricsEnabled; } \
      void setSubpixelCSSOMElementMetricsEnabled(bool subpixelCSSOMElementMetricsEnabled) { m_subpixelCSSOMElementMetricsEnabled = subpixelCSSOMElementMetricsEnabled; } \
     bool suppressesIncrementalRendering() const { return m_suppressesIncrementalRendering; } \
      void setSuppressesIncrementalRendering(bool suppressesIncrementalRendering) { m_suppressesIncrementalRendering = suppressesIncrementalRendering; } \
-    bool syncXHRInDocumentsEnabled() const { return m_syncXHRInDocumentsEnabled; } \
-     void setSyncXHRInDocumentsEnabled(bool syncXHRInDocumentsEnabled) { m_syncXHRInDocumentsEnabled = syncXHRInDocumentsEnabled; } \
+    const TextDirection& systemLayoutDirection() { return m_systemLayoutDirection; } \
+     void setSystemLayoutDirection(const TextDirection& systemLayoutDirection) { m_systemLayoutDirection = systemLayoutDirection; } \
     bool telephoneNumberParsingEnabled() const { return m_telephoneNumberParsingEnabled; } \
      void setTelephoneNumberParsingEnabled(bool telephoneNumberParsingEnabled) { m_telephoneNumberParsingEnabled = telephoneNumberParsingEnabled; } \
     bool temporaryTileCohortRetentionEnabled() const { return m_temporaryTileCohortRetentionEnabled; } \
@@ -597,12 +672,14 @@
     WEBCORE_EXPORT void setTextAreasAreResizable(bool textAreasAreResizable); \
     const TextDirectionSubmenuInclusionBehavior& textDirectionSubmenuInclusionBehavior() { return m_textDirectionSubmenuInclusionBehavior; } \
      void setTextDirectionSubmenuInclusionBehavior(const TextDirectionSubmenuInclusionBehavior& textDirectionSubmenuInclusionBehavior) { m_textDirectionSubmenuInclusionBehavior = textDirectionSubmenuInclusionBehavior; } \
+    bool treatIPAddressAsDomain() const { return m_treatIPAddressAsDomain; } \
+     void setTreatIPAddressAsDomain(bool treatIPAddressAsDomain) { m_treatIPAddressAsDomain = treatIPAddressAsDomain; } \
     bool treatsAnyTextCSSLinkAsStylesheet() const { return m_treatsAnyTextCSSLinkAsStylesheet; } \
      void setTreatsAnyTextCSSLinkAsStylesheet(bool treatsAnyTextCSSLinkAsStylesheet) { m_treatsAnyTextCSSLinkAsStylesheet = treatsAnyTextCSSLinkAsStylesheet; } \
     bool unifiedTextCheckerEnabled() const { return m_unifiedTextCheckerEnabled; } \
      void setUnifiedTextCheckerEnabled(bool unifiedTextCheckerEnabled) { m_unifiedTextCheckerEnabled = unifiedTextCheckerEnabled; } \
-    bool unsafePluginPastingEnabled() const { return m_unsafePluginPastingEnabled; } \
-     void setUnsafePluginPastingEnabled(bool unsafePluginPastingEnabled) { m_unsafePluginPastingEnabled = unsafePluginPastingEnabled; } \
+    bool useGiantTiles() const { return m_useGiantTiles; } \
+     void setUseGiantTiles(bool useGiantTiles) { m_useGiantTiles = useGiantTiles; } \
     bool useImageDocumentForSubframePDF() const { return m_useImageDocumentForSubframePDF; } \
      void setUseImageDocumentForSubframePDF(bool useImageDocumentForSubframePDF) { m_useImageDocumentForSubframePDF = useImageDocumentForSubframePDF; } \
     bool useLegacyBackgroundSizeShorthandBehavior() const { return m_useLegacyBackgroundSizeShorthandBehavior; } \
@@ -611,12 +688,18 @@
      void setUseLegacyTextAlignPositionedElementBehavior(bool useLegacyTextAlignPositionedElementBehavior) { m_useLegacyTextAlignPositionedElementBehavior = useLegacyTextAlignPositionedElementBehavior; } \
     bool usePreHTML5ParserQuirks() const { return m_usePreHTML5ParserQuirks; } \
      void setUsePreHTML5ParserQuirks(bool usePreHTML5ParserQuirks) { m_usePreHTML5ParserQuirks = usePreHTML5ParserQuirks; } \
+    const UserInterfaceDirectionPolicy& userInterfaceDirectionPolicy() { return m_userInterfaceDirectionPolicy; } \
+     void setUserInterfaceDirectionPolicy(const UserInterfaceDirectionPolicy& userInterfaceDirectionPolicy) { m_userInterfaceDirectionPolicy = userInterfaceDirectionPolicy; } \
     bool usesEncodingDetector() const { return m_usesEncodingDetector; } \
      void setUsesEncodingDetector(bool usesEncodingDetector) { m_usesEncodingDetector = usesEncodingDetector; } \
     int validationMessageTimerMagnification() const { return m_validationMessageTimerMagnification; } \
      void setValidationMessageTimerMagnification(int validationMessageTimerMagnification) { m_validationMessageTimerMagnification = validationMessageTimerMagnification; } \
+    bool videoPlaybackRequiresUserGesture() const { return m_videoPlaybackRequiresUserGesture; } \
+     void setVideoPlaybackRequiresUserGesture(bool videoPlaybackRequiresUserGesture) { m_videoPlaybackRequiresUserGesture = videoPlaybackRequiresUserGesture; } \
     const DebugOverlayRegions& visibleDebugOverlayRegions() { return m_visibleDebugOverlayRegions; } \
      void setVisibleDebugOverlayRegions(const DebugOverlayRegions& visibleDebugOverlayRegions) { m_visibleDebugOverlayRegions = visibleDebugOverlayRegions; } \
+    bool visualViewportEnabled() const { return m_visualViewportEnabled; } \
+    WEBCORE_EXPORT void setVisualViewportEnabled(bool visualViewportEnabled); \
     bool wantsBalancedSetDefersLoadingBehavior() const { return m_wantsBalancedSetDefersLoadingBehavior; } \
      void setWantsBalancedSetDefersLoadingBehavior(bool wantsBalancedSetDefersLoadingBehavior) { m_wantsBalancedSetDefersLoadingBehavior = wantsBalancedSetDefersLoadingBehavior; } \
     bool webAudioEnabled() const { return m_webAudioEnabled; } \
@@ -631,14 +714,17 @@
      void setWindowFocusRestricted(bool windowFocusRestricted) { m_windowFocusRestricted = windowFocusRestricted; } \
     bool xssAuditorEnabled() const { return m_xssAuditorEnabled; } \
      void setXSSAuditorEnabled(bool xssAuditorEnabled) { m_xssAuditorEnabled = xssAuditorEnabled; } \
+    bool youTubeFlashPluginReplacementEnabled() const { return m_youTubeFlashPluginReplacementEnabled; } \
+     void setYouTubeFlashPluginReplacementEnabled(bool youTubeFlashPluginReplacementEnabled) { m_youTubeFlashPluginReplacementEnabled = youTubeFlashPluginReplacementEnabled; } \
     ATTACHMENT_ELEMENT_SETTINGS_GETTER_AND_SETTERS \
     DASHBOARD_SUPPORT_SETTINGS_GETTER_AND_SETTERS \
+    DATA_DETECTION_SETTINGS_GETTER_AND_SETTERS \
     FULLSCREEN_API_SETTINGS_GETTER_AND_SETTERS \
-    IOS_TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS \
     MEDIA_SOURCE_SETTINGS_GETTER_AND_SETTERS \
     RUBBER_BANDING_SETTINGS_GETTER_AND_SETTERS \
     SERVICE_CONTROLS_SETTINGS_GETTER_AND_SETTERS \
     SMOOTH_SCROLLING_SETTINGS_GETTER_AND_SETTERS \
+    TEXT_AUTOSIZING_SETTINGS_GETTER_AND_SETTERS \
     VIDEO_TRACK_SETTINGS_GETTER_AND_SETTERS \
     WEB_ARCHIVE_SETTINGS_GETTER_AND_SETTERS \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_GETTER_AND_SETTERS \
@@ -646,6 +732,7 @@
 
 #define SETTINGS_MEMBER_VARIABLES \
     double m_backForwardCacheExpirationInterval; \
+    ClipboardAccessPolicy m_clipboardAccessPolicy; \
     int m_defaultFixedFontSize; \
     int m_defaultFontSize; \
     String m_defaultTextEncodingName; \
@@ -654,6 +741,9 @@
     int m_deviceWidth; \
     EditableLinkBehavior m_editableLinkBehavior; \
     EditingBehaviorType m_editingBehaviorType; \
+    ForcedAccessibilityValue m_forcedColorsAreInvertedAccessibilityValue; \
+    ForcedAccessibilityValue m_forcedDisplayIsMonochromeAccessibilityValue; \
+    ForcedAccessibilityValue m_forcedPrefersReducedMotionAccessibilityValue; \
     String m_ftpDirectoryTemplatePath; \
     double m_incrementalRenderingSuppressionTimeoutInSeconds; \
     JSC::RuntimeFlags m_javaScriptRuntimeFlags; \
@@ -666,18 +756,22 @@
     int m_minimumFontSize; \
     int m_minimumLogicalFontSize; \
     double m_passwordEchoDurationInSeconds; \
+    PDFImageCachingPolicy m_pdfImageCachingPolicy; \
     unsigned m_sessionStorageQuota; \
+    TextDirection m_systemLayoutDirection; \
     TextDirectionSubmenuInclusionBehavior m_textDirectionSubmenuInclusionBehavior; \
+    UserInterfaceDirectionPolicy m_userInterfaceDirectionPolicy; \
     int m_validationMessageTimerMagnification; \
     DebugOverlayRegions m_visibleDebugOverlayRegions; \
     ATTACHMENT_ELEMENT_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     DASHBOARD_SUPPORT_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
+    DATA_DETECTION_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     FULLSCREEN_API_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
-    IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     MEDIA_SOURCE_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     RUBBER_BANDING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     SERVICE_CONTROLS_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     SMOOTH_SCROLLING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
+    TEXT_AUTOSIZING_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     VIDEO_TRACK_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     WEB_ARCHIVE_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_NON_BOOL_MEMBER_VARIABLES \
@@ -690,7 +784,7 @@
     bool m_acceleratedDrawingEnabled : 1; \
     bool m_acceleratedFiltersEnabled : 1; \
     bool m_aggressiveTileRetentionEnabled : 1; \
-    bool m_allowCustomScrollbarInMainFrame : 1; \
+    bool m_allowContentSecurityPolicySourceStarToMatchAnyProtocol : 1; \
     bool m_allowDisplayOfInsecureContent : 1; \
     bool m_allowFileAccessFromFileURLs : 1; \
     bool m_allowMultiElementImplicitSubmission : 1; \
@@ -698,11 +792,11 @@
     bool m_allowScriptsToCloseWindows : 1; \
     bool m_allowUniversalAccessFromFileURLs : 1; \
     bool m_allowsInlineMediaPlayback : 1; \
+    bool m_allowsInlineMediaPlaybackAfterFullscreen : 1; \
     bool m_allowsPictureInPictureMediaPlayback : 1; \
     bool m_alwaysUseAcceleratedOverflowScroll : 1; \
-    bool m_antialiased2dCanvasEnabled : 1; \
+    bool m_animatedImageAsyncDecodingEnabled : 1; \
     bool m_appleMailPaginationQuirkEnabled : 1; \
-    bool m_applyDeviceScaleFactorInCompositor : 1; \
     bool m_asynchronousSpellCheckingEnabled : 1; \
     bool m_audioPlaybackRequiresUserGesture : 1; \
     bool m_authorAndUserStylesEnabled : 1; \
@@ -714,9 +808,11 @@
     bool m_contentDispositionAttachmentSandboxEnabled : 1; \
     bool m_cookieEnabled : 1; \
     bool m_crossOriginCheckInGetMatchedCSSRulesDisabled : 1; \
+    bool m_deferredCSSParserEnabled : 1; \
     bool m_delegatesPageScaling : 1; \
     bool m_developerExtrasEnabled : 1; \
     bool m_diagnosticLoggingEnabled : 1; \
+    bool m_displayListDrawingEnabled : 1; \
     bool m_domTimersThrottlingEnabled : 1; \
     bool m_downloadableBinaryFontsEnabled : 1; \
     bool m_enableInheritURIQueryComponent : 1; \
@@ -732,47 +828,53 @@
     bool m_frameFlatteningEnabled : 1; \
     bool m_httpEquivEnabled : 1; \
     bool m_hyperlinkAuditingEnabled : 1; \
-    bool m_ignoreViewportScalingConstraints : 1; \
     bool m_imageSubsamplingEnabled : 1; \
+    bool m_inlineMediaPlaybackRequiresPlaysInlineAttribute : 1; \
+    bool m_inputEventsEnabled : 1; \
     bool m_interactiveFormValidationEnabled : 1; \
+    bool m_invisibleAutoplayNotPermitted : 1; \
     bool m_javaScriptCanAccessClipboard : 1; \
     bool m_javaScriptCanOpenWindowsAutomatically : 1; \
+    bool m_langAttributeAwareFormControlUIEnabled : 1; \
+    bool m_largeImageAsyncDecodingEnabled : 1; \
     bool m_loadDeferringEnabled : 1; \
     bool m_loadsSiteIconsIgnoringImageLoadingSetting : 1; \
     bool m_localFileContentSniffingEnabled : 1; \
     bool m_localStorageEnabled : 1; \
     bool m_logsPageMessagesToSystemConsoleEnabled : 1; \
-    bool m_longMousePressEnabled : 1; \
+    bool m_mainContentUserGestureOverrideEnabled : 1; \
     bool m_mediaControlsScaleWithPageZoom : 1; \
     bool m_mediaDataLoadsAutomatically : 1; \
     bool m_mediaEnabled : 1; \
-    bool m_mediaStreamEnabled : 1; \
     bool m_needsIsLoadingInAPISenseQuirk : 1; \
     bool m_needsKeyboardEventDisambiguationQuirks : 1; \
     bool m_needsSiteSpecificQuirks : 1; \
+    bool m_needsStorageAccessFromFileURLsQuirk : 1; \
     bool m_newBlockInsideInlineModelEnabled : 1; \
     bool m_notificationsEnabled : 1; \
     bool m_offlineWebApplicationCacheEnabled : 1; \
-    bool m_openGLMultisamplingEnabled : 1; \
     bool m_pageCacheSupportsPlugins : 1; \
     bool m_paginateDuringLayoutEnabled : 1; \
     bool m_passwordEchoEnabled : 1; \
     bool m_plugInSnapshottingEnabled : 1; \
+    bool m_preferLowPowerWebGLRendering : 1; \
     bool m_preventKeyboardDOMEventDispatch : 1; \
     bool m_primaryPlugInSnapshotDetectionEnabled : 1; \
-    bool m_privilegedWebGLExtensionsEnabled : 1; \
+    bool m_quickTimePluginReplacementEnabled : 1; \
     bool m_requestAnimationFrameEnabled : 1; \
-    bool m_requiresUserGestureForMediaPlayback : 1; \
+    bool m_requiresUserGestureToLoadVideo : 1; \
     bool m_scriptMarkupEnabled : 1; \
     bool m_scrollingCoordinatorEnabled : 1; \
     bool m_scrollingTreeIncludesFrames : 1; \
     bool m_selectTrailingWhitespaceEnabled : 1; \
-    bool m_selectionIncludesAltImageText : 1; \
+    bool m_selectionPaintingWithoutSelectionGapsEnabled : 1; \
+    bool m_shouldConvertInvalidURLsToBlank : 1; \
     bool m_shouldConvertPositionStyleOnCopy : 1; \
     bool m_shouldDispatchJavaScriptWindowOnErrorEvents : 1; \
     bool m_shouldInjectUserScriptsInInitialEmptyDocument : 1; \
     bool m_shouldPrintBackgrounds : 1; \
     bool m_shouldRespectImageOrientation : 1; \
+    bool m_shouldSuppressKeyboardInputDuringProvisionalNavigation : 1; \
     bool m_shouldTransformsAffectOverflow : 1; \
     bool m_showDebugBorders : 1; \
     bool m_showRepaintCounter : 1; \
@@ -784,21 +886,24 @@
     bool m_smartInsertDeleteEnabled : 1; \
     bool m_snapshotAllPlugIns : 1; \
     bool m_spatialNavigationEnabled : 1; \
+    bool m_springTimingFunctionEnabled : 1; \
     bool m_standalone : 1; \
     bool m_subpixelCSSOMElementMetricsEnabled : 1; \
     bool m_suppressesIncrementalRendering : 1; \
-    bool m_syncXHRInDocumentsEnabled : 1; \
     bool m_telephoneNumberParsingEnabled : 1; \
     bool m_temporaryTileCohortRetentionEnabled : 1; \
     bool m_textAreasAreResizable : 1; \
+    bool m_treatIPAddressAsDomain : 1; \
     bool m_treatsAnyTextCSSLinkAsStylesheet : 1; \
     bool m_unifiedTextCheckerEnabled : 1; \
-    bool m_unsafePluginPastingEnabled : 1; \
+    bool m_useGiantTiles : 1; \
     bool m_useImageDocumentForSubframePDF : 1; \
     bool m_useLegacyBackgroundSizeShorthandBehavior : 1; \
     bool m_useLegacyTextAlignPositionedElementBehavior : 1; \
     bool m_usePreHTML5ParserQuirks : 1; \
     bool m_usesEncodingDetector : 1; \
+    bool m_videoPlaybackRequiresUserGesture : 1; \
+    bool m_visualViewportEnabled : 1; \
     bool m_wantsBalancedSetDefersLoadingBehavior : 1; \
     bool m_webAudioEnabled : 1; \
     bool m_webGLEnabled : 1; \
@@ -806,14 +911,16 @@
     bool m_webSecurityEnabled : 1; \
     bool m_windowFocusRestricted : 1; \
     bool m_xssAuditorEnabled : 1; \
+    bool m_youTubeFlashPluginReplacementEnabled : 1; \
     ATTACHMENT_ELEMENT_SETTINGS_BOOL_MEMBER_VARIABLES \
     DASHBOARD_SUPPORT_SETTINGS_BOOL_MEMBER_VARIABLES \
+    DATA_DETECTION_SETTINGS_BOOL_MEMBER_VARIABLES \
     FULLSCREEN_API_SETTINGS_BOOL_MEMBER_VARIABLES \
-    IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES \
     MEDIA_SOURCE_SETTINGS_BOOL_MEMBER_VARIABLES \
     RUBBER_BANDING_SETTINGS_BOOL_MEMBER_VARIABLES \
     SERVICE_CONTROLS_SETTINGS_BOOL_MEMBER_VARIABLES \
     SMOOTH_SCROLLING_SETTINGS_BOOL_MEMBER_VARIABLES \
+    TEXT_AUTOSIZING_SETTINGS_BOOL_MEMBER_VARIABLES \
     VIDEO_TRACK_SETTINGS_BOOL_MEMBER_VARIABLES \
     WEB_ARCHIVE_SETTINGS_BOOL_MEMBER_VARIABLES \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_BOOL_MEMBER_VARIABLES \
@@ -821,12 +928,16 @@
 
 #define SETTINGS_INITIALIZER_LIST \
     , m_backForwardCacheExpirationInterval(1800) \
+    , m_clipboardAccessPolicy(ClipboardAccessPolicy::RequiresUserGesture) \
     , m_defaultFixedFontSize(0) \
     , m_defaultFontSize(16) \
     , m_deviceHeight(0) \
     , m_deviceWidth(0) \
     , m_editableLinkBehavior(EditableLinkDefaultBehavior) \
     , m_editingBehaviorType(editingBehaviorTypeForPlatform()) \
+    , m_forcedColorsAreInvertedAccessibilityValue(defaultForcedColorsAreInvertedAccessibilityValue) \
+    , m_forcedDisplayIsMonochromeAccessibilityValue(defaultForcedDisplayIsMonochromeAccessibilityValue) \
+    , m_forcedPrefersReducedMotionAccessibilityValue(defaultForcedPrefersReducedMotionAccessibilityValue) \
     , m_incrementalRenderingSuppressionTimeoutInSeconds(defaultIncrementalRenderingSuppressionTimeoutInSeconds) \
     , m_layoutFallbackWidth(980) \
     , m_maxParseDuration(-1) \
@@ -836,18 +947,22 @@
     , m_minimumFontSize(0) \
     , m_minimumLogicalFontSize(0) \
     , m_passwordEchoDurationInSeconds(1) \
+    , m_pdfImageCachingPolicy(PDFImageCachingDefault) \
     , m_sessionStorageQuota(StorageMap::noQuota) \
+    , m_systemLayoutDirection(LTR) \
     , m_textDirectionSubmenuInclusionBehavior(TextDirectionSubmenuAutomaticallyIncluded) \
+    , m_userInterfaceDirectionPolicy(UserInterfaceDirectionPolicy::Content) \
     , m_validationMessageTimerMagnification(50) \
     , m_visibleDebugOverlayRegions(0) \
     ATTACHMENT_ELEMENT_SETTINGS_NON_BOOL_INITIALIZERS \
     DASHBOARD_SUPPORT_SETTINGS_NON_BOOL_INITIALIZERS \
+    DATA_DETECTION_SETTINGS_NON_BOOL_INITIALIZERS \
     FULLSCREEN_API_SETTINGS_NON_BOOL_INITIALIZERS \
-    IOS_TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS \
     MEDIA_SOURCE_SETTINGS_NON_BOOL_INITIALIZERS \
     RUBBER_BANDING_SETTINGS_NON_BOOL_INITIALIZERS \
     SERVICE_CONTROLS_SETTINGS_NON_BOOL_INITIALIZERS \
     SMOOTH_SCROLLING_SETTINGS_NON_BOOL_INITIALIZERS \
+    TEXT_AUTOSIZING_SETTINGS_NON_BOOL_INITIALIZERS \
     VIDEO_TRACK_SETTINGS_NON_BOOL_INITIALIZERS \
     WEB_ARCHIVE_SETTINGS_NON_BOOL_INITIALIZERS \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_NON_BOOL_INITIALIZERS \
@@ -860,7 +975,7 @@
     , m_acceleratedDrawingEnabled(false) \
     , m_acceleratedFiltersEnabled(false) \
     , m_aggressiveTileRetentionEnabled(false) \
-    , m_allowCustomScrollbarInMainFrame(true) \
+    , m_allowContentSecurityPolicySourceStarToMatchAnyProtocol(false) \
     , m_allowDisplayOfInsecureContent(false) \
     , m_allowFileAccessFromFileURLs(true) \
     , m_allowMultiElementImplicitSubmission(false) \
@@ -868,11 +983,11 @@
     , m_allowScriptsToCloseWindows(false) \
     , m_allowUniversalAccessFromFileURLs(true) \
     , m_allowsInlineMediaPlayback(defaultAllowsInlineMediaPlayback) \
+    , m_allowsInlineMediaPlaybackAfterFullscreen(true) \
     , m_allowsPictureInPictureMediaPlayback(defaultAllowsPictureInPictureMediaPlayback) \
     , m_alwaysUseAcceleratedOverflowScroll(false) \
-    , m_antialiased2dCanvasEnabled(true) \
+    , m_animatedImageAsyncDecodingEnabled(true) \
     , m_appleMailPaginationQuirkEnabled(false) \
-    , m_applyDeviceScaleFactorInCompositor(true) \
     , m_asynchronousSpellCheckingEnabled(false) \
     , m_audioPlaybackRequiresUserGesture(defaultAudioPlaybackRequiresUserGesture) \
     , m_authorAndUserStylesEnabled(true) \
@@ -884,9 +999,11 @@
     , m_contentDispositionAttachmentSandboxEnabled(false) \
     , m_cookieEnabled(true) \
     , m_crossOriginCheckInGetMatchedCSSRulesDisabled(false) \
+    , m_deferredCSSParserEnabled(false) \
     , m_delegatesPageScaling(false) \
     , m_developerExtrasEnabled(false) \
     , m_diagnosticLoggingEnabled(false) \
+    , m_displayListDrawingEnabled(false) \
     , m_domTimersThrottlingEnabled(true) \
     , m_downloadableBinaryFontsEnabled(true) \
     , m_enableInheritURIQueryComponent(false) \
@@ -902,47 +1019,53 @@
     , m_frameFlatteningEnabled(false) \
     , m_httpEquivEnabled(true) \
     , m_hyperlinkAuditingEnabled(false) \
-    , m_ignoreViewportScalingConstraints(false) \
     , m_imageSubsamplingEnabled(defaultImageSubsamplingEnabled) \
+    , m_inlineMediaPlaybackRequiresPlaysInlineAttribute(defaultInlineMediaPlaybackRequiresPlaysInlineAttribute) \
+    , m_inputEventsEnabled(true) \
     , m_interactiveFormValidationEnabled(false) \
+    , m_invisibleAutoplayNotPermitted(false) \
     , m_javaScriptCanAccessClipboard(false) \
     , m_javaScriptCanOpenWindowsAutomatically(false) \
+    , m_langAttributeAwareFormControlUIEnabled(false) \
+    , m_largeImageAsyncDecodingEnabled(true) \
     , m_loadDeferringEnabled(true) \
     , m_loadsSiteIconsIgnoringImageLoadingSetting(false) \
     , m_localFileContentSniffingEnabled(false) \
     , m_localStorageEnabled(false) \
     , m_logsPageMessagesToSystemConsoleEnabled(false) \
-    , m_longMousePressEnabled(false) \
+    , m_mainContentUserGestureOverrideEnabled(false) \
     , m_mediaControlsScaleWithPageZoom(defaultMediaControlsScaleWithPageZoom) \
-    , m_mediaDataLoadsAutomatically(false) \
+    , m_mediaDataLoadsAutomatically(defaultMediaDataLoadsAutomatically) \
     , m_mediaEnabled(true) \
-    , m_mediaStreamEnabled(false) \
     , m_needsIsLoadingInAPISenseQuirk(false) \
     , m_needsKeyboardEventDisambiguationQuirks(false) \
     , m_needsSiteSpecificQuirks(false) \
+    , m_needsStorageAccessFromFileURLsQuirk(true) \
     , m_newBlockInsideInlineModelEnabled(false) \
     , m_notificationsEnabled(true) \
     , m_offlineWebApplicationCacheEnabled(false) \
-    , m_openGLMultisamplingEnabled(true) \
     , m_pageCacheSupportsPlugins(false) \
     , m_paginateDuringLayoutEnabled(false) \
     , m_passwordEchoEnabled(false) \
     , m_plugInSnapshottingEnabled(false) \
+    , m_preferLowPowerWebGLRendering(true) \
     , m_preventKeyboardDOMEventDispatch(false) \
     , m_primaryPlugInSnapshotDetectionEnabled(true) \
-    , m_privilegedWebGLExtensionsEnabled(false) \
+    , m_quickTimePluginReplacementEnabled(defaultQuickTimePluginReplacementEnabled) \
     , m_requestAnimationFrameEnabled(true) \
-    , m_requiresUserGestureForMediaPlayback(defaultRequiresUserGestureForMediaPlayback) \
+    , m_requiresUserGestureToLoadVideo(defaultRequiresUserGestureToLoadVideo) \
     , m_scriptMarkupEnabled(true) \
     , m_scrollingCoordinatorEnabled(false) \
     , m_scrollingTreeIncludesFrames(defaultScrollingTreeIncludesFrames) \
     , m_selectTrailingWhitespaceEnabled(defaultSelectTrailingWhitespaceEnabled) \
-    , m_selectionIncludesAltImageText(true) \
+    , m_selectionPaintingWithoutSelectionGapsEnabled(false) \
+    , m_shouldConvertInvalidURLsToBlank(true) \
     , m_shouldConvertPositionStyleOnCopy(false) \
     , m_shouldDispatchJavaScriptWindowOnErrorEvents(false) \
     , m_shouldInjectUserScriptsInInitialEmptyDocument(false) \
     , m_shouldPrintBackgrounds(false) \
     , m_shouldRespectImageOrientation(defaultShouldRespectImageOrientation) \
+    , m_shouldSuppressKeyboardInputDuringProvisionalNavigation(false) \
     , m_shouldTransformsAffectOverflow(true) \
     , m_showDebugBorders(false) \
     , m_showRepaintCounter(false) \
@@ -954,21 +1077,24 @@
     , m_smartInsertDeleteEnabled(defaultSmartInsertDeleteEnabled) \
     , m_snapshotAllPlugIns(false) \
     , m_spatialNavigationEnabled(false) \
+    , m_springTimingFunctionEnabled(false) \
     , m_standalone(false) \
     , m_subpixelCSSOMElementMetricsEnabled(false) \
     , m_suppressesIncrementalRendering(false) \
-    , m_syncXHRInDocumentsEnabled(true) \
     , m_telephoneNumberParsingEnabled(false) \
     , m_temporaryTileCohortRetentionEnabled(true) \
     , m_textAreasAreResizable(false) \
+    , m_treatIPAddressAsDomain(false) \
     , m_treatsAnyTextCSSLinkAsStylesheet(false) \
     , m_unifiedTextCheckerEnabled(defaultUnifiedTextCheckerEnabled) \
-    , m_unsafePluginPastingEnabled(true) \
+    , m_useGiantTiles(false) \
     , m_useImageDocumentForSubframePDF(false) \
     , m_useLegacyBackgroundSizeShorthandBehavior(false) \
     , m_useLegacyTextAlignPositionedElementBehavior(false) \
     , m_usePreHTML5ParserQuirks(false) \
     , m_usesEncodingDetector(false) \
+    , m_videoPlaybackRequiresUserGesture(defaultVideoPlaybackRequiresUserGesture) \
+    , m_visualViewportEnabled(false) \
     , m_wantsBalancedSetDefersLoadingBehavior(false) \
     , m_webAudioEnabled(false) \
     , m_webGLEnabled(false) \
@@ -976,14 +1102,16 @@
     , m_webSecurityEnabled(true) \
     , m_windowFocusRestricted(true) \
     , m_xssAuditorEnabled(false) \
+    , m_youTubeFlashPluginReplacementEnabled(defaultYouTubeFlashPluginReplacementEnabled) \
     ATTACHMENT_ELEMENT_SETTINGS_BOOL_INITIALIZERS \
     DASHBOARD_SUPPORT_SETTINGS_BOOL_INITIALIZERS \
+    DATA_DETECTION_SETTINGS_BOOL_INITIALIZERS \
     FULLSCREEN_API_SETTINGS_BOOL_INITIALIZERS \
-    IOS_TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS \
     MEDIA_SOURCE_SETTINGS_BOOL_INITIALIZERS \
     RUBBER_BANDING_SETTINGS_BOOL_INITIALIZERS \
     SERVICE_CONTROLS_SETTINGS_BOOL_INITIALIZERS \
     SMOOTH_SCROLLING_SETTINGS_BOOL_INITIALIZERS \
+    TEXT_AUTOSIZING_SETTINGS_BOOL_INITIALIZERS \
     VIDEO_TRACK_SETTINGS_BOOL_INITIALIZERS \
     WEB_ARCHIVE_SETTINGS_BOOL_INITIALIZERS \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_BOOL_INITIALIZERS \
@@ -1081,14 +1209,22 @@ void Settings::setTextAreasAreResizable(bool textAreasAreResizable) \
     m_textAreasAreResizable = textAreasAreResizable; \
     m_page->setNeedsRecalcStyleInAllFrames(); \
 } \
+void Settings::setVisualViewportEnabled(bool visualViewportEnabled) \
+{ \
+    if (m_visualViewportEnabled == visualViewportEnabled) \
+        return; \
+    m_visualViewportEnabled = visualViewportEnabled; \
+    m_page->setNeedsRecalcStyleInAllFrames(); \
+} \
     ATTACHMENT_ELEMENT_SETTINGS_SETTER_BODIES \
     DASHBOARD_SUPPORT_SETTINGS_SETTER_BODIES \
+    DATA_DETECTION_SETTINGS_SETTER_BODIES \
     FULLSCREEN_API_SETTINGS_SETTER_BODIES \
-    IOS_TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES \
     MEDIA_SOURCE_SETTINGS_SETTER_BODIES \
     RUBBER_BANDING_SETTINGS_SETTER_BODIES \
     SERVICE_CONTROLS_SETTINGS_SETTER_BODIES \
     SMOOTH_SCROLLING_SETTINGS_SETTER_BODIES \
+    TEXT_AUTOSIZING_SETTINGS_SETTER_BODIES \
     VIDEO_TRACK_SETTINGS_SETTER_BODIES \
     WEB_ARCHIVE_SETTINGS_SETTER_BODIES \
     WIRELESS_PLAYBACK_TARGET_SETTINGS_SETTER_BODIES \

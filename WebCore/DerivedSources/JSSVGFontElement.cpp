@@ -25,7 +25,7 @@
 #include "JSSVGFontElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGFontElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -34,11 +34,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGFontElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGFontElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGFontElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGFontElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGFontElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGFontElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGFontElementPrototype>(vm.heap)) JSSVGFontElementPrototype(vm, globalObject, structure);
@@ -61,48 +62,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFontElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFontElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGFontElementConstructor = JSDOMConstructorNotConstructable<JSSVGFontElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFontElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFontElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFontElementConstructor>(vm.heap)) JSSVGFontElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFontElementConstructor::s_info = { "SVGFontElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontElementConstructor) };
-
-JSSVGFontElementConstructor::JSSVGFontElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGFontElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGFontElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGFontElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFontElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFontElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFontElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFontElementConstructor::s_info = { "SVGFontElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFontElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGFontElementConstructor) } },
 };
 
 const ClassInfo JSSVGFontElementPrototype::s_info = { "SVGFontElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontElementPrototype) };
@@ -115,32 +95,63 @@ void JSSVGFontElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFontElement::s_info = { "SVGFontElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontElement) };
 
-JSSVGFontElement::JSSVGFontElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFontElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGFontElement::JSSVGFontElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFontElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGFontElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGFontElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGFontElementPrototype::create(vm, globalObject, JSSVGFontElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGFontElementPrototype::create(vm, globalObject, JSSVGFontElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGFontElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGFontElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGFontElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFontElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFontElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSSVGFontElementPrototype* domObject = jsDynamicCast<JSSVGFontElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFontElement::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGFontElementPrototype* domObject = jsDynamicDowncast<JSSVGFontElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGFontElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSSVGFontElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSSVGFontElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSSVGFontElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGFontElementPrototype* domObject = jsDynamicDowncast<JSSVGFontElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSSVGFontElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSSVGFontElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+void JSSVGFontElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    auto* thisObject = jsCast<JSSVGFontElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

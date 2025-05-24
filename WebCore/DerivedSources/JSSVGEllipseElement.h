@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGEllipseElement_h
-#define JSSVGEllipseElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGEllipseElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGEllipseElement;
     static JSSVGEllipseElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGEllipseElement>&& impl)
     {
-        JSSVGEllipseElement* ptr = new (NotNull, JSC::allocateCell<JSSVGEllipseElement>(globalObject->vm().heap)) JSSVGEllipseElement(structure, globalObject, WTF::move(impl));
+        JSSVGEllipseElement* ptr = new (NotNull, JSC::allocateCell<JSSVGEllipseElement>(globalObject->vm().heap)) JSSVGEllipseElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGEllipseElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGEllipseElement& wrapped() const
     {
-        return static_cast<SVGEllipseElement&>(Base::impl());
+        return static_cast<SVGEllipseElement&>(Base::wrapped());
     }
 protected:
-    JSSVGEllipseElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGEllipseElement>&&);
+    JSSVGEllipseElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGEllipseElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGEllipseElement> {
+    using WrapperClass = JSSVGEllipseElement;
+    using ToWrappedReturnType = SVGEllipseElement*;
+};
 
 } // namespace WebCore
-
-#endif

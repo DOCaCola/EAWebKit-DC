@@ -21,14 +21,13 @@
 #include "config.h"
 #include "JSSVGCursorElement.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "JSSVGStringList.h"
-#include "SVGCursorElement.h"
-#include "SVGStringList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -42,18 +41,19 @@ JSC::EncodedJSValue JSC_HOST_CALL jsSVGCursorElementPrototypeFunctionHasExtensio
 
 // Attributes
 
-JSC::EncodedJSValue jsSVGCursorElementX(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementY(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementExternalResourcesRequired(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementRequiredFeatures(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementRequiredExtensions(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementSystemLanguage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementHref(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsSVGCursorElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementX(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementY(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementExternalResourcesRequired(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementRequiredFeatures(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementRequiredExtensions(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementSystemLanguage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementHref(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsSVGCursorElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSSVGCursorElementConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSSVGCursorElementPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSSVGCursorElementPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSSVGCursorElementPrototype* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElementPrototype>(vm.heap)) JSSVGCursorElementPrototype(vm, globalObject, structure);
@@ -76,56 +76,35 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGCursorElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGCursorElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSSVGCursorElementConstructor = JSDOMConstructorNotConstructable<JSSVGCursorElement>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGCursorElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGCursorElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElementConstructor>(vm.heap)) JSSVGCursorElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGCursorElementConstructor::s_info = { "SVGCursorElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCursorElementConstructor) };
-
-JSSVGCursorElementConstructor::JSSVGCursorElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSSVGCursorElementConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSSVGElement::getConstructor(vm, &globalObject);
 }
 
-void JSSVGCursorElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSSVGCursorElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGCursorElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGCursorElement::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGCursorElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGCursorElementConstructor::s_info = { "SVGCursorElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCursorElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGCursorElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredFeatures", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredExtensions", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "systemLanguage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "hasExtension", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGCursorElementPrototypeFunctionHasExtension), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGCursorElementConstructor) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredFeatures", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredExtensions", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "systemLanguage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGCursorElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "hasExtension", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGCursorElementPrototypeFunctionHasExtension), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGCursorElementPrototype::s_info = { "SVGCursorElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCursorElementPrototype) };
@@ -138,170 +117,202 @@ void JSSVGCursorElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGCursorElement::s_info = { "SVGCursorElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGCursorElement) };
 
-JSSVGCursorElement::JSSVGCursorElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGCursorElement>&& impl)
-    : JSSVGElement(structure, globalObject, WTF::move(impl))
+JSSVGCursorElement::JSSVGCursorElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGCursorElement>&& impl)
+    : JSSVGElement(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSSVGCursorElement::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSSVGCursorElement::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSSVGCursorElementPrototype::create(vm, globalObject, JSSVGCursorElementPrototype::createStructure(vm, globalObject, JSSVGElement::getPrototype(vm, globalObject)));
+    return JSSVGCursorElementPrototype::create(vm, globalObject, JSSVGCursorElementPrototype::createStructure(vm, globalObject, JSSVGElement::prototype(vm, globalObject)));
 }
 
-JSObject* JSSVGCursorElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSSVGCursorElement::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSSVGCursorElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGCursorElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSSVGCursorElement* BindingCaller<JSSVGCursorElement>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "x");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "x");
+    return jsDynamicDowncast<JSSVGCursorElement*>(JSValue::decode(thisValue));
+}
+
+template<> inline JSSVGCursorElement* BindingCaller<JSSVGCursorElement>::castForOperation(ExecState& state)
+{
+    return jsDynamicDowncast<JSSVGCursorElement*>(state.thisValue());
+}
+
+static inline JSValue jsSVGCursorElementXGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementX(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementXGetter>(state, thisValue, "x");
+}
+
+static inline JSValue jsSVGCursorElementXGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.xAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementYGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementY(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementYGetter>(state, thisValue, "y");
+}
+
+static inline JSValue jsSVGCursorElementYGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedLength>>(state, *thisObject.globalObject(), impl.yAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementExternalResourcesRequiredGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementExternalResourcesRequired(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementExternalResourcesRequiredGetter>(state, thisValue, "externalResourcesRequired");
+}
+
+static inline JSValue jsSVGCursorElementExternalResourcesRequiredGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedBoolean>>(state, *thisObject.globalObject(), impl.externalResourcesRequiredAnimated());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementRequiredFeaturesGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementRequiredFeatures(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementRequiredFeaturesGetter>(state, thisValue, "requiredFeatures");
+}
+
+static inline JSValue jsSVGCursorElementRequiredFeaturesGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGStringList>>(state, *thisObject.globalObject(), impl.requiredFeatures());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementRequiredExtensionsGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementRequiredExtensions(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementRequiredExtensionsGetter>(state, thisValue, "requiredExtensions");
+}
+
+static inline JSValue jsSVGCursorElementRequiredExtensionsGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGStringList>>(state, *thisObject.globalObject(), impl.requiredExtensions());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementSystemLanguageGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementSystemLanguage(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementSystemLanguageGetter>(state, thisValue, "systemLanguage");
+}
+
+static inline JSValue jsSVGCursorElementSystemLanguageGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJSNewlyCreated<IDLInterface<SVGStringList>>(state, *thisObject.globalObject(), impl.systemLanguage());
+    return result;
+}
+
+static inline JSValue jsSVGCursorElementHrefGetter(ExecState&, JSSVGCursorElement&, ThrowScope& throwScope);
+
+EncodedJSValue jsSVGCursorElementHref(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSSVGCursorElement>::attribute<jsSVGCursorElementHrefGetter>(state, thisValue, "href");
+}
+
+static inline JSValue jsSVGCursorElementHrefGetter(ExecState& state, JSSVGCursorElement& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SVGAnimatedString>>(state, *thisObject.globalObject(), impl.hrefAnimated());
+    return result;
+}
+
+EncodedJSValue jsSVGCursorElementConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSSVGCursorElementPrototype* domObject = jsDynamicDowncast<JSSVGCursorElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSSVGCursorElement::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSSVGCursorElementConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSSVGCursorElementPrototype* domObject = jsDynamicDowncast<JSSVGCursorElementPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-
-EncodedJSValue jsSVGCursorElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+JSValue JSSVGCursorElement::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "y");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "y");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return getDOMConstructor<JSSVGCursorElementConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
+static inline JSC::EncodedJSValue jsSVGCursorElementPrototypeFunctionHasExtensionCaller(JSC::ExecState*, JSSVGCursorElement*, JSC::ThrowScope&);
 
-EncodedJSValue jsSVGCursorElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue JSC_HOST_CALL jsSVGCursorElementPrototypeFunctionHasExtension(ExecState* state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "externalResourcesRequired");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
+    return BindingCaller<JSSVGCursorElement>::callOperation<jsSVGCursorElementPrototypeFunctionHasExtensionCaller>(state, "hasExtension");
 }
 
-
-EncodedJSValue jsSVGCursorElementRequiredFeatures(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSC::EncodedJSValue jsSVGCursorElementPrototypeFunctionHasExtensionCaller(JSC::ExecState* state, JSSVGCursorElement* castedThis, JSC::ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "requiredFeatures");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "requiredFeatures");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredFeatures())));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto extension = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(impl.hasExtension(WTFMove(extension))));
 }
 
-
-EncodedJSValue jsSVGCursorElementRequiredExtensions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+void JSSVGCursorElement::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "requiredExtensions");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "requiredExtensions");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredExtensions())));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGCursorElementSystemLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "systemLanguage");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "systemLanguage");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.systemLanguage())));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGCursorElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSSVGCursorElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGCursorElement", "href");
-        return throwGetterTypeError(*exec, "SVGCursorElement", "href");
-    }
-    auto& impl = castedThis->impl();
-    RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsSVGCursorElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSSVGCursorElementPrototype* domObject = jsDynamicCast<JSSVGCursorElementPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGCursorElement::getConstructor(exec->vm(), domObject->globalObject()));
-}
-
-JSValue JSSVGCursorElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMConstructor<JSSVGCursorElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
-}
-
-EncodedJSValue JSC_HOST_CALL jsSVGCursorElementPrototypeFunctionHasExtension(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSSVGCursorElement* castedThis = jsDynamicCast<JSSVGCursorElement*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGCursorElement", "hasExtension");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGCursorElement::info());
-    auto& impl = castedThis->impl();
-    String extension = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.hasExtension(extension));
-    return JSValue::encode(result);
+    auto* thisObject = jsCast<JSSVGCursorElement*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 

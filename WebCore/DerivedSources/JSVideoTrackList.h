@@ -18,34 +18,32 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSVideoTrackList_h
-#define JSVideoTrackList_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include "VideoTrackList.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSVideoTrackList : public JSDOMWrapper {
+class JSVideoTrackList : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = VideoTrackList;
     static JSVideoTrackList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoTrackList>&& impl)
     {
-        JSVideoTrackList* ptr = new (NotNull, JSC::allocateCell<JSVideoTrackList>(globalObject->vm().heap)) JSVideoTrackList(structure, globalObject, WTF::move(impl));
+        JSVideoTrackList* ptr = new (NotNull, JSC::allocateCell<JSVideoTrackList>(globalObject->vm().heap)) JSVideoTrackList(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static VideoTrackList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSVideoTrackList();
 
     DECLARE_INFO;
 
@@ -55,25 +53,22 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    VideoTrackList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VideoTrackList* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
+    VideoTrackList& wrapped() const
+    {
+        return static_cast<VideoTrackList&>(Base::wrapped());
+    }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSVideoTrackList(JSC::Structure*, JSDOMGlobalObject*, Ref<VideoTrackList>&&);
+    JSVideoTrackList(JSC::Structure*, JSDOMGlobalObject&, Ref<VideoTrackList>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSVideoTrackListOwner : public JSC::WeakHandleOwner {
@@ -88,12 +83,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VideoTrackList*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoTrackList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VideoTrackList& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(VideoTrackList* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoTrackList&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VideoTrackList* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<VideoTrackList>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<VideoTrackList>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<VideoTrackList> {
+    using WrapperClass = JSVideoTrackList;
+    using ToWrappedReturnType = VideoTrackList*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif

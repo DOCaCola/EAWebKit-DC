@@ -18,26 +18,26 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLImageElement_h
-#define JSHTMLImageElement_h
+#pragma once
 
 #include "HTMLImageElement.h"
 #include "JSHTMLElement.h"
 
 namespace WebCore {
 
-class JSHTMLImageElement : public JSHTMLElement {
+class WEBCORE_EXPORT JSHTMLImageElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLImageElement;
     static JSHTMLImageElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLImageElement>&& impl)
     {
-        JSHTMLImageElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElement>(globalObject->vm().heap)) JSHTMLImageElement(structure, globalObject, WTF::move(impl));
+        JSHTMLImageElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElement>(globalObject->vm().heap)) JSHTMLImageElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLImageElement* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -47,24 +47,28 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLImageElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static JSC::JSValue getNamedConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLImageElement& wrapped() const
     {
-        return static_cast<HTMLImageElement&>(Base::impl());
+        return static_cast<HTMLImageElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLImageElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLImageElement>&&);
+    JSHTMLImageElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLImageElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HTMLImageElement&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLImageElement* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<HTMLImageElement>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<HTMLImageElement>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
+template<> struct JSDOMWrapperConverterTraits<HTMLImageElement> {
+    using WrapperClass = JSHTMLImageElement;
+    using ToWrappedReturnType = HTMLImageElement*;
+};
 
 } // namespace WebCore
-
-#endif

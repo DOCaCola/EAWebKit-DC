@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLButtonElement_h
-#define JSHTMLButtonElement_h
+#pragma once
 
 #include "HTMLButtonElement.h"
 #include "JSHTMLElement.h"
@@ -28,16 +27,17 @@ namespace WebCore {
 
 class JSHTMLButtonElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLButtonElement;
     static JSHTMLButtonElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLButtonElement>&& impl)
     {
-        JSHTMLButtonElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElement>(globalObject->vm().heap)) JSHTMLButtonElement(structure, globalObject, WTF::move(impl));
+        JSHTMLButtonElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElement>(globalObject->vm().heap)) JSHTMLButtonElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -46,24 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLButtonElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    HTMLButtonElement& wrapped() const
     {
-        return static_cast<HTMLButtonElement&>(Base::impl());
+        return static_cast<HTMLButtonElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLButtonElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLButtonElement>&&);
+    JSHTMLButtonElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLButtonElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLButtonElement> {
+    using WrapperClass = JSHTMLButtonElement;
+    using ToWrappedReturnType = HTMLButtonElement*;
+};
 
 } // namespace WebCore
-
-#endif

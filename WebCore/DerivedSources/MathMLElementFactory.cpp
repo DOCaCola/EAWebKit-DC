@@ -35,13 +35,20 @@
 
 #include "MathMLNames.h"
 
-#include "MathMLTextElement.h"
-#include "MathMLInlineContainerElement.h"
+#include "MathMLAnnotationElement.h"
 #include "MathMLSelectElement.h"
-#include "MathMLElement.h"
+#include "MathMLPresentationElement.h"
 #include "MathMLMathElement.h"
 #include "MathMLMencloseElement.h"
-#include "MathMLElement.h"
+#include "MathMLRowElement.h"
+#include "MathMLFractionElement.h"
+#include "MathMLTokenElement.h"
+#include "MathMLScriptsElement.h"
+#include "MathMLOperatorElement.h"
+#include "MathMLUnderOverElement.h"
+#include "MathMLPaddedElement.h"
+#include "MathMLSpaceElement.h"
+#include "MathMLUnknownElement.h"
 
 #include "Document.h"
 #include "RuntimeEnabledFeatures.h"
@@ -55,14 +62,9 @@ using namespace MathMLNames;
 
 typedef Ref<MathMLElement> (*MathMLConstructorFunction)(const QualifiedName&, Document&, bool createdByParser);
 
-static Ref<MathMLElement> textConstructor(const QualifiedName& tagName, Document& document, bool)
+static Ref<MathMLElement> annotationConstructor(const QualifiedName& tagName, Document& document, bool)
 {
-    return MathMLTextElement::create(tagName, document);
-}
-
-static Ref<MathMLElement> inlinecontainerConstructor(const QualifiedName& tagName, Document& document, bool)
-{
-    return MathMLInlineContainerElement::create(tagName, document);
+    return MathMLAnnotationElement::create(tagName, document);
 }
 
 static Ref<MathMLElement> selectConstructor(const QualifiedName& tagName, Document& document, bool)
@@ -70,9 +72,9 @@ static Ref<MathMLElement> selectConstructor(const QualifiedName& tagName, Docume
     return MathMLSelectElement::create(tagName, document);
 }
 
-static Ref<MathMLElement> Constructor(const QualifiedName& tagName, Document& document, bool)
+static Ref<MathMLElement> presentationConstructor(const QualifiedName& tagName, Document& document, bool)
 {
-    return MathMLElement::create(tagName, document);
+    return MathMLPresentationElement::create(tagName, document);
 }
 
 static Ref<MathMLElement> mathConstructor(const QualifiedName& tagName, Document& document, bool)
@@ -85,7 +87,63 @@ static Ref<MathMLElement> mencloseConstructor(const QualifiedName& tagName, Docu
     return MathMLMencloseElement::create(tagName, document);
 }
 
-static NEVER_INLINE void populateMathMLFactoryMap(HashMap<AtomicStringImpl*, MathMLConstructorFunction>& map)
+static Ref<MathMLElement> rowConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLRowElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> fractionConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLFractionElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> tokenConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLTokenElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> scriptsConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLScriptsElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> operatorConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLOperatorElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> underoverConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLUnderOverElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> paddedConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLPaddedElement::create(tagName, document);
+}
+
+static Ref<MathMLElement> spaceConstructor(const QualifiedName& tagName, Document& document, bool)
+{
+    return MathMLSpaceElement::create(tagName, document);
+}
+
+
+struct ConstructorFunctionMapEntry {
+    ConstructorFunctionMapEntry(MathMLConstructorFunction function, const QualifiedName& name)
+        : function(function)
+        , qualifiedName(&name)
+    { }
+
+    ConstructorFunctionMapEntry()
+        : function(nullptr)
+        , qualifiedName(nullptr)
+    { }
+
+    MathMLConstructorFunction function;
+    const QualifiedName* qualifiedName; // Use pointer instead of reference so that emptyValue() in HashMap is cheap to create.
+};
+
+static NEVER_INLINE void populateMathMLFactoryMap(HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>& map)
 {
     struct TableEntry {
         const QualifiedName& name;
@@ -93,64 +151,101 @@ static NEVER_INLINE void populateMathMLFactoryMap(HashMap<AtomicStringImpl*, Mat
     };
 
     static const TableEntry table[] = {
-        { annotationTag, textConstructor },
-        { annotation_xmlTag, inlinecontainerConstructor },
+        { annotationTag, annotationConstructor },
+        { annotation_xmlTag, annotationConstructor },
         { mactionTag, selectConstructor },
-        { maligngroupTag, Constructor },
-        { malignmarkTag, Constructor },
+        { maligngroupTag, presentationConstructor },
+        { malignmarkTag, presentationConstructor },
         { mathTag, mathConstructor },
         { mencloseTag, mencloseConstructor },
-        { merrorTag, inlinecontainerConstructor },
-        { mfencedTag, inlinecontainerConstructor },
-        { mfracTag, inlinecontainerConstructor },
-        { mglyphTag, Constructor },
-        { miTag, textConstructor },
-        { mlabeledtrTag, Constructor },
-        { mlongdivTag, Constructor },
-        { mmultiscriptsTag, inlinecontainerConstructor },
-        { mnTag, textConstructor },
-        { moTag, textConstructor },
-        { moverTag, inlinecontainerConstructor },
-        { mpaddedTag, Constructor },
-        { mphantomTag, inlinecontainerConstructor },
-        { mprescriptsTag, inlinecontainerConstructor },
-        { mrootTag, inlinecontainerConstructor },
-        { mrowTag, inlinecontainerConstructor },
-        { msTag, textConstructor },
-        { mscarriesTag, Constructor },
-        { mscarryTag, Constructor },
-        { msgroupTag, Constructor },
-        { mslineTag, Constructor },
-        { mspaceTag, textConstructor },
-        { msqrtTag, inlinecontainerConstructor },
-        { msrowTag, Constructor },
-        { mstackTag, Constructor },
-        { mstyleTag, inlinecontainerConstructor },
-        { msubTag, inlinecontainerConstructor },
-        { msubsupTag, inlinecontainerConstructor },
-        { msupTag, inlinecontainerConstructor },
-        { mtableTag, inlinecontainerConstructor },
-        { mtdTag, Constructor },
-        { mtextTag, textConstructor },
-        { mtrTag, Constructor },
-        { munderTag, inlinecontainerConstructor },
-        { munderoverTag, inlinecontainerConstructor },
-        { noneTag, inlinecontainerConstructor },
+        { merrorTag, rowConstructor },
+        { mfencedTag, rowConstructor },
+        { mfracTag, fractionConstructor },
+        { mglyphTag, presentationConstructor },
+        { miTag, tokenConstructor },
+        { mlabeledtrTag, presentationConstructor },
+        { mlongdivTag, presentationConstructor },
+        { mmultiscriptsTag, scriptsConstructor },
+        { mnTag, tokenConstructor },
+        { moTag, operatorConstructor },
+        { moverTag, underoverConstructor },
+        { mpaddedTag, paddedConstructor },
+        { mphantomTag, rowConstructor },
+        { mprescriptsTag, presentationConstructor },
+        { mrootTag, rowConstructor },
+        { mrowTag, rowConstructor },
+        { msTag, tokenConstructor },
+        { mscarriesTag, presentationConstructor },
+        { mscarryTag, presentationConstructor },
+        { msgroupTag, presentationConstructor },
+        { mslineTag, presentationConstructor },
+        { mspaceTag, spaceConstructor },
+        { msqrtTag, rowConstructor },
+        { msrowTag, presentationConstructor },
+        { mstackTag, presentationConstructor },
+        { mstyleTag, rowConstructor },
+        { msubTag, scriptsConstructor },
+        { msubsupTag, scriptsConstructor },
+        { msupTag, scriptsConstructor },
+        { mtableTag, presentationConstructor },
+        { mtdTag, presentationConstructor },
+        { mtextTag, tokenConstructor },
+        { mtrTag, presentationConstructor },
+        { munderTag, underoverConstructor },
+        { munderoverTag, underoverConstructor },
+        { noneTag, presentationConstructor },
         { semanticsTag, selectConstructor },
     };
 
     for (unsigned i = 0; i < WTF_ARRAY_LENGTH(table); ++i)
-        map.add(table[i].name.localName().impl(), table[i].function);
+        map.add(table[i].name.localName().impl(), ConstructorFunctionMapEntry(table[i].function, table[i].name));
+}
+
+
+static ConstructorFunctionMapEntry findMathMLElementConstructorFunction(const AtomicString& localName)
+{
+    static NeverDestroyed<HashMap<AtomicStringImpl*, ConstructorFunctionMapEntry>> map;
+    if (map.get().isEmpty())
+        populateMathMLFactoryMap(map);
+    return map.get().get(localName.impl());
+}
+
+RefPtr<MathMLElement> MathMLElementFactory::createKnownElement(const AtomicString& localName, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findMathMLElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, createdByParser);
+    }
+    return nullptr;
+}
+
+RefPtr<MathMLElement> MathMLElementFactory::createKnownElement(const QualifiedName& name, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findMathMLElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, createdByParser);
+    return nullptr;
+}
+
+Ref<MathMLElement> MathMLElementFactory::createElement(const AtomicString& localName, Document& document, bool createdByParser)
+{
+    const ConstructorFunctionMapEntry& entry = findMathMLElementConstructorFunction(localName);
+    if (LIKELY(entry.function)) {
+        ASSERT(entry.qualifiedName);
+        const auto& name = *entry.qualifiedName;
+        return entry.function(name, document, createdByParser);
+    }
+    return MathMLUnknownElement::create(QualifiedName(nullAtom, localName, mathmlNamespaceURI), document);
 }
 
 Ref<MathMLElement> MathMLElementFactory::createElement(const QualifiedName& name, Document& document, bool createdByParser)
 {
-    static NeverDestroyed<HashMap<AtomicStringImpl*, MathMLConstructorFunction>> functions;
-    if (functions.get().isEmpty())
-        populateMathMLFactoryMap(functions);
-    if (MathMLConstructorFunction function = functions.get().get(name.localName().impl()))
-        return function(name, document, createdByParser);
-    return MathMLElement::create(name, document);
+    const ConstructorFunctionMapEntry& entry = findMathMLElementConstructorFunction(name.localName());
+    if (LIKELY(entry.function))
+        return entry.function(name, document, createdByParser);
+    return MathMLUnknownElement::create(name, document);
 }
 
 } // namespace WebCore

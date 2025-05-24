@@ -24,12 +24,11 @@
 
 #include "JSAudioParam.h"
 
-#include "AudioParam.h"
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -44,24 +43,22 @@ JSC::EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionExponentialRampTo
 JSC::EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetTargetAtTime(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetValueCurveAtTime(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionCancelScheduledValues(JSC::ExecState*);
-#if ENABLE(LEGACY_WEB_AUDIO)
-JSC::EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetTargetValueAtTime(JSC::ExecState*);
-#endif
 
 // Attributes
 
-JSC::EncodedJSValue jsAudioParamValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSAudioParamValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsAudioParamMinValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioParamMaxValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioParamDefaultValue(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioParamName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioParamUnits(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsAudioParamConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioParamValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsAudioParamMinValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamMaxValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamDefaultValue(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamUnits(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsAudioParamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSAudioParamConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSAudioParamPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSAudioParamPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSAudioParamPrototype* ptr = new (NotNull, JSC::allocateCell<JSAudioParamPrototype>(vm.heap)) JSAudioParamPrototype(vm, globalObject, structure);
@@ -84,65 +81,40 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAudioParamConstructor : public DOMConstructorObject {
-private:
-    JSAudioParamConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSAudioParamConstructor = JSDOMConstructorNotConstructable<JSAudioParam>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAudioParamConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAudioParamConstructor* ptr = new (NotNull, JSC::allocateCell<JSAudioParamConstructor>(vm.heap)) JSAudioParamConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSAudioParamConstructor::s_info = { "AudioParamConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioParamConstructor) };
-
-JSAudioParamConstructor::JSAudioParamConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSAudioParamConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSAudioParamConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSAudioParamConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAudioParam::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAudioParam::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioParam"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSAudioParamConstructor::s_info = { "AudioParam", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioParamConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioParamPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioParamValue) },
-    { "minValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamMinValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "maxValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamMaxValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "units", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "setValueAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetValueAtTime), (intptr_t) (2) },
-    { "linearRampToValueAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionLinearRampToValueAtTime), (intptr_t) (2) },
-    { "exponentialRampToValueAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionExponentialRampToValueAtTime), (intptr_t) (2) },
-    { "setTargetAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetTargetAtTime), (intptr_t) (3) },
-    { "setValueCurveAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetValueCurveAtTime), (intptr_t) (3) },
-    { "cancelScheduledValues", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionCancelScheduledValues), (intptr_t) (1) },
-#if ENABLE(LEGACY_WEB_AUDIO)
-    { "setTargetValueAtTime", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetTargetValueAtTime), (intptr_t) (3) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioParamConstructor) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioParamValue) } },
+    { "minValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamMinValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "maxValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamMaxValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "units", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioParamUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "setValueAtTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetValueAtTime), (intptr_t) (2) } },
+    { "linearRampToValueAtTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionLinearRampToValueAtTime), (intptr_t) (2) } },
+    { "exponentialRampToValueAtTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionExponentialRampToValueAtTime), (intptr_t) (2) } },
+    { "setTargetAtTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetTargetAtTime), (intptr_t) (3) } },
+    { "setValueCurveAtTime", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionSetValueCurveAtTime), (intptr_t) (3) } },
+    { "cancelScheduledValues", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioParamPrototypeFunctionCancelScheduledValues), (intptr_t) (1) } },
 };
 
 const ClassInfo JSAudioParamPrototype::s_info = { "AudioParamPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioParamPrototype) };
@@ -155,10 +127,16 @@ void JSAudioParamPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAudioParam::s_info = { "AudioParam", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioParam) };
 
-JSAudioParam::JSAudioParam(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioParam>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSAudioParam::JSAudioParam(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioParam>&& impl)
+    : JSDOMWrapper<AudioParam>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSAudioParam::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSAudioParam::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -166,7 +144,7 @@ JSObject* JSAudioParam::createPrototype(VM& vm, JSGlobalObject* globalObject)
     return JSAudioParamPrototype::create(vm, globalObject, JSAudioParamPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSAudioParam::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSAudioParam::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSAudioParam>(vm, globalObject);
 }
@@ -177,294 +155,293 @@ void JSAudioParam::destroy(JSC::JSCell* cell)
     thisObject->JSAudioParam::~JSAudioParam();
 }
 
-JSAudioParam::~JSAudioParam()
+template<> inline JSAudioParam* BindingCaller<JSAudioParam>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSAudioParam*>(JSValue::decode(thisValue));
 }
 
-EncodedJSValue jsAudioParamValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSAudioParam* BindingCaller<JSAudioParam>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "value");
-        return throwGetterTypeError(*exec, "AudioParam", "value");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.value());
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSAudioParam*>(state.thisValue());
 }
 
+static inline JSValue jsAudioParamValueGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioParamMinValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioParamValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "minValue");
-        return throwGetterTypeError(*exec, "AudioParam", "minValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.minValue());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamValueGetter>(state, thisValue, "value");
 }
 
-
-EncodedJSValue jsAudioParamMaxValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioParamValueGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "maxValue");
-        return throwGetterTypeError(*exec, "AudioParam", "maxValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.maxValue());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.value());
+    return result;
 }
 
+static inline JSValue jsAudioParamMinValueGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioParamDefaultValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioParamMinValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "defaultValue");
-        return throwGetterTypeError(*exec, "AudioParam", "defaultValue");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.defaultValue());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamMinValueGetter>(state, thisValue, "minValue");
 }
 
-
-EncodedJSValue jsAudioParamName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsAudioParamMinValueGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "name");
-        return throwGetterTypeError(*exec, "AudioParam", "name");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.minValue());
+    return result;
 }
 
+static inline JSValue jsAudioParamMaxValueGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
 
-EncodedJSValue jsAudioParamUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioParamMaxValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioParam", "units");
-        return throwGetterTypeError(*exec, "AudioParam", "units");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.units());
-    return JSValue::encode(result);
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamMaxValueGetter>(state, thisValue, "maxValue");
 }
 
-
-EncodedJSValue jsAudioParamConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsAudioParamMaxValueGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
 {
-    JSAudioParamPrototype* domObject = jsDynamicCast<JSAudioParamPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAudioParam::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.maxValue());
+    return result;
 }
 
-void setJSAudioParamValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsAudioParamDefaultValueGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioParamDefaultValue(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamDefaultValueGetter>(state, thisValue, "defaultValue");
+}
+
+static inline JSValue jsAudioParamDefaultValueGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedFloat>(impl.defaultValue());
+    return result;
+}
+
+static inline JSValue jsAudioParamNameGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioParamName(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamNameGetter>(state, thisValue, "name");
+}
+
+static inline JSValue jsAudioParamNameGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
+}
+
+static inline JSValue jsAudioParamUnitsGetter(ExecState&, JSAudioParam&, ThrowScope& throwScope);
+
+EncodedJSValue jsAudioParamUnits(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSAudioParam>::attribute<jsAudioParamUnitsGetter>(state, thisValue, "units");
+}
+
+static inline JSValue jsAudioParamUnitsGetter(ExecState& state, JSAudioParam& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.units());
+    return result;
+}
+
+EncodedJSValue jsAudioParamConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSAudioParamPrototype* domObject = jsDynamicDowncast<JSAudioParamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSAudioParam::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSAudioParamConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSAudioParamPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioParam", "value");
-        else
-            throwSetterTypeError(*exec, "AudioParam", "value");
-        return;
+    JSAudioParamPrototype* domObject = jsDynamicDowncast<JSAudioParamPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setValue(nativeValue);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSAudioParamValueFunction(ExecState&, JSAudioParam&, JSValue, ThrowScope&);
+
+bool setJSAudioParamValue(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSAudioParam>::setAttribute<setJSAudioParamValueFunction>(state, thisValue, encodedValue, "value");
+}
+
+static inline bool setJSAudioParamValueFunction(ExecState& state, JSAudioParam& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedFloat>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    impl.setValue(WTFMove(nativeValue));
+    return true;
 }
 
 
-JSValue JSAudioParam::getConstructor(VM& vm, JSGlobalObject* globalObject)
+JSValue JSAudioParam::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSAudioParamConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSAudioParamConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetValueAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetValueAtTimeCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetValueAtTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "setValueAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float value = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setValueAtTime(value, time);
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionSetValueAtTimeCaller>(state, "setValueAtTime");
+}
+
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetValueAtTimeCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto value = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto time = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setValueAtTime(WTFMove(value), WTFMove(time));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionLinearRampToValueAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionLinearRampToValueAtTimeCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionLinearRampToValueAtTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "linearRampToValueAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float value = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.linearRampToValueAtTime(value, time);
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionLinearRampToValueAtTimeCaller>(state, "linearRampToValueAtTime");
+}
+
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionLinearRampToValueAtTimeCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto value = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto time = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.linearRampToValueAtTime(WTFMove(value), WTFMove(time));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionExponentialRampToValueAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionExponentialRampToValueAtTimeCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionExponentialRampToValueAtTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "exponentialRampToValueAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float value = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.exponentialRampToValueAtTime(value, time);
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionExponentialRampToValueAtTimeCaller>(state, "exponentialRampToValueAtTime");
+}
+
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionExponentialRampToValueAtTimeCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto value = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto time = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.exponentialRampToValueAtTime(WTFMove(value), WTFMove(time));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetTargetAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetTargetAtTimeCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetTargetAtTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "setTargetAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float target = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float timeConstant = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setTargetAtTime(target, time, timeConstant);
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionSetTargetAtTimeCaller>(state, "setTargetAtTime");
+}
+
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetTargetAtTimeCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto target = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto time = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto timeConstant = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setTargetAtTime(WTFMove(target), WTFMove(time), WTFMove(timeConstant));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetValueCurveAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetValueCurveAtTimeCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetValueCurveAtTime(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "setValueCurveAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<Float32Array> values = toFloat32Array(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float duration = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setValueCurveAtTime(values.get(), time, duration);
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionSetValueCurveAtTimeCaller>(state, "setValueCurveAtTime");
+}
+
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionSetValueCurveAtTimeCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto values = convert<IDLNullable<IDLInterface<Float32Array>>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "values", "AudioParam", "setValueCurveAtTime", "Float32Array"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto time = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto duration = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(2));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.setValueCurveAtTime(WTFMove(values), WTFMove(time), WTFMove(duration));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionCancelScheduledValues(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionCancelScheduledValuesCaller(JSC::ExecState*, JSAudioParam*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionCancelScheduledValues(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "cancelScheduledValues");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float startTime = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.cancelScheduledValues(startTime);
-    return JSValue::encode(jsUndefined());
+    return BindingCaller<JSAudioParam>::callOperation<jsAudioParamPrototypeFunctionCancelScheduledValuesCaller>(state, "cancelScheduledValues");
 }
 
-#if ENABLE(LEGACY_WEB_AUDIO)
-EncodedJSValue JSC_HOST_CALL jsAudioParamPrototypeFunctionSetTargetValueAtTime(ExecState* exec)
+static inline JSC::EncodedJSValue jsAudioParamPrototypeFunctionCancelScheduledValuesCaller(JSC::ExecState* state, JSAudioParam* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSAudioParam* castedThis = jsDynamicCast<JSAudioParam*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioParam", "setTargetValueAtTime");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioParam::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float targetValue = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float time = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    float timeConstant = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.setTargetAtTime(targetValue, time, timeConstant);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto startTime = convert<IDLUnrestrictedFloat>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    impl.cancelScheduledValues(WTFMove(startTime));
     return JSValue::encode(jsUndefined());
 }
-
-#endif
 
 bool JSAudioParamOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -475,9 +452,9 @@ bool JSAudioParamOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> han
 
 void JSAudioParamOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsAudioParam = jsCast<JSAudioParam*>(handle.slot()->asCell());
+    auto* jsAudioParam = static_cast<JSAudioParam*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsAudioParam->impl(), jsAudioParam);
+    uncacheWrapper(world, &jsAudioParam->wrapped(), jsAudioParam);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -488,15 +465,12 @@ extern "C" { extern void (*const __identifier("??_7AudioParam@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10AudioParamE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioParam* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<AudioParam>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSAudioParam>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7AudioParam@WebCore@@6B@"));
 #else
@@ -504,7 +478,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioParam* 
 #if COMPILER(CLANG)
     // If this fails AudioParam does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(AudioParam), AudioParam_is_not_polymorphic);
+    static_assert(__is_polymorphic(AudioParam), "AudioParam is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -513,13 +487,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioParam* 
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSAudioParam>(globalObject, impl);
+    return createWrapper<AudioParam>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioParam& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 AudioParam* JSAudioParam::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSAudioParam*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSAudioParam*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

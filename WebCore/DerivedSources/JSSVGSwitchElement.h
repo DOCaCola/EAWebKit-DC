@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGSwitchElement_h
-#define JSSVGSwitchElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGSwitchElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGSwitchElement;
     static JSSVGSwitchElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGSwitchElement>&& impl)
     {
-        JSSVGSwitchElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSwitchElement>(globalObject->vm().heap)) JSSVGSwitchElement(structure, globalObject, WTF::move(impl));
+        JSSVGSwitchElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSwitchElement>(globalObject->vm().heap)) JSSVGSwitchElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGSwitchElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGSwitchElement& wrapped() const
     {
-        return static_cast<SVGSwitchElement&>(Base::impl());
+        return static_cast<SVGSwitchElement&>(Base::wrapped());
     }
 protected:
-    JSSVGSwitchElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGSwitchElement>&&);
+    JSSVGSwitchElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGSwitchElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGSwitchElement> {
+    using WrapperClass = JSSVGSwitchElement;
+    using ToWrappedReturnType = SVGSwitchElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -20,14 +20,13 @@
 
 #include "config.h"
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSRTCIceCandidateEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConvert.h"
 #include "JSRTCIceCandidate.h"
-#include "RTCIceCandidate.h"
-#include "RTCIceCandidateEvent.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -36,11 +35,12 @@ namespace WebCore {
 
 // Attributes
 
-JSC::EncodedJSValue jsRTCIceCandidateEventCandidate(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCIceCandidateEventCandidate(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSRTCIceCandidateEventConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSRTCIceCandidateEventPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSRTCIceCandidateEventPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSRTCIceCandidateEventPrototype* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateEventPrototype>(vm.heap)) JSRTCIceCandidateEventPrototype(vm, globalObject, structure);
@@ -67,7 +67,7 @@ private:
 
 static const HashTableValue JSRTCIceCandidateEventPrototypeTableValues[] =
 {
-    { "candidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateEventCandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "candidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceCandidateEventCandidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCIceCandidateEventPrototype::s_info = { "RTCIceCandidateEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidateEventPrototype) };
@@ -80,39 +80,64 @@ void JSRTCIceCandidateEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCIceCandidateEvent::s_info = { "RTCIceCandidateEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceCandidateEvent) };
 
-JSRTCIceCandidateEvent::JSRTCIceCandidateEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidateEvent>&& impl)
-    : JSEvent(structure, globalObject, WTF::move(impl))
+JSRTCIceCandidateEvent::JSRTCIceCandidateEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCIceCandidateEvent>&& impl)
+    : JSEvent(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSRTCIceCandidateEvent::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSRTCIceCandidateEvent::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSRTCIceCandidateEventPrototype::create(vm, globalObject, JSRTCIceCandidateEventPrototype::createStructure(vm, globalObject, JSEvent::getPrototype(vm, globalObject)));
+    return JSRTCIceCandidateEventPrototype::create(vm, globalObject, JSRTCIceCandidateEventPrototype::createStructure(vm, globalObject, JSEvent::prototype(vm, globalObject)));
 }
 
-JSObject* JSRTCIceCandidateEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSRTCIceCandidateEvent::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSRTCIceCandidateEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsRTCIceCandidateEventCandidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSRTCIceCandidateEvent* BindingCaller<JSRTCIceCandidateEvent>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSRTCIceCandidateEvent* castedThis = jsDynamicCast<JSRTCIceCandidateEvent*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSRTCIceCandidateEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceCandidateEvent", "candidate");
-        return throwGetterTypeError(*exec, "RTCIceCandidateEvent", "candidate");
+    return jsDynamicDowncast<JSRTCIceCandidateEvent*>(JSValue::decode(thisValue));
+}
+
+static inline JSValue jsRTCIceCandidateEventCandidateGetter(ExecState&, JSRTCIceCandidateEvent&, ThrowScope& throwScope);
+
+EncodedJSValue jsRTCIceCandidateEventCandidate(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSRTCIceCandidateEvent>::attribute<jsRTCIceCandidateEventCandidateGetter>(state, thisValue, "candidate");
+}
+
+static inline JSValue jsRTCIceCandidateEventCandidateGetter(ExecState& state, JSRTCIceCandidateEvent& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<RTCIceCandidate>>(state, *thisObject.globalObject(), impl.candidate());
+    return result;
+}
+
+bool setJSRTCIceCandidateEventConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSRTCIceCandidateEventPrototype* domObject = jsDynamicDowncast<JSRTCIceCandidateEventPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.candidate()));
-    return JSValue::encode(result);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
 
-
 }
 
-#endif // ENABLE(MEDIA_STREAM)
+#endif // ENABLE(WEB_RTC)

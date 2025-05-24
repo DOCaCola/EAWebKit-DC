@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFileError_h
-#define JSFileError_h
+#pragma once
 
 #include "FileError.h"
 #include "JSDOMWrapper.h"
@@ -27,22 +26,20 @@
 
 namespace WebCore {
 
-class JSFileError : public JSDOMWrapper {
+class JSFileError : public JSDOMWrapper<FileError> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<FileError>;
     static JSFileError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileError>&& impl)
     {
-        JSFileError* ptr = new (NotNull, JSC::allocateCell<JSFileError>(globalObject->vm().heap)) JSFileError(structure, globalObject, WTF::move(impl));
+        JSFileError* ptr = new (NotNull, JSC::allocateCell<JSFileError>(globalObject->vm().heap)) JSFileError(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static FileError* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileError();
 
     DECLARE_INFO;
 
@@ -51,23 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FileError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileError* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSFileError(JSC::Structure*, JSDOMGlobalObject*, Ref<FileError>&&);
+    JSFileError(JSC::Structure*, JSDOMGlobalObject&, Ref<FileError>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSFileErrorOwner : public JSC::WeakHandleOwner {
@@ -82,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileError*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileError& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(FileError* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileError&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileError* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<FileError>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<FileError>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<FileError> {
+    using WrapperClass = JSFileError;
+    using ToWrappedReturnType = FileError*;
+};
 
 } // namespace WebCore
-
-#endif

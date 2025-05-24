@@ -34,16 +34,20 @@
 
 namespace WebCore {
 
-    class Document;
-    class HTMLFormElement;
-    class QualifiedName;
+class Document;
+class HTMLFormElement;
+class QualifiedName;
 
-    class SVGElement;
+class SVGElement;
 
-    class SVGElementFactory {
-    public:
-        static Ref<SVGElement> createElement(const QualifiedName&, Document&, bool createdByParser = false);
-    };
+class SVGElementFactory {
+public:
+static RefPtr<SVGElement> createKnownElement(const AtomicString&, Document&, bool createdByParser = false);
+static RefPtr<SVGElement> createKnownElement(const QualifiedName&, Document&, bool createdByParser = false);
+static Ref<SVGElement> createElement(const AtomicString&, Document&, bool createdByParser = false);
+static Ref<SVGElement> createElement(const QualifiedName&, Document&, bool createdByParser = false);
+};
+
 }
 
 #endif // SVGElementFactory_h

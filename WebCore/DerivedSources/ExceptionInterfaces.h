@@ -31,12 +31,9 @@
 #define DOM_EXCEPTION_INTERFACES_FOR_EACH(macro) \
     \
     macro(DOMCoreException) \
-    macro(EventException) \
     macro(FileException) \
-    macro(RangeException) \
     macro(SQLException) \
     macro(SVGException) \
-    macro(XMLHttpRequestException) \
     macro(XPathException) \
     \
 

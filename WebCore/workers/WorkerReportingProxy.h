@@ -28,11 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WorkerReportingProxy_h
-#define WorkerReportingProxy_h
+#pragma once
 
 #include <runtime/ConsoleTypes.h>
-#include <wtf/Forward.h>
 
 namespace WebCore {
 
@@ -42,8 +40,6 @@ namespace WebCore {
         virtual ~WorkerReportingProxy() {}
 
         virtual void postExceptionToWorkerObject(const String& errorMessage, int lineNumber, int columnNumber, const String& sourceURL) = 0;
-
-        virtual void postConsoleMessageToWorkerObject(MessageSource, MessageLevel, const String& message, int lineNumber, int columnNumber, const String& sourceURL) = 0;
 
         virtual void postMessageToPageInspector(const String&) = 0;
 
@@ -55,5 +51,3 @@ namespace WebCore {
     };
 
 } // namespace WebCore
-
-#endif // WorkerReportingProxy_h

@@ -21,18 +21,15 @@
 #include "config.h"
 #include "JSDOMImplementation.h"
 
-#include "CSSStyleSheet.h"
-#include "DOMImplementation.h"
-#include "Document.h"
-#include "DocumentType.h"
-#include "ExceptionCode.h"
-#include "HTMLDocument.h"
 #include "JSCSSStyleSheet.h"
 #include "JSDOMBinding.h"
-#include "JSDocument.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include "JSDocumentType.h"
 #include "JSHTMLDocument.h"
+#include "JSXMLDocument.h"
 #include <runtime/Error.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -41,19 +38,20 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionHasFeature(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocumentType(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocument(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateHTMLDocument(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionHasFeature(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsDOMImplementationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsDOMImplementationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSDOMImplementationConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSDOMImplementationPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSDOMImplementationPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSDOMImplementationPrototype* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementationPrototype>(vm.heap)) JSDOMImplementationPrototype(vm, globalObject, structure);
@@ -76,53 +74,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMImplementationConstructor : public DOMConstructorObject {
-private:
-    JSDOMImplementationConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+using JSDOMImplementationConstructor = JSDOMConstructorNotConstructable<JSDOMImplementation>;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMImplementationConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMImplementationConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementationConstructor>(vm.heap)) JSDOMImplementationConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSDOMImplementationConstructor::s_info = { "DOMImplementationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMImplementationConstructor) };
-
-JSDOMImplementationConstructor::JSDOMImplementationConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSDOMImplementationConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSDOMImplementationConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSDOMImplementationConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMImplementation::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMImplementation::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMImplementation"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMImplementationConstructor::s_info = { "DOMImplementation", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMImplementationConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMImplementationPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMImplementationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "hasFeature", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionHasFeature), (intptr_t) (0) },
-    { "createDocumentType", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateDocumentType), (intptr_t) (0) },
-    { "createDocument", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateDocument), (intptr_t) (0) },
-    { "createCSSStyleSheet", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet), (intptr_t) (0) },
-    { "createHTMLDocument", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateHTMLDocument), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMImplementationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMImplementationConstructor) } },
+    { "createDocumentType", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateDocumentType), (intptr_t) (3) } },
+    { "createDocument", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateDocument), (intptr_t) (2) } },
+    { "createHTMLDocument", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateHTMLDocument), (intptr_t) (0) } },
+    { "hasFeature", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionHasFeature), (intptr_t) (0) } },
+    { "createCSSStyleSheet", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDOMImplementationPrototype::s_info = { "DOMImplementationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMImplementationPrototype) };
@@ -135,10 +113,16 @@ void JSDOMImplementationPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMImplementation::s_info = { "DOMImplementation", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMImplementation) };
 
-JSDOMImplementation::JSDOMImplementation(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMImplementation>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMImplementation::JSDOMImplementation(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMImplementation>&& impl)
+    : JSDOMWrapper<DOMImplementation>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSDOMImplementation::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSDOMImplementation::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -146,7 +130,7 @@ JSObject* JSDOMImplementation::createPrototype(VM& vm, JSGlobalObject* globalObj
     return JSDOMImplementationPrototype::create(vm, globalObject, JSDOMImplementationPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
 }
 
-JSObject* JSDOMImplementation::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSDOMImplementation::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSDOMImplementation>(vm, globalObject);
 }
@@ -157,130 +141,141 @@ void JSDOMImplementation::destroy(JSC::JSCell* cell)
     thisObject->JSDOMImplementation::~JSDOMImplementation();
 }
 
-JSDOMImplementation::~JSDOMImplementation()
+template<> inline JSDOMImplementation* BindingCaller<JSDOMImplementation>::castForOperation(ExecState& state)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSDOMImplementation*>(state.thisValue());
 }
 
-EncodedJSValue jsDOMImplementationConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDOMImplementationConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSDOMImplementationPrototype* domObject = jsDynamicCast<JSDOMImplementationPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMImplementation::getConstructor(exec->vm(), domObject->globalObject()));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSDOMImplementationPrototype* domObject = jsDynamicDowncast<JSDOMImplementationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSDOMImplementation::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-JSValue JSDOMImplementation::getConstructor(VM& vm, JSGlobalObject* globalObject)
+bool setJSDOMImplementationConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSDOMImplementationConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSDOMImplementationPrototype* domObject = jsDynamicDowncast<JSDOMImplementationPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionHasFeature(ExecState* exec)
+JSValue JSDOMImplementation::getConstructor(VM& vm, const JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMImplementation* castedThis = jsDynamicCast<JSDOMImplementation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMImplementation", "hasFeature");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMImplementation::info());
-    auto& impl = castedThis->impl();
-    String feature = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String version = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.hasFeature(feature, version));
-    return JSValue::encode(result);
+    return getDOMConstructor<JSDOMImplementationConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocumentType(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDOMImplementation* castedThis = jsDynamicCast<JSDOMImplementation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMImplementation", "createDocumentType");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMImplementation::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String qualifiedName = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String publicId = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String systemId = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createDocumentType(qualifiedName, publicId, systemId, ec)));
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateDocumentTypeCaller(JSC::ExecState*, JSDOMImplementation*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocumentType(ExecState* state)
+{
+    return BindingCaller<JSDOMImplementation>::callOperation<jsDOMImplementationPrototypeFunctionCreateDocumentTypeCaller>(state, "createDocumentType");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocument(ExecState* exec)
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateDocumentTypeCaller(JSC::ExecState* state, JSDOMImplementation* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMImplementation* castedThis = jsDynamicCast<JSDOMImplementation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMImplementation", "createDocument");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMImplementation::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String qualifiedName = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    DocumentType* doctype = JSDocumentType::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createDocument(namespaceURI, qualifiedName, doctype, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto qualifiedName = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto publicId = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto systemId = convert<IDLDOMString>(*state, state->uncheckedArgument(2), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<DocumentType>>(*state, *castedThis->globalObject(), throwScope, impl.createDocumentType(WTFMove(qualifiedName), WTFMove(publicId), WTFMove(systemId))));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDOMImplementation* castedThis = jsDynamicCast<JSDOMImplementation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMImplementation", "createCSSStyleSheet");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMImplementation::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String title = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String media = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createCSSStyleSheet(title, media, ec)));
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateDocumentCaller(JSC::ExecState*, JSDOMImplementation*, JSC::ThrowScope&);
 
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateDocument(ExecState* state)
+{
+    return BindingCaller<JSDOMImplementation>::callOperation<jsDOMImplementationPrototypeFunctionCreateDocumentCaller>(state, "createDocument");
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateHTMLDocument(ExecState* exec)
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateDocumentCaller(JSC::ExecState* state, JSDOMImplementation* castedThis, JSC::ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSDOMImplementation* castedThis = jsDynamicCast<JSDOMImplementation*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMImplementation", "createHTMLDocument");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMImplementation::info());
-    auto& impl = castedThis->impl();
-    String title = exec->argumentCount() <= 0 ? String() : exec->uncheckedArgument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createHTMLDocument(title)));
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto namespaceURI = convert<IDLNullable<IDLDOMString>>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto qualifiedName = convert<IDLDOMString>(*state, state->uncheckedArgument(1), StringConversionConfiguration::TreatNullAsEmptyString);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto doctype = convert<IDLNullable<IDLInterface<DocumentType>>>(*state, state->argument(2), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 2, "doctype", "DOMImplementation", "createDocument", "DocumentType"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<XMLDocument>>(*state, *castedThis->globalObject(), throwScope, impl.createDocument(WTFMove(namespaceURI), WTFMove(qualifiedName), WTFMove(doctype))));
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateHTMLDocumentCaller(JSC::ExecState*, JSDOMImplementation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateHTMLDocument(ExecState* state)
+{
+    return BindingCaller<JSDOMImplementation>::callOperation<jsDOMImplementationPrototypeFunctionCreateHTMLDocumentCaller>(state, "createHTMLDocument");
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateHTMLDocumentCaller(JSC::ExecState* state, JSDOMImplementation* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto title = state->argument(0).isUndefined() ? String() : convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<HTMLDocument>>(*state, *castedThis->globalObject(), impl.createHTMLDocument(WTFMove(title))));
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionHasFeatureCaller(JSC::ExecState*, JSDOMImplementation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionHasFeature(ExecState* state)
+{
+    return BindingCaller<JSDOMImplementation>::callOperation<jsDOMImplementationPrototypeFunctionHasFeatureCaller>(state, "hasFeature");
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionHasFeatureCaller(JSC::ExecState* state, JSDOMImplementation* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLBoolean>(impl.hasFeature()));
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateCSSStyleSheetCaller(JSC::ExecState*, JSDOMImplementation*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDOMImplementationPrototypeFunctionCreateCSSStyleSheet(ExecState* state)
+{
+    return BindingCaller<JSDOMImplementation>::callOperation<jsDOMImplementationPrototypeFunctionCreateCSSStyleSheetCaller>(state, "createCSSStyleSheet");
+}
+
+static inline JSC::EncodedJSValue jsDOMImplementationPrototypeFunctionCreateCSSStyleSheetCaller(JSC::ExecState* state, JSDOMImplementation* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto title = convert<IDLDOMString>(*state, state->argument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto media = convert<IDLDOMString>(*state, state->argument(1), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<CSSStyleSheet>>(*state, *castedThis->globalObject(), impl.createCSSStyleSheet(WTFMove(title), WTFMove(media))));
 }
 
 bool JSDOMImplementationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsDOMImplementation = jsCast<JSDOMImplementation*>(handle.slot()->asCell());
-    Document* root = WTF::getPtr(jsDOMImplementation->impl().document());
+    Document* root = WTF::getPtr(jsDOMImplementation->wrapped().document());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -288,31 +283,32 @@ bool JSDOMImplementationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unkno
 
 void JSDOMImplementationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsDOMImplementation = jsCast<JSDOMImplementation*>(handle.slot()->asCell());
+    auto* jsDOMImplementation = static_cast<JSDOMImplementation*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMImplementation->impl(), jsDOMImplementation);
+    uncacheWrapper(world, &jsDOMImplementation->wrapped(), jsDOMImplementation);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMImplementation* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<DOMImplementation>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSDOMImplementation>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to DOMImplementation.
-    COMPILE_ASSERT(!__is_polymorphic(DOMImplementation), DOMImplementation_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(DOMImplementation), "DOMImplementation is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSDOMImplementation>(globalObject, impl);
+    return createWrapper<DOMImplementation>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMImplementation& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 DOMImplementation* JSDOMImplementation::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSDOMImplementation*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSDOMImplementation*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

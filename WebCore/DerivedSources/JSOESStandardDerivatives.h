@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSOESStandardDerivatives_h
-#define JSOESStandardDerivatives_h
+#pragma once
 
 #if ENABLE(WEBGL)
 
@@ -29,21 +28,20 @@
 
 namespace WebCore {
 
-class JSOESStandardDerivatives : public JSDOMWrapper {
+class JSOESStandardDerivatives : public JSDOMWrapper<OESStandardDerivatives> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<OESStandardDerivatives>;
     static JSOESStandardDerivatives* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESStandardDerivatives>&& impl)
     {
-        JSOESStandardDerivatives* ptr = new (NotNull, JSC::allocateCell<JSOESStandardDerivatives>(globalObject->vm().heap)) JSOESStandardDerivatives(structure, globalObject, WTF::move(impl));
+        JSOESStandardDerivatives* ptr = new (NotNull, JSC::allocateCell<JSOESStandardDerivatives>(globalObject->vm().heap)) JSOESStandardDerivatives(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESStandardDerivatives* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESStandardDerivatives();
 
     DECLARE_INFO;
 
@@ -52,20 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESStandardDerivatives& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESStandardDerivatives* m_impl;
 protected:
-    JSOESStandardDerivatives(JSC::Structure*, JSDOMGlobalObject*, Ref<OESStandardDerivatives>&&);
+    JSOESStandardDerivatives(JSC::Structure*, JSDOMGlobalObject&, Ref<OESStandardDerivatives>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSOESStandardDerivativesOwner : public JSC::WeakHandleOwner {
@@ -80,12 +68,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESStandardDerivativ
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESStandardDerivatives*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESStandardDerivatives& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(OESStandardDerivatives* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESStandardDerivatives&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESStandardDerivatives* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<OESStandardDerivatives>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<OESStandardDerivatives>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<OESStandardDerivatives> {
+    using WrapperClass = JSOESStandardDerivatives;
+    using ToWrappedReturnType = OESStandardDerivatives*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEBGL)
-
-#endif

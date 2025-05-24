@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGException_h
-#define JSSVGException_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SVGElement.h"
@@ -29,22 +28,20 @@
 
 namespace WebCore {
 
-class JSSVGException : public JSDOMWrapper {
+class JSSVGException : public JSDOMWrapper<SVGException> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SVGException>;
     static JSSVGException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGException>&& impl)
     {
-        JSSVGException* ptr = new (NotNull, JSC::allocateCell<JSSVGException>(globalObject->vm().heap)) JSSVGException(structure, globalObject, WTF::move(impl));
+        JSSVGException* ptr = new (NotNull, JSC::allocateCell<JSSVGException>(globalObject->vm().heap)) JSSVGException(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGException* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGException();
 
     DECLARE_INFO;
 
@@ -53,23 +50,13 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGException* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::HasStaticPropertyTable | Base::StructureFlags;
 protected:
-    JSSVGException(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGException>&&);
+    JSSVGException(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGException>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGExceptionOwner : public JSC::WeakHandleOwner {
@@ -84,10 +71,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGException*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGException& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGException* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGException&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGException* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGException>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGException>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGException> {
+    using WrapperClass = JSSVGException;
+    using ToWrappedReturnType = SVGException*;
+};
 
 } // namespace WebCore
-
-#endif

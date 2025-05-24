@@ -18,33 +18,29 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGLength_h
-#define JSSVGLength_h
+#pragma once
 
 #include "JSDOMWrapper.h"
-#include "SVGAnimatedPropertyTearOff.h"
 #include "SVGElement.h"
 #include "SVGLength.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSSVGLength : public JSDOMWrapper {
+class JSSVGLength : public JSDOMWrapper<SVGLength> {
 public:
-    typedef JSDOMWrapper Base;
-    static JSSVGLength* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGLength>>&& impl)
+    using Base = JSDOMWrapper<SVGLength>;
+    static JSSVGLength* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLength>&& impl)
     {
-        JSSVGLength* ptr = new (NotNull, JSC::allocateCell<JSSVGLength>(globalObject->vm().heap)) JSSVGLength(structure, globalObject, WTF::move(impl));
+        JSSVGLength* ptr = new (NotNull, JSC::allocateCell<JSSVGLength>(globalObject->vm().heap)) JSSVGLength(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static SVGPropertyTearOff<SVGLength>* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static SVGLength* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGLength();
 
     DECLARE_INFO;
 
@@ -53,30 +49,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    JSC::JSValue value(JSC::ExecState*) const;
-    void setValue(JSC::ExecState*, JSC::JSValue);
-
-    // Custom functions
-    JSC::JSValue convertToSpecifiedUnits(JSC::ExecState*);
-    SVGPropertyTearOff<SVGLength>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGLength>* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSVGLength(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGLength>>&&);
+    JSSVGLength(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGLength>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSVGLengthOwner : public JSC::WeakHandleOwner {
@@ -85,16 +62,25 @@ public:
     virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
 };
 
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<SVGLength>*)
+inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGLength*)
 {
     static NeverDestroyed<JSSVGLengthOwner> owner;
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGLength>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGLength>& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SVGLength* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGLength&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGLength* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SVGLength>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SVGLength>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SVGLength> {
+    using WrapperClass = JSSVGLength;
+    using ToWrappedReturnType = SVGLength*;
+};
 
 } // namespace WebCore
-
-#endif

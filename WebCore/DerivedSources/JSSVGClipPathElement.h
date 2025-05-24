@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGClipPathElement_h
-#define JSSVGClipPathElement_h
+#pragma once
 
 #include "JSSVGGraphicsElement.h"
 #include "SVGClipPathElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGClipPathElement : public JSSVGGraphicsElement {
 public:
-    typedef JSSVGGraphicsElement Base;
+    using Base = JSSVGGraphicsElement;
+    using DOMWrapped = SVGClipPathElement;
     static JSSVGClipPathElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGClipPathElement>&& impl)
     {
-        JSSVGClipPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGClipPathElement>(globalObject->vm().heap)) JSSVGClipPathElement(structure, globalObject, WTF::move(impl));
+        JSSVGClipPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGClipPathElement>(globalObject->vm().heap)) JSSVGClipPathElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGClipPathElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGClipPathElement& wrapped() const
     {
-        return static_cast<SVGClipPathElement&>(Base::impl());
+        return static_cast<SVGClipPathElement&>(Base::wrapped());
     }
 protected:
-    JSSVGClipPathElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGClipPathElement>&&);
+    JSSVGClipPathElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGClipPathElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGClipPathElement> {
+    using WrapperClass = JSSVGClipPathElement;
+    using ToWrappedReturnType = SVGClipPathElement*;
+};
 
 } // namespace WebCore
-
-#endif

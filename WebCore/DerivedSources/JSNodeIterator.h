@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNodeIterator_h
-#define JSNodeIterator_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "NodeIterator.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSNodeIterator : public JSDOMWrapper {
+class JSNodeIterator : public JSDOMWrapper<NodeIterator> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<NodeIterator>;
     static JSNodeIterator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NodeIterator>&& impl)
     {
-        JSNodeIterator* ptr = new (NotNull, JSC::allocateCell<JSNodeIterator>(globalObject->vm().heap)) JSNodeIterator(structure, globalObject, WTF::move(impl));
+        JSNodeIterator* ptr = new (NotNull, JSC::allocateCell<JSNodeIterator>(globalObject->vm().heap)) JSNodeIterator(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static NodeIterator* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static WEBCORE_EXPORT NodeIterator* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNodeIterator();
 
     DECLARE_INFO;
 
@@ -50,24 +48,16 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    NodeIterator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NodeIterator* m_impl;
+    static void visitOutputConstraints(JSCell*, JSC::SlotVisitor&);
+    template<typename> static JSC::Subspace* subspaceFor(JSC::VM& vm) { return outputConstraintSubspaceFor(vm); }
 protected:
-    JSNodeIterator(JSC::Structure*, JSDOMGlobalObject*, Ref<NodeIterator>&&);
+    JSNodeIterator(JSC::Structure*, JSDOMGlobalObject&, Ref<NodeIterator>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSNodeIteratorOwner : public JSC::WeakHandleOwner {
@@ -82,10 +72,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NodeIterator*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeIterator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NodeIterator& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(NodeIterator* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeIterator&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NodeIterator* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<NodeIterator>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<NodeIterator>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<NodeIterator> {
+    using WrapperClass = JSNodeIterator;
+    using ToWrappedReturnType = NodeIterator*;
+};
 
 } // namespace WebCore
-
-#endif

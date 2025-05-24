@@ -18,30 +18,28 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathNSResolver_h
-#define JSXPathNSResolver_h
+#pragma once
 
-#include "JSCustomXPathNSResolver.h"
 #include "JSDOMWrapper.h"
+#include "XPathNSResolver.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSXPathNSResolver : public JSDOMWrapper {
+class JSXPathNSResolver : public JSDOMWrapper<XPathNSResolver> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<XPathNSResolver>;
     static JSXPathNSResolver* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathNSResolver>&& impl)
     {
-        JSXPathNSResolver* ptr = new (NotNull, JSC::allocateCell<JSXPathNSResolver>(globalObject->vm().heap)) JSXPathNSResolver(structure, globalObject, WTF::move(impl));
+        JSXPathNSResolver* ptr = new (NotNull, JSC::allocateCell<JSXPathNSResolver>(globalObject->vm().heap)) JSXPathNSResolver(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static XPathNSResolver* toWrapped(JSC::JSValue);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
+    static RefPtr<XPathNSResolver> toWrapped(JSC::ExecState&, JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathNSResolver();
 
     DECLARE_INFO;
 
@@ -50,20 +48,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    XPathNSResolver& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathNSResolver* m_impl;
 protected:
-    JSXPathNSResolver(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathNSResolver>&&);
+    JSXPathNSResolver(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathNSResolver>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSXPathNSResolverOwner : public JSC::WeakHandleOwner {
@@ -78,10 +66,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathNSResolver*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathNSResolver*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathNSResolver& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(XPathNSResolver* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathNSResolver&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathNSResolver* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<XPathNSResolver>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<XPathNSResolver>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<XPathNSResolver> {
+    using WrapperClass = JSXPathNSResolver;
+    using ToWrappedReturnType = RefPtr<XPathNSResolver>;
+};
 
 } // namespace WebCore
-
-#endif

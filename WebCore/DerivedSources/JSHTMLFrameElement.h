@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLFrameElement_h
-#define JSHTMLFrameElement_h
+#pragma once
 
 #include "HTMLFrameElement.h"
 #include "JSHTMLElement.h"
@@ -28,17 +27,17 @@ namespace WebCore {
 
 class JSHTMLFrameElement : public JSHTMLElement {
 public:
-    typedef JSHTMLElement Base;
+    using Base = JSHTMLElement;
+    using DOMWrapped = HTMLFrameElement;
     static JSHTMLFrameElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFrameElement>&& impl)
     {
-        JSHTMLFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameElement>(globalObject->vm().heap)) JSHTMLFrameElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameElement>(globalObject->vm().heap)) JSHTMLFrameElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,29 +46,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom attributes
-    void setLocation(JSC::ExecState*, JSC::JSValue);
-    HTMLFrameElement& impl() const
+    HTMLFrameElement& wrapped() const
     {
-        return static_cast<HTMLFrameElement&>(Base::impl());
+        return static_cast<HTMLFrameElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLFrameElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFrameElement>&&);
+    JSHTMLFrameElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFrameElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<HTMLFrameElement> {
+    using WrapperClass = JSHTMLFrameElement;
+    using ToWrappedReturnType = HTMLFrameElement*;
+};
 
 } // namespace WebCore
-
-#endif

@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSQLResultSet_h
-#define JSSQLResultSet_h
+#pragma once
 
 #include "JSDOMWrapper.h"
 #include "SQLResultSet.h"
@@ -27,21 +26,20 @@
 
 namespace WebCore {
 
-class JSSQLResultSet : public JSDOMWrapper {
+class JSSQLResultSet : public JSDOMWrapper<SQLResultSet> {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSDOMWrapper<SQLResultSet>;
     static JSSQLResultSet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSet>&& impl)
     {
-        JSSQLResultSet* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSet>(globalObject->vm().heap)) JSSQLResultSet(structure, globalObject, WTF::move(impl));
+        JSSQLResultSet* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSet>(globalObject->vm().heap)) JSSQLResultSet(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLResultSet* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSQLResultSet();
 
     DECLARE_INFO;
 
@@ -50,20 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    SQLResultSet& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLResultSet* m_impl;
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
 protected:
-    JSSQLResultSet(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLResultSet>&&);
+    JSSQLResultSet(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLResultSet>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSSQLResultSetOwner : public JSC::WeakHandleOwner {
@@ -78,10 +67,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLResultSet*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSet*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLResultSet& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(SQLResultSet* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSet&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLResultSet* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<SQLResultSet>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<SQLResultSet>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<SQLResultSet> {
+    using WrapperClass = JSSQLResultSet;
+    using ToWrappedReturnType = SQLResultSet*;
+};
 
 } // namespace WebCore
-
-#endif

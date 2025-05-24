@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGScriptElement_h
-#define JSSVGScriptElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGScriptElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGScriptElement;
     static JSSVGScriptElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGScriptElement>&& impl)
     {
-        JSSVGScriptElement* ptr = new (NotNull, JSC::allocateCell<JSSVGScriptElement>(globalObject->vm().heap)) JSSVGScriptElement(structure, globalObject, WTF::move(impl));
+        JSSVGScriptElement* ptr = new (NotNull, JSC::allocateCell<JSSVGScriptElement>(globalObject->vm().heap)) JSSVGScriptElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGScriptElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGScriptElement& wrapped() const
     {
-        return static_cast<SVGScriptElement&>(Base::impl());
+        return static_cast<SVGScriptElement&>(Base::wrapped());
     }
 protected:
-    JSSVGScriptElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGScriptElement>&&);
+    JSSVGScriptElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGScriptElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGScriptElement> {
+    using WrapperClass = JSSVGScriptElement;
+    using ToWrappedReturnType = SVGScriptElement*;
+};
 
 } // namespace WebCore
-
-#endif

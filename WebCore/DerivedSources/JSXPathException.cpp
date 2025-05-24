@@ -21,12 +21,11 @@
 #include "config.h"
 #include "JSXPathException.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "URL.h"
-#include "XPathException.h"
+#include "JSDOMConstructor.h"
+#include "JSDOMConvert.h"
 #include <runtime/Error.h>
-#include <runtime/JSString.h>
+#include <runtime/FunctionPrototype.h>
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -39,14 +38,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsXPathExceptionPrototypeFunctionToString(JSC:
 
 // Attributes
 
-JSC::EncodedJSValue jsXPathExceptionCode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsXPathExceptionName(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsXPathExceptionMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsXPathExceptionConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsXPathExceptionCode(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsXPathExceptionName(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsXPathExceptionMessage(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsXPathExceptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSXPathExceptionConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSXPathExceptionPrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSXPathExceptionPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSXPathExceptionPrototype* ptr = new (NotNull, JSC::allocateCell<JSXPathExceptionPrototype>(vm.heap)) JSXPathExceptionPrototype(vm, globalObject, structure);
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXPathExceptionConstructor : public DOMConstructorObject {
-private:
-    JSXPathExceptionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSXPathExceptionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXPathExceptionConstructor* ptr = new (NotNull, JSC::allocateCell<JSXPathExceptionConstructor>(vm.heap)) JSXPathExceptionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+using JSXPathExceptionConstructor = JSDOMConstructorNotConstructable<JSXPathException>;
 
 /* Hash table */
 
@@ -107,45 +88,44 @@ static const struct CompactHashIndex JSXPathExceptionTableIndex[9] = {
 
 static const HashTableValue JSXPathExceptionTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSXPathExceptionTable = { 3, 7, true, JSXPathExceptionTableValues, 0, JSXPathExceptionTableIndex };
+static const HashTable JSXPathExceptionTable = { 3, 7, true, JSXPathExceptionTableValues, JSXPathExceptionTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSXPathExceptionConstructorTableValues[] =
 {
-    { "INVALID_EXPRESSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(51), (intptr_t) (0) },
-    { "TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(52), (intptr_t) (0) },
+    { "INVALID_EXPRESSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(51) } },
+    { "TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(52) } },
 };
 
-const ClassInfo JSXPathExceptionConstructor::s_info = { "XPathExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExceptionConstructor) };
-
-JSXPathExceptionConstructor::JSXPathExceptionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSXPathExceptionConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    UNUSED_PARAM(vm);
+    return globalObject.functionPrototype();
 }
 
-void JSXPathExceptionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSXPathExceptionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXPathException::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXPathException::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XPathException"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSXPathExceptionConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSXPathExceptionConstructor::s_info = { "XPathException", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExceptionConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSXPathExceptionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "INVALID_EXPRESSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(51), (intptr_t) (0) },
-    { "TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(52), (intptr_t) (0) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathExceptionPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXPathExceptionConstructor) } },
+    { "toString", DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathExceptionPrototypeFunctionToString), (intptr_t) (0) } },
+    { "INVALID_EXPRESSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(51) } },
+    { "TYPE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(52) } },
 };
 
 const ClassInfo JSXPathExceptionPrototype::s_info = { "XPathExceptionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExceptionPrototype) };
@@ -158,10 +138,16 @@ void JSXPathExceptionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathException::s_info = { "XPathException", &Base::s_info, &JSXPathExceptionTable, CREATE_METHOD_TABLE(JSXPathException) };
 
-JSXPathException::JSXPathException(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathException>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathException::JSXPathException(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathException>&& impl)
+    : JSDOMWrapper<XPathException>(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSXPathException::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSXPathException::createPrototype(VM& vm, JSGlobalObject* globalObject)
@@ -169,7 +155,7 @@ JSObject* JSXPathException::createPrototype(VM& vm, JSGlobalObject* globalObject
     return JSXPathExceptionPrototype::create(vm, globalObject, JSXPathExceptionPrototype::createStructure(vm, globalObject, globalObject->errorPrototype()));
 }
 
-JSObject* JSXPathException::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSXPathException::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSXPathException>(vm, globalObject);
 }
@@ -180,77 +166,106 @@ void JSXPathException::destroy(JSC::JSCell* cell)
     thisObject->JSXPathException::~JSXPathException();
 }
 
-JSXPathException::~JSXPathException()
+template<> inline JSXPathException* BindingCaller<JSXPathException>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    releaseImpl();
+    return jsDynamicDowncast<JSXPathException*>(JSValue::decode(thisValue));
 }
 
-bool JSXPathException::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+template<> inline JSXPathException* BindingCaller<JSXPathException>::castForOperation(ExecState& state)
 {
-    auto* thisObject = jsCast<JSXPathException*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSXPathException, Base>(exec, JSXPathExceptionTable, thisObject, propertyName, slot);
+    return jsDynamicDowncast<JSXPathException*>(state.thisValue());
 }
 
-EncodedJSValue jsXPathExceptionCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsXPathExceptionCodeGetter(ExecState&, JSXPathException&, ThrowScope& throwScope);
+
+EncodedJSValue jsXPathExceptionCode(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXPathException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.code());
-    return JSValue::encode(result);
+    return BindingCaller<JSXPathException>::attribute<jsXPathExceptionCodeGetter>(state, thisValue, "code");
 }
 
-
-EncodedJSValue jsXPathExceptionName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsXPathExceptionCodeGetter(ExecState& state, JSXPathException& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXPathException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnsignedShort>(impl.code());
+    return result;
 }
 
+static inline JSValue jsXPathExceptionNameGetter(ExecState&, JSXPathException&, ThrowScope& throwScope);
 
-EncodedJSValue jsXPathExceptionMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathExceptionName(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXPathException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
-    return JSValue::encode(result);
+    return BindingCaller<JSXPathException>::attribute<jsXPathExceptionNameGetter>(state, thisValue, "name");
 }
 
-
-EncodedJSValue jsXPathExceptionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+static inline JSValue jsXPathExceptionNameGetter(ExecState& state, JSXPathException& thisObject, ThrowScope& throwScope)
 {
-    JSXPathExceptionPrototype* domObject = jsDynamicCast<JSXPathExceptionPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXPathException::getConstructor(exec->vm(), domObject->globalObject()));
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.name());
+    return result;
 }
 
-JSValue JSXPathException::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline JSValue jsXPathExceptionMessageGetter(ExecState&, JSXPathException&, ThrowScope& throwScope);
+
+EncodedJSValue jsXPathExceptionMessage(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    return getDOMConstructor<JSXPathExceptionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSXPathException>::attribute<jsXPathExceptionMessageGetter>(state, thisValue, "message");
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathExceptionPrototypeFunctionToString(ExecState* exec)
+static inline JSValue jsXPathExceptionMessageGetter(ExecState& state, JSXPathException& thisObject, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSXPathException* castedThis = jsDynamicCast<JSXPathException*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathException", "toString");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathException::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.message());
+    return result;
+}
+
+EncodedJSValue jsXPathExceptionConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSXPathExceptionPrototype* domObject = jsDynamicDowncast<JSXPathExceptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSXPathException::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSXPathExceptionConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSValue value = JSValue::decode(encodedValue);
+    JSXPathExceptionPrototype* domObject = jsDynamicDowncast<JSXPathExceptionPrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
+    }
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+JSValue JSXPathException::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSXPathExceptionConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsXPathExceptionPrototypeFunctionToStringCaller(JSC::ExecState*, JSXPathException*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsXPathExceptionPrototypeFunctionToString(ExecState* state)
+{
+    return BindingCaller<JSXPathException>::callOperation<jsXPathExceptionPrototypeFunctionToStringCaller>(state, "toString");
+}
+
+static inline JSC::EncodedJSValue jsXPathExceptionPrototypeFunctionToStringCaller(JSC::ExecState* state, JSXPathException* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    return JSValue::encode(toJS<IDLDOMString>(*state, impl.toString()));
 }
 
 bool JSXPathExceptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -262,31 +277,32 @@ bool JSXPathExceptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>
 
 void JSXPathExceptionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsXPathException = jsCast<JSXPathException*>(handle.slot()->asCell());
+    auto* jsXPathException = static_cast<JSXPathException*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathException->impl(), jsXPathException);
+    uncacheWrapper(world, &jsXPathException->wrapped(), jsXPathException);
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathException* impl)
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<XPathException>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSXPathException>(globalObject, impl))
-        return result;
 #if COMPILER(CLANG)
     // If you hit this failure the interface definition has the ImplementationLacksVTable
     // attribute. You should remove that attribute. If the class has subclasses
     // that may be passed through this toJS() function you should use the SkipVTableValidation
     // attribute to XPathException.
-    COMPILE_ASSERT(!__is_polymorphic(XPathException), XPathException_is_polymorphic_but_idl_claims_not_to_be);
+    static_assert(!__is_polymorphic(XPathException), "XPathException is polymorphic but the IDL claims it is not");
 #endif
-    return createNewWrapper<JSXPathException>(globalObject, impl);
+    return createWrapper<XPathException>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathException& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 XPathException* JSXPathException::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSXPathException*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSXPathException*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

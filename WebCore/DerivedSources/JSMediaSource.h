@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMediaSource_h
-#define JSMediaSource_h
+#pragma once
 
 #if ENABLE(MEDIA_SOURCE)
 
+#include "JSDOMConvert.h"
 #include "JSEventTarget.h"
 #include "MediaSource.h"
 #include <wtf/NeverDestroyed.h>
@@ -31,16 +31,17 @@ namespace WebCore {
 
 class JSMediaSource : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = MediaSource;
     static JSMediaSource* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSource>&& impl)
     {
-        JSMediaSource* ptr = new (NotNull, JSC::allocateCell<JSMediaSource>(globalObject->vm().heap)) JSMediaSource(structure, globalObject, WTF::move(impl));
+        JSMediaSource* ptr = new (NotNull, JSC::allocateCell<JSMediaSource>(globalObject->vm().heap)) JSMediaSource(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaSource* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,22 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaSource& impl() const
+    MediaSource& wrapped() const
     {
-        return static_cast<MediaSource&>(Base::impl());
+        return static_cast<MediaSource&>(Base::wrapped());
     }
 protected:
-    JSMediaSource(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaSource>&&);
+    JSMediaSource(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaSource>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSMediaSourceOwner : public JSC::WeakHandleOwner {
@@ -80,12 +76,27 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaSource*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSource*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaSource& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(MediaSource* wrappableObject)
+{
+    return wrappableObject;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSource&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSource* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<MediaSource>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<MediaSource>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<MediaSource> {
+    using WrapperClass = JSMediaSource;
+    using ToWrappedReturnType = MediaSource*;
+};
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, MediaSource::EndOfStreamError);
+
+template<> std::optional<MediaSource::EndOfStreamError> parseEnumeration<MediaSource::EndOfStreamError>(JSC::ExecState&, JSC::JSValue);
+template<> MediaSource::EndOfStreamError convertEnumeration<MediaSource::EndOfStreamError>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<MediaSource::EndOfStreamError>();
 
 
 } // namespace WebCore
 
 #endif // ENABLE(MEDIA_SOURCE)
-
-#endif

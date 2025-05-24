@@ -24,13 +24,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XPathValue_h
-#define XPathValue_h
+#pragma once
 
 #include "XPathNodeSet.h"
 
 namespace WebCore {
-
     namespace XPath {
     
         class Value {
@@ -44,9 +42,15 @@ namespace WebCore {
             Value(const String& value) : m_type(StringValue), m_data(Data::create(value)) { }
             Value(const char* value) : m_type(StringValue), m_data(Data::create(value)) { }
 
-            explicit Value(NodeSet value) : m_type(NodeSetValue), m_data(Data::create(WTF::move(value))) { }
-            explicit Value(Node* value) : m_type(NodeSetValue), m_data(Data::create(value)) { }
-            explicit Value(PassRefPtr<Node> value) : m_type(NodeSetValue), m_data(Data::create(value)) { }
+            explicit Value(NodeSet&& value)
+                : m_type(NodeSetValue), m_data(Data::create(WTFMove(value)))
+            { }
+            explicit Value(Node* value)
+                : m_type(NodeSetValue), m_data(Data::create(value))
+            { }
+            explicit Value(RefPtr<Node>&& value)
+                : m_type(NodeSetValue), m_data(Data::create(WTFMove(value)))
+            { }
 
             Type type() const { return m_type; }
 
@@ -68,19 +72,25 @@ namespace WebCore {
             Value(void*) = delete;
 
             struct Data : public RefCounted<Data> {
-                static PassRefPtr<Data> create() { return adoptRef(new Data); }
-                static PassRefPtr<Data> create(const String& string) { return adoptRef(new Data(string)); }
-                static PassRefPtr<Data> create(NodeSet nodeSet) { return adoptRef(new Data(WTF::move(nodeSet))); }
-                static PassRefPtr<Data> create(PassRefPtr<Node> node) { return adoptRef(new Data(node)); }
+                static Ref<Data> create() { return adoptRef(*new Data); }
+                static Ref<Data> create(const String& string) { return adoptRef(*new Data(string)); }
+                static Ref<Data> create(NodeSet&& nodeSet) { return adoptRef(*new Data(WTFMove(nodeSet))); }
+                static Ref<Data> create(RefPtr<Node>&& node) { return adoptRef(*new Data(WTFMove(node))); }
 
                 String string;
                 NodeSet nodeSet;
 
             private:
                 Data() { }
-                explicit Data(const String& string) : string(string) { }
-                explicit Data(NodeSet nodeSet) : nodeSet(WTF::move(nodeSet)) { }
-                explicit Data(PassRefPtr<Node> node) : nodeSet(node) { }
+                explicit Data(const String& string)
+                    : string(string)
+                { }
+                explicit Data(NodeSet&& nodeSet)
+                    : nodeSet(WTFMove(nodeSet))
+                { }
+                explicit Data(RefPtr<Node>&& node)
+                    : nodeSet(WTFMove(node))
+                { }
             };
 
             Type m_type;
@@ -89,7 +99,5 @@ namespace WebCore {
             RefPtr<Data> m_data;
         };
 
-    }
-}
-
-#endif // XPath_Value_H
+    } // namespace XPath
+} // namespace WebCore

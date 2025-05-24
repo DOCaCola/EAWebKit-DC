@@ -18,10 +18,9 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSRTCIceCandidateEvent_h
-#define JSRTCIceCandidateEvent_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#if ENABLE(WEB_RTC)
 
 #include "JSEvent.h"
 #include "RTCIceCandidateEvent.h"
@@ -30,43 +29,41 @@ namespace WebCore {
 
 class JSRTCIceCandidateEvent : public JSEvent {
 public:
-    typedef JSEvent Base;
+    using Base = JSEvent;
+    using DOMWrapped = RTCIceCandidateEvent;
     static JSRTCIceCandidateEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidateEvent>&& impl)
     {
-        JSRTCIceCandidateEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateEvent>(globalObject->vm().heap)) JSRTCIceCandidateEvent(structure, globalObject, WTF::move(impl));
+        JSRTCIceCandidateEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateEvent>(globalObject->vm().heap)) JSRTCIceCandidateEvent(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
     static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
     {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
+        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSEventType), StructureFlags), info());
     }
 
-    RTCIceCandidateEvent& impl() const
+    RTCIceCandidateEvent& wrapped() const
     {
-        return static_cast<RTCIceCandidateEvent&>(Base::impl());
+        return static_cast<RTCIceCandidateEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCIceCandidateEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceCandidateEvent>&&);
+    JSRTCIceCandidateEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCIceCandidateEvent>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<RTCIceCandidateEvent> {
+    using WrapperClass = JSRTCIceCandidateEvent;
+    using ToWrappedReturnType = RTCIceCandidateEvent*;
+};
 
 } // namespace WebCore
 
-#endif // ENABLE(MEDIA_STREAM)
-
-#endif
+#endif // ENABLE(WEB_RTC)

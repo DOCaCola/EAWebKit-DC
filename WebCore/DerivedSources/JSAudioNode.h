@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAudioNode_h
-#define JSAudioNode_h
+#pragma once
 
 #if ENABLE(WEB_AUDIO)
 
@@ -31,16 +30,17 @@ namespace WebCore {
 
 class JSAudioNode : public JSEventTarget {
 public:
-    typedef JSEventTarget Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = AudioNode;
     static JSAudioNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioNode>&& impl)
     {
-        JSAudioNode* ptr = new (NotNull, JSC::allocateCell<JSAudioNode>(globalObject->vm().heap)) JSAudioNode(structure, globalObject, WTF::move(impl));
+        JSAudioNode* ptr = new (NotNull, JSC::allocateCell<JSAudioNode>(globalObject->vm().heap)) JSAudioNode(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioNode* toWrapped(JSC::JSValue);
 
     DECLARE_INFO;
@@ -50,22 +50,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    AudioNode& impl() const
+    AudioNode& wrapped() const
     {
-        return static_cast<AudioNode&>(Base::impl());
+        return static_cast<AudioNode&>(Base::wrapped());
     }
 protected:
-    JSAudioNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioNode>&&);
+    JSAudioNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioNode>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 class JSAudioNodeOwner : public JSC::WeakHandleOwner {
@@ -80,12 +75,21 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioNode*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioNode& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(AudioNode* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioNode&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioNode* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<AudioNode>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<AudioNode>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<AudioNode> {
+    using WrapperClass = JSAudioNode;
+    using ToWrappedReturnType = AudioNode*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(WEB_AUDIO)
-
-#endif

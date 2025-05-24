@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf --key-positions='*' -D -n -s 2 --output-file=HTTPHeaderNames.cpp HTTPHeaderNames.gperf  */
+/* C++ code produced by gperf version 3.0.1 */
+/* Command-line: C:/GnuWin32/bin/gperf.exe --key-positions='*' -D -n -s 2 --output-file=HTTPHeaderNames.cpp HTTPHeaderNames.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -97,6 +97,7 @@ static const struct HeaderNameString {
     { "Content-Encoding", 16 },
     { "Content-Language", 16 },
     { "Content-Length", 14 },
+    { "Content-Range", 13 },
     { "Content-Security-Policy", 23 },
     { "Content-Security-Policy-Report-Only", 35 },
     { "Content-Transfer-Encoding", 25 },
@@ -124,6 +125,7 @@ static const struct HeaderNameString {
     { "Keep-Alive", 10 },
     { "Last-Event-ID", 13 },
     { "Last-Modified", 13 },
+    { "Link", 4 },
     { "Location", 8 },
     { "Origin", 6 },
     { "Ping-From", 9 },
@@ -146,6 +148,7 @@ static const struct HeaderNameString {
     { "Trailer", 7 },
     { "Transfer-Encoding", 17 },
     { "Upgrade", 7 },
+    { "Upgrade-Insecure-Requests", 25 },
     { "User-Agent", 10 },
     { "Vary", 4 },
     { "Via", 3 },
@@ -160,21 +163,21 @@ static const struct HeaderNameString {
 };
 
 
-#line 141 "HTTPHeaderNames.gperf"
+#line 144 "HTTPHeaderNames.gperf"
 struct HeaderNameHashEntry {
     const char* name;
     HTTPHeaderName headerName;
 };
 enum
   {
-    TOTAL_KEYWORDS = 82,
+    TOTAL_KEYWORDS = 85,
     MIN_WORD_LENGTH = 2,
     MAX_WORD_LENGTH = 35,
-    MIN_HASH_VALUE = 4,
-    MAX_HASH_VALUE = 640
+    MIN_HASH_VALUE = 5,
+    MAX_HASH_VALUE = 860
   };
 
-/* maximum key range = 637, duplicates = 0 */
+/* maximum key range = 856, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
@@ -234,32 +237,32 @@ HTTPHeaderNamesHash::header_name_hash_function (register const char *str, regist
 {
   static const unsigned short asso_values[] =
     {
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641,   0, 641, 641, 641, 641,
-       15, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641,   0,  10,   0, 100,   0,
-      115,  10, 100,   0, 641, 190,  20, 140,   5,   5,
-       40,  20,   5,  50,   5,   0,   4,  30, 145,  30,
-       50, 641, 641, 641, 641, 641, 641,   0,  10,   0,
-      100,   0, 115,  10, 100,   0, 641, 190,  20, 140,
-        5,   5,  40,  20,   5,  50,   5,   0,   4,  30,
-      145,  30,  50, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641, 641, 641, 641, 641,
-      641, 641, 641, 641, 641, 641
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861,   0, 861, 861, 861, 861,
+       25, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861,   0,  35,   0, 135,   0,
+      135,  10, 155,   0, 861, 205,  45, 165,   5,   5,
+       30,   5,   5,  65,   5,   0, 250,   0, 200,  20,
+       20, 861, 861, 861, 861, 861, 861,   0,  35,   0,
+      135,   0, 135,  10, 155,   0, 861, 205,  45, 165,
+        5,   5,  30,   5,   5,  65,   5,   0, 250,   0,
+      200,  20,  20, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861, 861, 861, 861, 861,
+      861, 861, 861, 861, 861, 861
     };
   register int hval = 0;
 
@@ -376,220 +379,242 @@ HTTPHeaderNamesHash::header_name_hash_function (register const char *str, regist
 
 static const struct HeaderNameHashEntry header_name_wordlist[] =
   {
-#line 224 "HTTPHeaderNames.gperf"
-    {"Via", HTTPHeaderName::Via},
-#line 217 "HTTPHeaderNames.gperf"
-    {"TE", HTTPHeaderName::TE},
-#line 164 "HTTPHeaderNames.gperf"
-    {"Age", HTTPHeaderName::Age},
-#line 182 "HTTPHeaderNames.gperf"
-    {"ETag", HTTPHeaderName::ETag},
-#line 206 "HTTPHeaderNames.gperf"
-    {"Range", HTTPHeaderName::Range},
-#line 201 "HTTPHeaderNames.gperf"
-    {"Origin", HTTPHeaderName::Origin},
-#line 168 "HTTPHeaderNames.gperf"
-    {"Connection", HTTPHeaderName::Connection},
-#line 219 "HTTPHeaderNames.gperf"
-    {"Trailer", HTTPHeaderName::Trailer},
-#line 223 "HTTPHeaderNames.gperf"
-    {"Vary", HTTPHeaderName::Vary},
-#line 200 "HTTPHeaderNames.gperf"
-    {"Location", HTTPHeaderName::Location},
-#line 151 "HTTPHeaderNames.gperf"
-    {"Accept", HTTPHeaderName::Accept},
-#line 186 "HTTPHeaderNames.gperf"
-    {"Icy-Genre", HTTPHeaderName::IcyGenre},
-#line 191 "HTTPHeaderNames.gperf"
-    {"Icy-URL", HTTPHeaderName::IcyURL},
-#line 190 "HTTPHeaderNames.gperf"
-    {"Icy-Title", HTTPHeaderName::IcyTitle},
-#line 214 "HTTPHeaderNames.gperf"
-    {"Server", HTTPHeaderName::Server},
-#line 203 "HTTPHeaderNames.gperf"
-    {"Ping-To", HTTPHeaderName::PingTo},
-#line 171 "HTTPHeaderNames.gperf"
-    {"Content-Language", HTTPHeaderName::ContentLanguage},
 #line 222 "HTTPHeaderNames.gperf"
-    {"User-Agent", HTTPHeaderName::UserAgent},
-#line 154 "HTTPHeaderNames.gperf"
-    {"Accept-Language", HTTPHeaderName::AcceptLanguage},
-#line 176 "HTTPHeaderNames.gperf"
-    {"Content-Type", HTTPHeaderName::ContentType},
-#line 180 "HTTPHeaderNames.gperf"
-    {"Date", HTTPHeaderName::Date},
-#line 179 "HTTPHeaderNames.gperf"
-    {"DNT", HTTPHeaderName::DNT},
-#line 155 "HTTPHeaderNames.gperf"
-    {"Accept-Ranges", HTTPHeaderName::AcceptRanges},
-#line 165 "HTTPHeaderNames.gperf"
-    {"Alternate-Protocol", HTTPHeaderName::AlternateProtocol},
-#line 207 "HTTPHeaderNames.gperf"
-    {"Referer", HTTPHeaderName::Referer},
-#line 195 "HTTPHeaderNames.gperf"
-    {"If-Range", HTTPHeaderName::IfRange},
-#line 205 "HTTPHeaderNames.gperf"
-    {"Purpose", HTTPHeaderName::Purpose},
+    {"TE", HTTPHeaderName::TE},
 #line 167 "HTTPHeaderNames.gperf"
-    {"Cache-Control", HTTPHeaderName::CacheControl},
-#line 170 "HTTPHeaderNames.gperf"
-    {"Content-Encoding", HTTPHeaderName::ContentEncoding},
-#line 221 "HTTPHeaderNames.gperf"
-    {"Upgrade", HTTPHeaderName::Upgrade},
-#line 185 "HTTPHeaderNames.gperf"
-    {"Host", HTTPHeaderName::Host},
-#line 172 "HTTPHeaderNames.gperf"
-    {"Content-Length", HTTPHeaderName::ContentLength},
-#line 153 "HTTPHeaderNames.gperf"
-    {"Accept-Encoding", HTTPHeaderName::AcceptEncoding},
-#line 189 "HTTPHeaderNames.gperf"
-    {"Icy-Name", HTTPHeaderName::IcyName},
-#line 166 "HTTPHeaderNames.gperf"
-    {"Authorization", HTTPHeaderName::Authorization},
-#line 187 "HTTPHeaderNames.gperf"
-    {"Icy-MetaInt", HTTPHeaderName::IcyMetaInt},
-#line 198 "HTTPHeaderNames.gperf"
-    {"Last-Event-ID", HTTPHeaderName::LastEventID},
-#line 183 "HTTPHeaderNames.gperf"
-    {"Expect", HTTPHeaderName::Expect},
-#line 204 "HTTPHeaderNames.gperf"
-    {"Pragma", HTTPHeaderName::Pragma},
-#line 177 "HTTPHeaderNames.gperf"
-    {"Cookie", HTTPHeaderName::Cookie},
-#line 152 "HTTPHeaderNames.gperf"
-    {"Accept-Charset", HTTPHeaderName::AcceptCharset},
-#line 173 "HTTPHeaderNames.gperf"
-    {"Content-Security-Policy", HTTPHeaderName::ContentSecurityPolicy},
-#line 178 "HTTPHeaderNames.gperf"
-    {"Cookie2", HTTPHeaderName::Cookie2},
-#line 184 "HTTPHeaderNames.gperf"
-    {"Expires", HTTPHeaderName::Expires},
-#line 159 "HTTPHeaderNames.gperf"
-    {"Access-Control-Allow-Origin", HTTPHeaderName::AccessControlAllowOrigin},
-#line 197 "HTTPHeaderNames.gperf"
-    {"Keep-Alive", HTTPHeaderName::KeepAlive},
-#line 215 "HTTPHeaderNames.gperf"
-    {"Set-Cookie", HTTPHeaderName::SetCookie},
-#line 218 "HTTPHeaderNames.gperf"
-    {"Timing-Allow-Origin", HTTPHeaderName::TimingAllowOrigin},
-#line 216 "HTTPHeaderNames.gperf"
-    {"Set-Cookie2", HTTPHeaderName::SetCookie2},
-#line 208 "HTTPHeaderNames.gperf"
-    {"Refresh", HTTPHeaderName::Refresh},
-#line 188 "HTTPHeaderNames.gperf"
-    {"Icy-Metadata", HTTPHeaderName::IcyMetadata},
-#line 169 "HTTPHeaderNames.gperf"
-    {"Content-Disposition", HTTPHeaderName::ContentDisposition},
-#line 220 "HTTPHeaderNames.gperf"
-    {"Transfer-Encoding", HTTPHeaderName::TransferEncoding},
-#line 202 "HTTPHeaderNames.gperf"
-    {"Ping-From", HTTPHeaderName::PingFrom},
-#line 174 "HTTPHeaderNames.gperf"
-    {"Content-Security-Policy-Report-Only", HTTPHeaderName::ContentSecurityPolicyReportOnly},
-#line 175 "HTTPHeaderNames.gperf"
-    {"Content-Transfer-Encoding", HTTPHeaderName::ContentTransferEncoding},
-#line 181 "HTTPHeaderNames.gperf"
-    {"Default-Style", HTTPHeaderName::DefaultStyle},
-#line 226 "HTTPHeaderNames.gperf"
-    {"X-Content-Type-Options", HTTPHeaderName::XContentTypeOptions},
-#line 192 "HTTPHeaderNames.gperf"
-    {"If-Match", HTTPHeaderName::IfMatch},
-#line 229 "HTTPHeaderNames.gperf"
-    {"X-Powered-By", HTTPHeaderName::XPoweredBy},
-#line 194 "HTTPHeaderNames.gperf"
-    {"If-None-Match", HTTPHeaderName::IfNoneMatch},
-#line 209 "HTTPHeaderNames.gperf"
-    {"Sec-WebSocket-Accept", HTTPHeaderName::SecWebSocketAccept},
-#line 156 "HTTPHeaderNames.gperf"
-    {"Access-Control-Allow-Credentials", HTTPHeaderName::AccessControlAllowCredentials},
-#line 213 "HTTPHeaderNames.gperf"
-    {"Sec-WebSocket-Version", HTTPHeaderName::SecWebSocketVersion},
-#line 212 "HTTPHeaderNames.gperf"
-    {"Sec-WebSocket-Protocol", HTTPHeaderName::SecWebSocketProtocol},
-#line 161 "HTTPHeaderNames.gperf"
-    {"Access-Control-Max-Age", HTTPHeaderName::AccessControlMaxAge},
-#line 232 "HTTPHeaderNames.gperf"
-    {"X-XSS-Protection", HTTPHeaderName::XXSSProtection},
-#line 230 "HTTPHeaderNames.gperf"
-    {"X-WebKit-CSP", HTTPHeaderName::XWebKitCSP},
-#line 157 "HTTPHeaderNames.gperf"
-    {"Access-Control-Allow-Headers", HTTPHeaderName::AccessControlAllowHeaders},
-#line 162 "HTTPHeaderNames.gperf"
-    {"Access-Control-Request-Headers", HTTPHeaderName::AccessControlRequestHeaders},
-#line 228 "HTTPHeaderNames.gperf"
-    {"X-Frame-Options", HTTPHeaderName::XFrameOptions},
-#line 199 "HTTPHeaderNames.gperf"
-    {"Last-Modified", HTTPHeaderName::LastModified},
+    {"Age", HTTPHeaderName::Age},
+#line 186 "HTTPHeaderNames.gperf"
+    {"ETag", HTTPHeaderName::ETag},
 #line 211 "HTTPHeaderNames.gperf"
-    {"Sec-WebSocket-Key", HTTPHeaderName::SecWebSocketKey},
-#line 225 "HTTPHeaderNames.gperf"
-    {"X-Check-Cacheable", HTTPHeaderName::XCheckCacheable},
-#line 163 "HTTPHeaderNames.gperf"
-    {"Access-Control-Request-Method", HTTPHeaderName::AccessControlRequestMethod},
-#line 231 "HTTPHeaderNames.gperf"
-    {"X-WebKit-CSP-Report-Only", HTTPHeaderName::XWebKitCSPReportOnly},
-#line 210 "HTTPHeaderNames.gperf"
-    {"Sec-WebSocket-Extensions", HTTPHeaderName::SecWebSocketExtensions},
-#line 227 "HTTPHeaderNames.gperf"
-    {"X-DNS-Prefetch-Control", HTTPHeaderName::XDNSPrefetchControl},
+    {"Range", HTTPHeaderName::Range},
+#line 206 "HTTPHeaderNames.gperf"
+    {"Origin", HTTPHeaderName::Origin},
+#line 171 "HTTPHeaderNames.gperf"
+    {"Connection", HTTPHeaderName::Connection},
+#line 154 "HTTPHeaderNames.gperf"
+    {"Accept", HTTPHeaderName::Accept},
+#line 190 "HTTPHeaderNames.gperf"
+    {"Icy-Genre", HTTPHeaderName::IcyGenre},
+#line 176 "HTTPHeaderNames.gperf"
+    {"Content-Range", HTTPHeaderName::ContentRange},
+#line 208 "HTTPHeaderNames.gperf"
+    {"Ping-To", HTTPHeaderName::PingTo},
+#line 224 "HTTPHeaderNames.gperf"
+    {"Trailer", HTTPHeaderName::Trailer},
+#line 205 "HTTPHeaderNames.gperf"
+    {"Location", HTTPHeaderName::Location},
+#line 195 "HTTPHeaderNames.gperf"
+    {"Icy-URL", HTTPHeaderName::IcyURL},
+#line 194 "HTTPHeaderNames.gperf"
+    {"Icy-Title", HTTPHeaderName::IcyTitle},
+#line 180 "HTTPHeaderNames.gperf"
+    {"Content-Type", HTTPHeaderName::ContentType},
+#line 228 "HTTPHeaderNames.gperf"
+    {"User-Agent", HTTPHeaderName::UserAgent},
+#line 174 "HTTPHeaderNames.gperf"
+    {"Content-Language", HTTPHeaderName::ContentLanguage},
+#line 157 "HTTPHeaderNames.gperf"
+    {"Accept-Language", HTTPHeaderName::AcceptLanguage},
 #line 158 "HTTPHeaderNames.gperf"
-    {"Access-Control-Allow-Methods", HTTPHeaderName::AccessControlAllowMethods},
+    {"Accept-Ranges", HTTPHeaderName::AcceptRanges},
+#line 210 "HTTPHeaderNames.gperf"
+    {"Purpose", HTTPHeaderName::Purpose},
+#line 184 "HTTPHeaderNames.gperf"
+    {"Date", HTTPHeaderName::Date},
+#line 183 "HTTPHeaderNames.gperf"
+    {"DNT", HTTPHeaderName::DNT},
+#line 212 "HTTPHeaderNames.gperf"
+    {"Referer", HTTPHeaderName::Referer},
+#line 199 "HTTPHeaderNames.gperf"
+    {"If-Range", HTTPHeaderName::IfRange},
+#line 168 "HTTPHeaderNames.gperf"
+    {"Alternate-Protocol", HTTPHeaderName::AlternateProtocol},
+#line 226 "HTTPHeaderNames.gperf"
+    {"Upgrade", HTTPHeaderName::Upgrade},
+#line 173 "HTTPHeaderNames.gperf"
+    {"Content-Encoding", HTTPHeaderName::ContentEncoding},
 #line 193 "HTTPHeaderNames.gperf"
-    {"If-Modified-Since", HTTPHeaderName::IfModifiedSince},
+    {"Icy-Name", HTTPHeaderName::IcyName},
+#line 156 "HTTPHeaderNames.gperf"
+    {"Accept-Encoding", HTTPHeaderName::AcceptEncoding},
+#line 191 "HTTPHeaderNames.gperf"
+    {"Icy-MetaInt", HTTPHeaderName::IcyMetaInt},
+#line 169 "HTTPHeaderNames.gperf"
+    {"Authorization", HTTPHeaderName::Authorization},
+#line 209 "HTTPHeaderNames.gperf"
+    {"Pragma", HTTPHeaderName::Pragma},
+#line 181 "HTTPHeaderNames.gperf"
+    {"Cookie", HTTPHeaderName::Cookie},
+#line 177 "HTTPHeaderNames.gperf"
+    {"Content-Security-Policy", HTTPHeaderName::ContentSecurityPolicy},
+#line 170 "HTTPHeaderNames.gperf"
+    {"Cache-Control", HTTPHeaderName::CacheControl},
+#line 189 "HTTPHeaderNames.gperf"
+    {"Host", HTTPHeaderName::Host},
+#line 187 "HTTPHeaderNames.gperf"
+    {"Expect", HTTPHeaderName::Expect},
+#line 182 "HTTPHeaderNames.gperf"
+    {"Cookie2", HTTPHeaderName::Cookie2},
+#line 175 "HTTPHeaderNames.gperf"
+    {"Content-Length", HTTPHeaderName::ContentLength},
+#line 230 "HTTPHeaderNames.gperf"
+    {"Via", HTTPHeaderName::Via},
+#line 204 "HTTPHeaderNames.gperf"
+    {"Link", HTTPHeaderName::Link},
+#line 155 "HTTPHeaderNames.gperf"
+    {"Accept-Charset", HTTPHeaderName::AcceptCharset},
+#line 229 "HTTPHeaderNames.gperf"
+    {"Vary", HTTPHeaderName::Vary},
+#line 220 "HTTPHeaderNames.gperf"
+    {"Set-Cookie", HTTPHeaderName::SetCookie},
+#line 188 "HTTPHeaderNames.gperf"
+    {"Expires", HTTPHeaderName::Expires},
+#line 223 "HTTPHeaderNames.gperf"
+    {"Timing-Allow-Origin", HTTPHeaderName::TimingAllowOrigin},
+#line 221 "HTTPHeaderNames.gperf"
+    {"Set-Cookie2", HTTPHeaderName::SetCookie2},
+#line 162 "HTTPHeaderNames.gperf"
+    {"Access-Control-Allow-Origin", HTTPHeaderName::AccessControlAllowOrigin},
+#line 219 "HTTPHeaderNames.gperf"
+    {"Server", HTTPHeaderName::Server},
+#line 192 "HTTPHeaderNames.gperf"
+    {"Icy-Metadata", HTTPHeaderName::IcyMetadata},
+#line 172 "HTTPHeaderNames.gperf"
+    {"Content-Disposition", HTTPHeaderName::ContentDisposition},
+#line 178 "HTTPHeaderNames.gperf"
+    {"Content-Security-Policy-Report-Only", HTTPHeaderName::ContentSecurityPolicyReportOnly},
+#line 207 "HTTPHeaderNames.gperf"
+    {"Ping-From", HTTPHeaderName::PingFrom},
+#line 213 "HTTPHeaderNames.gperf"
+    {"Refresh", HTTPHeaderName::Refresh},
+#line 225 "HTTPHeaderNames.gperf"
+    {"Transfer-Encoding", HTTPHeaderName::TransferEncoding},
+#line 232 "HTTPHeaderNames.gperf"
+    {"X-Content-Type-Options", HTTPHeaderName::XContentTypeOptions},
+#line 227 "HTTPHeaderNames.gperf"
+    {"Upgrade-Insecure-Requests", HTTPHeaderName::UpgradeInsecureRequests},
+#line 179 "HTTPHeaderNames.gperf"
+    {"Content-Transfer-Encoding", HTTPHeaderName::ContentTransferEncoding},
+#line 214 "HTTPHeaderNames.gperf"
+    {"Sec-WebSocket-Accept", HTTPHeaderName::SecWebSocketAccept},
+#line 235 "HTTPHeaderNames.gperf"
+    {"X-Powered-By", HTTPHeaderName::XPoweredBy},
+#line 185 "HTTPHeaderNames.gperf"
+    {"Default-Style", HTTPHeaderName::DefaultStyle},
 #line 196 "HTTPHeaderNames.gperf"
-    {"If-Unmodified-Since", HTTPHeaderName::IfUnmodifiedSince},
+    {"If-Match", HTTPHeaderName::IfMatch},
+#line 198 "HTTPHeaderNames.gperf"
+    {"If-None-Match", HTTPHeaderName::IfNoneMatch},
+#line 217 "HTTPHeaderNames.gperf"
+    {"Sec-WebSocket-Protocol", HTTPHeaderName::SecWebSocketProtocol},
+#line 202 "HTTPHeaderNames.gperf"
+    {"Last-Event-ID", HTTPHeaderName::LastEventID},
+#line 201 "HTTPHeaderNames.gperf"
+    {"Keep-Alive", HTTPHeaderName::KeepAlive},
+#line 236 "HTTPHeaderNames.gperf"
+    {"X-WebKit-CSP", HTTPHeaderName::XWebKitCSP},
+#line 159 "HTTPHeaderNames.gperf"
+    {"Access-Control-Allow-Credentials", HTTPHeaderName::AccessControlAllowCredentials},
+#line 164 "HTTPHeaderNames.gperf"
+    {"Access-Control-Max-Age", HTTPHeaderName::AccessControlMaxAge},
+#line 238 "HTTPHeaderNames.gperf"
+    {"X-XSS-Protection", HTTPHeaderName::XXSSProtection},
+#line 216 "HTTPHeaderNames.gperf"
+    {"Sec-WebSocket-Key", HTTPHeaderName::SecWebSocketKey},
+#line 234 "HTTPHeaderNames.gperf"
+    {"X-Frame-Options", HTTPHeaderName::XFrameOptions},
+#line 165 "HTTPHeaderNames.gperf"
+    {"Access-Control-Request-Headers", HTTPHeaderName::AccessControlRequestHeaders},
 #line 160 "HTTPHeaderNames.gperf"
+    {"Access-Control-Allow-Headers", HTTPHeaderName::AccessControlAllowHeaders},
+#line 237 "HTTPHeaderNames.gperf"
+    {"X-WebKit-CSP-Report-Only", HTTPHeaderName::XWebKitCSPReportOnly},
+#line 203 "HTTPHeaderNames.gperf"
+    {"Last-Modified", HTTPHeaderName::LastModified},
+#line 218 "HTTPHeaderNames.gperf"
+    {"Sec-WebSocket-Version", HTTPHeaderName::SecWebSocketVersion},
+#line 215 "HTTPHeaderNames.gperf"
+    {"Sec-WebSocket-Extensions", HTTPHeaderName::SecWebSocketExtensions},
+#line 166 "HTTPHeaderNames.gperf"
+    {"Access-Control-Request-Method", HTTPHeaderName::AccessControlRequestMethod},
+#line 197 "HTTPHeaderNames.gperf"
+    {"If-Modified-Since", HTTPHeaderName::IfModifiedSince},
+#line 200 "HTTPHeaderNames.gperf"
+    {"If-Unmodified-Since", HTTPHeaderName::IfUnmodifiedSince},
+#line 231 "HTTPHeaderNames.gperf"
+    {"X-Check-Cacheable", HTTPHeaderName::XCheckCacheable},
+#line 233 "HTTPHeaderNames.gperf"
+    {"X-DNS-Prefetch-Control", HTTPHeaderName::XDNSPrefetchControl},
+#line 161 "HTTPHeaderNames.gperf"
+    {"Access-Control-Allow-Methods", HTTPHeaderName::AccessControlAllowMethods},
+#line 163 "HTTPHeaderNames.gperf"
     {"Access-Control-Expose-Headers", HTTPHeaderName::AccessControlExposeHeaders}
   };
 
 static const signed char lookup[] =
   {
-    -1, -1, -1, -1,  0,  1, -1, -1, -1, -1,  2, -1, -1, -1,
-    -1,  3, -1, -1, -1, -1,  4, -1, -1, -1, -1,  5, -1, -1,
-    -1, -1,  6, -1, -1, -1, -1,  7, -1, -1, -1,  8,  9, -1,
-    -1, -1, -1, 10, -1, -1, -1, -1, 11, -1, -1, -1, -1, 12,
-    -1, -1, -1, -1, 13, -1, -1, -1, 14, 15, -1, -1, -1, -1,
-    16, -1, -1, -1, -1, 17, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, 18, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, 19, -1, -1, -1, -1, 20, -1, -1, -1, -1, 21, -1,
-    -1, -1, -1, 22, -1, -1, -1, -1, -1, -1, -1, -1, -1, 23,
-    -1, -1, -1, -1, 24, -1, -1, -1, -1, 25, -1, -1, -1, -1,
-    26, -1, -1, -1, -1, 27, -1, -1, -1, -1, 28, -1, -1, -1,
-    -1, 29, -1, -1, -1, -1, 30, -1, -1, -1, -1, 31, -1, -1,
-    -1, -1, 32, -1, -1, -1, -1, 33, -1, -1, -1, -1, 34, -1,
-    -1, -1, -1, 35, -1, -1, -1, 36, 37, -1, -1, -1, -1, 38,
-    -1, -1, -1, -1, 39, -1, -1, -1, -1, 40, -1, -1, -1, -1,
-    41, -1, -1, -1, -1, 42, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,  0, -1, -1, -1, -1,  1, -1, -1, -1,
+    -1,  2, -1, -1, -1, -1,  3, -1, -1, -1, -1,  4, -1, -1,
+    -1, -1,  5, -1, -1, -1, -1,  6, -1, -1, -1, -1,  7, -1,
+    -1, -1, -1,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1,  9,
+    -1, -1, -1, -1, 10, -1, -1, -1, -1, 11, -1, -1, -1, -1,
+    12, -1, -1, -1, -1, 13, -1, -1, -1, -1, 14, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, 15, -1, -1, -1, -1, 16, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 17, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, 18, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, 19, -1, -1, -1, -1,
+    20, -1, -1, -1, -1, 21, -1, -1, -1, -1, 22, -1, -1, -1,
+    -1, 23, -1, -1, -1, -1, -1, -1, -1, -1, -1, 24, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 25, -1,
+    -1, -1, -1, 26, -1, -1, -1, -1, 27, -1, -1, -1, -1, 28,
+    -1, -1, -1, -1, 29, -1, -1, -1, -1, 30, -1, -1, -1, -1,
+    31, -1, -1, -1, -1, 32, -1, -1, -1, -1, 33, -1, -1, -1,
+    -1, 34, -1, -1, -1, -1, 35, -1, -1, -1, -1, 36, -1, -1,
+    -1, -1, 37, -1, -1, -1, -1, 38, -1, -1, -1, -1, 39, -1,
+    -1, -1, -1, 40, -1, -1, -1, -1, -1, -1, -1, -1, -1, 41,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, 42, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, 43, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, 44, -1, -1, -1, -1, 45, -1, -1,
+    -1, -1, 46, -1, -1, -1, -1, -1, -1, -1, -1, -1, 47, -1,
+    -1, -1, -1, 48, -1, -1, -1, -1, 49, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, 50, -1, -1, -1, -1, 51, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, 52, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, 53, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, 54, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, 55, -1, -1, -1, -1, 56, -1, -1, -1, -1, 57,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, 58, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 59, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, 43, -1, -1, -1, -1, 44, -1, -1, -1, -1, -1, -1,
-    -1, -1, 45, 46, -1, -1, -1, -1, 47, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, 48, -1, -1, -1, -1, 49, -1, -1, -1, -1,
-    50, -1, -1, -1, -1, 51, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, 52, -1, -1, -1, -1, -1, -1, -1, -1, -1, 53, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, 54, -1, -1, -1, -1, 55,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, 56, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, 57, -1, -1, -1, -1, 58, -1, -1, -1,
-    -1, 59, -1, -1, -1, -1, -1, -1, -1, -1, -1, 60, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, 61, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 60, -1, -1, -1, -1, 61, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62,
-    -1, -1, -1, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, 64, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, 65, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 66, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, 67, -1, -1, -1, -1, 68,
-    -1, -1, -1, -1, 69, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 70, -1, -1,
+    -1, -1, -1, -1, -1, -1, 64, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 65, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, 66, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, 67, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, 71, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, 68, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, 69, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, 70, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, 71, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 72, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 73, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 74, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    72, -1, -1, -1, -1, 73, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, 74, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, 75, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, 76, -1, -1, -1, -1, 77, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, 78, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    79, -1, -1, -1, -1, 80, -1, -1, -1, -1, 81
+    -1, -1, -1, -1, 75, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 76, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, 77, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, 78, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 79, -1, -1, -1,
+    -1, 80, -1, -1, -1, -1, -1, -1, -1, -1, -1, 81, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, 82, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 83,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, 84
   };
 
 const struct HeaderNameHashEntry *
@@ -614,7 +639,7 @@ HTTPHeaderNamesHash::findHeaderNameImpl (register const char *str, register unsi
     }
   return 0;
 }
-#line 233 "HTTPHeaderNames.gperf"
+#line 239 "HTTPHeaderNames.gperf"
 
 bool findHTTPHeaderName(StringView stringView, HTTPHeaderName& headerName)
 {

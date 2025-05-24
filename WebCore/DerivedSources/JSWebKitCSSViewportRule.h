@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWebKitCSSViewportRule_h
-#define JSWebKitCSSViewportRule_h
+#pragma once
 
 #if ENABLE(CSS_DEVICE_ADAPTATION)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSWebKitCSSViewportRule : public JSCSSRule {
 public:
-    typedef JSCSSRule Base;
+    using Base = JSCSSRule;
+    using DOMWrapped = WebKitCSSViewportRule;
     static JSWebKitCSSViewportRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSViewportRule>&& impl)
     {
-        JSWebKitCSSViewportRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRule>(globalObject->vm().heap)) JSWebKitCSSViewportRule(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSViewportRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRule>(globalObject->vm().heap)) JSWebKitCSSViewportRule(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,26 +48,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSViewportRule& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    WebKitCSSViewportRule& wrapped() const
     {
-        return static_cast<WebKitCSSViewportRule&>(Base::impl());
+        return static_cast<WebKitCSSViewportRule&>(Base::wrapped());
     }
 protected:
-    JSWebKitCSSViewportRule(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSViewportRule>&&);
+    JSWebKitCSSViewportRule(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSViewportRule>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<WebKitCSSViewportRule> {
+    using WrapperClass = JSWebKitCSSViewportRule;
+    using ToWrappedReturnType = WebKitCSSViewportRule*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(CSS_DEVICE_ADAPTATION)
-
-#endif

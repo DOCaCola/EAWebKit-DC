@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTitleElement_h
-#define JSSVGTitleElement_h
+#pragma once
 
 #include "JSSVGElement.h"
 #include "SVGElement.h"
@@ -29,16 +28,17 @@ namespace WebCore {
 
 class JSSVGTitleElement : public JSSVGElement {
 public:
-    typedef JSSVGElement Base;
+    using Base = JSSVGElement;
+    using DOMWrapped = SVGTitleElement;
     static JSSVGTitleElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTitleElement>&& impl)
     {
-        JSSVGTitleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTitleElement>(globalObject->vm().heap)) JSSVGTitleElement(structure, globalObject, WTF::move(impl));
+        JSSVGTitleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTitleElement>(globalObject->vm().heap)) JSSVGTitleElement(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -47,24 +47,23 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::JSType(JSElementType), StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTitleElement& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    SVGTitleElement& wrapped() const
     {
-        return static_cast<SVGTitleElement&>(Base::impl());
+        return static_cast<SVGTitleElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTitleElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTitleElement>&&);
+    JSSVGTitleElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTitleElement>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
 
+template<> struct JSDOMWrapperConverterTraits<SVGTitleElement> {
+    using WrapperClass = JSSVGTitleElement;
+    using ToWrappedReturnType = SVGTitleElement*;
+};
 
 } // namespace WebCore
-
-#endif

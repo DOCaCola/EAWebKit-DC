@@ -18,31 +18,28 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSFileReader_h
-#define JSFileReader_h
+#pragma once
 
 #include "FileReader.h"
-#include "JSDOMWrapper.h"
+#include "JSEventTarget.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSFileReader : public JSDOMWrapper {
+class JSFileReader : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = FileReader;
     static JSFileReader* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileReader>&& impl)
     {
-        JSFileReader* ptr = new (NotNull, JSC::allocateCell<JSFileReader>(globalObject->vm().heap)) JSFileReader(structure, globalObject, WTF::move(impl));
+        JSFileReader* ptr = new (NotNull, JSC::allocateCell<JSFileReader>(globalObject->vm().heap)) JSFileReader(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static FileReader* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    static void destroy(JSC::JSCell*);
-    ~JSFileReader();
 
     DECLARE_INFO;
 
@@ -51,28 +48,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-
-    // Custom attributes
-    JSC::JSValue result(JSC::ExecState*) const;
-    FileReader& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileReader* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
-protected:
-    JSFileReader(JSC::Structure*, JSDOMGlobalObject*, Ref<FileReader>&&);
-
-    void finishCreation(JSC::VM& vm)
+    FileReader& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<FileReader&>(Base::wrapped());
     }
+protected:
+    JSFileReader(JSC::Structure*, JSDOMGlobalObject&, Ref<FileReader>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSFileReaderOwner : public JSC::WeakHandleOwner {
@@ -87,10 +73,19 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileReader*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReader*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileReader& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(FileReader* wrappableObject)
+{
+    return wrappableObject;
+}
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReader&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileReader* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<FileReader>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<FileReader>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<FileReader> {
+    using WrapperClass = JSFileReader;
+    using ToWrappedReturnType = FileReader*;
+};
 
 } // namespace WebCore
-
-#endif

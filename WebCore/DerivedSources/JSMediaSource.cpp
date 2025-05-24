@@ -24,14 +24,12 @@
 
 #include "JSMediaSource.h"
 
-#include "ExceptionCode.h"
+#include "EventNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
+#include "JSEventListener.h"
 #include "JSSourceBuffer.h"
 #include "JSSourceBufferList.h"
-#include "MediaSource.h"
-#include "SourceBuffer.h"
-#include "SourceBufferList.h"
-#include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -40,25 +38,73 @@ using namespace JSC;
 
 namespace WebCore {
 
+template<> JSString* convertEnumerationToJS(ExecState& state, MediaSource::EndOfStreamError enumerationValue)
+{
+    static NeverDestroyed<const String> values[] = {
+        ASCIILiteral("network"),
+        ASCIILiteral("decode"),
+    };
+    static_assert(static_cast<size_t>(MediaSource::EndOfStreamError::Network) == 0, "MediaSource::EndOfStreamError::Network is not 0 as expected");
+    static_assert(static_cast<size_t>(MediaSource::EndOfStreamError::Decode) == 1, "MediaSource::EndOfStreamError::Decode is not 1 as expected");
+    ASSERT(static_cast<size_t>(enumerationValue) < WTF_ARRAY_LENGTH(values));
+    return jsStringWithCache(&state, values[static_cast<size_t>(enumerationValue)]);
+}
+
+template<> std::optional<MediaSource::EndOfStreamError> parseEnumeration<MediaSource::EndOfStreamError>(ExecState& state, JSValue value)
+{
+    auto stringValue = value.toWTFString(&state);
+    if (stringValue == "network")
+        return MediaSource::EndOfStreamError::Network;
+    if (stringValue == "decode")
+        return MediaSource::EndOfStreamError::Decode;
+    return std::nullopt;
+}
+
+template<> MediaSource::EndOfStreamError convertEnumeration<MediaSource::EndOfStreamError>(ExecState& state, JSValue value)
+{
+    VM& vm = state.vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    auto result = parseEnumeration<MediaSource::EndOfStreamError>(state, value);
+    if (UNLIKELY(!result)) {
+        throwTypeError(&state, throwScope);
+        return { };
+    }
+    return result.value();
+}
+
+template<> const char* expectedEnumerationValues<MediaSource::EndOfStreamError>()
+{
+    return "\"network\", \"decode\"";
+}
+
 // Functions
 
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionAddSourceBuffer(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionRemoveSourceBuffer(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionEndOfStream(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourceConstructorFunctionIsTypeSupported(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionSetLiveSeekableRange(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionClearLiveSeekableRange(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsMediaSourceSourceBuffers(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaSourceActiveSourceBuffers(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaSourceDuration(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSMediaSourceDuration(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsMediaSourceReadyState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsMediaSourceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSourceSourceBuffers(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSourceActiveSourceBuffers(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSourceDuration(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSourceDuration(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaSourceReadyState(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsMediaSourceOnsourceopen(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSourceOnsourceopen(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaSourceOnsourceended(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSourceOnsourceended(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaSourceOnsourceclose(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSourceOnsourceclose(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsMediaSourceConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::PropertyName);
+bool setJSMediaSourceConstructor(JSC::ExecState*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 
 class JSMediaSourcePrototype : public JSC::JSNonFinalObject {
 public:
-    typedef JSC::JSNonFinalObject Base;
+    using Base = JSC::JSNonFinalObject;
     static JSMediaSourcePrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
         JSMediaSourcePrototype* ptr = new (NotNull, JSC::allocateCell<JSMediaSourcePrototype>(vm.heap)) JSMediaSourcePrototype(vm, globalObject, structure);
@@ -81,82 +127,61 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaSourceConstructor : public DOMConstructorObject {
-private:
-    JSMediaSourceConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaSourceConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaSourceConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaSourceConstructor>(vm.heap)) JSMediaSourceConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaSource(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+using JSMediaSourceConstructor = JSDOMConstructor<JSMediaSource>;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSMediaSourceConstructorTableValues[] =
 {
-    { "isTypeSupported", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSourceConstructorFunctionIsTypeSupported), (intptr_t) (1) },
+    { "isTypeSupported", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourceConstructorFunctionIsTypeSupported), (intptr_t) (1) } },
 };
 
-EncodedJSValue JSC_HOST_CALL JSMediaSourceConstructor::constructJSMediaSource(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMediaSourceConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSMediaSourceConstructor*>(exec->callee());
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    auto* castedThis = jsCast<JSMediaSourceConstructor*>(state->jsCallee());
+    ASSERT(castedThis);
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
-    if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaSource");
-    RefPtr<MediaSource> object = MediaSource::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    if (UNLIKELY(!context))
+        return throwConstructorScriptExecutionContextUnavailableError(*state, throwScope, "MediaSource");
+    auto object = MediaSource::create(*context);
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<MediaSource>>(*state, *castedThis->globalObject(), WTFMove(object)));
 }
 
-const ClassInfo JSMediaSourceConstructor::s_info = { "MediaSourceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSourceConstructor) };
-
-JSMediaSourceConstructor::JSMediaSourceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSValue JSMediaSourceConstructor::prototypeForStructure(JSC::VM& vm, const JSDOMGlobalObject& globalObject)
 {
+    return JSEventTarget::getConstructor(vm, &globalObject);
 }
 
-void JSMediaSourceConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSMediaSourceConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaSource::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaSource::prototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaSource"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSMediaSourceConstructorTableValues, *this);
 }
 
-ConstructType JSMediaSourceConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaSource;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaSourceConstructor::s_info = { "MediaSource", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSourceConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaSourcePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "sourceBuffers", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceSourceBuffers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "activeSourceBuffers", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceActiveSourceBuffers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "duration", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceDuration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceDuration) },
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "addSourceBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionAddSourceBuffer), (intptr_t) (1) },
-    { "removeSourceBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionRemoveSourceBuffer), (intptr_t) (1) },
-    { "endOfStream", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionEndOfStream), (intptr_t) (0) },
+    { "constructor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceConstructor) } },
+    { "sourceBuffers", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceSourceBuffers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "activeSourceBuffers", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceActiveSourceBuffers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "duration", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceDuration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceDuration) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onsourceopen", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceOnsourceopen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceOnsourceopen) } },
+    { "onsourceended", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceOnsourceended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceOnsourceended) } },
+    { "onsourceclose", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaSourceOnsourceclose), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaSourceOnsourceclose) } },
+    { "addSourceBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionAddSourceBuffer), (intptr_t) (1) } },
+    { "removeSourceBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionRemoveSourceBuffer), (intptr_t) (1) } },
+    { "endOfStream", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionEndOfStream), (intptr_t) (0) } },
+    { "setLiveSeekableRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionSetLiveSeekableRange), (intptr_t) (2) } },
+    { "clearLiveSeekableRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaSourcePrototypeFunctionClearLiveSeekableRange), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaSourcePrototype::s_info = { "MediaSourcePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSourcePrototype) };
@@ -169,201 +194,351 @@ void JSMediaSourcePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaSource::s_info = { "MediaSource", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaSource) };
 
-JSMediaSource::JSMediaSource(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSource>&& impl)
-    : JSEventTarget(structure, globalObject, WTF::move(impl))
+JSMediaSource::JSMediaSource(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaSource>&& impl)
+    : JSEventTarget(structure, globalObject, WTFMove(impl))
 {
+}
+
+void JSMediaSource::finishCreation(VM& vm)
+{
+    Base::finishCreation(vm);
+    ASSERT(inherits(info()));
+
 }
 
 JSObject* JSMediaSource::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
-    return JSMediaSourcePrototype::create(vm, globalObject, JSMediaSourcePrototype::createStructure(vm, globalObject, JSEventTarget::getPrototype(vm, globalObject)));
+    return JSMediaSourcePrototype::create(vm, globalObject, JSMediaSourcePrototype::createStructure(vm, globalObject, JSEventTarget::prototype(vm, globalObject)));
 }
 
-JSObject* JSMediaSource::getPrototype(VM& vm, JSGlobalObject* globalObject)
+JSObject* JSMediaSource::prototype(VM& vm, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSMediaSource>(vm, globalObject);
 }
 
-EncodedJSValue jsMediaSourceSourceBuffers(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaSource* BindingCaller<JSMediaSource>::castForAttribute(ExecState&, EncodedJSValue thisValue)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSourcePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSource", "sourceBuffers");
-        return throwGetterTypeError(*exec, "MediaSource", "sourceBuffers");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.sourceBuffers()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSMediaSource*>(JSValue::decode(thisValue));
 }
 
-
-EncodedJSValue jsMediaSourceActiveSourceBuffers(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+template<> inline JSMediaSource* BindingCaller<JSMediaSource>::castForOperation(ExecState& state)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSourcePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSource", "activeSourceBuffers");
-        return throwGetterTypeError(*exec, "MediaSource", "activeSourceBuffers");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.activeSourceBuffers()));
-    return JSValue::encode(result);
+    return jsDynamicDowncast<JSMediaSource*>(state.thisValue());
 }
 
+static inline JSValue jsMediaSourceSourceBuffersGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaSourceDuration(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaSourceSourceBuffers(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSourcePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSource", "duration");
-        return throwGetterTypeError(*exec, "MediaSource", "duration");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.duration());
-    return JSValue::encode(result);
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceSourceBuffersGetter>(state, thisValue, "sourceBuffers");
 }
 
-
-EncodedJSValue jsMediaSourceReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+static inline JSValue jsMediaSourceSourceBuffersGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSourcePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaSource", "readyState");
-        return throwGetterTypeError(*exec, "MediaSource", "readyState");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.readyState());
-    return JSValue::encode(result);
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SourceBufferList>>(state, *thisObject.globalObject(), impl.sourceBuffers());
+    return result;
 }
 
+static inline JSValue jsMediaSourceActiveSourceBuffersGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
 
-EncodedJSValue jsMediaSourceConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMediaSourceActiveSourceBuffers(ExecState* state, EncodedJSValue thisValue, PropertyName)
 {
-    JSMediaSourcePrototype* domObject = jsDynamicCast<JSMediaSourcePrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaSource::getConstructor(exec->vm(), domObject->globalObject()));
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceActiveSourceBuffersGetter>(state, thisValue, "activeSourceBuffers");
 }
 
-void setJSMediaSourceDuration(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+static inline JSValue jsMediaSourceActiveSourceBuffersGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
 {
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLInterface<SourceBufferList>>(state, *thisObject.globalObject(), impl.activeSourceBuffers());
+    return result;
+}
+
+static inline JSValue jsMediaSourceDurationGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSourceDuration(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceDurationGetter>(state, thisValue, "duration");
+}
+
+static inline JSValue jsMediaSourceDurationGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLUnrestrictedDouble>(impl.duration());
+    return result;
+}
+
+static inline JSValue jsMediaSourceReadyStateGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSourceReadyState(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceReadyStateGetter>(state, thisValue, "readyState");
+}
+
+static inline JSValue jsMediaSourceReadyStateGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    auto& impl = thisObject.wrapped();
+    JSValue result = toJS<IDLDOMString>(state, impl.readyState());
+    return result;
+}
+
+static inline JSValue jsMediaSourceOnsourceopenGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSourceOnsourceopen(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceOnsourceopenGetter>(state, thisValue, "onsourceopen");
+}
+
+static inline JSValue jsMediaSourceOnsourceopenGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().sourceopenEvent);
+}
+
+static inline JSValue jsMediaSourceOnsourceendedGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSourceOnsourceended(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceOnsourceendedGetter>(state, thisValue, "onsourceended");
+}
+
+static inline JSValue jsMediaSourceOnsourceendedGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().sourceendedEvent);
+}
+
+static inline JSValue jsMediaSourceOnsourcecloseGetter(ExecState&, JSMediaSource&, ThrowScope& throwScope);
+
+EncodedJSValue jsMediaSourceOnsourceclose(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    return BindingCaller<JSMediaSource>::attribute<jsMediaSourceOnsourcecloseGetter>(state, thisValue, "onsourceclose");
+}
+
+static inline JSValue jsMediaSourceOnsourcecloseGetter(ExecState& state, JSMediaSource& thisObject, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(throwScope);
+    UNUSED_PARAM(state);
+    return eventHandlerAttribute(thisObject.wrapped(), eventNames().sourcecloseEvent);
+}
+
+EncodedJSValue jsMediaSourceConstructor(ExecState* state, EncodedJSValue thisValue, PropertyName)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    JSMediaSourcePrototype* domObject = jsDynamicDowncast<JSMediaSourcePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject))
+        return throwVMTypeError(state, throwScope);
+    return JSValue::encode(JSMediaSource::getConstructor(state->vm(), domObject->globalObject()));
+}
+
+bool setJSMediaSourceConstructor(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
     JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSMediaSourcePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaSource", "duration");
-        else
-            throwSetterTypeError(*exec, "MediaSource", "duration");
-        return;
+    JSMediaSourcePrototype* domObject = jsDynamicDowncast<JSMediaSourcePrototype*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!domObject)) {
+        throwVMTypeError(state, throwScope);
+        return false;
     }
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setDuration(nativeValue, ec);
-    setDOMException(exec, ec);
+    // Shadowing a built-in constructor
+    return domObject->putDirect(state->vm(), state->propertyNames().constructor, value);
+}
+
+static inline bool setJSMediaSourceDurationFunction(ExecState&, JSMediaSource&, JSValue, ThrowScope&);
+
+bool setJSMediaSourceDuration(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaSource>::setAttribute<setJSMediaSourceDurationFunction>(state, thisValue, encodedValue, "duration");
+}
+
+static inline bool setJSMediaSourceDurationFunction(ExecState& state, JSMediaSource& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = thisObject.wrapped();
+    auto nativeValue = convert<IDLUnrestrictedDouble>(state, value);
+    RETURN_IF_EXCEPTION(throwScope, false);
+    propagateException(state, throwScope, impl.setDuration(WTFMove(nativeValue)));
+    return true;
 }
 
 
-JSValue JSMediaSource::getConstructor(VM& vm, JSGlobalObject* globalObject)
+static inline bool setJSMediaSourceOnsourceopenFunction(ExecState&, JSMediaSource&, JSValue, ThrowScope&);
+
+bool setJSMediaSourceOnsourceopen(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSMediaSourceConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return BindingCaller<JSMediaSource>::setAttribute<setJSMediaSourceOnsourceopenFunction>(state, thisValue, encodedValue, "onsourceopen");
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionAddSourceBuffer(ExecState* exec)
+static inline bool setJSMediaSourceOnsourceopenFunction(ExecState& state, JSMediaSource& thisObject, JSValue value, ThrowScope& throwScope)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaSource", "addSourceBuffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaSource::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.addSourceBuffer(type, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().sourceopenEvent, value);
+    return true;
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionRemoveSourceBuffer(ExecState* exec)
+
+static inline bool setJSMediaSourceOnsourceendedFunction(ExecState&, JSMediaSource&, JSValue, ThrowScope&);
+
+bool setJSMediaSourceOnsourceended(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaSource", "removeSourceBuffer");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaSource::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    SourceBuffer* buffer = JSSourceBuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.removeSourceBuffer(buffer, ec);
-    setDOMException(exec, ec);
+    return BindingCaller<JSMediaSource>::setAttribute<setJSMediaSourceOnsourceendedFunction>(state, thisValue, encodedValue, "onsourceended");
+}
+
+static inline bool setJSMediaSourceOnsourceendedFunction(ExecState& state, JSMediaSource& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().sourceendedEvent, value);
+    return true;
+}
+
+
+static inline bool setJSMediaSourceOnsourcecloseFunction(ExecState&, JSMediaSource&, JSValue, ThrowScope&);
+
+bool setJSMediaSourceOnsourceclose(ExecState* state, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    return BindingCaller<JSMediaSource>::setAttribute<setJSMediaSourceOnsourcecloseFunction>(state, thisValue, encodedValue, "onsourceclose");
+}
+
+static inline bool setJSMediaSourceOnsourcecloseFunction(ExecState& state, JSMediaSource& thisObject, JSValue value, ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    setEventHandlerAttribute(state, thisObject, thisObject.wrapped(), eventNames().sourcecloseEvent, value);
+    return true;
+}
+
+
+JSValue JSMediaSource::getConstructor(VM& vm, const JSGlobalObject* globalObject)
+{
+    return getDOMConstructor<JSMediaSourceConstructor>(vm, *jsCast<const JSDOMGlobalObject*>(globalObject));
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionAddSourceBufferCaller(JSC::ExecState*, JSMediaSource*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionAddSourceBuffer(ExecState* state)
+{
+    return BindingCaller<JSMediaSource>::callOperation<jsMediaSourcePrototypeFunctionAddSourceBufferCaller>(state, "addSourceBuffer");
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionAddSourceBufferCaller(JSC::ExecState* state, JSMediaSource* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLInterface<SourceBuffer>>(*state, *castedThis->globalObject(), throwScope, impl.addSourceBuffer(WTFMove(type))));
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionRemoveSourceBufferCaller(JSC::ExecState*, JSMediaSource*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionRemoveSourceBuffer(ExecState* state)
+{
+    return BindingCaller<JSMediaSource>::callOperation<jsMediaSourcePrototypeFunctionRemoveSourceBufferCaller>(state, "removeSourceBuffer");
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionRemoveSourceBufferCaller(JSC::ExecState* state, JSMediaSource* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto buffer = convert<IDLInterface<SourceBuffer>>(*state, state->uncheckedArgument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "buffer", "MediaSource", "removeSourceBuffer", "SourceBuffer"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.removeSourceBuffer(*buffer));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionEndOfStream(ExecState* exec)
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionEndOfStreamCaller(JSC::ExecState*, JSMediaSource*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionEndOfStream(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
-    JSMediaSource* castedThis = jsDynamicCast<JSMediaSource*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaSource", "endOfStream");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaSource::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
+    return BindingCaller<JSMediaSource>::callOperation<jsMediaSourcePrototypeFunctionEndOfStreamCaller>(state, "endOfStream");
+}
 
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 0) {
-        impl.endOfStream(ec);
-        setDOMException(exec, ec);
-        return JSValue::encode(jsUndefined());
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionEndOfStreamCaller(JSC::ExecState* state, JSMediaSource* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto errorValue = state->argument(0);
+    std::optional<MediaSource::EndOfStreamError> error;
+    if (!errorValue.isUndefined()) {
+        error = parseEnumeration<MediaSource::EndOfStreamError>(*state, errorValue);
+        RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+        if (UNLIKELY(!error))
+            return throwArgumentMustBeEnumError(*state, throwScope, 0, "error", "MediaSource", "endOfStream", expectedEnumerationValues<MediaSource::EndOfStreamError>());
     }
-
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* errorString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& error = errorString->value(exec);
-    if (error != "network" && error != "decode")
-        return throwArgumentMustBeEnumError(*exec, 0, "error", "MediaSource", "endOfStream", "\"network\", \"decode\"");
-    impl.endOfStream(error, ec);
-    setDOMException(exec, ec);
+    propagateException(*state, throwScope, impl.endOfStream(error));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaSourceConstructorFunctionIsTypeSupported(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaSourceConstructorFunctionIsTypeSupported(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(MediaSource::isTypeSupported(type));
-    return JSValue::encode(result);
+    VM& vm = state->vm();
+    auto throwScope = DECLARE_THROW_SCOPE(vm);
+    UNUSED_PARAM(throwScope);
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto type = convert<IDLDOMString>(*state, state->uncheckedArgument(0), StringConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJS<IDLBoolean>(MediaSource::isTypeSupported(WTFMove(type))));
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionSetLiveSeekableRangeCaller(JSC::ExecState*, JSMediaSource*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionSetLiveSeekableRange(ExecState* state)
+{
+    return BindingCaller<JSMediaSource>::callOperation<jsMediaSourcePrototypeFunctionSetLiveSeekableRangeCaller>(state, "setLiveSeekableRange");
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionSetLiveSeekableRangeCaller(JSC::ExecState* state, JSMediaSource* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, throwScope, createNotEnoughArgumentsError(state));
+    auto start = convert<IDLDouble>(*state, state->uncheckedArgument(0));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto end = convert<IDLDouble>(*state, state->uncheckedArgument(1));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    propagateException(*state, throwScope, impl.setLiveSeekableRange(WTFMove(start), WTFMove(end)));
+    return JSValue::encode(jsUndefined());
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionClearLiveSeekableRangeCaller(JSC::ExecState*, JSMediaSource*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsMediaSourcePrototypeFunctionClearLiveSeekableRange(ExecState* state)
+{
+    return BindingCaller<JSMediaSource>::callOperation<jsMediaSourcePrototypeFunctionClearLiveSeekableRangeCaller>(state, "clearLiveSeekableRange");
+}
+
+static inline JSC::EncodedJSValue jsMediaSourcePrototypeFunctionClearLiveSeekableRangeCaller(JSC::ExecState* state, JSMediaSource* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    propagateException(*state, throwScope, impl.clearLiveSeekableRange());
+    return JSValue::encode(jsUndefined());
 }
 
 void JSMediaSource::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -371,15 +546,15 @@ void JSMediaSource::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSMediaSource*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSMediaSourceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsMediaSource = jsCast<JSMediaSource*>(handle.slot()->asCell());
-    if (jsMediaSource->impl().hasPendingActivity())
+    if (jsMediaSource->wrapped().hasPendingActivity())
         return true;
-    if (jsMediaSource->impl().isFiringEventListeners())
+    if (jsMediaSource->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -387,9 +562,9 @@ bool JSMediaSourceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> ha
 
 void JSMediaSourceOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    auto* jsMediaSource = jsCast<JSMediaSource*>(handle.slot()->asCell());
+    auto* jsMediaSource = static_cast<JSMediaSource*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaSource->impl(), jsMediaSource);
+    uncacheWrapper(world, &jsMediaSource->wrapped(), jsMediaSource);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -400,15 +575,12 @@ extern "C" { extern void (*const __identifier("??_7MediaSource@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11MediaSourceE[]; }
 #endif
 #endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaSource* impl)
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Ref<MediaSource>&& impl)
 {
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSMediaSource>(globalObject, impl))
-        return result;
 
 #if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl.ptr()));
 #if PLATFORM(WIN)
     void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7MediaSource@WebCore@@6B@"));
 #else
@@ -416,7 +588,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaSource*
 #if COMPILER(CLANG)
     // If this fails MediaSource does not have a vtable, so you need to add the
     // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(MediaSource), MediaSource_is_not_polymorphic);
+    static_assert(__is_polymorphic(MediaSource), "MediaSource is not polymorphic");
 #endif
 #endif
     // If you hit this assertion you either have a use after free bug, or
@@ -425,13 +597,18 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaSource*
     // by adding the SkipVTableValidation attribute to the interface IDL definition
     RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
 #endif
-    return createNewWrapper<JSMediaSource>(globalObject, impl);
+    return createWrapper<MediaSource>(globalObject, WTFMove(impl));
+}
+
+JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSource& impl)
+{
+    return wrap(state, globalObject, impl);
 }
 
 MediaSource* JSMediaSource::toWrapped(JSC::JSValue value)
 {
-    if (auto* wrapper = jsDynamicCast<JSMediaSource*>(value))
-        return &wrapper->impl();
+    if (auto* wrapper = jsDynamicDowncast<JSMediaSource*>(value))
+        return &wrapper->wrapped();
     return nullptr;
 }
 

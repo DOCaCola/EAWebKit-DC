@@ -18,32 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNotification_h
-#define JSNotification_h
+#pragma once
 
 #if ENABLE(LEGACY_NOTIFICATIONS) || ENABLE(NOTIFICATIONS)
 
-#include "JSDOMWrapper.h"
+#include "JSDOMConvert.h"
+#include "JSEventTarget.h"
 #include "Notification.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSNotification : public JSDOMWrapper {
+class WEBCORE_EXPORT JSNotification : public JSEventTarget {
 public:
-    typedef JSDOMWrapper Base;
+    using Base = JSEventTarget;
+    using DOMWrapped = Notification;
     static JSNotification* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Notification>&& impl)
     {
-        JSNotification* ptr = new (NotNull, JSC::allocateCell<JSNotification>(globalObject->vm().heap)) JSNotification(structure, globalObject, WTF::move(impl));
+        JSNotification* ptr = new (NotNull, JSC::allocateCell<JSNotification>(globalObject->vm().heap)) JSNotification(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
     static Notification* toWrapped(JSC::JSValue);
-    static void destroy(JSC::JSCell*);
-    ~JSNotification();
 
     DECLARE_INFO;
 
@@ -52,23 +51,17 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    Notification& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Notification* m_impl;
-protected:
-    JSNotification(JSC::Structure*, JSDOMGlobalObject*, Ref<Notification>&&);
-
-    void finishCreation(JSC::VM& vm)
+    Notification& wrapped() const
     {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
+        return static_cast<Notification&>(Base::wrapped());
     }
+protected:
+    JSNotification(JSC::Structure*, JSDOMGlobalObject&, Ref<Notification>&&);
 
+    void finishCreation(JSC::VM&);
 };
 
 class JSNotificationOwner : public JSC::WeakHandleOwner {
@@ -83,12 +76,37 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Notification*)
     return &owner.get();
 }
 
-WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Notification*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Notification& impl) { return toJS(exec, globalObject, &impl); }
+inline void* wrapperKey(Notification* wrappableObject)
+{
+    return wrappableObject;
+}
+
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Notification&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Notification* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<Notification>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<Notification>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
+
+template<> struct JSDOMWrapperConverterTraits<Notification> {
+    using WrapperClass = JSNotification;
+    using ToWrappedReturnType = Notification*;
+};
+#if ENABLE(NOTIFICATIONS)
+
+template<> JSC::JSString* convertEnumerationToJS(JSC::ExecState&, Notification::Direction);
+
+template<> std::optional<Notification::Direction> parseEnumeration<Notification::Direction>(JSC::ExecState&, JSC::JSValue);
+template<> Notification::Direction convertEnumeration<Notification::Direction>(JSC::ExecState&, JSC::JSValue);
+template<> const char* expectedEnumerationValues<Notification::Direction>();
+
+#endif
+
+#if ENABLE(NOTIFICATIONS)
+
+template<> Notification::Options convertDictionary<Notification::Options>(JSC::ExecState&, JSC::JSValue);
+
+#endif
 
 
 } // namespace WebCore
 
 #endif // ENABLE(LEGACY_NOTIFICATIONS) || ENABLE(NOTIFICATIONS)
-
-#endif

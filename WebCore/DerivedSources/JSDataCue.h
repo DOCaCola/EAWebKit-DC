@@ -18,8 +18,7 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDataCue_h
-#define JSDataCue_h
+#pragma once
 
 #if ENABLE(VIDEO_TRACK)
 
@@ -30,16 +29,17 @@ namespace WebCore {
 
 class JSDataCue : public JSTextTrackCue {
 public:
-    typedef JSTextTrackCue Base;
+    using Base = JSTextTrackCue;
+    using DOMWrapped = DataCue;
     static JSDataCue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataCue>&& impl)
     {
-        JSDataCue* ptr = new (NotNull, JSC::allocateCell<JSDataCue>(globalObject->vm().heap)) JSDataCue(structure, globalObject, WTF::move(impl));
+        JSDataCue* ptr = new (NotNull, JSC::allocateCell<JSDataCue>(globalObject->vm().heap)) JSDataCue(structure, *globalObject, WTFMove(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
+    static JSC::JSObject* prototype(JSC::VM&, JSC::JSGlobalObject*);
 
     DECLARE_INFO;
 
@@ -48,29 +48,29 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DataCue& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, const JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
+
+    DataCue& wrapped() const
     {
-        return static_cast<DataCue&>(Base::impl());
+        return static_cast<DataCue&>(Base::wrapped());
     }
 protected:
-    JSDataCue(JSC::Structure*, JSDOMGlobalObject*, Ref<DataCue>&&);
+    JSDataCue(JSC::Structure*, JSDOMGlobalObject&, Ref<DataCue>&&);
 
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
-
+    void finishCreation(JSC::VM&);
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DataCue&);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataCue* impl) { return impl ? toJS(state, globalObject, *impl) : JSC::jsNull(); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Ref<DataCue>&&);
+inline JSC::JSValue toJSNewlyCreated(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RefPtr<DataCue>&& impl) { return impl ? toJSNewlyCreated(state, globalObject, impl.releaseNonNull()) : JSC::jsNull(); }
 
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSDataCue(JSC::ExecState*);
-
+template<> struct JSDOMWrapperConverterTraits<DataCue> {
+    using WrapperClass = JSDataCue;
+    using ToWrappedReturnType = DataCue*;
+};
 
 } // namespace WebCore
 
 #endif // ENABLE(VIDEO_TRACK)
-
-#endif
