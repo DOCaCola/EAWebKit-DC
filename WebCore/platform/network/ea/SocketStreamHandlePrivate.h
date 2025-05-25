@@ -29,10 +29,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SocketStreamHandlePrivate_h
-#define SocketStreamHandlePrivate_h
+#pragma once
 
-#include "SocketStreamHandleBase.h"
+#include "SocketStreamHandleImpl.h"
 #include "Timer.h"
 
 #include <EAWebKit/EAWebKitTransport.h>
@@ -41,8 +40,8 @@ namespace WebCore
 class SocketStreamHandlePrivate : public EA::WebKit::SocketHandleClient
 {
 public:
-	SocketStreamHandlePrivate(SocketStreamHandle*, const URL&);
-    SocketStreamHandlePrivate(SocketStreamHandle* streamHandle, EA::WebKit::SocketHandle socketHandle);
+	SocketStreamHandlePrivate(SocketStreamHandleImpl*, const URL&);
+    SocketStreamHandlePrivate(SocketStreamHandleImpl* streamHandle, EA::WebKit::SocketHandle socketHandle);
 	~SocketStreamHandlePrivate();
 
 	// SocketHandleClient Interface
@@ -56,11 +55,11 @@ public:
 private:
 	void timerFired();
 	
-	SocketStreamHandle* m_streamHandle;
+	SocketStreamHandleImpl* m_streamHandle;
 	EA::WebKit::SocketHandle m_socketHandle;
 	EA::WebKit::SocketHandle m_CleanupTansportHandlerSocketHandle; // same as m_socketHandle, but when we set our m_socketHandle to NULL then we can't actually change the TransportHandler for it anymore, so we keep track of it and retain the original logic
 	WebCore::Timer   mPendingDataTimer;    // Timer to trigger send operation for pending data.    
 };
 
 }
-#endif //SocketStreamHandlePrivate_h
+

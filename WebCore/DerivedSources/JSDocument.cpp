@@ -43,6 +43,7 @@
 #include "JSElement.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
+#include "JSEventTarget.h"
 #include "JSFontFaceSet.h"
 #include "JSHTMLCollection.h"
 #include "JSHTMLElement.h"
@@ -57,6 +58,7 @@
 #include "JSSVGSVGElement.h"
 #include "JSStyleSheetList.h"
 #include "JSText.h"
+#include "JSTouch.h"
 #include "JSTreeWalker.h"
 #include "JSWebAnimation.h"
 #include "JSXPathExpression.h"
@@ -167,6 +169,8 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExitPointerLock(JSC
 #if ENABLE(CSS_REGIONS)
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitGetNamedFlows(JSC::ExecState*);
 #endif
+JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouch(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouchList(JSC::ExecState*);
 #if ENABLE(WEB_ANIMATIONS)
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetAnimations(JSC::ExecState*);
 #endif
@@ -819,6 +823,8 @@ static const HashTableValue JSDocumentPrototypeTableValues[] =
 #else
     { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
+    { "createTouch", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouch), (intptr_t) (0) } },
+    { "createTouchList", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouchList), (intptr_t) (0) } },
 #if ENABLE(WEB_ANIMATIONS)
     { "getAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetAnimations), (intptr_t) (0) } },
 #else
@@ -5464,6 +5470,57 @@ static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionWebkitGetNamedFlows
 }
 
 #endif
+
+static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionCreateTouchCaller(JSC::ExecState*, JSDocument*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouch(ExecState* state)
+{
+    return BindingCaller<JSDocument>::callOperation<jsDocumentPrototypeFunctionCreateTouchCaller>(state, "createTouch");
+}
+
+static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionCreateTouchCaller(JSC::ExecState* state, JSDocument* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    auto& impl = castedThis->wrapped();
+    auto window = convert<IDLNullable<IDLInterface<DOMWindow>>>(*state, state->argument(0), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 0, "window", "Document", "createTouch", "DOMWindow"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto target = convert<IDLNullable<IDLInterface<EventTarget>>>(*state, state->argument(1), [](JSC::ExecState& state, JSC::ThrowScope& scope) { throwArgumentTypeError(state, scope, 1, "target", "Document", "createTouch", "EventTarget"); });
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto identifier = convert<IDLLong>(*state, state->argument(2), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto pageX = convert<IDLLong>(*state, state->argument(3), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto pageY = convert<IDLLong>(*state, state->argument(4), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenX = convert<IDLLong>(*state, state->argument(5), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto screenY = convert<IDLLong>(*state, state->argument(6), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto webkitRadiusX = convert<IDLLong>(*state, state->argument(7), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto webkitRadiusY = convert<IDLLong>(*state, state->argument(8), IntegerConversionConfiguration::Normal);
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto webkitRotationAngle = convert<IDLUnrestrictedFloat>(*state, state->argument(9));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    auto webkitForce = convert<IDLUnrestrictedFloat>(*state, state->argument(10));
+    RETURN_IF_EXCEPTION(throwScope, encodedJSValue());
+    return JSValue::encode(toJSNewlyCreated<IDLInterface<Touch>>(*state, *castedThis->globalObject(), impl.createTouch(WTFMove(window), WTFMove(target), WTFMove(identifier), WTFMove(pageX), WTFMove(pageY), WTFMove(screenX), WTFMove(screenY), WTFMove(webkitRadiusX), WTFMove(webkitRadiusY), WTFMove(webkitRotationAngle), WTFMove(webkitForce))));
+}
+
+static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionCreateTouchListCaller(JSC::ExecState*, JSDocument*, JSC::ThrowScope&);
+
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouchList(ExecState* state)
+{
+    return BindingCaller<JSDocument>::callOperation<jsDocumentPrototypeFunctionCreateTouchListCaller>(state, "createTouchList");
+}
+
+static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionCreateTouchListCaller(JSC::ExecState* state, JSDocument* castedThis, JSC::ThrowScope& throwScope)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(throwScope);
+    return JSValue::encode(castedThis->createTouchList(*state));
+}
 
 #if ENABLE(WEB_ANIMATIONS)
 static inline JSC::EncodedJSValue jsDocumentPrototypeFunctionGetAnimationsCaller(JSC::ExecState*, JSDocument*, JSC::ThrowScope&);

@@ -241,6 +241,7 @@ StylePropertyShorthand allShorthand()
         CSSPropertyTextUnderlineStyle,
         CSSPropertyTextUnderlineWidth,
         CSSPropertyTop,
+        CSSPropertyTouchAction,
         CSSPropertyTransform,
         CSSPropertyTransformOriginX,
         CSSPropertyTransformOriginY,
@@ -368,6 +369,7 @@ StylePropertyShorthand allShorthand()
         CSSPropertyWebkitRtlOrdering,
         CSSPropertyWebkitRubyPosition,
         CSSPropertyWebkitSvgShadow,
+        CSSPropertyWebkitTapHighlightColor,
         CSSPropertyWebkitTextCombine,
         CSSPropertyWebkitTextDecorationColor,
         CSSPropertyWebkitTextDecorationLine,
@@ -1242,6 +1244,7 @@ StylePropertyShorthandVector matchingShorthandsForLonghand(CSSPropertyID propert
     case CSSPropertyWebkitRtlOrdering:
     case CSSPropertyWebkitRubyPosition:
     case CSSPropertyWebkitSvgShadow:
+    case CSSPropertyWebkitTapHighlightColor:
     case CSSPropertyWebkitTextCombine:
     case CSSPropertyWebkitTextDecorationSkip:
     case CSSPropertyWebkitTextDecorationsInEffect:
@@ -1385,6 +1388,7 @@ StylePropertyShorthandVector matchingShorthandsForLonghand(CSSPropertyID propert
     case CSSPropertyTextUnderlineStyle:
     case CSSPropertyTextUnderlineWidth:
     case CSSPropertyTop:
+    case CSSPropertyTouchAction:
     case CSSPropertyTransform:
     case CSSPropertyTransformStyle:
     case CSSPropertyUnicodeRange:

@@ -44,33 +44,33 @@ namespace JSC { namespace Bindings {
 class EAInstance : public Instance {
 	WTF_MAKE_NONCOPYABLE(EAInstance);
 public:
-    static Ref<EAInstance> create(EA::WebKit::IJSBoundObject* object, PassRefPtr<RootObject> rootObject)
+    static Ref<EAInstance> create(EA::WebKit::IJSBoundObject* object, RefPtr<RootObject>& rootObject)
     {
-        return adoptRef(*new EAInstance(object, rootObject));
+        return adoptRef(*new EAInstance(object, WTFMove(rootObject)));
     }
 
     virtual ~EAInstance(void);
 
-    virtual Class *getClass() const override;
+    Class *getClass() const override;
 
 	//virtual bool setValueOfUndefinedField(ExecState*, PropertyName, JSValue) { return false; }
 	
-	virtual JSValue getMethod(ExecState*, PropertyName) override;
-	virtual JSValue invokeMethod(ExecState*, RuntimeMethod*) override;
+	JSValue getMethod(ExecState*, PropertyName) override;
+	JSValue invokeMethod(ExecState*, RuntimeMethod*) override;
 	
-	virtual bool supportsInvokeDefaultMethod() const override;
-	virtual JSValue invokeDefaultMethod(ExecState*) override;
+	bool supportsInvokeDefaultMethod() const override;
+	JSValue invokeDefaultMethod(ExecState*) override;
 
 	//EAWebKitTODO: Implement these to support bound object as constructor. 
-	//virtual bool supportsConstruct() const { return false; }
-	//virtual JSValue invokeConstruct(ExecState*, const ArgList&) { return JSValue(); }
+	//bool supportsConstruct() const { return false; }
+	//JSValue invokeConstruct(ExecState*, const ArgList&) { return JSValue(); }
 	
 	//EAWebKitTODO: We currently don't support methods, only fields.
-	virtual void getPropertyNames(ExecState*, PropertyNameArray&) override;
+	void getPropertyNames(ExecState*, PropertyNameArray&) override;
 	
-    virtual JSValue defaultValue(ExecState*, PreferredPrimitiveType) const override;
+    JSValue defaultValue(ExecState*, PreferredPrimitiveType) const override;
 
-	virtual JSValue valueOf(ExecState*) const override;
+	JSValue valueOf(ExecState*) const override;
 
 	//EAWebKitTODO: Implement these to support dynamic object member addition.
 	//virtual bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&) { return false; }
@@ -82,7 +82,7 @@ private:
 	// Invoke the method identified by the name. If name is NULL, invoke self as a function.
 	JSValue invokeMethodPriv(ExecState*, const char8_t* methodName);
 	
-	EAInstance(EA::WebKit::IJSBoundObject*, PassRefPtr<RootObject>);
+	EAInstance(EA::WebKit::IJSBoundObject*, RefPtr<RootObject>&&);
     mutable EAClass *mClass;
     EA::WebKit::IJSBoundObject *mBoundObject;
 };

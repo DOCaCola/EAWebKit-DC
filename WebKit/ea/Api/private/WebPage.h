@@ -48,7 +48,7 @@ namespace WebCore
 #include "IntSize.h"
 #include "IntRect.h"
 
-#include "InspectorForwarding.h"
+#include "InspectorFrontendChannel.h"
 
 namespace EA { namespace WebKit
 {
@@ -60,7 +60,7 @@ class ViewportAttributesPrivate;
 class WebInspector;
 
 class WebPage 
-    : public WebCore::InspectorFrontendChannel
+    : public Inspector::FrontendChannel
 {
 public:
 	enum NavigationType 
@@ -183,7 +183,7 @@ public:
     void remoteFrontendConnected();
     void remoteFrontendDisconnected();
     void dispatchMessageFromRemoteFrontend(const String& message);
-    virtual bool sendMessageToFrontend(const String& message);
+    virtual void sendMessageToFrontend(const String& message) override;
 
 
 private:

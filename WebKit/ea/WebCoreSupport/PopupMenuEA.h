@@ -69,9 +69,9 @@ public:
 private:
     // ScrollableArea
     virtual int scrollSize(ScrollbarOrientation) const override;
-    virtual int scrollPosition(Scrollbar*) const override;
+    ScrollPosition scrollPosition() const override;
     virtual void setScrollOffset(const IntPoint&) override;
-    virtual void invalidateScrollbarRect(Scrollbar*, const IntRect&) override { } ;
+    virtual void invalidateScrollbarRect(Scrollbar&, const IntRect&) override { } ;
     virtual void invalidateScrollCornerRect(const IntRect&) override { }
     virtual bool isActive() const override { return true; }
     ScrollableArea* enclosingScrollableArea() const override { return 0; }
@@ -80,8 +80,7 @@ private:
     virtual Scrollbar* verticalScrollbar() const override { return m_scrollBar.get(); }
 	virtual IntSize visibleSize() const override;
     virtual IntSize contentsSize() const override;
-    virtual IntRect scrollableAreaBoundingBox() const override;
-    virtual bool updatesScrollLayerPositionOnMainThread() const override { return true; }
+    virtual IntRect scrollableAreaBoundingBox(bool*) const override;
 	virtual bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const override { return false; }
 	virtual bool isScrollableOrRubberbandable() override { return false; }
 	virtual bool hasScrollableOrRubberbandableAncestor() override { return false; }

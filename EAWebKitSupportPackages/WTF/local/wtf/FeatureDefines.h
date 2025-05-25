@@ -3,6 +3,7 @@
  * Copyright (C) 2007-2009 Torch Mobile, Inc.
  * Copyright (C) 2010, 2011 Research In Motion Limited. All rights reserved.
  * Copyright (C) 2013 Samsung Electronics. All rights reserved.
+ * Copyright (C) 2014 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -336,6 +337,14 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_KEYBOARD_CODE_ATTRIBUTE 1
 #endif
 #endif /* PLATFORM(GTK) */
+
+//+EAWebKitChange
+//1/6/2014
+/* --------- EA port (EA) --------- */
+#if PLATFORM(EA)
+#include <FeatureDefinesEA.h>
+#endif /* PLATFORM(EA) */
+//-EAWebKitChange
 
 /* ENABLE macro defaults for WebCore */
 /* Do not use PLATFORM() tests in this section ! */

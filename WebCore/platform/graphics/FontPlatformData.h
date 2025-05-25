@@ -231,8 +231,9 @@ public:
     FontWidthVariant widthVariant() const { return m_widthVariant; }
     TextRenderingMode textRenderingMode() const { return m_textRenderingMode; }
     bool isForTextCombine() const { return widthVariant() != RegularWidth; } // Keep in sync with callers of FontDescription::setWidthVariant().
-
-#if USE(CAIRO)
+    //+EAWKDC Change
+#if USE(CAIRO) && !PLATFORM(EA)
+    //-EAWKDC Change
     cairo_scaled_font_t* scaledFont() const { return m_scaledFont.get(); }
 #endif
 

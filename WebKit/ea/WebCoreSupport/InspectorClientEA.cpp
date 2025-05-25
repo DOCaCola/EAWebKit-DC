@@ -65,16 +65,16 @@ InspectorClientEA::InspectorClientEA(EA::WebKit::WebPage* page)
 
 }
 
-void InspectorClientEA::inspectorDestroyed(void)
+void InspectorClientEA::inspectedPageDestroyed(void)
 {
     closeInspectorFrontend();
     delete this;
 }
 
     
-WebCore::InspectorFrontendChannel*  InspectorClientEA::openInspectorFrontend(WebCore::InspectorController* inspectorController)
+Inspector::FrontendChannel* InspectorClientEA::openLocalFrontend(InspectorController*)
 {
-    WebCore::InspectorFrontendChannel* frontendChannel = 0;
+    Inspector::FrontendChannel* frontendChannel = nullptr;
     
 	// Create the view and page for the inspector.
     if(EA::WebKit::EAWebKitClient* const pClient = EA::WebKit::GetEAWebKitClient(mInspectedPage->view()))
@@ -147,13 +147,13 @@ void InspectorClientEA::hideHighlight(void)
 		frame.view()->invalidateRect(rect);
 }
 
-bool InspectorClientEA::sendMessageToFrontend(const String& message)
+void InspectorClientEA::sendMessageToFrontend(const String& message)
 {
     if (!mInspectorPage)
-        return false;
+        return;
 
     Page* frontendPage = mInspectorPage->d->page;
-    return doDispatchMessageOnFrontendPage(frontendPage, message);
+    doDispatchMessageOnFrontendPage(frontendPage, message);
 }
 
 class InspectorSettingsEA;
@@ -246,11 +246,6 @@ void InspectorFrontendClientEA::setAttachedWindowWidth(unsigned)
     notImplemented();
 }
 
-void InspectorFrontendClientEA::setToolbarHeight(unsigned)
-{
-    notImplemented();
-}
-
 void InspectorFrontendClientEA::inspectedURLChanged(const String& newURL)
 {
     //mInspectedURL.assign = newURL;
@@ -273,12 +268,12 @@ void InspectorFrontendClientEA::destroyInspectorView(bool notifyInspectorControl
     // Inspected page may have already been destroyed.
     if (mInspectedWebPage) 
     {
-        mInspectedWebPage->GetInspector()->SetFrontend(NULL);
+        mInspectedWebPage->GetInspector()->SetFrontend(nullptr);
         mInspectedWebPage->DestroyInspector();
     }
 
     if (notifyInspectorController && (mInspectedWebPage))
-		mInspectedWebPage->d->page->inspectorController().disconnectFrontend(Inspector::DisconnectReason::InspectorDestroyed);
+		mInspectedWebPage->d->page->inspectorController().disconnectFrontend(mInspectorClient);
 
     if (mInspectorClient)
         mInspectorClient->releaseFrontendPage();
@@ -292,7 +287,7 @@ void InspectorFrontendClientEA::destroyInspectorView(bool notifyInspectorControl
         destroyInfo.mpUserData = mInspectorView->GetUserData();
 		destroyInfo.mEventType = EA::WebKit::DestroyViewInfo::kEventInspectorClose;
         pClient->DestroyView(destroyInfo);
-        mInspectorView = NULL;
+        mInspectorView = nullptr;
     }
 }
 

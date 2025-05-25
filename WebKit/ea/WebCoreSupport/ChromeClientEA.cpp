@@ -167,7 +167,7 @@ void ChromeClientEA::focusedFrameChanged(Frame*)
 {
 }
 
-Page* ChromeClientEA::createWindow(Frame*, const FrameLoadRequest& request, const WindowFeatures& features, const NavigationAction& action)
+Page* ChromeClientEA::createWindow(Frame&, const FrameLoadRequest& request, const WindowFeatures& features, const NavigationAction& action)
 {
 	if(features.dialog)
 	{
@@ -331,7 +331,7 @@ bool ChromeClientEA::canRunBeforeUnloadConfirmPanel()
     return true;
 }
 
-bool ChromeClientEA::runBeforeUnloadConfirmPanel(const String& message, Frame* frame)
+bool ChromeClientEA::runBeforeUnloadConfirmPanel(const String& message, Frame& frame)
 {
     return runJavaScriptConfirm(frame, message);
 }
@@ -352,7 +352,7 @@ void ChromeClientEA::closeWindowSoon()
 	}
 }
 
-void ChromeClientEA::runJavaScriptAlert(Frame* f, const String& msg)
+void ChromeClientEA::runJavaScriptAlert(Frame& f, const String& msg)
 {
     if (EA::WebKit::EAWebKitClient *pClient = EA::WebKit::GetEAWebKitClient(m_webPage->view()))
     {
@@ -368,7 +368,7 @@ void ChromeClientEA::runJavaScriptAlert(Frame* f, const String& msg)
     }
 }
 
-bool ChromeClientEA::runJavaScriptConfirm(Frame* f, const String& msg)
+bool ChromeClientEA::runJavaScriptConfirm(Frame& f, const String& msg)
 {
     if (EA::WebKit::EAWebKitClient *pClient = EA::WebKit::GetEAWebKitClient(m_webPage->view()))
     {
@@ -388,7 +388,7 @@ bool ChromeClientEA::runJavaScriptConfirm(Frame* f, const String& msg)
     return false;
 }
 
-bool ChromeClientEA::runJavaScriptPrompt(Frame* f, const String& message, const String& defaultValue, String& result)
+bool ChromeClientEA::runJavaScriptPrompt(Frame& f, const String& message, const String& defaultValue, String& result)
 {
     if (EA::WebKit::EAWebKitClient *pClient = EA::WebKit::GetEAWebKitClient(m_webPage->view()))
     {
@@ -486,7 +486,7 @@ PlatformPageClient ChromeClientEA::platformPageClient() const
     return m_webPage->d->client.get();
 }
 
-void ChromeClientEA::contentsSizeChanged(Frame* frame, const IntSize& size) const
+void ChromeClientEA::contentsSizeChanged(Frame& frame, const IntSize& size) const
 {
 	notImplemented();
 }
@@ -518,17 +518,17 @@ void ChromeClientEA::setToolTip(const String &tip, TextDirection)
     pView->SetToolTip(tipText.charactersWithNullTermination().data()); 
 }
 
-void ChromeClientEA::print(Frame* frame)
+void ChromeClientEA::print(Frame& frame)
 {
 }
 
 #if ENABLE(SQL_DATABASE)
-void ChromeClientEA::exceededDatabaseQuota(Frame* frame, const String& databaseName,DatabaseDetails)
+void ChromeClientEA::exceededDatabaseQuota(Frame& frame, const String& databaseName,DatabaseDetails)
 {
 	uint64_t quota = 50* 1024 * 1024; //50 MB - If needed, we can expose it. This is disk usage, not RAM.
 
-    if (!DatabaseManager::singleton().hasEntryForOrigin(frame->document()->securityOrigin()))
-        DatabaseManager::singleton().setQuota(frame->document()->securityOrigin(), quota);
+    if (!DatabaseManager::singleton().hasEntryForOrigin(frame.document()->securityOrigin()))
+        DatabaseManager::singleton().setQuota(frame.document()->securityOrigin(), quota);
 
 }
 #endif
@@ -543,23 +543,23 @@ void ChromeClientEA::reachedMaxAppCacheSize(int64_t size)
 }
 
 
-void ChromeClientEA::reachedApplicationCacheOriginQuota(WebCore::SecurityOrigin* origin,int64_t)
+void ChromeClientEA::reachedApplicationCacheOriginQuota(WebCore::SecurityOrigin& origin,int64_t)
 {
     notImplemented();
 	// abaldeva: This should not be really fired since the quota is set to ApplicationCacheStorage::noQuota() by default.
-	EAW_ASSERT_FORMATTED(false, "Max App Cache Size for %S origin reached. Need a way to handle this.",origin->host().charactersWithNullTermination().data());
+	EAW_ASSERT_FORMATTED(false, "Max App Cache Size for %S origin reached. Need a way to handle this.",origin.host().charactersWithNullTermination().data());
 }
 
 
 
 
-void ChromeClientEA::runOpenPanel(Frame* frame, PassRefPtr<FileChooser> prpFileChooser)
+void ChromeClientEA::runOpenPanel(Frame& frame, FileChooser& prpFileChooser)
 {
 	// abaldeva: This is for the file open dialog so that you can attach a file. We don't support that yet.
 	notImplemented();
 }
 
-void ChromeClientEA::loadIconForFiles(const Vector<String>&, FileIconLoader*) 
+void ChromeClientEA::loadIconForFiles(const Vector<String>&, FileIconLoader&) 
 {
 }
 void ChromeClientEA::setCursor(const Cursor& cursor)
@@ -583,7 +583,7 @@ void ChromeClientEA::scheduleAnimation(void)
 
 #endif
 #if USE(ACCELERATED_COMPOSITING)
-void ChromeClientEA::attachRootGraphicsLayer(Frame* frame, GraphicsLayer* graphicsLayer)
+void ChromeClientEA::attachRootGraphicsLayer(Frame& frame, GraphicsLayer* graphicsLayer)
 {
 	if (!m_textureMapperLayerClient)
 		m_textureMapperLayerClient = std::make_unique<TextureMapperLayerClientEA>(m_webPage->mainFrame());
@@ -665,12 +665,12 @@ bool ChromeClientEA::hasOpenedPopup() const
     return false;
 }
 
-RefPtr<PopupMenu> ChromeClientEA::createPopupMenu(PopupMenuClient* client) const
+RefPtr<PopupMenu> ChromeClientEA::createPopupMenu(PopupMenuClient& client) const
 {
 	return adoptRef(new PopupMenuEA(client, this));
 }
 
-RefPtr<SearchPopupMenu> ChromeClientEA::createSearchPopupMenu(PopupMenuClient* client) const
+RefPtr<SearchPopupMenu> ChromeClientEA::createSearchPopupMenu(PopupMenuClient& client) const
 {
     return adoptRef(new SearchPopupMenuEA(createPopupMenu(client)));
 }

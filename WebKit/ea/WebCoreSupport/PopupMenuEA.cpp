@@ -225,11 +225,11 @@ bool PopupMenuEA::layout()
             FontCascade itemFontBold(d, itemFont.letterSpacing(), itemFont.wordSpacing());
             itemFontBold.update(m_popupClient->fontSelector());
             
-			fontWidth = (int) (ceilf(itemFontBold.width(textRun)));
+			fontWidth = static_cast<int>(ceilf(itemFontBold.width(textRun)));
         }
         else
         {
-            fontWidth = (int) (ceilf(itemFont.width(textRun)));   
+            fontWidth = static_cast<int>(ceilf(itemFont.width(textRun)));   
         }
         itemWidth = std::max(itemWidth, fontWidth);
     }
@@ -889,9 +889,9 @@ int PopupMenuEA::scrollSize(ScrollbarOrientation orientation) const
     return ((orientation == VerticalScrollbar) && m_scrollBar) ? (m_scrollBar->totalSize() - m_scrollBar->visibleSize()) : 0;
 }
 
-int PopupMenuEA::scrollPosition(Scrollbar*) const
+ScrollPosition PopupMenuEA::scrollPosition() const
 {
-    return m_scrollOffset;
+    return IntPoint(m_scrollOffset, 0);
 }
 
 void PopupMenuEA::setScrollOffset(const IntPoint& offset)
@@ -910,7 +910,7 @@ IntSize PopupMenuEA::contentsSize() const
 	return m_poppedUpSurfaceRect.size();
 }
 
-IntRect PopupMenuEA::scrollableAreaBoundingBox() const
+IntRect PopupMenuEA::scrollableAreaBoundingBox(bool*) const
 {
 	return m_poppedUpSurfaceRect;
 }

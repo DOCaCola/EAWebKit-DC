@@ -35,8 +35,8 @@ class EAField : public Field {
 public:
     EAField(const char *ident) : mIdent(ident) {}
 
-    virtual JSValue valueFromInstance(ExecState*, const Instance*) const override;
-    virtual void setValueToInstance(ExecState*, const Instance*, JSValue) const override;
+    JSValue valueFromInstance(ExecState*, const Instance*) const override;
+    bool setValueToInstance(ExecState*, const Instance*, JSValue) const override;
 
     const char8_t *name(void) { return mIdent.c_str(); }
 
@@ -51,7 +51,7 @@ public:
     EAMethod(const char *ident) : mIdent(ident) {}
 
     //EAWebKitTODO: This is called in response to function.length in JavaScript land. Implement it.
-	virtual int numParameters(void) const override { 
+	int numParameters(void) const override { 
 		ASSERT(false);
 		return 0; 
 	}

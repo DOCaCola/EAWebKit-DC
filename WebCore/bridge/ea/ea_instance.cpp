@@ -35,8 +35,8 @@
 namespace JSC { namespace Bindings {
 
 
-EAInstance::EAInstance(EA::WebKit::IJSBoundObject *object, PassRefPtr<RootObject> rootObject)
-: Instance(rootObject)
+EAInstance::EAInstance(EA::WebKit::IJSBoundObject *object, RefPtr<RootObject>&& rootObject)
+: Instance(WTFMove(rootObject))
 {
     mBoundObject = object;
     mClass = NULL;
@@ -101,6 +101,9 @@ typedef eastl::fixed_vector<EA::WebKit::JavascriptValue, 8> EAArgumentList;
 
 JSValue EAInstance::invokeMethodPriv(ExecState* exec, const char8_t* methodName)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
 	// Translate all the arguments into C++ JavascriptValue implementation.
 	unsigned count = exec->argumentCount();
 	EAArgumentList cArgs(count);
@@ -129,9 +132,9 @@ JSValue EAInstance::invokeMethodPriv(ExecState* exec, const char8_t* methodName)
 	else
 	{
 		if(methodName)
-			exec->vm().throwException(exec, createError(exec, ASCIILiteral("Error invoking method on bound object.")));
+			throwException(exec, scope, createError(exec, ASCIILiteral("Error invoking method on bound object.")));
 		else
-			exec->vm().throwException(exec, createError(exec, ASCIILiteral("Error invoking bound object as a function.")));
+			throwException(exec, scope, createError(exec, ASCIILiteral("Error invoking bound object as a function.")));
 	}
 
 	return jsUndefined();
@@ -139,8 +142,11 @@ JSValue EAInstance::invokeMethodPriv(ExecState* exec, const char8_t* methodName)
 }
 JSValue EAInstance::invokeMethod(ExecState* exec, RuntimeMethod* runtimeMethod)
 {
+    VM& vm = exec->vm();
+    auto scope = DECLARE_THROW_SCOPE(vm);
+
 	if (!asObject(runtimeMethod)->inherits(EARuntimeMethod::info()))
-		return exec->vm().throwException(exec, createTypeError(exec, "Wrong method invocation on bound object."));
+		return throwException(exec, scope, createTypeError(exec, "Wrong method invocation on bound object."));
 
 
     if(EAMethod* method = static_cast<EAMethod*>(runtimeMethod->method()))

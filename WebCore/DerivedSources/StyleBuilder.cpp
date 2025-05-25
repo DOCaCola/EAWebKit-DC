@@ -3083,6 +3083,18 @@ public:
     {
         styleResolver.style()->setTop(StyleBuilderConverter::convertLengthOrAuto(styleResolver, value));
     }
+    static void applyInitialTouchAction(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTouchAction(RenderStyle::initialTouchAction());
+    }
+    static void applyInheritTouchAction(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTouchAction(forwardInheritedValue(styleResolver.parentStyle()->touchAction()));
+    }
+    static void applyValueTouchAction(StyleResolver& styleResolver, CSSValue& value)
+    {
+        styleResolver.style()->setTouchAction(downcast<CSSPrimitiveValue>(value));
+    }
     static void applyInitialTransform(StyleResolver& styleResolver)
     {
         styleResolver.style()->setTransform(RenderStyle::initialTransform());
@@ -4942,6 +4954,18 @@ public:
     static void applyValueWebkitRubyPosition(StyleResolver& styleResolver, CSSValue& value)
     {
         styleResolver.style()->setRubyPosition(downcast<CSSPrimitiveValue>(value));
+    }
+    static void applyInitialWebkitTapHighlightColor(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTapHighlightColor(RenderStyle::initialTapHighlightColor());
+    }
+    static void applyInheritWebkitTapHighlightColor(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTapHighlightColor(forwardInheritedValue(styleResolver.parentStyle()->tapHighlightColor()));
+    }
+    static void applyValueWebkitTapHighlightColor(StyleResolver& styleResolver, CSSValue& value)
+    {
+        styleResolver.style()->setTapHighlightColor(StyleBuilderConverter::convertTapHighlightColor(styleResolver, value));
     }
     static void applyInitialWebkitTextCombine(StyleResolver& styleResolver)
     {
@@ -7063,6 +7087,14 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueTop(styleResolver, value);
         break;
+    case CSSPropertyTouchAction:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialTouchAction(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritTouchAction(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueTouchAction(styleResolver, value);
+        break;
     case CSSPropertyTransform:
         if (isInitial)
             StyleBuilderFunctions::applyInitialTransform(styleResolver);
@@ -7966,6 +7998,14 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
             StyleBuilderCustom::applyInheritWebkitSvgShadow(styleResolver);
         else
             StyleBuilderCustom::applyValueWebkitSvgShadow(styleResolver, value);
+        break;
+    case CSSPropertyWebkitTapHighlightColor:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialWebkitTapHighlightColor(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritWebkitTapHighlightColor(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueWebkitTapHighlightColor(styleResolver, value);
         break;
     case CSSPropertyWebkitTextCombine:
         if (isInitial)

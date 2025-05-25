@@ -40,18 +40,20 @@ JSValue EAField::valueFromInstance(ExecState* exec, const Instance* inst) const
     return EAtoJS(exec, result);
 }
 
-void EAField::setValueToInstance(ExecState* exec, const Instance* inst, JSValue jsValue) const
+bool EAField::setValueToInstance(ExecState* exec, const Instance* inst, JSValue jsValue) const
 {
 	EA::WebKit::IJSBoundObject *obj = static_cast<const EAInstance *>(inst)->getBoundObject();
 
     JSValue undefined = jsUndefined();
     EA::WebKit::JavascriptValue eaValue(&undefined, exec);
     JStoEA(exec, jsValue, &eaValue);
-	
+
+	bool result = false;
 	{
 		JSLock::DropAllLocks dropAllLocks(exec);
-		obj->setProperty(mIdent.c_str(), eaValue);
+		result = obj->setProperty(mIdent.c_str(), eaValue);
 	}
+	return result;
 }
 
 }}

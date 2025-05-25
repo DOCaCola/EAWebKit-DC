@@ -226,7 +226,7 @@ String Notification::permission(Document& document)
 {
 	//+EAWebKitChange 
 	//12/09/2015 - Handle the null notification controller, which is not supported in EA port.
-	if (NotificationController::from(downcast<Document>(*context).page()))
+	if (NotificationController::from(document.page()))
     	return permissionString(NotificationController::from(document.page())->client().checkPermission(&document));
 	else
 		return permissionString(NotificationClient::PermissionNotAllowed); // Not Allowing it by default for EAwebkit.

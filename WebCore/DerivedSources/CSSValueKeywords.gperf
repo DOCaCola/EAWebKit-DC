@@ -774,6 +774,7 @@ from-intrinsic, CSSValueFromIntrinsic
 weight, CSSValueWeight
 style, CSSValueStyle
 scroll-position, CSSValueScrollPosition
+manipulation, CSSValueManipulation
 allow-end, CSSValueAllowEnd
 first, CSSValueFirst
 force-end, CSSValueForceEnd
@@ -1687,6 +1688,7 @@ static const char* const valueList[] = {
     "weight",
     "style",
     "scroll-position",
+    "manipulation",
     "allow-end",
     "first",
     "force-end",

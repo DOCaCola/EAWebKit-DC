@@ -1220,10 +1220,9 @@ void WebPage::dispatchMessageFromRemoteFrontend(const String& message)
     ic.dispatchMessageFromFrontend(message);
 }
 
-bool WebPage::sendMessageToFrontend(const String& message)
+void WebPage::sendMessageToFrontend(const String& message)
 {
     ::WebKit::WebInspectorServer::shared().sendMessageOverConnection(mRemoteInspectorId, message);
-    return true;
 }
 
 }}

@@ -153,7 +153,6 @@ set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX
   "${LOCAL_DIR}/JavaScriptCore/debugger"
   "${LOCAL_DIR}/JavaScriptCore/dfg"
   "${LOCAL_DIR}/JavaScriptCore/disassembler"
-  "${LOCAL_DIR}/JavaScriptCore/domjit"
   "${LOCAL_DIR}/JavaScriptCore/ftl"
   "${LOCAL_DIR}/JavaScriptCore/heap"
   "${LOCAL_DIR}/JavaScriptCore/inspector"
@@ -170,6 +169,7 @@ set(JAVASCRIPTCORE_INCLUDE_PRIVATE_CXX
   "${LOCAL_DIR}/JavaScriptCore/wasm/js"
   "${LOCAL_DIR}/JavaScriptCore/yarr"
   "${DerivedSourcesDir}"
+  "${DerivedSourcesDir}/inspector"
   )
 
 target_include_directories(JavaScriptCore PRIVATE
@@ -186,6 +186,7 @@ set(JAVASCRIPTCORE_INCLUDE_PUBLIC_CXX
   "${LOCAL_DIR}/JavaScriptCore/bytecompiler"
   "${LOCAL_DIR}/JavaScriptCore/debugger"
   "${LOCAL_DIR}/JavaScriptCore/dfg"
+  "${LOCAL_DIR}/JavaScriptCore/domjit"
   "${LOCAL_DIR}/JavaScriptCore/heap"
   "${LOCAL_DIR}/JavaScriptCore/inspector"
   "${LOCAL_DIR}/JavaScriptCore/interpreter"
@@ -198,6 +199,7 @@ set(JAVASCRIPTCORE_INCLUDE_PUBLIC_CXX
   "${LOCAL_DIR}/JavaScriptCore/yarr"
   "${LOCAL_DIR}/JavaScriptCore/ForwardingHeaders"
   "${DerivedSourcesDir}"
+  "${DerivedSourcesDir}/inspector"
   )
 
 target_include_directories(JavaScriptCore PUBLIC

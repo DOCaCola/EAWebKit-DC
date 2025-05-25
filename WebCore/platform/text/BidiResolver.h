@@ -608,8 +608,9 @@ void BidiResolverBase<Iterator, Run, DerivedClass>::createBidiRunsForLine(const 
             else if (dirCurrent == U_DIR_NON_SPACING_MARK)
                 dirCurrent = m_status.last;
         }
-
-#if PLATFORM(WIN)
+        //+EAWKDC Change
+#if PLATFORM(WIN) || defined(EA_PLATFORM_MICROSOFT)
+        //-EAWKDC Change
         // Our Windows build hasn't updated its headers from ICU 6.1, which doesn't have these symbols.
         const UCharDirection U_FIRST_STRONG_ISOLATE = static_cast<UCharDirection>(19);
         const UCharDirection U_LEFT_TO_RIGHT_ISOLATE = static_cast<UCharDirection>(20);

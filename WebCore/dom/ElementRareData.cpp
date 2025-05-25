@@ -51,7 +51,7 @@ struct SameSizeAsElementRareData : NodeRareData {
     std::unique_ptr<DatasetDOMStringMap> pointer2;
     std::unique_ptr<DOMTokenList> pointer3;
     std::unique_ptr<CustomElementReactionQueue> pointer4;
-    std::unique_ptr<NamedNodeMap> pointer4;
+    std::unique_ptr<NamedNodeMap> pointer5;
     //-EAWebKitChange
 };
 

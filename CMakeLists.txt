@@ -407,7 +407,6 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/ColorData.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSPropertyNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSValueKeywords.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/EventFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/ExceptionCodeDescription.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTTPHeaderNames.cpp
@@ -433,6 +432,52 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/accessibility/AccessibilityAllInOne.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/css/CSSAllInOne.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/CanvasProxy.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/ANGLEInstancedArrays.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/EXTBlendMinMax.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/EXTFragDepth.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/EXTShaderTextureLOD.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/EXTTextureFilterAnisotropic.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/EXTsRGB.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESElementIndexUint.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESStandardDerivatives.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESTextureFloat.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESTextureFloatLinear.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESTextureHalfFloat.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESTextureHalfFloatLinear.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/OESVertexArrayObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGL2RenderingContext.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLAny.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLBuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLCompressedTextureATC.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLCompressedTexturePVRTC.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLCompressedTextureS3TC.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLContextEvent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLContextGroup.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLContextObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLDebugRendererInfo.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLDebugShaders.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLDepthTexture.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLDrawBuffers.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLExtension.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLFramebuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLLoseContext.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLProgram.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLQuery.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLRenderbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLRenderingContext.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLRenderingContextBase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLSampler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLShader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLShaderPrecisionFormat.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLSharedObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLSync.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLTexture.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLTransformFeedback.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLUniformLocation.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLVertexArrayObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLVertexArrayObjectBase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/canvas/WebGLVertexArrayObjectOES.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/HTMLElementsAllInOne.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/HTMLSelectElementWin.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/html/shadow/ImageControlsRootElement.cpp
@@ -524,12 +569,20 @@ target_include_directories(EAWebKit PRIVATE
 	"WebKit/ea/WebCoreSupport/InspectorServer"
 	"WebKit/storage"
 	"WebCore"
+	"WebCore/animation"
 	"WebCore/crypto"
 	"WebCore/crypto/keys"
+    "WebCore/Modules/airplay"
+    "WebCore/Modules/applepay"
 	"WebCore/Modules/encryptedmedia"
+	"WebCore/Modules/encryptedmedia/legacy"
+	"WebCore/Modules/fetch"
 	"WebCore/Modules/gamepad"
-	"WebCore/Modules/geolocation"
-	"WebCore/Modules/indexeddb"
+    "WebCore/Modules/geolocation"
+    "WebCore/Modules/indexeddb"
+    "WebCore/Modules/indexeddb/client"
+    "WebCore/Modules/indexeddb/server"
+    "WebCore/Modules/indexeddb/shared"
 	"WebCore/Modules/mediacontrols"
 	"WebCore/Modules/mediasession"
 	"WebCore/Modules/mediasource"
@@ -537,13 +590,15 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/Modules/navigatorcontentutils"
 	"WebCore/Modules/notifications"
 	"WebCore/Modules/plugins"
-	"WebCore/Modules/proximit}y"
+	"WebCore/Modules/proximity"
 	"WebCore/Modules/quota"
 	"WebCore/Modules/speech"
 	"WebCore/Modules/streams"
 	"WebCore/Modules/webdatabase"
+	"WebCore/Modules/webdriver"
 	"WebCore/Modules/websockets"
 	"WebCore/accessibility"
+	"WebCore/bindings"
 	"WebCore/bindings/generic"
 	"WebCore/bindings/js"
 	"WebCore/bridge"
@@ -552,8 +607,10 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/css"
 	"WebCore/css/parser"
 	"WebCore/cssjit"
+	"WebCore/displaylist"
 	"WebCore/dom"
 	"WebCore/dom/default"
+	"WebCore/domjit"
 	"WebCore/editing"
 	"WebCore/fileapi"
 	"WebCore/history"
@@ -575,12 +632,14 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/page/animation"
 	"WebCore/page/scrolling"
 	"WebCore/page/scrolling/coordinatedgraphics"
+	"WebCore/pal"
 	"WebCore/platform"
 	"WebCore/platform/animation"
 	"WebCore/platform/audio"
 	"WebCore/platform/graphics"
 	"WebCore/platform/graphics/cpu/arm/filters"
 	"WebCore/platform/graphics/cairo"
+	"WebCore/platform/graphics/displaylists"
 	"WebCore/platform/graphics/filters"
 	"WebCore/platform/graphics/gpu"
 	"WebCore/platform/graphics/opentype"
@@ -595,8 +654,11 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/platform/image-decoders/png"
 	"WebCore/platform/image-decoders/webp"
 	"WebCore/platform/image-decoders/dds"
+    "WebCore/platform/mediastream"
+    "WebCore/platform/mediastream/libwebrtc"
 	"WebCore/platform/mock"
 	"WebCore/platform/network"
+	"WebCore/platform/network/curl"
 	"WebCore/platform/sql"
 	"WebCore/platform/text"
 	"WebCore/plugins"
@@ -612,6 +674,7 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/svg"
 	"WebCore/svg/animation"
 	"WebCore/svg/graphics"
+	"WebCore/svg/graphics/displaylists"
 	"WebCore/svg/graphics/filters"
 	"WebCore/svg/properties"
 	"WebCore/workers"

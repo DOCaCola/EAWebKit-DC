@@ -85,7 +85,7 @@ Method* EAClass::methodNamed(PropertyName propertyName, Instance* instance) cons
     {
         auto method = std::make_unique<EAMethod>(pName);
         EAMethod* ret = method.get();
-        mMethods.set(name.impl(), WTF::move(method));
+        mMethods.set(name.impl(), WTFMove(method));
         return ret;
     }
 
@@ -115,7 +115,7 @@ Field* EAClass::fieldNamed(PropertyName propertyName, Instance* instance) const
     {
         auto field = std::make_unique<EAField>(pName);
         EAField* ret = field.get();
-        mFields.set(name.impl(), WTF::move(field));
+        mFields.set(name.impl(), WTFMove(field));
         return ret;
     }
 

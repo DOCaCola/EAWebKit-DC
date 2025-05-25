@@ -194,11 +194,7 @@
 #include "XPathNSResolver.h"
 #include "XPathResult.h"
 #include "htmlediting.h"
-//+EAWebKitChange
-//09/21/15
-#include <JavaScriptCore/Profile.h>
-#include <Profile.h>
-//-EAWebKitChange
+#include <ctime>
 #include <inspector/ScriptCallStack.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/NeverDestroyed.h>

@@ -76,7 +76,7 @@ public:
     virtual void focusedElementChanged(Element*) override;
     virtual void focusedFrameChanged(Frame*) override;
 
-    virtual Page* createWindow(Frame*, const FrameLoadRequest&, const WindowFeatures&, const NavigationAction&) override;
+    Page* createWindow(Frame&, const FrameLoadRequest&, const WindowFeatures&, const NavigationAction&) override;
     virtual void show() override;
 
     virtual bool canRunModal() override;
@@ -99,13 +99,13 @@ public:
     virtual void addMessageToConsole(MessageSource, MessageLevel, const String& message, unsigned lineNumber, unsigned columnNumber, const String& sourceID) override;
 
     virtual bool canRunBeforeUnloadConfirmPanel() override;
-    virtual bool runBeforeUnloadConfirmPanel(const String& message, Frame*) override;
+    virtual bool runBeforeUnloadConfirmPanel(const String& message, Frame&) override;
 
     virtual void closeWindowSoon() override;
 
-    virtual void runJavaScriptAlert(Frame*, const String&) override;
-    virtual bool runJavaScriptConfirm(Frame*, const String&) override;
-    virtual bool runJavaScriptPrompt(Frame*, const String& message, const String& defaultValue, String& result) override;
+    virtual void runJavaScriptAlert(Frame&, const String&) override;
+    virtual bool runJavaScriptConfirm(Frame&, const String&) override;
+    virtual bool runJavaScriptPrompt(Frame&, const String& message, const String& defaultValue, String& result) override;
 
     virtual void setStatusbarText(const String&) override;
 
@@ -118,24 +118,24 @@ public:
 	virtual IntPoint screenToRootView(const IntPoint&) const override;
 	virtual IntRect rootViewToScreen(const IntRect&) const override;
 	virtual PlatformPageClient platformPageClient() const override;
-	virtual void contentsSizeChanged(Frame*, const IntSize&) const override;
+	virtual void contentsSizeChanged(Frame&, const IntSize&) const override;
 
     virtual void scrollbarsModeDidChange() const override{ }
     virtual void mouseDidMoveOverElement(const HitTestResult&, unsigned modifierFlags) override;
 
     virtual void setToolTip(const String&, TextDirection) override;
 
-	virtual void print(Frame*) override;
+	virtual void print(Frame&) override;
 #if ENABLE(SQL_DATABASE)
-	virtual void exceededDatabaseQuota(Frame*, const String&, DatabaseDetails) override;
+	virtual void exceededDatabaseQuota(Frame&, const String&, DatabaseDetails) override;
 #endif
     virtual void reachedMaxAppCacheSize(int64_t spaceNeeded) override;
-    virtual void reachedApplicationCacheOriginQuota(SecurityOrigin*, int64_t totalSpaceNeeded) override;
+    virtual void reachedApplicationCacheOriginQuota(SecurityOrigin&, int64_t totalSpaceNeeded) override;
 
 #if USE(ACCELERATED_COMPOSITING)
 	// This is a hook for WebCore to tell us what we need to do with the GraphicsLayers.
-	virtual void attachRootGraphicsLayer(Frame*, GraphicsLayer*) override;
-	virtual void attachViewOverlayGraphicsLayer(Frame*, GraphicsLayer*) override {}
+	virtual void attachRootGraphicsLayer(Frame&, GraphicsLayer*) override;
+	virtual void attachViewOverlayGraphicsLayer(Frame&, GraphicsLayer*) override {}
 	virtual void setNeedsOneShotDrawingSynchronization() override;
 	virtual void scheduleCompositingLayerFlush() override;
 	virtual CompositingTriggerFlags allowedCompositingTriggers() const override;
@@ -146,14 +146,10 @@ public:
     virtual IntRect visibleRectForTiledBackingStore() const override;
 #endif
 
-#if ENABLE(TOUCH_EVENTS)
-    virtual void needTouchEvents(bool) override { }
-#endif
 
 
-
-    virtual void runOpenPanel(Frame*, PassRefPtr<FileChooser>) override;
-    virtual void loadIconForFiles(const Vector<String>&, FileIconLoader*) override;
+    virtual void runOpenPanel(Frame&, FileChooser&) override;
+    virtual void loadIconForFiles(const Vector<String>&, FileIconLoader&) override;
 
     virtual void setCursor(const Cursor&) override;
     virtual void setCursorHiddenUntilMouseMoves(bool)  override{ }
@@ -167,8 +163,8 @@ public:
     virtual bool selectItemWritingDirectionIsNatural() override;
     virtual bool selectItemAlignmentFollowsMenuWritingDirection() override;
 	virtual bool hasOpenedPopup() const  override;
-    virtual RefPtr<PopupMenu> createPopupMenu(PopupMenuClient*)  const  override;
-    virtual RefPtr<SearchPopupMenu> createSearchPopupMenu(PopupMenuClient*)  const  override;
+    virtual RefPtr<PopupMenu> createPopupMenu(PopupMenuClient&)  const  override;
+    virtual RefPtr<SearchPopupMenu> createSearchPopupMenu(PopupMenuClient&)  const  override;
 
 	virtual void dispatchViewportPropertiesDidChange(const ViewportArguments&) const override;
 

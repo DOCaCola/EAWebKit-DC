@@ -58,6 +58,7 @@ public:
 
     // Custom functions
     JSC::JSValue getCSSCanvasContext(JSC::ExecState&);
+    JSC::JSValue createTouchList(JSC::ExecState&);
     Document& wrapped() const
     {
         return static_cast<Document&>(Base::wrapped());

@@ -41,8 +41,8 @@ public:
 
     virtual ~EAClass(void);
 
-	virtual Method* methodNamed(PropertyName, Instance*) const override;
-	virtual Field* fieldNamed(PropertyName, Instance*) const override;
+	Method* methodNamed(PropertyName, Instance*) const override;
+	Field* fieldNamed(PropertyName, Instance*) const override;
 
 private:
     mutable HashMap<RefPtr<StringImpl>, std::unique_ptr<Method>> mMethods;

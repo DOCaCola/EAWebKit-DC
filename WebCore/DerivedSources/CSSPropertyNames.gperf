@@ -290,6 +290,7 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "text-underline-style",
     "text-underline-width",
     "top",
+    "touch-action",
     "transform",
     "transform-origin",
     "transform-origin-x",
@@ -430,6 +431,7 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "-webkit-rtl-ordering",
     "-webkit-ruby-position",
     "-webkit-svg-shadow",
+    "-webkit-tap-highlight-color",
     "-webkit-text-combine",
     "-webkit-text-decoration",
     "-webkit-text-decoration-color",
@@ -733,6 +735,7 @@ text-underline-mode, CSSPropertyTextUnderlineMode
 text-underline-style, CSSPropertyTextUnderlineStyle
 text-underline-width, CSSPropertyTextUnderlineWidth
 top, CSSPropertyTop
+touch-action, CSSPropertyTouchAction
 transform, CSSPropertyTransform
 transform-origin, CSSPropertyTransformOrigin
 transform-origin-x, CSSPropertyTransformOriginX
@@ -873,6 +876,7 @@ z-index, CSSPropertyZIndex
 -webkit-rtl-ordering, CSSPropertyWebkitRtlOrdering
 -webkit-ruby-position, CSSPropertyWebkitRubyPosition
 -webkit-svg-shadow, CSSPropertyWebkitSvgShadow
+-webkit-tap-highlight-color, CSSPropertyWebkitTapHighlightColor
 -webkit-text-combine, CSSPropertyWebkitTextCombine
 -webkit-text-decoration, CSSPropertyWebkitTextDecoration
 -webkit-text-decoration-color, CSSPropertyWebkitTextDecorationColor
@@ -1297,6 +1301,7 @@ static const bool isInheritedPropertyTable[numCSSProperties + 2] = {
     false, // CSSPropertyTextUnderlineStyle
     false, // CSSPropertyTextUnderlineWidth
     false, // CSSPropertyTop
+    false, // CSSPropertyTouchAction
     false, // CSSPropertyTransform
     false, // CSSPropertyTransformOrigin
     false, // CSSPropertyTransformOriginX
@@ -1437,6 +1442,7 @@ static const bool isInheritedPropertyTable[numCSSProperties + 2] = {
     true , // CSSPropertyWebkitRtlOrdering
     true , // CSSPropertyWebkitRubyPosition
     false, // CSSPropertyWebkitSvgShadow
+    true , // CSSPropertyWebkitTapHighlightColor
     true , // CSSPropertyWebkitTextCombine
     false, // CSSPropertyWebkitTextDecoration
     false, // CSSPropertyWebkitTextDecorationColor
