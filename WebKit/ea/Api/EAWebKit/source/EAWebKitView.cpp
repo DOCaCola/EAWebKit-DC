@@ -53,6 +53,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <internal/include/EAWebKitString.h>
 #include "DOMTimeStamp.h"
 #include "PageClientEA.h"
+#include "SharedBuffer.h"
+#include "WebInspector.h"
 #if USE(COORDINATED_GRAPHICS)
 #include "TileEA.h"
 #endif
@@ -73,8 +75,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <internal/include/EAWebKitFPUPrecision.h> 
 #include <internal/include/InputBinding/EAWebKitUtils.h>
 #include <internal/include/EAWebKitViewNavigationDelegate.h>
-
-#include "WebInspector.h"
 
 
 // Note by Arpit Baldeva:
@@ -252,7 +252,7 @@ void View::Paint()
 						WebCore::AnimationUpdateBlock updateBlock(&coreView->frame().animation());
                         d->mNeedsAnimation = false;
                         NOTIFY_PROCESS_STATUS(kVProcessTypeAnimation, EA::WebKit::kVProcessStatusStarted, this);
-                        coreView->serviceScriptedAnimations(WebCore::convertSecondsToDOMTimeStamp(WTF::currentTime()));
+                        coreView->serviceScriptedAnimations();
                         NOTIFY_PROCESS_STATUS(kVProcessTypeAnimation, EA::WebKit::kVProcessStatusEnded, this);
                     }
 #endif

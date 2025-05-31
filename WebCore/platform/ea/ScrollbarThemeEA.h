@@ -36,11 +36,9 @@ public:
     virtual ~ScrollbarThemeEA();
 
     virtual bool paint(Scrollbar&, GraphicsContext&, const IntRect& damageRect) override;
-    virtual void paintScrollCorner(ScrollView*, GraphicsContext*, const IntRect& cornerRect) override;
+    virtual void paintScrollCorner(ScrollView*, GraphicsContext&, const IntRect& cornerRect) override;
 
     virtual ScrollbarPart hitTest(Scrollbar&, const IntPoint&) override;
-
-    virtual bool shouldCenterOnThumb(Scrollbar&, const PlatformMouseEvent&) override;
 
     virtual void invalidatePart(Scrollbar&, ScrollbarPart) override;
 

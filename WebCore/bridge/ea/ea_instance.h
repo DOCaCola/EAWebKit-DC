@@ -44,12 +44,12 @@ namespace JSC { namespace Bindings {
 class EAInstance : public Instance {
 	WTF_MAKE_NONCOPYABLE(EAInstance);
 public:
-    static Ref<EAInstance> create(EA::WebKit::IJSBoundObject* object, RefPtr<RootObject>& rootObject)
+    static Ref<EAInstance> create(EA::WebKit::IJSBoundObject* object, RefPtr<RootObject>&& rootObject)
     {
         return adoptRef(*new EAInstance(object, WTFMove(rootObject)));
     }
 
-    virtual ~EAInstance(void);
+	~EAInstance(void) override;
 
     Class *getClass() const override;
 

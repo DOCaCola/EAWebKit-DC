@@ -41,13 +41,13 @@ const int DragController::DragIconRightInset = 7;
 const int DragController::DragIconBottomInset = 3;
 
 const float DragController::DragImageAlpha = 0.75f;
-    
-DragOperation DragController::dragOperation(DragData& dragData)
+
+DragOperation DragController::dragOperation(const DragData& dragData)
 {
     return DragOperationNone;
 }
 
-bool DragController::isCopyKeyDown(DragData&)
+bool DragController::isCopyKeyDown(const DragData&)
 {
     return false;
 }

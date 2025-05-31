@@ -33,6 +33,7 @@
 
 #include "Chrome.h"
 #include "ChromeClientEA.h"
+#include "WebResourceLoadScheduler.h"
 #include <IntSize.h>
 #include <NotImplemented.h>
 #include <Page.h>
@@ -40,12 +41,15 @@
 #include <PlatformCookieJar.h>
 #include <WebPage.h>
 #include <wtf/MathExtras.h>
+#include <AudioDestination.h>
+#include <BlobRegistryImpl.h>
+#include <wtf/NeverDestroyed.h>
 
 using namespace WebCore;
 
 void PlatformStrategiesEA::initialize()
 {
-    DEPRECATED_DEFINE_STATIC_LOCAL(PlatformStrategiesEA, platformStrategies, ());
+    static NeverDestroyed<PlatformStrategiesEA> platformStrategies;
     (void)platformStrategies;
 }
 
@@ -67,17 +71,19 @@ CookiesStrategy* PlatformStrategiesEA::createCookiesStrategy()
 
 LoaderStrategy* PlatformStrategiesEA::createLoaderStrategy()
 {
-    return this;
+    return new WebResourceLoadScheduler;
 }
 
 PasteboardStrategy* PlatformStrategiesEA::createPasteboardStrategy()
 {
-    return 0;
+    return nullptr;
 }
-PluginStrategy* PlatformStrategiesEA::createPluginStrategy()
+
+WebCore::BlobRegistry* PlatformStrategiesEA::createBlobRegistry()
 {
-    return this;
+    return new BlobRegistryImpl;
 }
+
 
 //SharedWorkerStrategy* PlatformStrategiesEA::createSharedWorkerStrategy()
 //{
@@ -114,6 +120,13 @@ String PlatformStrategiesEA::cookieRequestHeaderFieldValue(const NetworkStorageS
     return WebCore::cookieRequestHeaderFieldValue(session, firstParty, url);
 }
 
+String PlatformStrategiesEA::cookieRequestHeaderFieldValue(WebCore::SessionID, const WebCore::URL& firstParty,
+	const WebCore::URL& url)
+{
+    notImplemented();
+    return String();
+}
+
 bool PlatformStrategiesEA::getRawCookies(const NetworkStorageSession& session, const URL& firstParty, const URL& url, Vector<Cookie>& rawCookies)
 {
     return WebCore::getRawCookies(session, firstParty, url, rawCookies);
@@ -124,47 +137,9 @@ void PlatformStrategiesEA::deleteCookie(const NetworkStorageSession& session, co
     WebCore::deleteCookie(session, url, cookieName);
 }
 
-void PlatformStrategiesEA::refreshPlugins()
+void PlatformStrategiesEA::addCookie(const WebCore::NetworkStorageSession&, const WebCore::URL&, const WebCore::Cookie&)
 {
     notImplemented();
-}
-
-
-void PlatformStrategiesEA::getPluginInfo(const WebCore::Page* page, Vector<WebCore::PluginInfo>& outPlugins)
-{
-    notImplemented();
-    /*PluginDatabase* db = PluginDatabase::installedPlugins();
-    const Vector<PluginPackage*> &plugins = db->plugins();
-
-    outPlugins.resize(plugins.size());
-
-    for (unsigned int i = 0; i < plugins.size(); ++i) {
-        PluginInfo info;
-        PluginPackage* package = plugins[i];
-
-        info.name = package->name();
-        info.file = package->fileName();
-        info.desc = package->description();
-
-        const MIMEToDescriptionsMap& mimeToDescriptions = package->mimeToDescriptions();
-        MIMEToDescriptionsMap::const_iterator end = mimeToDescriptions.end();
-        for (MIMEToDescriptionsMap::const_iterator it = mimeToDescriptions.begin(); it != end; ++it) {
-            MimeClassInfo mime;
-
-            mime.type = it->key;
-            mime.desc = it->value;
-            mime.extensions = package->mimeToExtensions().get(mime.type);
-
-            info.mimes.append(mime);
-        }
-
-        outPlugins.append(info);
-    }*/
-}
-
-void PlatformStrategiesEA::getWebVisiblePluginInfo(const Page* page, Vector<PluginInfo>& plugins)
-{
-	getPluginInfo(page, plugins);
 }
 
 namespace WebCore

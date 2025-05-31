@@ -57,7 +57,6 @@
 #include "config.h"
 #include "ResourceHandleManagerEA.h"
 
-#include "DataURL.h"
 #include <wtf/text/CString.h>
 #include "MIMETypeRegistry.h"
 #include "NotImplemented.h"
@@ -65,6 +64,7 @@
 #include "ResourceHandle.h"
 #include "ResourceHandleInternal.h"
 #include "NetworkingContext.h"
+#include "TextEncoding.h"
 #include "SharedBuffer.h"
 #include "HTTPParsers.h"
 #include "wtf/text/Base64.h"
@@ -245,6 +245,67 @@ void ResourceHandleManager::changeResourceHandleState(ResourceHandle* pRH, bool 
 	}
 }
 
+static void handleDataURL(ResourceHandle* handle)
+{
+    ASSERT(handle->firstRequest().url().protocolIsData());
+    String url = handle->firstRequest().url().string();
+
+    ASSERT(handle);
+    ASSERT(handle->client());
+
+    int index = url.find(',');
+    if (index == -1) {
+        handle->client()->cannotShowURL(handle);
+        return;
+    }
+
+    String mediaType = url.substring(5, index - 5);
+    String data = url.substring(index + 1);
+
+    bool base64 = mediaType.endsWith(";base64", false);
+    if (base64)
+        mediaType = mediaType.left(mediaType.length() - 7);
+
+    if (mediaType.isEmpty())
+        mediaType = "text/plain";
+
+    String mimeType = extractMIMETypeFromMediaType(mediaType);
+    String charset = extractCharsetFromMediaType(mediaType);
+
+    if (charset.isEmpty())
+        charset = "US-ASCII";
+
+    ResourceResponse response;
+    response.setMimeType(mimeType);
+    response.setTextEncodingName(charset);
+    response.setURL(handle->firstRequest().url());
+
+    if (base64) {
+        data = decodeURLEscapeSequences(data);
+        handle->client()->didReceiveResponse(handle, WTFMove(response));
+
+        // didReceiveResponse might cause the client to be deleted.
+        if (handle->client()) {
+            Vector<char> out;
+            if (base64Decode(data, out, Base64IgnoreSpacesAndNewLines) && out.size() > 0)
+                handle->client()->didReceiveData(handle, out.data(), out.size(), 0);
+        }
+    } else {
+        TextEncoding encoding(charset);
+        data = decodeURLEscapeSequences(data, encoding);
+        handle->client()->didReceiveResponse(handle, WTFMove(response));
+
+        // didReceiveResponse might cause the client to be deleted.
+        if (handle->client()) {
+            CString encodedData = encoding.encode(data, URLEncodedEntitiesForUnencodables);
+            if (encodedData.length())
+                handle->client()->didReceiveData(handle, encodedData.data(), encodedData.length(), 0);
+        }
+    }
+
+    if (handle->client())
+        handle->client()->didFinishLoading(handle, 0);
+}
 
 // This function needs to synchronously (i.e. blocking in place) do a resource load.
 // No deref is required on ResourceHandle because we don't ref it. We only for add a ref to ResourceHandle
@@ -332,7 +393,8 @@ void ResourceHandleManager::notifyJobFailed(const JobInfo& jobInfo)
 	ResourceHandleClient* pRHC = pRHI->client();
 	if(pRHC)
 	{
-		const WTF::String sURI(GetFixedString(jobInfo.mTInfo.mURI)->data(), GetFixedString(jobInfo.mTInfo.mURI)->length());
+		const WTF::String sURISTring(GetFixedString(jobInfo.mTInfo.mURI)->data(), GetFixedString(jobInfo.mTInfo.mURI)->length());
+		const URL sURI(ParsedURLString, sURISTring);
 		const WTF::String sError("Transport job failed.");
 
 		ResourceError error(sURI, EA::WebKit::kLETTransport, sURI, sError);
@@ -430,7 +492,7 @@ bool ResourceHandleManager::initializeJob(JobInfo& jobInfo, ResourceHandle* pRH,
 
 	ResourceHandleInternal* pRHI = pRH->getInternal();
 	String url		= kurl.string();
-	String sScheme	= kurl.protocol();
+	String sScheme	= kurl.protocol().toString();
 	auto schemeChars = sScheme.charactersWithNullTermination();
 	const char16_t* pScheme = schemeChars.data();
 
@@ -493,7 +555,7 @@ bool ResourceHandleManager::initializeJob(JobInfo& jobInfo, ResourceHandle* pRH,
     GetFixedString(jobInfo.mTInfo.mURI)->assign(StringView(url).upconvertedCharacters(), url.length());
 	GetFixedString(jobInfo.mTInfo.mEffectiveURI)->assign(GetFixedString(jobInfo.mTInfo.mURI)->c_str());
 	EA::IO::EAIOStrlcpy16(jobInfo.mTInfo.mScheme, pScheme, sizeof(jobInfo.mTInfo.mScheme) / sizeof(jobInfo.mTInfo.mScheme[0]));
-	jobInfo.mTInfo.mPort = kurl.port();
+	jobInfo.mTInfo.mPort = kurl.port().value();
 
 	if(EA::Internal::Stricmp(jobInfo.mTInfo.mScheme, EA_CHAR16("file")) == 0)
 		Local::GetSystemPathFromFileURL(kurl, *GetFixedString(jobInfo.mTInfo.mPath));
@@ -518,17 +580,17 @@ bool ResourceHandleManager::initializeJob(JobInfo& jobInfo, ResourceHandle* pRH,
 	const String& method = pRH->firstRequest().httpMethod();
 
 	// Wondering what happens for a custom transport handler. 
-	if(equalIgnoringCase(method,"GET"))
+	if(equalLettersIgnoringASCIICase(method,"GET"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypeGET;
-	else if(equalIgnoringCase(method,"HEAD"))
+	else if(equalLettersIgnoringASCIICase(method,"HEAD"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypeHEAD;
-	else if(equalIgnoringCase(method,"POST"))
+	else if(equalLettersIgnoringASCIICase(method,"POST"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypePOST;
-	else if(equalIgnoringCase(method,"PUT"))
+	else if(equalLettersIgnoringASCIICase(method,"PUT"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypePUT;
-	else if(equalIgnoringCase(method,"DELETE"))
+	else if(equalLettersIgnoringASCIICase(method,"DELETE"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypeDELETE;
-	else if(equalIgnoringCase(method,"OPTIONS"))
+	else if(equalLettersIgnoringASCIICase(method,"OPTIONS"))
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypeOPTIONS;
 	else // seems like this can be called for a custom transport handler 
 		jobInfo.mTInfo.mHttpRequestType = EA::WebKit::kHttpRequestTypeUnknown;//EAW_ASSERT_MSG(false, "Unknown http method\n");*/
@@ -1020,7 +1082,7 @@ bool ResourceHandleManager::HeadersReceived(EA::WebKit::TransportInfo* pTInfo)
 				redirectedRequest.clearHTTPReferrer();
 			
 			if (pRHI->client())
-				pRHI->client()->willSendRequest(pRH, redirectedRequest, pRHI->m_response);
+				pRHI->client()->willSendRequest(pRH, WTFMove(redirectedRequest), WTFMove(pRHI->m_response));
 
 			pRHI->m_firstRequest.setURL(newURL);
 
@@ -1043,7 +1105,7 @@ bool ResourceHandleManager::HeadersReceived(EA::WebKit::TransportInfo* pTInfo)
     // Added checking the job state (kJSShutdown/kJSRemove) as a way not call a client that might have been be invalid (occured very infrequently when 
     // switching between sites).  We don't need to check for the cancelled job case since we already exit from it above.
     if (pRHI->client() && (pJobInfo->mJobState != kJSShutdown) && (pJobInfo->mJobState != kJSRemove))
-		pRHI->client()->didReceiveResponse(pRH, pRHI->m_response);
+		pRHI->client()->didReceiveResponse(pRH, WTFMove(pRHI->m_response));
 	
 	pRHI->m_response.setResponseFired(true);
 
@@ -1094,7 +1156,7 @@ bool ResourceHandleManager::DataReceived(EA::WebKit::TransportInfo* pTInfo, cons
         pRHI->m_response.setURL(url);
    
 		if(pRHI->client())
-			pRHI->client()->didReceiveResponse(pRH, pRHI->m_response);
+			pRHI->client()->didReceiveResponse(pRH, WTFMove(pRHI->m_response));
 
         pRHI->m_response.setResponseFired(true);
 		
@@ -1108,7 +1170,7 @@ bool ResourceHandleManager::DataReceived(EA::WebKit::TransportInfo* pTInfo, cons
     if(!pJobInfo->mbAuthorizationRequired)
     {
 		if(pRHI->client())
-			pRHI->client()->didReceiveData(pRH, (char*)pData, (unsigned)size, 0);
+			pRHI->client()->didReceiveData(pRH, (char*)pData, static_cast<unsigned>(size), 0);
     }
 
     return true;
@@ -1200,7 +1262,7 @@ bool ResourceHandleManager::DataDone(EA::WebKit::TransportInfo* pTInfo, bool res
                     {
 						const WTF::String& mimeTypeWTFStr = pRHI->m_response.mimeType();
 						EAW_ASSERT_MSG(!mimeTypeWTFStr.isEmpty(),"No mime type!\n");
-						if(!mimeTypeWTFStr.isEmpty() && MIMETypeRegistry::canShowMIMEType(mimeTypeWTFStr.lower()))
+						if(!mimeTypeWTFStr.isEmpty() && MIMETypeRegistry::canShowMIMEType(mimeTypeWTFStr.convertToASCIILowercase()))
 						{
 							EA::WebKit::FixedString8_128 mimeStr;
 							EA::WebKit::ConvertToString8(pRHI->m_response.mimeType(), mimeStr);

@@ -203,7 +203,10 @@ PassRefPtr<FilterOperation> DropShadowFilterOperation::blend(const FilterOperati
         WebCore::blend(fromStdDeviation, m_stdDeviation, progress),
         WebCore::blend(fromColor, m_color, progress));
 }
-
+//+EAWKDC Change
+// Compile fix
+#undef PASSTHROUGH
+//-EAWKDC Change
 TextStream& operator<<(TextStream& ts, const FilterOperation& filter)
 {
     switch (filter.type()) {

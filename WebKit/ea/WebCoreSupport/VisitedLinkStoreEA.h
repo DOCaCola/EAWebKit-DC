@@ -34,7 +34,6 @@
 #include <LinkHash.h>
 #include <VisitedLinkStore.h>
 //-EAWebKitChange
-#include <wtf/PassRef.h>
 
 class VisitedLinkStoreEA final : public WebCore::VisitedLinkStore {
 public:

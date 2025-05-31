@@ -25,8 +25,8 @@
 
 namespace WebCore {
 
-SearchPopupMenuEA::SearchPopupMenuEA(PassRefPtr<PopupMenu> popup)
-    : m_popup(popup)
+SearchPopupMenuEA::SearchPopupMenuEA(RefPtr<WebCore::PopupMenu>&& popup)
+    : m_popup(WTFMove(popup))
 {
 }
 
@@ -35,12 +35,12 @@ PopupMenu* SearchPopupMenuEA::popupMenu()
     return m_popup.get();
 }
 
-void SearchPopupMenuEA::saveRecentSearches(const AtomicString&, const Vector<String>&)
+void SearchPopupMenuEA::saveRecentSearches(const AtomicString& name, const Vector<RecentSearch>&)
 {
 	notImplemented();
 }
 
-void SearchPopupMenuEA::loadRecentSearches(const AtomicString&, Vector<String>&)
+void SearchPopupMenuEA::loadRecentSearches(const AtomicString& name, Vector<RecentSearch>&)
 {
 	notImplemented();
 }

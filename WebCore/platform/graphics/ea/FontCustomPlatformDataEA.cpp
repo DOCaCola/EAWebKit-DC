@@ -64,16 +64,16 @@ FontPlatformData FontCustomPlatformData::fontPlatformData(const FontDescription&
 bool FontCustomPlatformData::supportsFormat(const String& format)
 {
 // EAWebKitTODO - Seems like new trunk is using OPENTYPE_SANITIZER for dealing with woff type. Can we use that? 
-    if(equalIgnoringCase(format, "woff"))
+    if(equalLettersIgnoringASCIICase(format, "woff"))
         // If a page explicitly sets the font format to WOFF (e.g. format('woff')), we need to accept it so that the fontface can be considered for use.
         // A WOOF can be a truetype or opentype font but we don't need to verify this here since we will check if the font data can be created/supported in createFontCustomPlatformData(). 
         return true;
 
 	if(EA::WebKit::ITextSystem* pTextSystem = EA::WebKit::GetTextSystem())
 	{
-		if(equalIgnoringCase(format, "truetype"))
+		if(equalLettersIgnoringASCIICase(format, "truetype"))
 			return pTextSystem->SupportsFormat(EA::WebKit::kTrueType);
-		if(equalIgnoringCase(format, "opentype"))
+		if(equalLettersIgnoringASCIICase(format, "opentype"))
 			return pTextSystem->SupportsFormat(EA::WebKit::kOpenType);
 	}
 	return false;
@@ -94,10 +94,10 @@ static bool canHandleSourceData(const char* data, unsigned size)
 std::unique_ptr<FontCustomPlatformData> createFontCustomPlatformData(SharedBuffer& buffer)
 {
 	// Check if we are dealing with a compressed WOFF font format.
-	if (isWOFF(&buffer))
+	if (isWOFF(buffer))
 	{
 		Vector<char> sfnt;
-		convertWOFFToSfnt(&buffer, sfnt);
+		convertWOFFToSfnt(buffer, sfnt);
 		if (!sfnt.size())
 			return nullptr;
 		RefPtr<SharedBuffer> bufferWOFF = SharedBuffer::adoptVector(sfnt);

@@ -38,7 +38,7 @@ void SynchronousLoaderClient::didReceiveAuthenticationChallenge(ResourceHandle* 
 
 ResourceError SynchronousLoaderClient::platformBadResponseError()
 {
-	return ResourceError("NetworkDomain", EA::WebKit::kLETBadServerResponse, WTF::String(),"File does not exist");
+	return ResourceError("NetworkDomain", EA::WebKit::kLETBadServerResponse, URL(),"File does not exist");
 
 }
 

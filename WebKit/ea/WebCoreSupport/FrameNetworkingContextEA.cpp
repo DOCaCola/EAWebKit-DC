@@ -25,6 +25,8 @@
 #include <WebFrame.h>
 #include <WebPage.h>
 
+#include "NetworkStorageSession.h"
+
 namespace WebCore {
 
 FrameNetworkingContextEA::FrameNetworkingContextEA(Frame* frame, void* originatingObject, bool mimeSniffingEnabled)
@@ -34,9 +36,21 @@ FrameNetworkingContextEA::FrameNetworkingContextEA(Frame* frame, void* originati
 {
 }
 
-PassRefPtr<FrameNetworkingContextEA> FrameNetworkingContextEA::create(Frame* frame, void* originatingObject, bool mimeSniffingEnabled)
+Ref<FrameNetworkingContextEA> FrameNetworkingContextEA::create(Frame* frame, void* originatingObject, bool mimeSniffingEnabled)
 {
-    return adoptRef(new FrameNetworkingContextEA(frame, originatingObject,mimeSniffingEnabled));
+    Ref<FrameNetworkingContextEA> self = adoptRef(*new FrameNetworkingContextEA(frame, originatingObject, mimeSniffingEnabled));
+	self->setSession(std::make_unique<NetworkStorageSession>(SessionID::defaultSessionID(), self.ptr()));
+    return self;
+}
+
+void FrameNetworkingContextEA::setSession(std::unique_ptr<NetworkStorageSession>&& session)
+{
+	m_session = WTFMove(session);
+}
+
+NetworkStorageSession& FrameNetworkingContextEA::storageSession() const
+{
+    return *m_session;
 }
 
 void* FrameNetworkingContextEA::originatingObject() const

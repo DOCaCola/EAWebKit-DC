@@ -254,14 +254,8 @@ private:
     bool start();
     static void platformLoadResourceSynchronously(NetworkingContext*, const ResourceRequest&, StoredCredentials, ResourceError&, ResourceResponse&, Vector<char>& data);
 
-//+EAWebKitChange
-	//1/14/2014
-#if !PLATFORM(EA)
-    virtual void refAuthenticationClient() override { ref(); }
-    virtual void derefAuthenticationClient() override { deref(); }
-#endif
-	//-EAWebKitChange
-
+    void refAuthenticationClient() override { ref(); }
+    void derefAuthenticationClient() override { deref(); }
 
 #if PLATFORM(COCOA) || USE(CFURLCONNECTION)
     enum class SchedulingBehavior { Asynchronous, Synchronous };

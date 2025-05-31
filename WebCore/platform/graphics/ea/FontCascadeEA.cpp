@@ -46,7 +46,7 @@ namespace WebCore {
 
 //These live in FontCascade now. I wonder if internally we should map FontEA -> FontCascadeEA and SimpleFontDataEA -> FontEA
 //
-void FontCascade::drawEmphasisMarksForComplexText(GraphicsContext*, const TextRun&, const AtomicString& mark, const FloatPoint&, int from, int to) const
+void FontCascade::drawEmphasisMarksForComplexText(GraphicsContext&, const TextRun&, const AtomicString& mark, const FloatPoint&, unsigned from, unsigned to) const
 {
     // Not implemented.
 }
@@ -180,11 +180,11 @@ static bool drawGlyphsShadow(GraphicsContext* graphicsContext, float x, float y,
         return false;
     
     FloatRect destRect(x, y, w, h);         
-    if (GraphicsContext* shadowContext = shadow.beginShadowLayer(graphicsContext, destRect))
+    if (GraphicsContext* shadowContext = shadow.beginShadowLayer(*graphicsContext, destRect))
     {
         cairo_set_source_surface(shadowContext->platformContext()->cr(), surface, x, y);
         cairo_paint(shadowContext->platformContext()->cr());
-        shadow.endShadowLayer(graphicsContext);
+        shadow.endShadowLayer(*graphicsContext);
     }
     return true;  
 }
@@ -364,10 +364,10 @@ namespace
     }
 }
   
-// We need to draw the glyphBuffer glyphs/advances with the pSimpleFontData font onto the 
-// pGraphicsContext pSurface. We draw glyphCount glyphs starting at the glyphIndexBegin.
-void FontCascade::drawGlyphs(GraphicsContext* pGraphicsContext, const Font* pSimpleFontData, const GlyphBuffer& glyphBuffer,
-                        int glyphIndexBegin, int glyphCount, const FloatPoint& point) const
+// We need to draw the glyphBuffer glyphs/advances with the simpleFontData font onto the 
+// graphicsContext pSurface. We draw glyphCount glyphs starting at the glyphIndexBegin.
+void FontCascade::drawGlyphs(GraphicsContext& graphicsContext, const Font& simpleFontData, const GlyphBuffer& glyphBuffer,
+        unsigned glyphIndexBegin, unsigned glyphCount, const FloatPoint& point, FontSmoothingMode)
 {
     if (glyphCount <= 0)
     {
@@ -384,22 +384,22 @@ void FontCascade::drawGlyphs(GraphicsContext* pGraphicsContext, const Font* pSim
     // Get the clip extents. Only care about horizontal clipping for now.
     float clipLeft = 0.0f;
     float clipRight = 0.0f;
-    GetClipExtentsX(pGraphicsContext, &clipLeft, &clipRight);
+    GetClipExtentsX(&graphicsContext, &clipLeft, &clipRight);
 
     // Translate the clip region into offset space.
     clipLeft -= point.x();
     clipRight -= point.x();
 
     // If we have a shadow offset or blur, we need to also consider glyphs just beyond the clip area for they might be casting a shadow into the draw area.
-    const ShadowBlur& shadow = pGraphicsContext->platformContext()->shadowBlur();
-    if ((pGraphicsContext->textDrawingMode() & TextModeFill) && shadow.type() != ShadowBlur::NoShadow)
+    const ShadowBlur& shadow = graphicsContext.platformContext()->shadowBlur();
+    if ((graphicsContext.textDrawingMode() & TextModeFill) && shadow.type() != ShadowBlur::NoShadow)
     {
         // Add the shadow offset to the clip offset.
-        const FloatSize shadowOffset(pGraphicsContext->state().shadowOffset);
+        const FloatSize shadowOffset(graphicsContext.state().shadowOffset);
         float clipOffset = shadowOffset.width() >= 0.f ? shadowOffset.width() : -shadowOffset.width();
         
         // Add the blur to the clip offset.  
-        clipOffset += pGraphicsContext->state().shadowBlur;
+        clipOffset += graphicsContext.state().shadowBlur;
         
         // Add the max shadow clip offset to both sides regardless of shadow/blur direction.  The Cairo clip rect will refine it if needed.
         clipLeft -= clipOffset;
@@ -407,7 +407,7 @@ void FontCascade::drawGlyphs(GraphicsContext* pGraphicsContext, const Font* pSim
     }
 
 
-    EA::WebKit::IFont *pFont = pSimpleFontData->getEAFont();
+    EA::WebKit::IFont *pFont = simpleFontData.getEAFont();
 	if(!pFont)
 	{
 		EAW_ASSERT_MSG(pFont, "Font is not available");
@@ -535,7 +535,7 @@ void FontCascade::drawGlyphs(GraphicsContext* pGraphicsContext, const Font* pSim
         {
             const float x = point.x() + x_offset + xMin;
             const float y = point.y() - yMax;
-            drawGlyphsToContext(pGraphicsContext, gdiArray.data(), gdiArray.size(), destWidth, destHeight, x, y, xMin, yMin);
+            drawGlyphsToContext(&graphicsContext, gdiArray.data(), gdiArray.size(), destWidth, destHeight, x, y, xMin, yMin);
         }
     }
 
@@ -594,103 +594,6 @@ __inline String replaceIfNeeded(const UChar symbol)
     return String(&symbol, 1);
 }
 
-float FontCascade::drawComplexText(GraphicsContext* ctx, const TextRun& run, const FloatPoint& point, int from, int to) const
-{
-    EA::WebKit::ITextSystem *pTextSystem = EA::WebKit::GetTextSystem();
-    if(!pTextSystem)
-    {
-        return 0;
-    }   
-
-    const Font& pSimpleFontData = primaryFont();
-    EA::WebKit::IFont *pFont = pSimpleFontData.getEAFont();
-    if (!pFont)    
-        return 0;
-
-    pFont->BeginDraw();    
-
-    // Set up clip area.
-    float clipLeft = 0.0f;
-    float clipRight = 0.0f;
-    GetClipExtentsX(ctx, &clipLeft, &clipRight);
-
-    // Translate the clip region into offset space.
-    clipLeft -= point.x();
-    clipRight -= point.x();
-
-    const UChar* pTextRun = NULL;
-    String bufferFor16BitData;
-    if (run.is8Bit()) {
-        // Our Text System only deals with 16-bit characters. Must generate them now.
-        bufferFor16BitData = String::make16BitFrom8BitSource(run.characters8(), run.length());
-        pTextRun = bufferFor16BitData.characters16();
-    }
-    else
-        pTextRun = run.characters16();
-/*
- * Updating textRun for RTL languages.
- */
-//Moving declarations to the front since String not making copy of byte arrays representing current string when we calling .characters16() method.
-    String reorderingEndToFront;
-    String reorderingFrontToEnd;
-    if (run.rtl() && to - from > 1)
-    {
-        int posSource;
-        int posDest = from;
-/*
- * First step. Moving suffix from the back to the front if needed. If we have directional brackets here also changing their direction.
- */
-        String _character;
-        reorderingEndToFront = String(pTextRun, to);
-        if (needSwap(pTextRun[to - 1]))
-        {
-            do
-            {
-                _character = replaceIfNeeded(reorderingEndToFront[to - 1]);
-                reorderingEndToFront.remove(to - 1);
-                reorderingEndToFront.insert(_character, posDest++);
-            } while (needSwap(reorderingEndToFront[to - 1]) && posDest < to);
-            pTextRun = reorderingEndToFront.characters16();
-        }
-/*
- * Second step. Moving prefix from the front (where it was in original textRun and keep piece that we just moved in first step) to the back if needed.
- * If we have directional brackets here also changing their direction.
- */
-        if (needSwap(pTextRun[posDest]) && posDest < to)
-        {
-            reorderingFrontToEnd = String(pTextRun, to);
-            posSource = posDest;
-            posDest = to - 1;
-            do
-            {
-                _character = replaceIfNeeded(reorderingFrontToEnd[posSource]);
-                reorderingFrontToEnd.remove(posSource);
-                reorderingFrontToEnd.insert(_character, posDest--);
-            } while (needSwap(reorderingFrontToEnd[posSource]));
-            pTextRun = reorderingFrontToEnd.characters16();
-        }
-    }
-
-    const EA::WebKit::Char* pText = (const EA::WebKit::Char*) (pTextRun + from); 
-    EA::WebKit::TextDrawInfo dInfo;
-    bool result = pTextSystem->GetDrawInfoForComplexText(pFont, pText, (to - from), clipLeft, clipRight, dInfo);
-    if (result == false)
-    {
-        // Was just empty spaces for example.
-        pFont->EndDraw();
-        return 0;
-    }
-
-    // Send the generated glyph draw info to the draw.
-    const float x = point.x() + dInfo.mXMin;
-    const float y = point.y() - dInfo.mH - dInfo.mYMin;
-    drawGlyphsToContext(ctx, dInfo.mpGDI, dInfo.mGDICount, dInfo.mW, dInfo.mH, x, y, dInfo.mXMin, dInfo.mYMin);
-
-    pFont->EndDraw();
-
-	return dInfo.mW;
-}
-
 float FontCascade::floatWidthForComplexText(const TextRun& run, HashSet<const Font*>* /*fallbackFonts*/, GlyphOverflow* /*glyphOverflow*/) const
 {
     EA::WebKit::ITextSystem *pTextSystem = EA::WebKit::GetTextSystem();
@@ -730,7 +633,7 @@ bool FontCascade::canExpandAroundIdeographsInComplexText()
 	return false;
 }
 
-void FontCascade::adjustSelectionRectForComplexText(const TextRun& run, LayoutRect& selectionRect, int from, int to) const
+void FontCascade::adjustSelectionRectForComplexText(const TextRun& run, LayoutRect& selectionRect, unsigned from, unsigned to) const
 {
 	EA::WebKit::ITextSystem *pTextSystem = EA::WebKit::GetTextSystem();
 	if (!pTextSystem)

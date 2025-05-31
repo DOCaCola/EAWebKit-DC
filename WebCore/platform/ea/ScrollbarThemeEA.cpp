@@ -178,8 +178,8 @@ static void paintButton(ScrollPaintInfo& info, ScrollButtonType type, GraphicsCo
     else
         fillColor = ThemeEA::kScrollButtonNormalColor;
 
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);
-    context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+    context.setFillColor(fillColor);
+    context.setStrokeColor(ThemeEA::kScrollBorderColor);
     context.setStrokeStyle(SolidStroke);
     context.drawRect(r);
 
@@ -189,28 +189,34 @@ static void paintButton(ScrollPaintInfo& info, ScrollButtonType type, GraphicsCo
     float hOffset = (float) (r.height()/kArrowSizeRatio);
     const IntPoint center = r.center();    
     const FloatPoint c(center);
-    FloatPoint pts[3];
+
+	Vector<FloatPoint> pts;
+	pts.reserveInitialCapacity(3);
 
     if(info.mVertical)
     {
          if(type == kScrollButtonBack)
             hOffset = -hOffset;
-            
-         pts[0].set( c.x(), (c.y() + hOffset) );         
-         pts[1].set( (c.x() + wOffset), (c.y() - hOffset));         
-         pts[2].set( (c.x() - wOffset), (c.y() - hOffset));        
+
+		 pts.uncheckedAppend({ c.x(), (c.y() + hOffset) });
+		 pts.uncheckedAppend({ (c.x() + wOffset), (c.y() - hOffset) });
+		 pts.uncheckedAppend({ (c.x() - wOffset), (c.y() - hOffset) });
     }
     else
     {
         if(type == kScrollButtonBack)
             wOffset = -wOffset;
-            
-         pts[0].set((c.x() + wOffset), c.y());         
-         pts[1].set((c.x() - wOffset), (c.y() + hOffset));         
-         pts[2].set((c.x() - wOffset), (c.y() - hOffset));         
+
+		pts.uncheckedAppend({ (c.x() + wOffset), c.y() });
+		pts.uncheckedAppend({ (c.x() - wOffset), (c.y() + hOffset) });
+		pts.uncheckedAppend({ (c.x() - wOffset), (c.y() - hOffset) });
     }
-    context.setFillColor(ThemeEA::kScrollButtonArrowColor, ColorSpaceDeviceRGB);
-    context.drawConvexPolygon(3, pts, true);
+    context.setFillColor(ThemeEA::kScrollButtonArrowColor);
+
+	bool wasAntialiased = context.shouldAntialias();
+	context.setShouldAntialias(true);
+	context.fillPath(Path::polygonPathFromPoints(pts));
+	context.setShouldAntialias(wasAntialiased);
 
     // Highlight edges
     RenderThemeEA::paintEdgeHighlights(&context,r);   
@@ -223,8 +229,8 @@ static void paintTrack(ScrollPaintInfo& info, GraphicsContext& context, const In
         return;
 
     Color fillColor = ThemeEA::kScrollTrackColor;
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);   
-    context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+    context.setFillColor(fillColor);   
+    context.setStrokeColor(ThemeEA::kScrollBorderColor);
     context.setStrokeStyle(SolidStroke);
     context.setStrokeThickness(ThemeEA::kScrollThemeBorderThickness);        // The Cairo draw rect hardcodes the stroke thickness to 1.0 but we set it here anyway for better compatibility
     context.drawRect(r);                                        
@@ -244,7 +250,7 @@ static void paintThumb(ScrollPaintInfo& info, GraphicsContext& context, const In
     else
         fillColor = ThemeEA::kScrollThumbNormalColor;
     
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);  
+    context.setFillColor(fillColor);  
     context.setStrokeStyle(NoStroke);
     context.drawRect(r);
 
@@ -278,11 +284,11 @@ static void paintThumb(ScrollPaintInfo& info, GraphicsContext& context, const In
     context.setStrokeThickness(1.0f);  // The grip is needs to be 1.0.  Large lines just don't work well.
     for(int i = 0; i < kGripCount; i++)
     {
-        context.setStrokeColor(Color::white, ColorSpaceDeviceRGB);
+        context.setStrokeColor(Color::white);
         context.drawLine(a, b);
         a.move(dx,dy);
         b.move(dx,dy);
-        context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+        context.setStrokeColor(ThemeEA::kScrollBorderColor);
         context.drawLine(a, b);
         a.move(dx,dy);
         b.move(dx,dy);    
@@ -299,14 +305,14 @@ void ScrollbarThemeEA::staticFinalize()
     }    
 }
 
-ScrollbarTheme* ScrollbarTheme::nativeTheme()
+ScrollbarTheme& ScrollbarTheme::nativeTheme()
 {
     if(!spThemeEA)
     {
         spThemeEA = new ScrollbarThemeEA;
         EAW_ASSERT(spThemeEA);
     }
-    return spThemeEA;
+    return *spThemeEA;
 }
 
 ScrollbarThemeEA::~ScrollbarThemeEA()
@@ -423,14 +429,6 @@ ScrollbarPart ScrollbarThemeEA::hitTest(Scrollbar& scrollbar, const IntPoint& p)
     return NoPart;
 }
 
-bool ScrollbarThemeEA::shouldCenterOnThumb(Scrollbar&, const PlatformMouseEvent& evt)
-{
-    // Middle click centers slider thumb (if supported)
-//    return style()->styleHint(QStyle::SH_ScrollBar_MiddleClickAbsolutePosition) && evt.button() == MiddleButton;
-
-    return false;
-}
-
 void ScrollbarThemeEA::invalidatePart(Scrollbar& scrollbar, ScrollbarPart)
 {
     // FIXME: Do more precise invalidation.
@@ -487,9 +485,9 @@ int ScrollbarThemeEA::trackLength(Scrollbar& scrollbar)
     return length;
 }
 
-void ScrollbarThemeEA::paintScrollCorner(ScrollView* scrollView, GraphicsContext* context, const IntRect& rect)
+void ScrollbarThemeEA::paintScrollCorner(ScrollView* scrollView, GraphicsContext& context, const IntRect& rect)
 {
-    if (context->updatingControlTints()) {
+    if (context.updatingControlTints()) {
        scrollView->invalidateRect(rect);
        return;
     }
@@ -498,11 +496,11 @@ void ScrollbarThemeEA::paintScrollCorner(ScrollView* scrollView, GraphicsContext
         return;
 
     // Draw
-    context->save();
-    context->setFillColor(ThemeEA::kScrollCornerColor, ColorSpaceDeviceRGB);
-    context->setStrokeStyle(NoStroke);
-    context->drawRect(rect);
-    context->restore();
+    context.save();
+    context.setFillColor(ThemeEA::kScrollCornerColor);
+    context.setStrokeStyle(NoStroke);
+    context.drawRect(rect);
+    context.restore();
 }
 
 

@@ -179,12 +179,17 @@ bool MediaPlayerPrivateEA::ClientUpdateAndReturnBool(MediaUpdateInfo::UpdateType
 void MediaPlayerPrivateEA::registerMediaEngine(MediaEngineRegistrar registrar)
 {
 	registrar([](MediaPlayer* player) { return std::make_unique<MediaPlayerPrivateEA>(player); },
-		getSupportedTypes, supportsType, 0, 0, 0, 0);
+		getSupportedTypes, supportsType, 0, 0, 0, supportsKeySystem);
 }
 
-void MediaPlayerPrivateEA::getSupportedTypes(HashSet<String> &supported)
+void MediaPlayerPrivateEA::getSupportedTypes(HashSet<String, ASCIICaseInsensitiveHash>& types)
 {
     // Ignore for now as does not seem to be needed to be set. Could tie in with supported EA mime types.
+}
+
+bool MediaPlayerPrivateEA::supportsKeySystem(const String& keySystem, const String& mimeType)
+{
+    return false;
 }
 
 MediaPlayer::SupportsType MediaPlayerPrivateEA::supportsType(const MediaEngineSupportParameters& parameters)
@@ -408,18 +413,15 @@ void MediaPlayerPrivateEA::setSize(const IntSize& size)
     mSize = size;
 }
 
-void MediaPlayerPrivateEA::paint(GraphicsContext* context, const FloatRect& r)
+void MediaPlayerPrivateEA::paint(GraphicsContext& context, const FloatRect& r)
 {
-    if (!context)
-        return;
-
     // Can get a NULL platform context so need to verify.  Seems that UpdateControlTints does what is called a "fake" paint
     // with a null platform context just to get an invalidate.
-    PlatformContextCairo* pPlatformContext = context->platformContext();
+    PlatformContextCairo* pPlatformContext = context.platformContext();
     if (!pPlatformContext)
         return;
 
-    cairo_t* cr = context->platformContext()->cr();
+    cairo_t* cr = context.platformContext()->cr();
     if (!cr)
         return;
 
@@ -437,12 +439,16 @@ void MediaPlayerPrivateEA::paint(GraphicsContext* context, const FloatRect& r)
 	// following is overly complex. It needs to be understood why movie API needs these odd calculations. I arrived at them by mostly creating sample pages to render movie in iframes and scroll extensively. 
 	// The graphics context can easily draw the passed in rect (r) without much of these calculations. 
 	IntPoint location = pFV->location(); //zero for main frame. Some offset for the iframe. 
-	IntSize scrollOffset = pFV->scrollOffset();//scroll offset for the current frame.
-	
+	IntSize scrollOffset;
+	scrollOffset.setWidth(pFV->scrollOffset(HorizontalScrollbar));//scroll offset for the current frame.
+    scrollOffset.setHeight(pFV->scrollOffset(VerticalScrollbar));
+
 	ScrollView* pParent = pFV->parent();
 	while(pParent)
 	{
-		scrollOffset +=pParent->scrollOffset(); //take into account scroll offset of any parent frame
+		scrollOffset.setWidth(scrollOffset.width() + pParent->scrollOffset(HorizontalScrollbar)); //take into account scroll offset of any parent frame
+		scrollOffset.setHeight(scrollOffset.height() + pParent->scrollOffset(VerticalScrollbar));
+
 		pParent = pParent->parent();
 	}
 	IntPoint totalOffset(location.x()-scrollOffset.width(),location.y()-scrollOffset.height());
@@ -497,21 +503,21 @@ void MediaPlayerPrivateEA::paint(GraphicsContext* context, const FloatRect& r)
             sAssertChecked = true;
         }
 #endif
-        context->save(); 
+        context.save(); 
         RefPtr<cairo_surface_t> cairoSurface = adoptRef(cairo_image_surface_create_for_data((unsigned char*) info.mReturnData, CAIRO_FORMAT_ARGB32, w, h, w * sizeof(uint32_t)));
         EAW_ASSERT(cairo_surface_status(cairoSurface.get()) == CAIRO_STATUS_SUCCESS);
         cairo_set_source_surface(cr, cairoSurface.get(), rect.x(), rect.y()); 
         cairo_paint(cr);
-        context->restore(); 
+        context.restore(); 
     }
     else
     {
         // Draw a default black background.
-        context->save(); 
-        context->setStrokeStyle(NoStroke);
-        context->setFillColor(Color::black, ColorSpaceDeviceRGB);
-        context->drawRect(r);    
-        context->restore();
+        context.save(); 
+        context.setStrokeStyle(NoStroke);
+        context.setFillColor(Color::black);
+        context.drawRect(r);    
+        context.restore();
     }
 }
 

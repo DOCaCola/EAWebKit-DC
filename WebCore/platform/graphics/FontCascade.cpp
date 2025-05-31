@@ -581,6 +581,7 @@ FontCascade::CodePath FontCascade::codePath(const TextRun& run) const
         return Complex;
 #endif
     //-EAWebKitChange
+#endif
 
     if (!run.characterScanForCodePath())
         return Simple;

@@ -25,8 +25,11 @@
 
 #include "config.h"
 #include "PlatformDisplay.h"
-
+//+EAWKDC Change
+#if !PLATFORM(EA)
 #include "GLContext.h"
+#endif
+//-EAWKDC Change
 #include <cstdlib>
 #include <mutex>
 

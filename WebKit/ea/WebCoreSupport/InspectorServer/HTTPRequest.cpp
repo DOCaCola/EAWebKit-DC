@@ -83,7 +83,7 @@ size_t HTTPRequest::parseHeaders(const char* data, size_t length, String& failur
 {
     const char* p = data;
     const char* end = data + length;
-    String name;
+    StringView name;
     String value;
     for (; p < data + length; p++) {
         size_t consumedLength = parseHTTPHeader(p, end - p, failureReason, name, value);
@@ -92,7 +92,7 @@ size_t HTTPRequest::parseHeaders(const char* data, size_t length, String& failur
         p += consumedLength;
         if (name.isEmpty())
             break;
-        m_headerFields.add(name, value);
+        m_headerFields.add(name.toString(), value);
     }
 
     // If we got here and "name" is empty, it means the headers are valid and ended with a

@@ -219,7 +219,7 @@ bool PopupMenuEA::layout()
         if(m_popupClient->itemIsLabel(i))
         {
             //The labels are bolder meaning they need more width. Calculate it here.
-			FontDescription d = itemFont.fontDescription();  
+			FontCascadeDescription d = itemFont.fontDescription();  
             d.setWeight(d.bolderWeight());
 
             FontCascade itemFontBold(d, itemFont.letterSpacing(), itemFont.wordSpacing());
@@ -367,9 +367,9 @@ void PopupMenuEA::draw(void)
         sampleIndex++;
     PopupMenuStyle sampleStyle = m_popupClient->itemStyle(sampleIndex);
     Color defaultBgColor(sampleStyle.backgroundColor()); 
-    if((int) defaultBgColor.rgb() == 0)             
-        defaultBgColor.setRGB(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
-    context.setFillColor(defaultBgColor, ColorSpaceDeviceRGB);
+    if(defaultBgColor.rgb() == 0)             
+        defaultBgColor = Color(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
+    context.setFillColor(defaultBgColor);
     const IntRect windowRect(0,0,m_poppedUpSurfaceRect.width(),m_poppedUpSurfaceRect.height());
     context.fillRect(windowRect);
 
@@ -398,12 +398,12 @@ void PopupMenuEA::draw(void)
         {
             // Grab the CSS values but use our defaults if 0
             bgColor = itemStyle.backgroundColor();   
-            if((int)bgColor.rgb() == 0)
-                defaultBgColor.setRGB(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
+            if(bgColor.rgb() == 0)
+                defaultBgColor = Color(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
             
             textColor = itemStyle.foregroundColor();   
-            if((int) textColor.rgb() == 0)
-                textColor.setRGB(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionFore);
+            if(textColor.rgb() == 0)
+                textColor = Color(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionFore);
         }
         
         // Build the item rect
@@ -413,7 +413,7 @@ void PopupMenuEA::draw(void)
         // Only fill if we have something different for this item since we already filled the full background with the estimated default
         if(bgColor != defaultBgColor)
         {
-            context.setFillColor(bgColor, ColorSpaceDeviceRGB);    
+            context.setFillColor(bgColor);    
             context.fillRect(itemRect);
         }
     
@@ -422,7 +422,7 @@ void PopupMenuEA::draw(void)
         const FontMetrics& fontMetrics = font.fontMetrics();
  		const int fontAscent = (int) fontMetrics.floatAscent();
         const TextRun textRun(m_popupClient->itemText(i));
-        context.setFillColor(textColor, ColorSpaceDeviceRGB);    // The fill color is used for the text draw
+        context.setFillColor(textColor);    // The fill color is used for the text draw
         context.drawText(font, textRun, IntPoint(itemRect.x() + ThemeEA::kPopupMenuBorderPadding, itemRect.y() + fontAscent));
     }
 
@@ -430,19 +430,19 @@ void PopupMenuEA::draw(void)
     if(m_scrollBarActive)
     {
         context.save();
-        m_scrollBar->paint(&context, m_scrollRect);
+        m_scrollBar->paint(context, m_scrollRect);
         context.restore();
     }
 
     // We draw the border last
-    context.setFillColor(0, ColorSpaceDeviceRGB);          // Disable the fill
+    context.setFillColor(0);          // Disable the fill
     context.setStrokeStyle(SolidStroke);
-    context.setStrokeColor(ThemeEA::kListBoxBorderColor, ColorSpaceDeviceRGB);
+    context.setStrokeColor(ThemeEA::kListBoxBorderColor);
     context.drawRect(windowRect);
 
     m_surface->Unlock();   
 
-    // Request a redraw so that the new overlay gets transfered to the main view surface.
+    // Request a redraw so that the new overlay gets transferred to the main view surface.
     EA::WebKit::IntRect dirtyRegion(m_poppedUpSurfaceRect.x(),m_poppedUpSurfaceRect.y(),m_poppedUpSurfaceRect.width(),m_poppedUpSurfaceRect.height());
     m_viewEA->AddDirtyRegion(dirtyRegion);  
 
@@ -469,10 +469,10 @@ void PopupMenuEA::drawScrollBar(void)
 	WebCore::GraphicsContext context(cairoContext.get());
     
     // Paint the scrollbar if active
-    m_scrollBar->paint(&context, m_scrollRect);
+    m_scrollBar->paint(context, m_scrollRect);
     m_surface->Unlock();   
 
-    // Request a redraw so that the new overlay gets transfered to the main view surface.
+    // Request a redraw so that the new overlay gets transferred to the main view surface.
     EA::WebKit::IntRect dirtyRegion(m_mouseScrollRect.x(),m_mouseScrollRect.y(),m_mouseScrollRect.width(),m_mouseScrollRect.height());
     m_viewEA->AddDirtyRegion(dirtyRegion);    
 }
@@ -538,7 +538,7 @@ void PopupMenuEA::updateFocusIndex(int index, bool updateSelected, bool updateSc
         int requestedScrollIndex = requestedIndex;
     
         // If the requestedItem is within the scroll area, we don't update the scroll bar offset
-        // This so that the move move over menu items does not activate the scroll thumb
+        // This so that the move over menu items does not activate the scroll thumb
         if(requestedScrollIndex < m_itemScrollOffset)
         {
             updateScrollOffset(requestedScrollIndex);
@@ -661,11 +661,11 @@ void PopupMenuEA::OnMouseMoveEvent(const EA::WebKit::MouseMoveEvent& mouseMoveEv
             mousePressType = PlatformEvent::Type::MousePressed;
         else
            mousePressType = PlatformEvent::Type::MouseReleased;
-        
+
         PlatformMouseEvent evt(localPos,globalPos, LeftButton, mousePressType, 1, 
         (mouseMoveEvent.mModifiers & kModifierMaskShift), (mouseMoveEvent.mModifiers & kModifierMaskControl),
-        (mouseMoveEvent.mModifiers & kModifierMaskAlt), (mouseMoveEvent.mModifiers & kModifierMaskOS), 0.0, WebCore::ForceAtClick);
-        
+        (mouseMoveEvent.mModifiers & kModifierMaskAlt), (mouseMoveEvent.mModifiers & kModifierMaskOS), 0.0, WebCore::ForceAtClick, NoTap);
+
         // Make sure mouse is in the scroll bar area
         if(m_scrollbarCapturingMouse || m_mouseScrollRect.contains(mouseMoveEvent.mX, mouseMoveEvent.mY))
         {
@@ -750,7 +750,7 @@ void PopupMenuEA::OnMouseButtonEvent(const EA::WebKit::MouseButtonEvent& mouseBu
 
                 PlatformMouseEvent evt(localPos,globalPos, LeftButton, PlatformEvent::Type::MousePressed, 1, 
                 (mouseButtonEvent.mModifiers & kModifierMaskShift),(mouseButtonEvent.mModifiers & kModifierMaskControl),
-                (mouseButtonEvent.mModifiers & kModifierMaskAlt),(mouseButtonEvent.mModifiers & kModifierMaskOS), 0.0, WebCore::ForceAtClick);              
+                (mouseButtonEvent.mModifiers & kModifierMaskAlt),(mouseButtonEvent.mModifiers & kModifierMaskOS), 0.0, WebCore::ForceAtClick, NoTap);              
 
                 m_scrollBar->mouseDown(evt);        
                 m_scrollbarCapturingMouse = true;  
@@ -889,12 +889,17 @@ int PopupMenuEA::scrollSize(ScrollbarOrientation orientation) const
     return ((orientation == VerticalScrollbar) && m_scrollBar) ? (m_scrollBar->totalSize() - m_scrollBar->visibleSize()) : 0;
 }
 
+int PopupMenuEA::scrollOffset(ScrollbarOrientation orientation) const
+{
+    return m_scrollOffset;
+}
+
 ScrollPosition PopupMenuEA::scrollPosition() const
 {
     return IntPoint(m_scrollOffset, 0);
 }
 
-void PopupMenuEA::setScrollOffset(const IntPoint& offset)
+void PopupMenuEA::setScrollOffset(const ScrollOffset& offset)
 {
    m_scrollOffset = offset.y();
 }

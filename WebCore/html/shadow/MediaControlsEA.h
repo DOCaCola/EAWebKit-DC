@@ -42,7 +42,7 @@ class MediaControlsEAEventListener;
 class MediaControlsEA : public MediaControls {
 public:
     // Called from port-specific parent create function to create custom controls.
-    static PassRefPtr<MediaControlsEA> createControls(Document&);
+    static PassRefPtr<MediaControlsEA> tryCreateControls(Document&);
 
     virtual void setMediaController(MediaControllerInterface*) override;
     virtual void reset() override;
@@ -67,7 +67,7 @@ private:
     void showClosedCaptionTrackList();
     void hideClosedCaptionTrackList();
 
-    PassRefPtr<MediaControlsEAEventListener> eventListener();
+    MediaControlsEAEventListener& eventListener();
 
     MediaControlTimeRemainingDisplayElement* m_durationDisplay;
     MediaControlPanelEnclosureElement* m_enclosure;

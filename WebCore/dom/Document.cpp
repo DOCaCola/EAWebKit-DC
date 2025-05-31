@@ -202,6 +202,9 @@
 #include <wtf/SystemTracing.h>
 #include <wtf/text/StringBuffer.h>
 #include <yarr/RegularExpression.h>
+//+EAWKDC Change
+#include "HTMLTextAreaElement.h"
+//-EAWKDC Change
 
 #if ENABLE(DEVICE_ORIENTATION)
 #include "DeviceMotionEvent.h"
@@ -3552,7 +3555,7 @@ void Document::removeFocusedNodeOfSubtree(Node& node, bool amongChildrenOnly)
 		//+EAWebKitChange 
 		//11/06/2014
 		//If the editable element has been destroyed while in focus, the focused element no longer exists, hence input state needs to change.
-        if (is<HTMLInputElement>(*node) || is<HTMLTextAreaElement>(*node))
+        if (is<HTMLInputElement>(node) || is<HTMLTextAreaElement>(node))
 		    m_frame->page()->editorClient().setInputMethodState(false); 
 		//-EAWebKitChange
 

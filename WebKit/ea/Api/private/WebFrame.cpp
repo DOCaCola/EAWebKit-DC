@@ -129,7 +129,7 @@ namespace WebKit
 	// FIXME: All of the below should probably be moved over into WebCore
 	frame->tree().setName(name);
 	if (parentFrame)
-		parentFrame->tree().appendChild(frame);
+		parentFrame->tree().appendChild(*frame);
 }
 
 
@@ -290,7 +290,7 @@ WTF::String WebFrame::renderTreeDump() const
 WTF::String WebFrame::title() const
 {
 	if (d->frame->document())
-		return d->frame->loader().documentLoader()->title().string();
+		return d->frame->loader().documentLoader()->title().string;
 	return WTF::String();
 }
 
@@ -372,7 +372,7 @@ void WebFrame::setContent(const char8_t* data, size_t length, const char8_t* pMe
 		encoding = WebCore::extractCharsetFromMediaType(mediaType);
 	}
 	WebCore::ResourceResponse response(WebCore::URL(), actualMimeType, buffer->size(), encoding);
-	WebCore::SubstituteData substituteData(buffer, WebCore::URL(), response, WebCore::SubstituteData::SessionHistoryVisibility::Hidden);
+	WebCore::SubstituteData substituteData(WTFMove(buffer), WebCore::URL(), response, WebCore::SubstituteData::SessionHistoryVisibility::Hidden);
 	EAW_ASSERT(false); // Passing the newly needed parameter- failingUrl to SubstitueData as  a null string. Reference from the win port. get rid of this assert, if nothing is broken/unexpected because of above change.
 	d->frame->loader().load(WebCore::FrameLoadRequest(d->frame, request, WebCore::ShouldOpenExternalURLsPolicy::ShouldAllow, substituteData));
 }
@@ -481,8 +481,7 @@ WebCore::IntPoint WebFrame::scrollPosition() const
     if (!d->frame->view())
 		return WebCore::IntPoint(0,0);
 
-	WebCore::IntSize ofs = d->frame->view()->scrollOffset();
-	return WebCore::IntPoint(ofs.width(), ofs.height());
+	return d->frame->view()->scrollPosition();
 }
 
 void WebFrame::setScrollPosition(const WebCore::IntPoint &pos)
@@ -538,7 +537,7 @@ void WebFrame::renderNonTiled(EA::WebKit::IHardwareRenderer* renderer, ISurface 
         {
             const WebCore::IntRect &dirty = dirtyRegions[i];
 			graphicsContext.translate(-dirty.x(), -dirty.y());// Translate the context so the drawing starts at the origin of the locked portion.
-            view->paint(&graphicsContext, dirty);// Paint contents and scroll bars. Some ports call paintContents and then painScrollbars separately.
+            view->paint(graphicsContext, dirty);// Paint contents and scroll bars. Some ports call paintContents and then painScrollbars separately.
         }
 
 		EAW_ASSERT_FORMATTED(cairo_status(cairoContext.get()) == CAIRO_STATUS_SUCCESS, "cairo failed to paint (for example, OOM) - %d",cairo_status(cairoContext.get()));
@@ -549,7 +548,7 @@ void WebFrame::renderNonTiled(EA::WebKit::IHardwareRenderer* renderer, ISurface 
 			graphicsContext.save();
 			
 			graphicsContext.setStrokeStyle(WebCore::SolidStroke);
-			graphicsContext.setStrokeColor(WebCore::Color(1.0f,0.0f,0.0f,1.0f), WebCore::ColorSpaceDeviceRGB);
+			graphicsContext.setStrokeColor(WebCore::Color(1.0f,0.0f,0.0f,1.0f));
 			graphicsContext.strokeRect(WebCore::FloatRect(eaRect.mLocation.mX,eaRect.mLocation.mY,eaRect.mSize.mWidth,eaRect.mSize.mHeight),2.0f); 
 
 			graphicsContext.restore();
@@ -759,9 +758,9 @@ void WebFrame::renderScrollHelper(WebCore::Scrollbar *bar, WebCore::FrameView *v
 		WebCore::GraphicsContext graphicsContext(cairoContext.get());
 		graphicsContext.translate(-boundsRect.x(), -boundsRect.y()); 
 		if(view)
-			view->paintScrollCorner(&graphicsContext, boundsRect);
+			view->paintScrollCorner(graphicsContext, boundsRect);
 		else
-			bar->paint(&graphicsContext, boundsRect);
+			bar->paint(graphicsContext, boundsRect);
 
 		(*surface)->Unlock();
 	}
@@ -900,16 +899,15 @@ WebHitTestResult WebFrame::hitTestContent(const WebCore::IntPoint &pos, bool exc
 bool WebFrame::evaluateJavaScript(const WTF::String& scriptSource, JavascriptValue *resultOut)
 {
     WebCore::ScriptController& scriptController = d->frame->script();
-	Deprecated::ScriptValue sv = scriptController.executeScript(WebCore::ScriptSourceCode(scriptSource));
+	auto sv = scriptController.executeScript(WebCore::ScriptSourceCode(scriptSource));
 
-	if (!sv.hasNoValue()) 
+	if (!sv) 
 	{
 		if (resultOut) 
 		{
-			JSC::JSValue v = sv.jsValue();
 			JSC::ExecState *exec = scriptController.globalObject(WebCore::mainThreadNormalWorld())->globalExec(); 
 			resultOut->SetExec(exec);
-			JSC::Bindings::JStoEA(exec, v, resultOut);
+			JSC::Bindings::JStoEA(exec, sv, resultOut);
 		}
 
 		return true;

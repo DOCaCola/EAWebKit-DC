@@ -34,6 +34,7 @@
 #include "MediaControlsEA.h"
 
 #include "Chrome.h"
+#include "EventNames.h"
 #include "MouseEvent.h"
 
 namespace WebCore {
@@ -48,7 +49,7 @@ public:
             : 0;
     }
 
-    virtual bool operator==(const EventListener& other);
+    virtual bool operator==(const EventListener& other) const;
 
 private:
     MediaControlsEAEventListener(MediaControlsEA* mediaControls)
@@ -63,119 +64,106 @@ private:
 };
 
 MediaControlsEA::MediaControlsEA(Document& document)
-    : MediaControls(document)
-    , m_durationDisplay(0)
-    , m_enclosure(0)
-    , m_closedCaptionsTrackList(0)
-    , m_closedCaptionsContainer(0)
-    , m_eventListener(0)
+	: MediaControls(document)
+	, m_durationDisplay(nullptr)
+	, m_enclosure(nullptr)
+	, m_volumeSliderContainer(nullptr)
+	, m_closedCaptionsTrackList(nullptr)
+	, m_closedCaptionsContainer(nullptr)
+	, m_eventListener(nullptr)
 {
 }
 
-PassRefPtr<MediaControls> MediaControls::create(Document& document)
+RefPtr<MediaControls> MediaControls::tryCreate(Document& document)
 {
-    return MediaControlsEA::createControls(document);
+    return MediaControlsEA::tryCreateControls(document);
 }
 
-PassRefPtr<MediaControlsEA> MediaControlsEA::createControls(Document& document)
+PassRefPtr<MediaControlsEA> MediaControlsEA::tryCreateControls(Document& document)
 {
     if (!document.page())
-        return 0;
+        return nullptr;
 
     RefPtr<MediaControlsEA> controls = adoptRef(new MediaControlsEA(document));
 
     if (controls->initializeControls(document))
         return controls.release();
 
-    return 0;
+    return nullptr;
 }
 
 bool MediaControlsEA::initializeControls(Document& document)
 {
     // Create an enclosing element for the panel so we can visually offset the controls correctly.
-    RefPtr<MediaControlPanelEnclosureElement> enclosure = MediaControlPanelEnclosureElement::create(document);
-    RefPtr<MediaControlPanelElement> panel = MediaControlPanelElement::create(document);
-    ExceptionCode exceptionCode;
+    auto enclosure = MediaControlPanelEnclosureElement::create(document);
+    auto panel = MediaControlPanelElement::create(document);
 
-    RefPtr<MediaControlPlayButtonElement> playButton = MediaControlPlayButtonElement::create(document);
-    m_playButton = playButton.get();
-    panel->appendChild(playButton.release(), exceptionCode);
-    if (exceptionCode)
+    auto playButton = MediaControlPlayButtonElement::create(document);
+    m_playButton = playButton.ptr();
+    if (panel->appendChild(playButton).hasException())
         return false;
 
-    RefPtr<MediaControlTimelineElement> timeline = MediaControlTimelineElement::create(document, this);
-    m_timeline = timeline.get();
-    panel->appendChild(timeline.release(), exceptionCode);
-    if (exceptionCode)
+    auto timeline = MediaControlTimelineElement::create(document, this);
+    m_timeline = timeline.ptr();
+    if (panel->appendChild(timeline).hasException())
         return false;
 
-    RefPtr<MediaControlCurrentTimeDisplayElement> currentTimeDisplay = MediaControlCurrentTimeDisplayElement::create(document);
-    m_currentTimeDisplay = currentTimeDisplay.get();
+    auto currentTimeDisplay = MediaControlCurrentTimeDisplayElement::create(document);
+    m_currentTimeDisplay = currentTimeDisplay.ptr();
     m_currentTimeDisplay->hide();
-    panel->appendChild(currentTimeDisplay.release(), exceptionCode);
-    if (exceptionCode)
+    if (panel->appendChild(currentTimeDisplay).hasException())
         return false;
 
-    RefPtr<MediaControlTimeRemainingDisplayElement> durationDisplay = MediaControlTimeRemainingDisplayElement::create(document);
-    m_durationDisplay = durationDisplay.get();
-    panel->appendChild(durationDisplay.release(), exceptionCode);
-    if (exceptionCode)
+    auto durationDisplay = MediaControlTimeRemainingDisplayElement::create(document);
+    m_durationDisplay = durationDisplay.ptr();
+    if (panel->appendChild(durationDisplay).hasException())
         return false;
 
     if (document.page()->theme().supportsClosedCaptioning()) {
-        RefPtr<MediaControlClosedCaptionsContainerElement> closedCaptionsContainer = MediaControlClosedCaptionsContainerElement::create(document);
+        auto closedCaptionsContainer = MediaControlClosedCaptionsContainerElement::create(document);
 
-        RefPtr<MediaControlClosedCaptionsTrackListElement> closedCaptionsTrackList = MediaControlClosedCaptionsTrackListElement::create(document, this);
-        m_closedCaptionsTrackList = closedCaptionsTrackList.get();
-        closedCaptionsContainer->appendChild(closedCaptionsTrackList.release(), exceptionCode);
-        if (exceptionCode)
+        auto closedCaptionsTrackList = MediaControlClosedCaptionsTrackListElement::create(document, this);
+        m_closedCaptionsTrackList = closedCaptionsTrackList.ptr();
+        if (closedCaptionsContainer->appendChild(closedCaptionsTrackList).hasException())
             return false;
 
-        RefPtr<MediaControlToggleClosedCaptionsButtonElement> toggleClosedCaptionsButton = MediaControlToggleClosedCaptionsButtonElement::create(document, this);
-        m_toggleClosedCaptionsButton = toggleClosedCaptionsButton.get();
-        panel->appendChild(toggleClosedCaptionsButton.release(), exceptionCode);
-        if (exceptionCode)
+        auto toggleClosedCaptionsButton = MediaControlToggleClosedCaptionsButtonElement::create(document, this);
+        m_toggleClosedCaptionsButton = toggleClosedCaptionsButton.ptr();
+        if (panel->appendChild(toggleClosedCaptionsButton).hasException())
             return false;
 
-        m_closedCaptionsContainer = closedCaptionsContainer.get();
-        appendChild(closedCaptionsContainer.release(), exceptionCode);
-        if (exceptionCode)
+        m_closedCaptionsContainer = closedCaptionsContainer.ptr();
+        if (appendChild(closedCaptionsContainer).hasException())
             return false;
     }
 
-    RefPtr<MediaControlFullscreenButtonElement> fullscreenButton = MediaControlFullscreenButtonElement::create(document);
-    m_fullScreenButton = fullscreenButton.get();
-    panel->appendChild(fullscreenButton.release(), exceptionCode);
-    if (exceptionCode)
+    auto fullscreenButton = MediaControlFullscreenButtonElement::create(document);
+    m_fullScreenButton = fullscreenButton.ptr();
+    if (panel->appendChild(fullscreenButton).hasException())
         return false;
 
-    RefPtr<MediaControlPanelMuteButtonElement> panelMuteButton = MediaControlPanelMuteButtonElement::create(document, this);
-    m_panelMuteButton = panelMuteButton.get();
-    panel->appendChild(panelMuteButton.release(), exceptionCode);
-    if (exceptionCode)
+    auto panelMuteButton = MediaControlPanelMuteButtonElement::create(document, this);
+    m_panelMuteButton = panelMuteButton.ptr();
+    if (panel->appendChild(panelMuteButton).hasException())
         return false;
 
-    RefPtr<MediaControlVolumeSliderContainerElement> sliderContainer = MediaControlVolumeSliderContainerElement::create(document);
-    m_volumeSliderContainer = sliderContainer.get();
-    panel->appendChild(sliderContainer.release(), exceptionCode);
-    if (exceptionCode)
+	auto sliderContainer = MediaControlVolumeSliderContainerElement::create(document);
+    m_volumeSliderContainer = sliderContainer.ptr();
+    if (panel->appendChild(sliderContainer).hasException())
         return false;
 
-    RefPtr<MediaControlPanelVolumeSliderElement> slider = MediaControlPanelVolumeSliderElement::create(document);
-    m_volumeSlider = slider.get();
+    auto slider = MediaControlPanelVolumeSliderElement::create(document);
+    m_volumeSlider = slider.ptr();
     m_volumeSlider->setClearMutedOnUserInteraction(true);
-    m_volumeSliderContainer->appendChild(slider.release(), exceptionCode);
-    if (exceptionCode)
+    if (panel->appendChild(slider).hasException())
         return false;
 
-    m_panel = panel.get();
-    enclosure->appendChild(panel.release(), exceptionCode);
-    if (exceptionCode)
+    m_panel = panel.ptr();
+    if (enclosure->appendChild(panel).hasException())
         return false;
 
-    m_enclosure = enclosure.get();
-    appendChild(enclosure.release(), exceptionCode);
-    if (exceptionCode)
+    m_enclosure = enclosure.ptr();
+    if (appendChild(enclosure).hasException())
         return false;
 
     return true;
@@ -205,7 +193,7 @@ void MediaControlsEA::reset()
         return;
 
     double duration = m_mediaController->duration();
-    m_durationDisplay->setInnerText(page->theme().formatMediaControlsTime(duration), ASSERT_NO_EXCEPTION);
+    m_durationDisplay->setInnerText(page->theme().formatMediaControlsTime(duration));
     m_durationDisplay->setCurrentValue(duration);
 
     if (m_toggleClosedCaptionsButton) {
@@ -242,8 +230,7 @@ void MediaControlsEA::updateCurrentTimeDisplay()
     }
 
     // Allow the theme to format the time.
-    ExceptionCode exceptionCode;
-    m_currentTimeDisplay->setInnerText(page->theme().formatMediaControlsCurrentTime(now, duration), exceptionCode);
+    m_currentTimeDisplay->setInnerText(page->theme().formatMediaControlsCurrentTime(now, duration));
     m_currentTimeDisplay->setCurrentValue(now);
 }
 
@@ -288,14 +275,14 @@ void MediaControlsEA::createTextTrackDisplay()
     if (m_textDisplayContainer)
         return;
 
-    RefPtr<MediaControlTextTrackContainerElement> textDisplayContainer = MediaControlTextTrackContainerElement::create(document());
-    m_textDisplayContainer = textDisplayContainer.get();
+    auto textDisplayContainer = MediaControlTextTrackContainerElement::create(document());
+    m_textDisplayContainer = textDisplayContainer.ptr();
 
     if (m_mediaController)
         m_textDisplayContainer->setMediaController(m_mediaController);
 
     // Insert it before the first controller element so it always displays behind the controls.
-    insertBefore(textDisplayContainer.release(), m_enclosure, ASSERT_NO_EXCEPTION);
+    insertBefore(textDisplayContainer, m_enclosure);
 }
 #endif
 
@@ -326,12 +313,12 @@ void MediaControlsEA::showClosedCaptionTrackList()
     m_closedCaptionsContainer->show();
     m_panel->setInlineStyleProperty(CSSPropertyPointerEvents, CSSValueNone);
 
-    RefPtr<EventListener> listener = eventListener();
+    EventListener& listener = eventListener();
 
     // Check for clicks outside the media-control
-    document().addEventListener(eventNames().clickEvent, listener.get(), true);
+    document().addEventListener(eventNames().clickEvent, listener, true);
     // Check for clicks inside the media-control box
-    addEventListener(eventNames().clickEvent, listener.get(), true);
+    addEventListener(eventNames().clickEvent, listener, true);
 }
 
 void MediaControlsEA::hideClosedCaptionTrackList()
@@ -342,7 +329,7 @@ void MediaControlsEA::hideClosedCaptionTrackList()
     m_closedCaptionsContainer->hide();
     m_panel->removeInlineStyleProperty(CSSPropertyPointerEvents);
 
-    EventListener* listener = eventListener().get();
+    EventListener& listener = eventListener();
 
     document().removeEventListener(eventNames().clickEvent, listener, true);
     removeEventListener(eventNames().clickEvent, listener, true);
@@ -361,12 +348,12 @@ void MediaControlsEA::handleClickEvent(Event *event)
     }
 }
 
-PassRefPtr<MediaControlsEAEventListener> MediaControlsEA::eventListener()
+MediaControlsEAEventListener& MediaControlsEA::eventListener()
 {
     if (!m_eventListener)
         m_eventListener = MediaControlsEAEventListener::create(this);
 
-    return m_eventListener;
+    return *m_eventListener;
 }
 
 void MediaControlsEAEventListener::handleEvent(ScriptExecutionContext*, Event* event)
@@ -377,7 +364,7 @@ void MediaControlsEAEventListener::handleEvent(ScriptExecutionContext*, Event* e
     return;
 }
 
-bool MediaControlsEAEventListener::operator==(const EventListener& listener)
+bool MediaControlsEAEventListener::operator==(const EventListener& listener) const
 {
     if (const MediaControlsEAEventListener* mediaControlsEAEventListener = MediaControlsEAEventListener::cast(&listener))
         return m_mediaControls == mediaControlsEAEventListener->m_mediaControls;

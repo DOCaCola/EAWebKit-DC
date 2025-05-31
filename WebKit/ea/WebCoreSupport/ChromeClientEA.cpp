@@ -77,6 +77,8 @@
 #include <internal/include/EAWebKitAssert.h>
 #include <internal/include/EAWebkitEASTLHelpers.h>
 
+#include "DatabaseTracker.h"
+
 // Note by Arpit Baldeva: 
 // Most of the functionality in this file is related to the window object in the JavaScript API. For example, window.open()/window.close().
 // So more like multiple Windows (as opposed to multiple Views).
@@ -527,8 +529,9 @@ void ChromeClientEA::exceededDatabaseQuota(Frame& frame, const String& databaseN
 {
 	uint64_t quota = 50* 1024 * 1024; //50 MB - If needed, we can expose it. This is disk usage, not RAM.
 
-    if (!DatabaseManager::singleton().hasEntryForOrigin(frame.document()->securityOrigin()))
-        DatabaseManager::singleton().setQuota(frame.document()->securityOrigin(), quota);
+	const auto& securityOriginData = SecurityOriginData::fromSecurityOrigin(frame.document()->securityOrigin());
+    if (!DatabaseTracker::singleton().usage(securityOriginData))
+        DatabaseTracker::singleton().setQuota(securityOriginData, quota);
 
 }
 #endif
@@ -667,7 +670,7 @@ bool ChromeClientEA::hasOpenedPopup() const
 
 RefPtr<PopupMenu> ChromeClientEA::createPopupMenu(PopupMenuClient& client) const
 {
-	return adoptRef(new PopupMenuEA(client, this));
+	return adoptRef(new PopupMenuEA(&client, this));
 }
 
 RefPtr<SearchPopupMenu> ChromeClientEA::createSearchPopupMenu(PopupMenuClient& client) const

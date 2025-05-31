@@ -314,7 +314,7 @@ namespace EA
                 ConvertToString8(url.path(),path);
 
                 FixedString8_128 scheme; 
-                ConvertToString8(url.protocol(),scheme);
+                ConvertToString8(url.protocol().toString(),scheme);
                 
                 time_t timeNow = ::time(NULL);
 
@@ -343,7 +343,7 @@ namespace EA
                 {
                     uint16_t urlPort(80);
                     if(url.port())
-                        urlPort = url.port();
+                        urlPort = url.port().value();
                     uint16_t index = 0;
                     for(; index < Cookie::MAX_NUM_PORTS ; ++index)
                     {
@@ -1141,7 +1141,7 @@ namespace EA
 							WebCore::URL url(WebCore::ParsedURLString, pURI);
                             if(url.port())
                             {
-                                currentPort = url.port();
+                                currentPort = url.port().value();
                             }
                             cookie->mPorts[0] = currentPort;
                             cookie->mPorts[1] = 0;
@@ -1234,7 +1234,7 @@ namespace EA
             }
 
             //Make sure that the port list has the port on which the request was made
-            uint32_t urlPort = url.port();
+            uint32_t urlPort = url.port().value();
             
             //urlport is 0
             if(!urlPort) 

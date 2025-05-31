@@ -64,7 +64,7 @@ public:
 	//+EAWebKitChange
 	//10/14/2011
 #if PLATFORM(EA)
-	virtual void* originatingObject() const = 0;
+	virtual void* originatingObject() const { return nullptr; }
 #endif
 	//-EAWebKitChange
 #if PLATFORM(WIN)

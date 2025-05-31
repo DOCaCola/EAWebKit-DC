@@ -32,9 +32,9 @@ FontPlatformData::FontPlatformData(FontPlatformDataPrivate* privData, int size, 
 	, m_orientation(Horizontal)
 	, m_size(size) //EAWebKitTODO: Ideally, this m_size should be equal everywhere so we need to get rid of scaling
 	, m_widthVariant(RegularWidth)
+    , m_textRenderingMode(AutoTextRendering)
 	, m_privData(privData)
 	, m_isColorBitmapFont(false)
-	, m_isCompositeFontReference(false)
 {
 	
 }
@@ -60,37 +60,11 @@ unsigned FontPlatformData::hash() const
     hashCodes[1] = m_syntheticBold;
     hashCodes[2] = m_syntheticOblique;
     hashCodes[3] = m_isColorBitmapFont;
-    hashCodes[4] = m_isCompositeFontReference;
-    hashCodes[5] = m_orientation;
-    hashCodes[6] = m_widthVariant;
+    hashCodes[4] = m_orientation;
+    hashCodes[5] = m_widthVariant;
+	hashCodes[6] = m_textRenderingMode;
 	hashCodes[7] = StringHasher::computeHashAndMaskTop8Bits(font()->GetFamilyName(), EA::Internal::Strlen(font()->GetFamilyName()));
 	return StringHasher::hashMemory<sizeof(hashCodes)>(hashCodes);
-}
-
-void FontPlatformData::platformDataInit(const FontPlatformData &other)
-{
-	m_privData = other.m_privData;
-	if (m_privData && m_privData != hashTableDeletedFontValue())
-		++m_privData->refCount;
-}
-
-const FontPlatformData& FontPlatformData::platformDataAssign(const FontPlatformData& other)
-{
-    EAW_ASSERT(m_privData != other.m_privData);
-    
-	if (m_privData && m_privData != hashTableDeletedFontValue()) 
-	{
-        --m_privData->refCount;
-        if (!m_privData->refCount)
-            delete m_privData;
-    }
-    
-	m_privData = other.m_privData;
-    
-	if (m_privData && m_privData != hashTableDeletedFontValue())
-        ++m_privData->refCount;
-    
-	return *this;
 }
 
 bool FontPlatformData::platformIsEqual(const FontPlatformData& other) const

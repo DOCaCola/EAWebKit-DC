@@ -246,7 +246,7 @@ bool PNGImageDecoder::isSizeAvailable()
 	// abaldeva: The size available is used as an indication that image can be drawn in the CachedImage.cpp. We avoid unnecessary decoding
 	// and display of partial data by not decoding until all the data is received. This is a win/win situation for both memory and performance. 
 	if (!ImageDecoder::isSizeAvailable() && isAllDataReceived())
-		decode(true);
+		decode(true, 0);
 	//-EAWebKitChange
 
     return ImageDecoder::isSizeAvailable();

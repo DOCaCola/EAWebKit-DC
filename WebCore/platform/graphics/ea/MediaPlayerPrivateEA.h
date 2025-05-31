@@ -46,11 +46,12 @@ class MediaPlayerPrivateEA : public MediaPlayerPrivateInterface
 {
 public:
 	explicit MediaPlayerPrivateEA(MediaPlayer* player);
-    ~MediaPlayerPrivateEA();
+    ~MediaPlayerPrivateEA() override;
 
     // For setting up the engine
     static void registerMediaEngine(MediaEngineRegistrar);
-    static void getSupportedTypes(HashSet<String> &supported);
+    static void getSupportedTypes(HashSet<String, ASCIICaseInsensitiveHash>& types);
+	static bool supportsKeySystem(const String& keySystem, const String& mimeType);
 	static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters& parameters);
 
     // For playing the media
@@ -77,7 +78,7 @@ public:
     virtual float maxTimeSeekable() const override;
     virtual std::unique_ptr<PlatformTimeRanges> buffered() const override; 
     virtual void setSize(const IntSize& ) override;
-    virtual void paint(GraphicsContext*, const FloatRect&) override;
+    virtual void paint(GraphicsContext&, const FloatRect&) override;
 
     // Ignore these for now as unclear if needed.
     virtual void prepareToPlay() override { }

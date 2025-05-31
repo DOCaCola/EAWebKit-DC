@@ -58,7 +58,7 @@ SocketStreamHandlePrivate::SocketStreamHandlePrivate(SocketStreamHandleImpl* str
 	bool isSecure = url.protocolIs("wss");
 	EA::WebKit::SocketType sockType = isSecure ? EA::WebKit::kSecuredTCP : EA::WebKit::kUnsecuredTCP;
 
-	unsigned int port = url.hasPort() ? url.port() : (isSecure ? 443 : 80);
+	unsigned int port = url.port() ? url.port().value() : (isSecure ? 443 : 80);
 	EA::WebKit::FixedString8_128 hostUrl;
 	EA::WebKit::ConvertToString8(url.host(),hostUrl);
 	
@@ -71,7 +71,7 @@ SocketStreamHandlePrivate::SocketStreamHandlePrivate(SocketStreamHandleImpl* str
 	}
 }
 
-SocketStreamHandlePrivate::SocketStreamHandlePrivate(SocketStreamHandle* streamHandle, EA::WebKit::SocketHandle socketHandle)
+SocketStreamHandlePrivate::SocketStreamHandlePrivate(SocketStreamHandleImpl* streamHandle, EA::WebKit::SocketHandle socketHandle)
 : m_streamHandle(streamHandle)
 , m_socketHandle(socketHandle)
 , m_CleanupTansportHandlerSocketHandle(socketHandle)
@@ -86,7 +86,7 @@ SocketStreamHandlePrivate::SocketStreamHandlePrivate(SocketStreamHandle* streamH
     //need to set the EA::WebKit::SocketHandleClient* sockInfo->socketHandleClient, so the streamer gets the notifications
     EA::WebKit::GetSocketTransportHandler()->SetSocketHandleClient(m_socketHandle, this);
     //an accepted connection is already open
-    m_streamHandle->m_state = SocketStreamHandleBase::SocketStreamState::Open;
+    m_streamHandle->m_state = SocketStreamHandleImpl::SocketStreamState::Open;
 }
 
 SocketStreamHandlePrivate::~SocketStreamHandlePrivate()
@@ -105,9 +105,9 @@ SocketStreamHandlePrivate::~SocketStreamHandlePrivate()
 
 void SocketStreamHandlePrivate::RecvedData(const char8_t* data, int32_t length)
 {
-	if (m_streamHandle && m_streamHandle->client()) 
+	if (m_streamHandle) 
 	{
-		m_streamHandle->client()->didReceiveSocketStreamData(m_streamHandle, data, length);
+		m_streamHandle->m_client.didReceiveSocketStreamData(*m_streamHandle, data, length);
 	}
 }
 void SocketStreamHandlePrivate::SocketEvent(EA::WebKit::SocketEventType eventType)
@@ -115,32 +115,32 @@ void SocketStreamHandlePrivate::SocketEvent(EA::WebKit::SocketEventType eventTyp
 	switch(eventType)
 	{
 	case EA::WebKit::kSocketConnected:
-		if (m_streamHandle && m_streamHandle->client()) 
+		if (m_streamHandle) 
 		{
-			m_streamHandle->m_state = SocketStreamHandleBase::Open;
-			m_streamHandle->client()->didOpenSocketStream(m_streamHandle);
+			m_streamHandle->m_state = SocketStreamHandle::Open;
+			m_streamHandle->m_client.didOpenSocketStream(*m_streamHandle);
 		}
 		break;
 	case EA::WebKit::kSocketClose:
 		// Following is ported from Qt. This code does not call SocketStreamHandle::platformClose() so we need to do that manually on the handler side.
-		if (m_streamHandle && m_streamHandle->client()) 
+		if (m_streamHandle) 
 		{
-			SocketStreamHandle* streamHandle = m_streamHandle;
+			SocketStreamHandleImpl* streamHandle = m_streamHandle;
 			m_streamHandle = 0;
 			m_socketHandle = 0;
 			// This following call deletes _this_. Nothing should be after it.
-			streamHandle->client()->didCloseSocketStream(streamHandle);
+			streamHandle->m_client.didCloseSocketStream(*streamHandle);
 		}
 		break;
 	case EA::WebKit::kSocketError:
 		// Following is ported from Qt. This code does not call SocketStreamHandle::platformClose() so we need to do that manually on the handler side.
-		if (m_streamHandle && m_streamHandle->client()) 
+		if (m_streamHandle) 
 		{
-			SocketStreamHandle* streamHandle = m_streamHandle;
+			SocketStreamHandleImpl* streamHandle = m_streamHandle;
 			m_streamHandle = 0;
 			m_socketHandle = 0;
 			// This following call deletes _this_. Nothing should be after it.
-			streamHandle->client()->didCloseSocketStream(streamHandle);
+			streamHandle->m_client.didCloseSocketStream(*streamHandle);
 		}
 		break;
 	default:
@@ -203,15 +203,14 @@ SocketStreamHandleImpl::~SocketStreamHandleImpl()
 {
 	ASSERT(WTF::isMainThread());
 	LOG(Network, "SocketStreamHandle %p delete", this);
-    setClient(0);
     delete m_p;
 }
 
-int SocketStreamHandleImpl::platformSend(const char* data, int len)
+std::optional<size_t>  SocketStreamHandleImpl::platformSend(const char* data, size_t length)
 {
 	ASSERT(WTF::isMainThread());
 	LOG(Network, "SocketStreamHandle %p platformSend", this);
-    return m_p->Send(data, len);
+    return m_p->Send(data, length);
 }
 
 void SocketStreamHandleImpl::writeReady()

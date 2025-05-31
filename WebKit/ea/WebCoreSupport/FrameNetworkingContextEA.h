@@ -27,15 +27,19 @@ namespace WebCore {
 // This class serves to propagate port specific information down the WebCore layer. In our port, we encapsulate our WebFrame. 
 class FrameNetworkingContextEA : public FrameNetworkingContext {
 public:
-    static PassRefPtr<FrameNetworkingContextEA> create(Frame*, void* originatingObject, bool mimeSniffingEnabled);
+    static Ref<FrameNetworkingContextEA> create(Frame*, void* originatingObject, bool mimeSniffingEnabled);
 
 private:
     FrameNetworkingContextEA(Frame*, void* originatingObject, bool mimeSniffingEnabled);
+    void setSession(std::unique_ptr<NetworkStorageSession>&&);
 
-    virtual void* originatingObject() const;
+    NetworkStorageSession& storageSession() const override;
+    virtual void* originatingObject() const override;
 
     void* m_originatingObject;
 	bool m_mimeSniffingEnabled;
+
+    mutable std::unique_ptr<NetworkStorageSession> m_session;
 };
 
 }

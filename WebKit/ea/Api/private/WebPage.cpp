@@ -63,6 +63,7 @@
 #include "FrameLoaderClientEA.h"
 #include "FrameTree.h"
 #include "FrameView.h"
+#include "LibWebRTCProvider.h"
 #include "HTMLFormElement.h"
 #include "HTMLFrameOwnerElement.h"
 #include "HTMLInputElement.h"
@@ -114,6 +115,7 @@
 #include "InspectorAgentBase.h"
 #include "PageConfiguration.h"
 #include "BackForwardController.h"
+#include "SocketProvider.h"
 
 namespace EA
 {
@@ -188,9 +190,12 @@ static void ApplyParamsToSettings(WebCore::Settings& settings)
     WTF::String offlineCachePath = constructPathInTempDir(kOfflineCacheSubDir);
     if (!offlineCachePath.isEmpty())
     {
+		// TODO: EAWKDC FIXME
+		/*
         settings.setOfflineWebApplicationCacheEnabled(true);
         if (WebCore::ApplicationCacheStorage::singleton().cacheDirectory().isEmpty())
 			WebCore::ApplicationCacheStorage::singleton().setCacheDirectory(offlineCachePath);
+		*/
     }
 
 		//Web SQL database is deprecated and does not seem to function correctly anymore. 
@@ -309,56 +314,60 @@ const char* WebPagePrivate::editorCommandForWebActions(WebAction action)
 }
 
 
-WebPagePrivate::WebPagePrivate(WebPage *wPage)
-: webPage(wPage)
-, page(0)
-, mainFrame(0)
-, insideOpenCall(false)
-, m_totalBytes(0)
-, m_bytesReceived()
-, mouseCausedEventActive(false)
-, clickCausedFocus(false)
-, mNewTouch(true)
-, forwardUnsupportedContent(false)
-, smartInsertDeleteEnabled(true)
-, selectTrailingWhitespaceEnabled(false)
-, linkPolicy(WebPage::DontDelegateLinks)
-, viewportSize(WebCore::IntSize(0, 0))
-, useFixedLayout(false)
-, mInspector(NULL)
+WebPagePrivate::WebPagePrivate(WebPage* wPage)
+	: webPage(wPage)
+	, page(nullptr)
+	, mainFrame(nullptr)
+	, webView(nullptr)
+	, insideOpenCall(false)
+	, m_totalBytes(0)
+	, m_bytesReceived()
+	, mouseCausedEventActive(false)
+	, clickCausedFocus(false)
+	, mNewTouch(true)
+	, forwardUnsupportedContent(false)
+	, smartInsertDeleteEnabled(true)
+	, selectTrailingWhitespaceEnabled(false)
+	, linkPolicy(WebPage::DontDelegateLinks)
+	, viewportSize(WebCore::IntSize(0, 0))
+	, useFixedLayout(false)
+	, mInspector(nullptr)
 {
-	WebCore::PageConfiguration pageConfiguration;
-    fillWithEmptyClients(pageConfiguration);
+	WebCore::PageConfiguration pageConfiguration(
+		makeUniqueRef<WebCore::EditorClientEA>(webPage),
+		WebCore::SocketProvider::create(),
+		makeUniqueRef<WebCore::LibWebRTCProvider>()
+	);
+	fillWithEmptyClients(pageConfiguration);
 	pageConfiguration.chromeClient = new WebCore::ChromeClientEA(webPage);
-	pageConfiguration.editorClient = new WebCore::EditorClientEA(webPage);
 	pageConfiguration.loaderClientForMainFrame = new WebCore::FrameLoaderClientEA();
 	pageConfiguration.progressTrackerClient = new WebCore::ProgressTrackerClientEA(webPage);
-    WTF::String localStoragePath = constructPathInTempDir(kLocalStorageSubDir);
-    if (!localStoragePath.isEmpty())
-    {
-        pageConfiguration.storageNamespaceProvider = WebStorageNamespaceProvider::create(localStoragePath);
-        // This is the guy for IndexedDB which I don't believe we support yet.  It is not a mistake to create this guy inside the if check.
-        pageConfiguration.databaseProvider = &WebDatabaseProvider::singleton(); 
-    }
-    // Use this for progress notification configuration.progressTrackerClient = static_cast<WebFrameLoaderClient*>(configuration.loaderClientForMainFrame);
+	WTF::String localStoragePath = constructPathInTempDir(kLocalStorageSubDir);
+	if (!localStoragePath.isEmpty())
+	{
+		pageConfiguration.storageNamespaceProvider = ::WebKit::WebStorageNamespaceProvider::create(localStoragePath);
+		// This is the guy for IndexedDB which I don't believe we support yet.  It is not a mistake to create this guy inside the if check.
+		pageConfiguration.databaseProvider = &WebDatabaseProvider::singleton();
+	}
+	// Use this for progress notification configuration.progressTrackerClient = static_cast<WebFrameLoaderClient*>(configuration.loaderClientForMainFrame);
 #if !defined(EA_PLATFORM_PS5) && !defined(EA_PLATFORM_STADIA)
-    //TODO there possible crash on PS5, need to investigate this issue later. Not affecting normal WebKit usage.
+	//TODO there possible crash on PS5, need to investigate this issue later. Not affecting normal WebKit usage.
 	pageConfiguration.inspectorClient = new WebCore::InspectorClientEA(webPage);
 #endif
 
-    VisitedLinkStoreEA::setShouldTrackVisitedLinks(true);
-    pageConfiguration.visitedLinkStore = VisitedLinkStoreEA::create();
-    pageConfiguration.userContentController = WebCore::UserContentController::create();
+	VisitedLinkStoreEA::setShouldTrackVisitedLinks(true);
+	pageConfiguration.visitedLinkStore = VisitedLinkStoreEA::create();
+	pageConfiguration.userContentProvider = WebCore::UserContentController::create();
 
-	page = new WebCore::Page(pageConfiguration);
+	page = new WebCore::Page(WTFMove(pageConfiguration));
 	page->setGroupName(kDefaultPageGroupName);
 
-    // Set up the page settings
-    ApplyParamsToSettings(page->settings());
+	// Set up the page settings
+	ApplyParamsToSettings(page->settings());
 #if 0
 	memset(actions, 0, sizeof(actions));
 #endif
-#if ENABLE(NOTIFICATIONS)    
+#if ENABLE(NOTIFICATIONS)
 	//NotificationPresenterClientEA::notificationPresenter()->addClient();
 #endif
 }
@@ -913,7 +922,7 @@ void WebPagePrivate::privOnLoadProgressChanged(int)
 }
 
 WebPage::ViewportAttributes::ViewportAttributes()
-    : d(0)
+    : d(nullptr)
     , m_initialScaleFactor(-1.0)
     , m_minimumScaleFactor(-1.0)
     , m_maximumScaleFactor(-1.0)
@@ -1182,7 +1191,8 @@ void WebPage::SetInspectorDisplay(bool show)
     }
     else
     {
-        ic.close();
+		// TODO: EAWKDC FIXME
+        //ic.close();
     }
 }
 
@@ -1211,7 +1221,7 @@ void WebPage::remoteFrontendConnected()
 void WebPage::remoteFrontendDisconnected()
 {
     WebCore::InspectorController &ic = d->page->inspectorController();
-    ic.disconnectFrontend(Inspector::DisconnectReason::InspectorDestroyed);
+    ic.disconnectFrontend(this);
 }
 
 void WebPage::dispatchMessageFromRemoteFrontend(const String& message)

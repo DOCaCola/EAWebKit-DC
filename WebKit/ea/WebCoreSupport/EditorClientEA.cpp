@@ -39,6 +39,7 @@
 #include "Frame.h"
 #include "HTMLElement.h"
 #include "HTMLInputElement.h"
+#include "HTMLTextAreaElement.h"
 #include "HTMLNames.h"
 #include "KeyboardEvent.h"
 #include "NotImplemented.h"
@@ -238,12 +239,12 @@ void EditorClientEA::getClientPasteboardDataForRange(Range*, Vector<String>& pas
 	notImplemented();
 }
 
-void EditorClientEA::registerUndoStep(PassRefPtr<UndoStep>)
+void EditorClientEA::registerUndoStep(UndoStep&)
 {
 	notImplemented();
 }
 
-void EditorClientEA::registerRedoStep(PassRefPtr<UndoStep>)
+void EditorClientEA::registerRedoStep(UndoStep&)
 {
 	notImplemented();
 }
@@ -287,11 +288,6 @@ bool EditorClientEA::shouldInsertNode(Node* node, Range* range, EditorInsertActi
 //     }
 	notImplemented();
     return acceptsEditing;
-}
-
-void EditorClientEA::pageDestroyed()
-{
-    delete this;
 }
 
 bool EditorClientEA::smartInsertDeleteEnabled()
@@ -340,7 +336,7 @@ void EditorClientEA::handleKeyboardEvent(KeyboardEvent* event)
     if (start->isContentEditable()) {
         bool doSpatialNavigation = false;
         if (isSpatialNavigationEnabled(&frame)) {
-            if (!kevent->modifiers()) {
+            if (kevent->modifiers().isEmpty()) {
                 switch (kevent->windowsVirtualKeyCode()) {
 				case EA::WebKit::kArrowLeft:
 				case EA::WebKit::kArrowRight:
@@ -429,9 +425,9 @@ void EditorClientEA::handleKeyboardEvent(KeyboardEvent* event)
 				) 
 			{
 #if defined(EA_PLATFORM_OSX)
-                int modifierFilter = PlatformKeyboardEvent::MetaKey;
+                PlatformEvent::Modifier modifierFilter = PlatformKeyboardEvent::Modifier::MetaKey;
 #else
-                int modifierFilter = PlatformKeyboardEvent::CtrlKey;
+                PlatformEvent::Modifier modifierFilter = PlatformKeyboardEvent::Modifier::CtrlKey;
 #endif
 
                 switch (kevent->windowsVirtualKeyCode()) {
@@ -528,6 +524,10 @@ bool EditorClientEA::supportsGlobalSelection(void)
     return false;
 }
 
+void EditorClientEA::updateEditorStateAfterLayoutIfEditabilityChanged()
+{
+}
+
 bool EditorClientEA::isEditing() const
 {
     return m_editing;
@@ -567,7 +567,7 @@ void EditorClientEA::setInputMethodState(bool active)
 			pView->MoveMouseCursorToNode(pNode);
 			if (pNode && pNode->isHTMLElement())
 			{
-				if (is<HTMLInputElement>(frame.document()->focusedElement()) || is<HTMLTextAreaElement>(frame.document()->focusedElement()))
+				if (is<HTMLInputElement>(*frame.document()->focusedElement()) || is<HTMLTextAreaElement>(*frame.document()->focusedElement()))
 				{
 					HTMLElement* pElement = static_cast<HTMLElement*> (pNode);
 					pElement->blur();
@@ -669,7 +669,8 @@ void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText, Ma
 	notImplemented();
 }
 
-PassRefPtr<DocumentFragment> Editor::webContentFromPasteboard(Pasteboard& pasteboard, Range&, bool /*allowPlainText*/, bool& /*chosePlainText*/)
+RefPtr<DocumentFragment> Editor::webContentFromPasteboard(Pasteboard& pasteboard, Range&, bool /*allowPlainText*/,
+                                                          bool& /*chosePlainText*/)
 {
 	notImplemented();
 	return nullptr;

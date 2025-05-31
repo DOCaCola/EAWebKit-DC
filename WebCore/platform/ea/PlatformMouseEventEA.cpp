@@ -70,12 +70,13 @@ PlatformMouseEvent::PlatformMouseEvent(const EA::WebKit::MouseButtonEvent* butto
 
 	m_clickCount = buttonEvent->mClickCount;
 
-    m_modifiers = 0;
-    m_modifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? m_modifiers | ShiftKey  : m_modifiers;
-    m_modifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? m_modifiers | CtrlKey   : m_modifiers;
-    m_modifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? m_modifiers | AltKey    : m_modifiers;
-    m_modifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? m_modifiers | MetaKey   : m_modifiers;
-	
+    int newModifiers = 0;
+    newModifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? newModifiers | (int)Modifier::ShiftKey  : newModifiers;
+    newModifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? newModifiers | (int)Modifier::CtrlKey   : newModifiers;
+    newModifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? newModifiers | (int)Modifier::AltKey    : newModifiers;
+    newModifiers = (buttonEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? newModifiers | (int)Modifier::MetaKey   : newModifiers;
+	m_modifiers = OptionSet<Modifier>::fromRaw(newModifiers);
+
 	m_timestamp = WTF::currentTime();
 	
 	// Note by Arpit Baldeva: Following is not used in the Qt port. On Windows port, it has a straight mapping to Windows modifiers WORD. So it seems like 
@@ -110,27 +111,18 @@ PlatformMouseEvent::PlatformMouseEvent(const EA::WebKit::MouseMoveEvent* moveEve
 	m_type		= MouseMoved;
 	m_clickCount	= 0;
 
-    m_modifiers = 0;
-    m_modifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? m_modifiers | ShiftKey  : m_modifiers;
-    m_modifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? m_modifiers | CtrlKey   : m_modifiers;
-    m_modifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? m_modifiers | AltKey    : m_modifiers;
-    m_modifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? m_modifiers | MetaKey   : m_modifiers;
+    int newModifiers = 0;
+    newModifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? newModifiers | (int)Modifier::ShiftKey  : newModifiers;
+    newModifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? newModifiers | (int)Modifier::CtrlKey   : newModifiers;
+    newModifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? newModifiers | (int)Modifier::AltKey    : newModifiers;
+    newModifiers = (moveEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? newModifiers | (int)Modifier::MetaKey   : newModifiers;
+	m_modifiers = OptionSet<Modifier>::fromRaw(newModifiers);
 
 	m_timestamp = WTF::currentTime();
 
 	// Note by Arpit Baldeva: Following is not used in the Qt port. On Windows port, it has a straight mapping to Windows modifiers WORD. 
 	// This information is later passed to the ChromeClient which is port specific. So this can be ignored unless the port makes some use of it. 
 	m_modifierFlags = moveEvent->mModifiers;
-}
-
-bool operator==(unsigned short a, MouseButton b)
-{
-    return a == static_cast<unsigned short>(b);
-}
-
-bool operator!=(unsigned short a, MouseButton b)
-{
-    return a != static_cast<unsigned short>(b);
 }
 
 }

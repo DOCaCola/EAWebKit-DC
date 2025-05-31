@@ -279,7 +279,7 @@ MappedFileData::~MappedFileData()
 {
 //+EAWebKitChange
 //9/23/2015 added && !PLATFORM(EA)
-#if !PLATFORM(WIN)
+#if !PLATFORM(WIN) && !PLATFORM(EA)
 //-EAWebKitChange
     if (!m_fileData)
         return;
@@ -291,7 +291,7 @@ MappedFileData::MappedFileData(const String& filePath, bool& success)
 {
 //+EAWebKitChange
 //9/23/2015 added || PLATFORM(EA)
-#if PLATFORM(WIN)
+#if !PLATFORM(WIN) && PLATFORM(EA)
 //-EAWebKitChange
     // FIXME: Implement mapping
     success = false;

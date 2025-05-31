@@ -133,7 +133,7 @@ public:
 
 
 	explicit WebPage(View* pView);
-	~WebPage();
+	~WebPage() override;
 
 	WebFrame* mainFrame() const;
 	WebFrame* currentFrame() const;
@@ -184,6 +184,7 @@ public:
     void remoteFrontendDisconnected();
     void dispatchMessageFromRemoteFrontend(const String& message);
     virtual void sendMessageToFrontend(const String& message) override;
+	ConnectionType connectionType() const override { return ConnectionType::Local; }
 
 
 private:

@@ -30,8 +30,7 @@
 // This file has one modification. At various places, it fixes up the include paths of the files in webcore directory. Merge carefully for next iteration.
 //-EAWebKitChange
 
-#include <WebCore/SecurityOriginData.h>
-
+#include <SecurityOriginData.h>
 #include <StorageArea.h>
 #include <Timer.h>
 #include <wtf/HashMap.h>

@@ -139,6 +139,7 @@ static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, con
 	    // If we come across a generic font, we read it from the Params based on the generic family set in the description. 
 	    bool genericFontAdded = false;
         AtomicString nextFamilyName = "";
+		
 	    while((i < (fontDescription.familyCount() + 1)) && (i < familyNameArrayCapacity))
 	    {
             // we do this so we can insert the first family name into the list and keep all the other logic to operate on it in the loop
@@ -154,7 +155,7 @@ static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, con
 		    if(nextFamilyName.startsWith("-webkit",true)) // A generic font family 
 		    {
 			    genericFontAdded = true;
-			    const char16_t* type = 0;
+			    const char16_t* type = nullptr;
 
                 //note, not specifically handled pictographFamily
                 if (nextFamilyName == standardFamily)
@@ -235,7 +236,8 @@ static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, con
 
 	return nullptr;
 }
-std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDescription& fontDescription, const AtomicString& familyName)
+
+std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDescription& fontDescription, const AtomicString& familyName, const FontFeatureSettings* fontFaceFeatures, const FontVariantSettings* fontFaceVariantSettings)
 {
 	if(EA::WebKit::IFont* pFont = createFont(fontDescription,familyName))
 	{
@@ -248,7 +250,7 @@ std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDe
 }
 
 
-RefPtr<Font> FontCache::systemFallbackForCharacters(const FontDescription& fontDescription, const WebCore::Font*, bool, const UChar* sampleChars, unsigned length)
+RefPtr<Font> FontCache::systemFallbackForCharacters(const FontDescription& fontDescription, const WebCore::Font* font, bool, const UChar* sampleChars, unsigned length)
 {
     // This function is called if WebCore can't display the character with the font data it received from the platform earlier. The situation mostly arises for lightweight font resources.
 	// For example, by default, our "Times New Roman" does not contain foreign language characters (such as Chinese). A page might request Times New Roman for Chinese script. Since during the initial query
@@ -284,7 +286,7 @@ Ref<Font> FontCache::lastResortFallbackFont(const FontDescription& fontDescripti
 	return fontForPlatformData(*platformData);
 }
 
-void FontCache::getTraitsInFamily(const AtomicString&, Vector<unsigned>&)
+Vector<FontTraitsMask> getTraitsInFamily(const AtomicString&)
 {
 	//Most ports ignore this. Seems like called only for downloadable font.
 }

@@ -33,8 +33,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace WebCore {
 
-DDSImageDecoder::DDSImageDecoder(ImageSource::AlphaOption alphaOption,
-                                 ImageSource::GammaAndColorProfileOption gammaAndColorProfileOption)
+DDSImageDecoder::DDSImageDecoder(AlphaOption alphaOption,
+                                 GammaAndColorProfileOption gammaAndColorProfileOption)
     : ImageDecoder(alphaOption, gammaAndColorProfileOption)
 {
 	setIgnoreGammaAndColorProfile(EA::WebKit::GetParameters().mIgnoreGammaAndColorProfile ? true : false);
@@ -55,9 +55,9 @@ bool DDSImageDecoder::isSizeAvailable()
     return ImageDecoder::isSizeAvailable();
 }
 
-bool DDSImageDecoder::setSize(unsigned width, unsigned height)
+bool DDSImageDecoder::setSize(const IntSize& size)
 {
-    if (!ImageDecoder::setSize(width, height))
+    if (!ImageDecoder::setSize(size))
         return false;
     return true;
 }
@@ -69,11 +69,10 @@ ImageFrame* DDSImageDecoder::frameBufferAtIndex(size_t index)
 
     if (m_frameBufferCache.isEmpty()) {
         m_frameBufferCache.resize(1);
-        m_frameBufferCache[0].setPremultiplyAlpha(m_premultiplyAlpha);
     }
 
     ImageFrame& frame = m_frameBufferCache[0];
-    if (frame.status() != ImageFrame::FrameComplete)
+    if (!frame.isComplete())
         decode();
     return &frame;
 }
@@ -110,9 +109,9 @@ bool DDSImageDecoder::decode()
             return false;
         }
         
-        setSize(width, height);
+        setSize(IntSize(width, height));
         ImageFrame& frame = m_frameBufferCache[0];
-        frame.setSize(width, height, false);
+        frame.initialize(IntSize(width, height), false);
 
         int mipMapCount = buffer->mipMapCount; 
         if (mipMapCount > 1)
@@ -126,7 +125,7 @@ bool DDSImageDecoder::decode()
         // Use a straight up memcpy instead DDSDecompressARGB8888 from ddshelper.h as that guy does a byte by byte copy
         //ImageFrame::PixelData* address = frame.getAddr(0, 0);
         //memcpy(address, pixels, width * height * 4);
-        m_frameBufferCache.first().setStatus(ImageFrame::FrameComplete);
+        m_frameBufferCache.first().setDecoding(ImageFrame::Decoding::Complete);
 
         return true;
     }

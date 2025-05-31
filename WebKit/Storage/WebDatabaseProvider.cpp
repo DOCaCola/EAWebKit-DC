@@ -32,7 +32,6 @@
 #include "config.h"
 #include "WebDatabaseProvider.h"
 
-#include <IDBFactoryBackendInterface.h>
 #include <SessionID.h>
 
 WebDatabaseProvider& WebDatabaseProvider::singleton()

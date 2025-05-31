@@ -124,7 +124,7 @@ void WebSocketServerConnection::sendRawData(const char* data, size_t length)
     m_socket->send(data, length);
 }
 
-void WebSocketServerConnection::didCloseSocketStream(SocketStreamHandle*)
+void WebSocketServerConnection::didCloseSocketStream(SocketStreamHandle&)
 {
     // Destroy the SocketStreamHandle now to prevent closing an already closed socket later.
     m_socket = nullptr;
@@ -137,11 +137,12 @@ void WebSocketServerConnection::didCloseSocketStream(SocketStreamHandle*)
     m_server->didCloseWebSocketServerConnection(this);
 }
 
-void WebSocketServerConnection::didReceiveSocketStreamData(SocketStreamHandle*, const char* data, int length)
+void WebSocketServerConnection::didReceiveSocketStreamData(WebCore::SocketStreamHandle&, const char* data, std::optional<size_t> length)
 {
     // Each didReceiveData call adds more data to our buffer.
     // We clear the buffer when we have handled data from it.
-    m_bufferedData.append(data, length);
+    if (length)
+		m_bufferedData.append(data, length.value());
 
     switch (m_mode) {
     case HTTP:
@@ -156,13 +157,13 @@ void WebSocketServerConnection::didReceiveSocketStreamData(SocketStreamHandle*, 
     }
 }
 
-void WebSocketServerConnection::didUpdateBufferedAmount(WebCore::SocketStreamHandle*, size_t)
+void WebSocketServerConnection::didUpdateBufferedAmount(WebCore::SocketStreamHandle&, size_t)
 {
     if (m_shutdownAfterSend && !m_socket->bufferedAmount())
         shutdownNow();
 }
 
-void WebSocketServerConnection::didFailSocketStream(SocketStreamHandle*, const SocketStreamError&)
+void WebSocketServerConnection::didFailSocketStream(SocketStreamHandle&, const SocketStreamError&)
 {
     // Possible read or write error.
 }

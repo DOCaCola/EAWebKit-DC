@@ -37,7 +37,7 @@
 #include <EAWebKit/EAWebKitTransport.h>
 namespace WebCore 
 {
-class SocketStreamHandlePrivate : public EA::WebKit::SocketHandleClient
+class SocketStreamHandlePrivate final : public EA::WebKit::SocketHandleClient
 {
 public:
 	SocketStreamHandlePrivate(SocketStreamHandleImpl*, const URL&);

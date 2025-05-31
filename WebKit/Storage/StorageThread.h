@@ -64,7 +64,7 @@ private:
 	//04/24/2015
 	static void DoWorkCallback(void*);
 	void DoWork();
-	std::function<void ()> m_currentTask;
+	Function<void ()> m_currentTask;
 	//-EAWebKitChange
 };
 

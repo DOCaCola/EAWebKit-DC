@@ -41,7 +41,7 @@ PlatformTouchEvent::PlatformTouchEvent(const EA::WebKit::TouchEvent* touchEvent)
 		m_touchPoints.append(touchPoint);
 	}
 	m_type = touchEvent->mType;
-	m_modifiers = touchEvent->mModifiers;
+	m_modifiers = OptionSet<Modifier>::fromRaw(touchEvent->mModifiers);
 	m_timestamp = WTF::currentTime();
 	
 }

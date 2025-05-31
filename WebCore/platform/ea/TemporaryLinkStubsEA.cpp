@@ -110,16 +110,6 @@ void AXObjectCache::notificationPostTimerFired()
     notImplemented();
 }
 
-AXAttributeCacheEnabler::AXAttributeCacheEnabler(AXObjectCache *cache)
-{
-    notImplemented();
-}
-
-AXAttributeCacheEnabler::~AXAttributeCacheEnabler()
-{
-    notImplemented();
-}
-
 }
 
 // vim: ts=4 sw=4 et

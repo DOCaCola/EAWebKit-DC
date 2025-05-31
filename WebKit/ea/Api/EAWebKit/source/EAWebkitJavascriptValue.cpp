@@ -429,14 +429,16 @@ bool JavascriptValue::Call(JavascriptValue *args, size_t argCount, JavascriptVal
     JSC::JSFunction *jsFunction = ValueToFunction(GetImpl());
     JSC::CallData callData;
     JSC::CallType callType = JSC::JSFunction::getCallData(jsFunction,callData);
-    if (callType != JSC::CallTypeNone)
+    if (callType != JSC::CallType::None)
     {
         JSC::JSValue jsvFunction = *GetImpl();
         JSC::ExecState *exec = mExecState;
         JSC::JSLockHolder lock(exec);
         JSC::JSValue result = JSC::call(exec, jsvFunction, callType, callData, jsvFunction, jsArgs);
 
-        if (!exec->hadException())
+        auto scope = DECLARE_THROW_SCOPE(exec->vm());
+
+        if (!(UNLIKELY(scope.exception())))
         {
             if (pValueOut)
             {
@@ -448,7 +450,7 @@ bool JavascriptValue::Call(JavascriptValue *args, size_t argCount, JavascriptVal
         }
         else
         {
-            WebCore::reportException(exec, exec->exception());
+            WebCore::reportException(exec, scope.exception());
         }
     }
 

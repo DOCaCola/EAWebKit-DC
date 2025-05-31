@@ -119,11 +119,11 @@ void TextPopup::show(const char16_t* pTip, int x, int y)
     AtomicString stdfont(EA::WebKit::GetParameters().mFontFamilyStandard);
     if(stdfont.isEmpty())
         stdfont = "Arial";
-    FontDescription fontDescription;
+    FontCascadeDescription fontDescription;
     fontDescription.setComputedSize(kToolTipFontSize);
     fontDescription.setSpecifiedSize(kToolTipFontSize);   
     
-	WTF::RefPtr<Font> pSFD = FontCache::singleton().fontForFamily(fontDescription, stdfont, true);
+	WTF::RefPtr<Font> pSFD = FontCache::singleton().fontForFamily(fontDescription, stdfont, nullptr, nullptr, true);
     const FontCascade toolTipFont(pSFD->platformData(), AutoSmoothing);
     
     // Get the length of the text run using the font.
@@ -226,14 +226,14 @@ void TextPopup::draw(const Font& font)
 	WebCore::GraphicsContext context(cairoContext.get());    
     
     // Draw box and background.    
-    context.setFillColor(Color::white, ColorSpaceDeviceRGB);
+    context.setFillColor(Color::white);
     context.setStrokeStyle(SolidStroke);
-    context.setStrokeColor(Color::black, ColorSpaceDeviceRGB);
+    context.setStrokeColor(Color::black);
     const IntRect windowRect(0, 0, surfaceW, surfaceH);
     context.drawRect(windowRect);
 
    // Draw the text. 
-    context.setFillColor(Color::black, ColorSpaceDeviceRGB);
+    context.setFillColor(Color::black);
     const TextRun textRun(mAdjustedTip, mAdjustedTip.length());
     context.drawText(FontCascade(font.platformData()), textRun, IntPoint(kToolTipTextOffsetX, (int) kToolTipFontSize + kToolTipTextOffsetY));   
 

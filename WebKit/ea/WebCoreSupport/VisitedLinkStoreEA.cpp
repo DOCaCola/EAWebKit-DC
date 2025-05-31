@@ -74,7 +74,6 @@ void VisitedLinkStoreEA::removeAllVisitedLinks()
 {
 	for (auto& visitedLinkStore : visitedLinkStores())
 		visitedLinkStore->removeVisitedLinkHashes();
-	PageCache::singleton().markPagesForVisitedLinkStyleRecalc();
 }
 
 void VisitedLinkStoreEA::addVisitedLink(const String& urlString)
@@ -130,7 +129,6 @@ void VisitedLinkStoreEA::addVisitedLinkHash(LinkHash linkHash)
     m_visitedLinkHashes.add(linkHash);
 
     invalidateStylesForLink(linkHash);
-    PageCache::singleton().markPagesForVisitedLinkStyleRecalc();
 }
 
 void VisitedLinkStoreEA::removeVisitedLinkHashes()

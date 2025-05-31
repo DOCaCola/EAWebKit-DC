@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013-2014 Apple Inc. All rights reserved.
  * Copyright (c) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,7 +119,13 @@ void PageScriptDebugServer::runEventLoopWhilePausedInternal()
 
     EventLoop loop;
     while (!m_doneProcessingDebuggerEvents && !loop.ended())
-        loop.cycle();
+	//+EAWebKitChange
+	//3/19/2015
+	//EAWEBKITBUILDFIX
+	{
+		loop.cycle(&m_page);
+	}
+	//-EAWebKitChange
 
     m_page.decrementNestedRunLoopCount();
 }

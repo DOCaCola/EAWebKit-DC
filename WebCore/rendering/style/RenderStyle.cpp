@@ -2221,12 +2221,4 @@ void RenderStyle::setDashboardRegion(int type, const String& label, Length&& top
 
 #endif
 
-//+EAWebKitChange
-//9/20/2016
-//Vertical Scrollbar of the left side for text direction RTL. Integrated from webkit - https://trac.webkit.org/changeset/198069 and https://trac.webkit.org/changeset/200261
-bool RenderStyle::shouldPlaceBlockDirectionScrollbarOnLeft() const
-{
-	return !isLeftToRightDirection() && isHorizontalWritingMode();
-}
-//-EAWebKitChange
 } // namespace WebCore

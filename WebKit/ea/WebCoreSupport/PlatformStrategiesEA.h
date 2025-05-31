@@ -32,13 +32,13 @@
 #include <CookiesStrategy.h>
 #include <LoaderStrategy.h>
 #include <PlatformStrategies.h>
-#include <PluginStrategy.h>
 
 namespace WebCore {
 class PasteboardStrategy;
 }
 
-class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy, private WebCore::LoaderStrategy, private WebCore::PluginStrategy {
+class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy {
+    friend class WTF::NeverDestroyed<PlatformStrategiesEA>;
 public:
     static void initialize();
 
@@ -49,20 +49,17 @@ private:
     virtual WebCore::CookiesStrategy* createCookiesStrategy() override;
     virtual WebCore::LoaderStrategy* createLoaderStrategy() override;
     virtual WebCore::PasteboardStrategy* createPasteboardStrategy() override;
-    virtual WebCore::PluginStrategy* createPluginStrategy() override;
+    virtual WebCore::BlobRegistry* createBlobRegistry() override;
     
     // WebCore::CookiesStrategy
     virtual String cookiesForDOM(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&) override;
     virtual void setCookiesFromDOM(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&, const String&) override;
     virtual bool cookiesEnabled(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&) override;
     virtual String cookieRequestHeaderFieldValue(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&) override;
+    virtual String cookieRequestHeaderFieldValue(WebCore::SessionID, const WebCore::URL& firstParty, const WebCore::URL&) override;
     virtual bool getRawCookies(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&, Vector<WebCore::Cookie>&) override;
     virtual void deleteCookie(const WebCore::NetworkStorageSession&, const WebCore::URL&, const String&) override;
-
-    // WebCore::PluginStrategy
-    virtual void refreshPlugins() override;
-    virtual void getPluginInfo(const WebCore::Page*, Vector<WebCore::PluginInfo>&) override;
-	virtual void getWebVisiblePluginInfo(const WebCore::Page*, Vector<WebCore::PluginInfo>&) override;
+    virtual void addCookie(const WebCore::NetworkStorageSession&, const WebCore::URL&, const WebCore::Cookie&) override;
 };
 
 #endif // PlatformStrategiesEA_h

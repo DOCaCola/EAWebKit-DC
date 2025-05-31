@@ -179,7 +179,7 @@ public:
 	// In JS, when a property is set, for example, EAWebKitTest.FriendsCount = 11; setProperty is called 
 	// with the 'name' of the property and the JavaScriptValue. The C++ code can read the value out of the
 	// passed in parameter to appropriately set the game side state.
-    virtual void setProperty(const char *name, const JavascriptValue &value) {}
+    virtual bool setProperty(const char *name, const JavascriptValue &value) { return false; }
 
     // Default tostring value.
     virtual const char8_t *stringValue(void) { return u8""; }

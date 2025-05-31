@@ -166,7 +166,7 @@ void setCookiesFromDOM(const NetworkStorageSession&, const URL&, const URL& url,
 				if(cookie->mDomain.find_first_of('.') == 0)
 					cookie->mDomain.erase(0,1);
 
-				String urlBuilder = url.protocol() + EA_CHAR16("://") + String(cookie->mDomain.c_str()) + String(cookie->mPath.c_str());
+				String urlBuilder = url.protocol().toString() + EA_CHAR16("://") + String(cookie->mDomain.c_str()) + String(cookie->mPath.c_str());
 				auto urlStr = urlBuilder.charactersWithNullTermination();
 				
 				cookieEx.pName	= cookieName.data();

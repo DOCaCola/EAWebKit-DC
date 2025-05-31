@@ -40,12 +40,6 @@
 
 #include "config.h"
 #include "JPEGImageDecoder.h"
-//+EAWebKitChange
-//5/2/2012
-#if PLATFORM(EA)
-#include <internal/include/EAWebKitNewDelete.h>
-#endif
-//-EAWebKitChange
 
 extern "C" {
 #if USE(ICCJPEG)
@@ -566,14 +560,7 @@ void setPixel(ImageFrame& buffer, RGBA32* currentAddress, JSAMPARRAY samples, in
 
     switch (colorSpace) {
     case JCS_RGB:
-		//+EAWebKitChange
-		//3/18/2014
-#if PLATFORM(EA)
-		buffer.setRGBWithSolidAlpha(currentAddress, jsample[0], jsample[1], jsample[2]);
-#else
         buffer.backingStore()->setPixel(currentAddress, jsample[0], jsample[1], jsample[2], 0xFF);
-#endif
-		//-EAWebKitChange
         break;
     case JCS_CMYK:
         // Source is 'Inverted CMYK', output is RGB.
@@ -586,14 +573,7 @@ void setPixel(ImageFrame& buffer, RGBA32* currentAddress, JSAMPARRAY samples, in
         // From CMY (0..1) to RGB (0..1):
         // R = 1 - C => 1 - (1 - iC*iK) => iC*iK  [G and B similar]
         unsigned k = jsample[3];
-		//+EAWebKitChange
-		//3/18/2014
-#if PLATFORM(EA)
-		buffer.setRGBWithSolidAlpha(currentAddress, jsample[0] * k / 255, jsample[1] * k / 255, jsample[2] * k / 255 );
-#else
         buffer.backingStore()->setPixel(currentAddress, jsample[0] * k / 255, jsample[1] * k / 255, jsample[2] * k / 255, 0xFF);
-#endif
-		//-EAWebKitChange
         break;
     }
 }

@@ -97,6 +97,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WorkerThread.h"
 #include "JSDOMWindow.h"
 #include "CSSValuePool.h"
+#include "StyleScope.h"
 #include "WebStorageNamespaceProvider.h"
 
 //-
@@ -457,6 +458,8 @@ void EAWebKitLib::NetworkStateChanged(bool isOnline)
 
 void EAWebKitLib::AddUserStyleSheet(const EA::WebKit::View* pView, const char8_t* userStyleSheet)
 {
+	// EAWKDC FIXME
+	/*
 	SET_AUTOFPUPRECISION(EA::WebKit::kFPUPrecisionExtended);
     EAWEBKIT_THREAD_CHECK();
     EAWWBKIT_INIT_CHECK(); 
@@ -466,6 +469,7 @@ void EAWebKitLib::AddUserStyleSheet(const EA::WebKit::View* pView, const char8_t
     // add user style sheets for the page associated with the view
     auto userStyleSheetObj = std::make_unique<WebCore::UserStyleSheet>(userStyleSheet, WebCore::blankURL(), Vector<String>(), Vector<String>(), WebCore::InjectInAllFrames, WebCore::UserStyleUserLevel);
     WebPagePrivate::core(pView->Page())->userContentController()->addUserStyleSheet(WebCore::mainThreadNormalWorld(), WTF::move(userStyleSheetObj), WebCore::UserStyleInjectionTime::InjectInExistingDocuments);
+	*/
 }
 
 bool EAWebKitLib::AddCookie(const char8_t* pHeaderValue)
@@ -723,7 +727,8 @@ bool Init(AppCallbacks* appCallbacks, AppSystems* appSystems)
 #endif
 
 #if USE(ACCELERATED_COMPOSITING)
-    WebCore::PageCache::singleton().setShouldClearBackingStores(true);
+	// EAWKDC TODO: Still needed?
+	//WebCore::PageCache::singleton().setShouldClearBackingStores(true);
 #endif
 
 #if ENABLE(SQL_DATABASE)
@@ -747,7 +752,7 @@ void Shutdown()
 	// We used to have a common waitforallthreadscompletion callback here but we got rid of it due to circular dependency between common VM and block free thread. If you wait for the thread completion before destroying
 	// common VM, it would never finish due to block free thread. And if you move it above the wait* call, you may end up firing timers that rely on common VM.
 
-    WebStorageNamespaceProvider::closeLocalStorage(); //Gets rid of local storage threads.
+    ::WebKit::WebStorageNamespaceProvider::closeLocalStorage(); //Gets rid of local storage threads.
 
 	//Get rid of worker threads
 	while(WebCore::WorkerThread::workerThreadCount())
@@ -1076,9 +1081,9 @@ void TriggerGarbageCollectFromScript()
 
 void ClearMemoryCache(MemoryCacheClearFlags flags)
 {
-	//trying to keep this function in the order it is in, so it can easily be compared to MemoryPressureHandler
+	//trying to keep this function in the order it is in, so it can easily be compared to MemoryRelease
 
-	//from MemoryPressureHandler::releaseCriticalMemory(Synchronous synchronous)
+	//from MemoryRelease::releaseCriticalMemory(Synchronous synchronous)
 	{
 		//Empty the PageCache
 		//skip this as we arent using page cache
@@ -1092,17 +1097,17 @@ void ClearMemoryCache(MemoryCacheClearFlags flags)
 		//WebCore::MemoryCache::singleton().pruneLiveResourcesToSize(0);
         
 		//Drain CSSValuePool
-		WebCore::cssValuePool().drain();
+		WebCore::CSSValuePool::singleton().drain();
         
 		//Discard StyleResolvers
-        Vector<RefPtr<WebCore::Document>> documents; 
-        copyToVector(WebCore::Document::allDocuments(), documents);
-        for (auto& document : documents)
-			document->clearStyleResolver();
+		Vector<RefPtr<WebCore::Document>> documents;
+		copyToVector(WebCore::Document::allDocuments(), documents);
+		for (auto& document : documents)
+			document->styleScope().clearResolver();
             
 		//Discard all JIT-compiled code
 		if (flags & EA::WebKit::MemoryCacheClearScriptBit)
-			WebCore::GCController::singleton().deleteAllCode();
+			WebCore::GCController::singleton().deleteAllCode(JSC::DeleteAllCodeIfNotCollecting);
         
 		//Invalidate font cache
 		WebCore::FontCache::singleton().invalidate();
@@ -1134,15 +1139,15 @@ void ClearMemoryCache(MemoryCacheClearFlags flags)
 			document->clearSelectorQueryCache();
         
 		//Clearing JS string cache
-		WebCore::JSDOMWindow::commonVM().stringCache.clear();
+		//WebCore::JSDOMWindow::commonVM().stringCache.clear();
         
 		//Prune MemoryCache dead resources
 		//we handle MemoryCache ourselves in our own block below
 		//WebCore::MemoryCache::singleton().pruneDeadResourcesToSize(0);
         
 		//Prune presentation attribute cache
-		if (flags & EA::WebKit::MemoryCacheClearResourcesBit)
-			WebCore::StyledElement::clearPresentationAttributeCache();
+		/*if (flags & EA::WebKit::MemoryCacheClearResourcesBit)
+			WebCore::StyledElement::clearPresentationAttributeCache();*/
 	}
 
 	// our own handling, not from MemoryPressureHandler

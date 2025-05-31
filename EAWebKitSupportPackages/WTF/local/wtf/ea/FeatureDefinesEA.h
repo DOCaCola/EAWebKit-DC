@@ -222,8 +222,10 @@ Use this file to define ENABLE() macros only. Do not use this file to define USE
 #define ENABLE_DASHBOARD_SUPPORT 0
 #endif
 
+// EAWKDC: Current webkit version cannot compile without this feature.
+// Disable in the future
 #if !defined(ENABLE_MHTML)
-#define ENABLE_MHTML 0
+#define ENABLE_MHTML 1
 #endif
 
 #if !defined(ENABLE_BLOB)

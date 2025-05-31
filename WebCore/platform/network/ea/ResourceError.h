@@ -43,6 +43,8 @@ public:
     {
     }
 
+	void doPlatformIsolatedCopy(const ResourceError&) {}
+
 private:
     friend class ResourceErrorBase;
 };

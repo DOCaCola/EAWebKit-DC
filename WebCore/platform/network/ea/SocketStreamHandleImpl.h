@@ -38,6 +38,7 @@
 #include <EAWebKit/EAWebKitTransport.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
+#include "SessionID.h"
 
 #if !PLATFORM(EA)
 #error This should only be built on EA
@@ -51,17 +52,17 @@ namespace WebCore {
     class SocketStreamHandleClient;
     class SocketStreamHandlePrivate;
 
-    class SocketStreamHandleImpl : public RefCounted<SocketStreamHandleImpl>, public SocketStreamHandle {
+    class SocketStreamHandleImpl final : public SocketStreamHandle {
     public:
-        static Ref<SocketStreamHandle> create(const URL& url, SocketStreamHandleClient* client, NetworkingContext&) { return adoptRef(*new SocketStreamHandleImpl(url, client)); }
-        static Ref<SocketStreamHandle> create(EA::WebKit::SocketHandle socketHandle, SocketStreamHandleClient* client) { return adoptRef(*new SocketStreamHandleImpl(socketHandle, client)); }
+        static Ref<SocketStreamHandle> create(const URL& url, SocketStreamHandleClient& client, SessionID) { return adoptRef(*new SocketStreamHandleImpl(url, client)); }
+        static Ref<SocketStreamHandle> create(EA::WebKit::SocketHandle socketHandle, SocketStreamHandleClient& client) { return adoptRef(*new SocketStreamHandleImpl(socketHandle, client)); }
 
-        virtual ~SocketStreamHandleImpl();
+        ~SocketStreamHandleImpl() override;
 
 		void writeReady(); //Call this method if the network socket is ready to consume data.
     protected:
-        virtual int platformSend(const char* data, int length);
-        virtual void platformClose();
+        virtual std::optional<size_t> platformSend(const char* data, size_t length) override;
+        virtual void platformClose() override;
 
     private:
         SocketStreamHandleImpl(const URL&, SocketStreamHandleClient&);

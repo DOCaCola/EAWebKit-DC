@@ -49,7 +49,7 @@ class WebSocketServerConnection : public WebCore::SocketStreamHandleClient {
 public:
     enum WebSocketServerMode { HTTP, WebSocket };
     WebSocketServerConnection(WebSocketServerClient*, WebSocketServer*);
-    virtual ~WebSocketServerConnection();
+    ~WebSocketServerConnection() override;
 
     unsigned identifier() const { return m_identifier; }
     void setIdentifier(unsigned id) { m_identifier = id; }
@@ -65,10 +65,11 @@ public:
     void shutdownAfterSendOrNow();
 
     // SocketStreamHandleClient implementation.
-    virtual void didCloseSocketStream(WebCore::SocketStreamHandle*);
-    virtual void didReceiveSocketStreamData(WebCore::SocketStreamHandle*, const char* data, int length);
-    virtual void didUpdateBufferedAmount(WebCore::SocketStreamHandle*, size_t bufferedAmount);
-    virtual void didFailSocketStream(WebCore::SocketStreamHandle*, const WebCore::SocketStreamError&);
+	void didOpenSocketStream(WebCore::SocketStreamHandle&) final {}
+    void didCloseSocketStream(WebCore::SocketStreamHandle&) final;
+    void didReceiveSocketStreamData(WebCore::SocketStreamHandle&, const char* data, std::optional<size_t> length) final;
+    void didUpdateBufferedAmount(WebCore::SocketStreamHandle&, size_t bufferedAmount) final;
+    void didFailSocketStream(WebCore::SocketStreamHandle&, const WebCore::SocketStreamError&) final;
 
 private:
     // HTTP Mode.

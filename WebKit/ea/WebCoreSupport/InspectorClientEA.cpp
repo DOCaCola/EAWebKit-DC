@@ -57,8 +57,8 @@ namespace WebCore {
 
 InspectorClientEA::InspectorClientEA(EA::WebKit::WebPage* page)
     : mInspectedPage(page)
-    , mInspectorPage(0)
-    , mInspectorPageClient(0)
+    , mInspectorPage(nullptr)
+    , mInspectorPageClient(nullptr)
 {
 
 	WebCore::InspectorSettingsEA::sharedInstance(); //This implicitly reads the inspector settings.

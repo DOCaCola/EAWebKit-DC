@@ -70,10 +70,10 @@ bool Pasteboard::canSmartReplace()
     return false;
 }
 
-PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame& frame, Range& context,
-                                                          bool allowPlainText, bool& chosePlainText)
+RefPtr<DocumentFragment> Pasteboard::documentFragment(Frame& frame, Range& context,
+                                                      bool allowPlainText, bool& chosePlainText)
 {
-    return 0;
+    return nullptr;
 }
 
 void Pasteboard::read(PasteboardPlainText& text)

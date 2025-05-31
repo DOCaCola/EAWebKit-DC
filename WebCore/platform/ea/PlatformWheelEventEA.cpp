@@ -70,11 +70,12 @@ PlatformWheelEvent::PlatformWheelEvent(const EA::WebKit::MouseWheelEvent* wheelE
 	m_position			= IntPoint(wheelEvent->mX, wheelEvent->mY);
 	m_globalPosition	= IntPoint(wheelEvent->mGlobalX, wheelEvent->mGlobalY);
 
-    m_modifiers = 0;
-    m_modifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? m_modifiers | ShiftKey  : m_modifiers;
-    m_modifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? m_modifiers | CtrlKey   : m_modifiers;
-    m_modifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? m_modifiers | AltKey    : m_modifiers;
-    m_modifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? m_modifiers | MetaKey   : m_modifiers;
+    int newModifiers = 0;
+    newModifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? newModifiers | (int)Modifier::ShiftKey  : newModifiers;
+    newModifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? newModifiers | (int)Modifier::CtrlKey   : newModifiers;
+    newModifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? newModifiers | (int)Modifier::AltKey    : newModifiers;
+    newModifiers = (wheelEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? newModifiers | (int)Modifier::MetaKey   : newModifiers;
+    m_modifiers = OptionSet<Modifier>::fromRaw(newModifiers);
 
 	applyDelta(wheelEvent->mZDelta, fabs(wheelEvent->mNumLines), !shiftKey());
 

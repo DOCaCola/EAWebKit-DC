@@ -50,6 +50,8 @@
 #include <EAWebKit/EAWebKitClient.h>
 #include <internal/include/EAWebKit_p.h>
 
+#include "LogInitialization.h"
+
 namespace WebCore {
 
 static bool shouldTerminateCallback (JSC::ExecState*, void* data1, void* data2)
@@ -79,7 +81,7 @@ void initializeWebCoreEA()
         return;
 
 #if !LOG_DISABLED
-    WebCore::initializeLoggingChannelsIfNecessary();
+    WebCore::initializeLogChannelsIfNecessary();
 #endif // !LOG_DISABLED
     ScriptController::initializeThreading();
     WTF::initializeMainThread();

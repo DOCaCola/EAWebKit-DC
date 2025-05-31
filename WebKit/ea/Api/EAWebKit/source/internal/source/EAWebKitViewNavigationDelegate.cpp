@@ -144,8 +144,8 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 			WebCore::IntPoint scrollOffset;
 			if(pFrameView)
 			{
- 				scrollOffset.setX(pFrameView->scrollOffset().width());
- 				scrollOffset.setY(pFrameView->scrollOffset().height());
+ 				scrollOffset.setX(pFrameView->scrollOffset(WebCore::HorizontalScrollbar));
+ 				scrollOffset.setY(pFrameView->scrollOffset(WebCore::VerticalScrollbar));
 			}
 
 			// We figure out the start position(It is center of the currently hovered element almost all the time but can be slightly different 
@@ -222,7 +222,8 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 			{
 				if(pFrame1->view())
 				{
-					scrollOffset = pFrame1->view()->scrollOffset();//We read scroll offset here as it could have changed in the switch statement above.
+					scrollOffset.setWidth(pFrame1->view()->scrollOffset(WebCore::HorizontalScrollbar));//We read scroll offset here as it could have changed in the switch statement above.
+					scrollOffset.setHeight(pFrame1->view()->scrollOffset(WebCore::VerticalScrollbar));
 					break;
 				}
 			}
@@ -274,7 +275,7 @@ void ViewNavigationDelegate::MoveMouseCursorToNode(WebCore::Node* node, bool scr
 {
 	if (node)
 	{
-		WebCore::HTMLElement* element = (WebCore::HTMLElement*)node;
+		WebCore::HTMLElement* element = static_cast<WebCore::HTMLElement*>(node);
 		WebCore::LayoutRect rect = element->renderer()->absoluteBoundingBoxRect();
 		WebCore::IntPoint frameOffset;
 		WebCore::IntPoint scrollOffset;
@@ -284,7 +285,7 @@ void ViewNavigationDelegate::MoveMouseCursorToNode(WebCore::Node* node, bool scr
 		{
 			//Use move here instead of setX/setY as it results in 1 call instead of two and takes advantage that ctor sets x,y to 0.
 			frameOffset.move(pFrameView->x(), pFrameView->y());
-			scrollOffset.move(pFrameView->scrollOffset().width(), pFrameView->scrollOffset().height());
+			scrollOffset.move(pFrameView->scrollOffset(WebCore::HorizontalScrollbar), pFrameView->scrollOffset(WebCore::VerticalScrollbar));
 		}
 
 		int width = mView->GetSize().mWidth;
@@ -323,8 +324,8 @@ void ViewNavigationDelegate::MoveMouseCursorToNode(WebCore::Node* node, bool scr
 			// Read the scroll offset again as it may have changed.
 			if(pFrameView) 
 			{
-				scrollOffset.setX(pFrameView->scrollOffset().width());
-				scrollOffset.setY(pFrameView->scrollOffset().height());
+				scrollOffset.setX(pFrameView->scrollOffset(WebCore::HorizontalScrollbar));
+				scrollOffset.setY(pFrameView->scrollOffset(WebCore::VerticalScrollbar));
 			}
 		}
 

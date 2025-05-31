@@ -424,6 +424,8 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XLinkNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNSNames.cpp
+
+	${CMAKE_CURRENT_SOURCE_DIR}/WebKit/WebCoreSupport/WebResourceLoadScheduler.cpp
 	)
 
 
@@ -491,6 +493,7 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/PointerLockController.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/AsyncScrollingCoordinator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/AxisScrollSnapOffsets.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/ScrollingMomentumCalculator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/ScrollingStateFrameScrollingNode.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/ScrollingStateOverflowScrollingNode.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/page/scrolling/ScrollingTreeFrameScrollingNode.cpp
@@ -505,11 +508,13 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/ContextMenuItemNone.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/ContextMenuNone.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/GamepadProvider.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/ANGLEWebKitBridge.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/cairo/FontCairo.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/cairo/FontCairoHarfbuzzNG.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/DisplayRefreshMonitor.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/DisplayRefreshMonitorClient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/DisplayRefreshMonitorManager.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/opentype/OpenTypeCG.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/opentype/OpenTypeUtilities.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/PlatformSpeechSynthesisUtterance.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/PlatformSpeechSynthesisVoice.cpp
@@ -517,7 +522,6 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/LocaleICU.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/LocaleToScriptMappingICU.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextBoundaries.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextBreakIterator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextCodec.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextCodecICU.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextCodecLatin1.cpp
@@ -530,6 +534,19 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextEncodingRegistry.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/TextStream.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/Theme.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/UserAgentQuirks.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/UserAgentQuirks.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebKit/WebCoreSupport/WebResourceLoadScheduler.cpp
+	)
+
+
+list(REMOVE_ITEM EAWEBKIT_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/text/ea/TextBreakIteratorEA.cpp
+	)
+
+# Remove until fixed
+list(REMOVE_ITEM EAWEBKIT_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/image-decoders/dds/DDSImageDecoder.cpp
 	)
 
 include(GenerateProductVersion)
@@ -681,6 +698,7 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/xml"
 	"WebCore/xml/parser"
 	"WebCore/DerivedSources"
+	"WebKit/WebCoreSupport"
 	)
 
 target_link_libraries(EAWebKit PUBLIC JavaScriptCore EAText cairo SQLite libjpeg libxml2 DirtySDK)

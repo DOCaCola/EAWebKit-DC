@@ -78,7 +78,7 @@ String MIMETypeRegistry::getMIMETypeForExtension(const String &ext)
 {
     ASSERT(isMainThread());
 	
-	String s = ext.lower();
+	String s = ext.convertToASCIILowercase();
 
     const ExtensionMap *e = extensionMap;
     while (e->extension) {

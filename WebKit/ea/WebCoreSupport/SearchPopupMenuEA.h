@@ -22,18 +22,19 @@
 #ifndef SearchPopupMenuEA_h
 #define SearchPopupMenuEA_h
 
+#include "PopupMenu.h"
 #include "SearchPopupMenu.h"
 
 namespace WebCore {
 
 class SearchPopupMenuEA : public SearchPopupMenu {
 public:
-    SearchPopupMenuEA(PassRefPtr<PopupMenu> popup);
+    SearchPopupMenuEA(RefPtr<WebCore::PopupMenu>&& popup);
 
-    virtual PopupMenu* popupMenu();
-    virtual void saveRecentSearches(const AtomicString& name, const Vector<String>& searchItems);
-    virtual void loadRecentSearches(const AtomicString& name, Vector<String>& searchItems);
-    virtual bool enabled();
+    virtual PopupMenu* popupMenu() override;
+    virtual void saveRecentSearches(const AtomicString& name, const Vector<RecentSearch>&) override;
+    virtual void loadRecentSearches(const AtomicString& name, Vector<RecentSearch>&) override;
+    virtual bool enabled() override;
 
 private:
     RefPtr<PopupMenu> m_popup;

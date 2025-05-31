@@ -36,16 +36,16 @@ namespace WebCore {
     // This class decodes the dds image format.
     class DDSImageDecoder : public ImageDecoder {
     public:
-        DDSImageDecoder(ImageSource::AlphaOption, ImageSource::GammaAndColorProfileOption);
+        DDSImageDecoder(AlphaOption, GammaAndColorProfileOption);
         virtual ~DDSImageDecoder();
 
         // ImageDecoder
-        virtual String filenameExtension() const { return "dds"; }
-        virtual bool isSizeAvailable();
-        virtual bool setSize(unsigned width, unsigned height);
-        virtual ImageFrame* frameBufferAtIndex(size_t index);
-        virtual bool setFailed();
-        virtual unsigned frameBytesAtIndex(size_t index) const;
+        virtual String filenameExtension() const override { return "dds"; }
+        virtual bool isSizeAvailable() override;
+        virtual bool setSize(const IntSize& size) override;
+        virtual ImageFrame* frameBufferAtIndex(size_t index) override;
+        virtual bool setFailed() override;
+        virtual unsigned frameBytesAtIndex(size_t index) const override;
 
     private:
         bool decode();

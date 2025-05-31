@@ -41,6 +41,8 @@
 #include <EAWebKit/EAWebKitInput.h>
 #include <wtf/CurrentTime.h>
 
+#include "PlatformEvent.h"
+
 namespace WebCore {
 
 String keyIdentifierForEAKeyCode(int keyCode)
@@ -206,15 +208,15 @@ PlatformKeyboardEvent::PlatformKeyboardEvent(const EA::WebKit::KeyboardEvent* ke
 , m_keyIdentifier((m_type == Char) ? String() : keyIdentifierForEAKeyCode(keyBoardEvent->mId))
 // Our key codes defined in the EAWebKitInput.h map to InputMan which itself map to Windows virtual key code.
 , m_windowsVirtualKeyCode((m_type == RawKeyDown || m_type == KeyUp) ? keyBoardEvent->mId : 0)
-, m_nativeVirtualKeyCode(m_windowsVirtualKeyCode)
 , m_autoRepeat(false)
 , m_isKeypad(isKeypadEvent(keyBoardEvent->mId, keyBoardEvent->mModifiers, (PlatformEvent::Type) m_type))
 {
-    m_modifiers = 0;
-    m_modifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? m_modifiers | ShiftKey  : m_modifiers;
-    m_modifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? m_modifiers | CtrlKey   : m_modifiers;
-    m_modifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? m_modifiers | AltKey    : m_modifiers;
-    m_modifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? m_modifiers | MetaKey   : m_modifiers;
+    int newModifiers = 0;
+    newModifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskShift)     ? newModifiers | (int)Modifier::ShiftKey  : newModifiers;
+    newModifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskControl)   ? newModifiers | (int)Modifier::CtrlKey   : newModifiers;
+    newModifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskAlt)       ? newModifiers | (int)Modifier::AltKey    : newModifiers;
+    newModifiers = (keyBoardEvent->mModifiers & EA::WebKit::kModifierMaskOS)        ? newModifiers | (int)Modifier::MetaKey   : newModifiers;
+    m_modifiers = OptionSet<Modifier>::fromRaw(newModifiers);
 
 	m_timestamp = WTF::currentTime();
 }

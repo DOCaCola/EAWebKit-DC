@@ -35,6 +35,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Logging.h"
 #include <wtf/text/CString.h>
 #include <internal/include/EAWebKit_p.h>
+#include "ea/SocketStreamHandleImpl.h"
 
 using namespace WebCore;
 
@@ -56,8 +57,8 @@ void WebSocketServer::ConnectionAccepted(EA::WebKit::SocketHandle newClient)
 {
     //this will hand off the newClient to be managed by SocketStreamHandle callbacks
     auto webSocketConnection = std::make_unique<WebSocketServerConnection>(this->client(), this);
-    webSocketConnection->setSocketHandle(SocketStreamHandle::create(newClient, webSocketConnection.get()));
-    this->didAcceptConnection(WTF::move(webSocketConnection));
+    webSocketConnection->setSocketHandle(SocketStreamHandleImpl::create(newClient, *webSocketConnection));
+    this->didAcceptConnection(WTFMove(webSocketConnection));
 }
 
 void WebSocketServer::platformInitialize()

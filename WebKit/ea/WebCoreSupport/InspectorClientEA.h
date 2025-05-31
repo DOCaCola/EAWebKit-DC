@@ -56,7 +56,8 @@ class InspectorClientEA final : public InspectorClient, public Inspector::Fronte
 public:
     InspectorClientEA(EA::WebKit::WebPage*);
 
-    virtual void inspectedPageDestroyed(void) override; 
+    virtual void inspectedPageDestroyed(void) override;
+    ConnectionType connectionType() const override { return ConnectionType::Local; }
 
     Inspector::FrontendChannel* openLocalFrontend(InspectorController*) override;
     void closeInspectorFrontend();

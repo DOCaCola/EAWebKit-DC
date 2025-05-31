@@ -55,7 +55,7 @@ namespace WebCore {
 
 const double EventHandler::TextDragDelay = 0.0;
 
-bool EventHandler::tabsToAllFormControls(KeyboardEvent* event) const
+bool EventHandler::tabsToAllFormControls(KeyboardEvent& event) const
 {
     return true;
 }
@@ -79,7 +79,7 @@ bool EventHandler::eventActivatedView(const PlatformMouseEvent&) const
     return false;
 }
 
-bool EventHandler::passWheelEventToWidget(const PlatformWheelEvent& event, Widget& widget)
+bool EventHandler::widgetDidHandleWheelEvent(const PlatformWheelEvent& event, Widget& widget)
 {
     //EAW_ASSERT(widget);
     if (!widget.isFrameView())
@@ -88,9 +88,9 @@ bool EventHandler::passWheelEventToWidget(const PlatformWheelEvent& event, Widge
     return static_cast<FrameView*>(&widget)->frame().eventHandler().handleWheelEvent(event);
 }
 #if ENABLE(DRAG_SUPPORT)
-PassRefPtr<DataTransfer> EventHandler::createDraggingDataTransfer() const
+Ref<DataTransfer> EventHandler::createDraggingDataTransfer() const
 {
-	return nullptr;
+	return DataTransfer::createForDragAndDrop();
 }
 #endif
 
@@ -112,12 +112,12 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return true;
 }
 
-unsigned EventHandler::accessKeyModifiers()
+OptionSet<PlatformEvent::Modifier> accessKeyModifiers()
 {
 #if OS(DARWIN)
-    return PlatformKeyboardEvent::CtrlKey | PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::Modifier:CtrlKey | PlatformEvent::Modifier:AltKey;
 #else
-    return PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::Modifier::AltKey;
 #endif
 }
 

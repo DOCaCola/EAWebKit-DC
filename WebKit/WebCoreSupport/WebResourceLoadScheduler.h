@@ -22,11 +22,13 @@
 
 #pragma once
 
-#include <WebCore/FrameLoaderTypes.h>
-#include <WebCore/LoaderStrategy.h>
-#include <WebCore/ResourceLoadPriority.h>
-#include <WebCore/ResourceLoaderOptions.h>
-#include <WebCore/Timer.h>
+// +EAWKDC Change: Remove "WebCore" path from includes
+#include <FrameLoaderTypes.h>
+#include <LoaderStrategy.h>
+#include <ResourceLoadPriority.h>
+#include <ResourceLoaderOptions.h>
+#include <Timer.h>
+// -EAWKDC Change
 #include <array>
 #include <wtf/Deque.h>
 #include <wtf/HashMap.h>

@@ -32,14 +32,9 @@
 
 namespace WebCore {
 
-bool DNSResolveQueue::platformProxyIsEnabledInSystemPreferences()
+void DNSResolveQueue::updateIsUsingProxy()
 {
-	// Don't do DNS prefetch if proxies are involved. For many proxy types, the user agent is never exposed
-	// to the IP address during normal operation. Querying an internal DNS server may not help performance,
-	// as it doesn't necessarily look up the actual external IP. Also, if DNS returns a fake internal address,
-	// local caches may keep it even after re-connecting to another network.
-
-	return true;
+    m_isUsingProxy = false;
 }
 
 	

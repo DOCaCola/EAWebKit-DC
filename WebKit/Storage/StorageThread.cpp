@@ -38,6 +38,7 @@
 #include <wtf/NeverDestroyed.h>
 //+EAWebKitChange
 //06/13/2013
+#include <EAWebKit/EAWebKitThreadInterface.h>
 //-EAWebKitChange
 
 namespace WebCore {
@@ -84,7 +85,7 @@ void StorageThread::threadEntryPoint()
 		//+EAWebKitChange
 		//03/18/2014
 		//(*function)();
-		m_currentTask = *function;
+		m_currentTask = WTFMove(*function);
 		EA::WebKit::GetThreadSystem()->ScheduleWork(StorageThread::DoWorkCallback,(void*)this);
 		//-EAWebKitChange
     }

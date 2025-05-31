@@ -48,7 +48,7 @@ class PopupMenuEA : public PopupMenu, public EA::WebKit::IOverlayInputClient, pr
 {
 public:
     PopupMenuEA(PopupMenuClient*, const ChromeClientEA*);
-    ~PopupMenuEA();
+    ~PopupMenuEA() override;
 
     virtual void show(const IntRect&, FrameView*, int index) override;
     virtual void hide() override;
@@ -69,8 +69,9 @@ public:
 private:
     // ScrollableArea
     virtual int scrollSize(ScrollbarOrientation) const override;
+    virtual int scrollOffset(ScrollbarOrientation) const override;
     ScrollPosition scrollPosition() const override;
-    virtual void setScrollOffset(const IntPoint&) override;
+    virtual void setScrollOffset(const ScrollOffset&) override;
     virtual void invalidateScrollbarRect(Scrollbar&, const IntRect&) override { } ;
     virtual void invalidateScrollCornerRect(const IntRect&) override { }
     virtual bool isActive() const override { return true; }
@@ -84,6 +85,7 @@ private:
 	virtual bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const override { return false; }
 	virtual bool isScrollableOrRubberbandable() override { return false; }
 	virtual bool hasScrollableOrRubberbandableAncestor() override { return false; }
+    bool shouldPlaceBlockDirectionScrollbarOnLeft() const final { return false; }
 
 private:
     int  getNextFocusIndex(const int delta);

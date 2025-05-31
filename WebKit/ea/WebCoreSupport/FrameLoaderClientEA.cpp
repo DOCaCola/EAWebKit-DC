@@ -61,6 +61,7 @@
 #include "ResourceRequest.h"
 #include "HistoryItem.h"
 #include "HTMLAppletElement.h"
+#include "HTMLCollection.h"
 #include "HTMLFormElement.h"
 #include "HTMLPlugInElement.h"
 #include "HTTPParsers.h"
@@ -159,9 +160,9 @@ bool FrameLoaderClientEA::policyDelegatePermissive = false;
 // }
 
 FrameLoaderClientEA::FrameLoaderClientEA()
-    : m_frame(0)
-    , m_webFrame(0)
-    , m_pluginView(0)
+    : m_frame(nullptr)
+    , m_webFrame(nullptr)
+    , m_pluginView(nullptr)
     , m_hasSentResponseToPlugin(false)
     , m_hasRepresentation(false)
     , m_loadError(ResourceError())
@@ -286,7 +287,7 @@ void FrameLoaderClientEA::detachedFromParent3()
 {
 }
 
-void FrameLoaderClientEA::dispatchDidHandleOnloadEvents()
+void FrameLoaderClientEA::dispatchDidDispatchOnloadEvents()
 {
 	if(isMainFrame(m_frame))
 	{
@@ -330,7 +331,7 @@ void FrameLoaderClientEA::dispatchDidNavigateWithinPage()
     if (!loaderCompleted)
         return;
 
-    dispatchDidCommitLoad();
+    dispatchDidCommitLoad(std::nullopt);
     dispatchDidFinishLoad();
 }
 
@@ -414,13 +415,7 @@ void FrameLoaderClientEA::dispatchDidReceiveTitle(const WebCore::StringWithDirec
 }
 
 
-void FrameLoaderClientEA::dispatchDidChangeIcons(WebCore::IconType)
-{
-	notImplemented();
-}
-
-
-void FrameLoaderClientEA::dispatchDidCommitLoad()
+void FrameLoaderClientEA::dispatchDidCommitLoad(std::optional<WebCore::HasInsecureContent>)
 {
 	// abaldeva: This is called when the first chunk of the data is received from the server for a requested load. 
     if (m_frame->tree().parent() || !m_webFrame)
@@ -518,7 +513,7 @@ void FrameLoaderClientEA::dispatchDidFinishLoad()
     m_webFrame->page()->d->updateNavigationActions();
 }
 
-void FrameLoaderClientEA::dispatchDidLayout(WebCore::LayoutMilestones mileStones)
+void FrameLoaderClientEA::dispatchDidReachLayoutMilestone(WebCore::LayoutMilestones mileStones)
 {
 	// This is the first time the user is actually going to be able to see something on the screen.
 	if(mileStones & DidFirstVisuallyNonEmptyLayout)
@@ -551,7 +546,7 @@ void FrameLoaderClientEA::cancelPolicyCheck()
 }
 
 
-void FrameLoaderClientEA::dispatchWillSubmitForm(PassRefPtr<FormState>,FramePolicyFunction function)
+void FrameLoaderClientEA::dispatchWillSubmitForm(FormState&, FramePolicyFunction function)
 {
     notImplemented();
     // FIXME: This is surely too simple
@@ -590,7 +585,7 @@ bool FrameLoaderClientEA::canShowMIMETypeAsHTML(const String& MIMEType) const
     
 bool FrameLoaderClientEA::canShowMIMEType(const String& MIMEType) const
 {
-    String type = MIMEType.lower();
+    String type = MIMEType.convertToLowercaseWithoutLocale();
     
     if (MIMETypeRegistry::canShowMIMEType(type))
         return true;
@@ -736,7 +731,7 @@ void FrameLoaderClientEA::didDisplayInsecureContent()
     notImplemented();
 }
 
-void FrameLoaderClientEA::didRunInsecureContent(WebCore::SecurityOrigin *,const WebCore::URL &)
+void FrameLoaderClientEA::didRunInsecureContent(WebCore::SecurityOrigin&,const WebCore::URL &)
 {
     notImplemented();
 }
@@ -754,7 +749,7 @@ void FrameLoaderClientEA::didDetectXSS(const URL&, bool didBlockEntirePage)
 	}
 }
 
-void FrameLoaderClientEA::saveViewStateToItem(WebCore::HistoryItem* item)
+void FrameLoaderClientEA::saveViewStateToItem(WebCore::HistoryItem& item)
 {
 }
 
@@ -788,42 +783,48 @@ void FrameLoaderClientEA::committedLoad(WebCore::DocumentLoader* loader, const c
 
 WebCore::ResourceError FrameLoaderClientEA::cancelledError(const WebCore::ResourceRequest& request)
 {
-	ResourceError error = ResourceError("NetworkDomain", EA::WebKit::kLETLoadCancelled, request.url().string(),"Request cancelled");
-    error.setIsCancellation(true);
+	ResourceError error = ResourceError("NetworkDomain", EA::WebKit::kLETLoadCancelled, request.url(),"Request cancelled");
+    error.setType(ResourceError::Type::Cancellation);
     return error;
 }
 
 WebCore::ResourceError FrameLoaderClientEA::blockedError(const WebCore::ResourceRequest& request)
 {
 	EAW_ASSERT_FORMATTED(false, "WebKit Error:URL blocked - %s",request.url().string().ascii().data());
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETBlocked, request.url().string(),"Request blocked");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETBlocked, request.url(),"Request blocked");
+}
+
+ResourceError FrameLoaderClientEA::blockedByContentBlockerError(const ResourceRequest&)
+{
+	notImplemented();
+	return ResourceError();
 }
 
 
 WebCore::ResourceError FrameLoaderClientEA::cannotShowURLError(const WebCore::ResourceRequest& request)
 {
 	EAW_ASSERT_FORMATTED(false, "WebKit Error:Cannot show URL. Please verify the URL you are trying to load - %s",request.url().string().ascii().data());
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowURL, request.url().string(),"Cannot show URL");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowURL, request.url(),"Cannot show URL");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::interruptedForPolicyChangeError(const WebCore::ResourceRequest &request)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETFrameLoadInterruptedByPolicyChange, request.url().string(),"Frame load interrupted by policy change");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETFrameLoadInterruptedByPolicyChange, request.url(),"Frame load interrupted by policy change");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::cannotShowMIMETypeError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowMIMEType, response.url().string(),"Cannot show mimetype");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowMIMEType, response.url(),"Cannot show mimetype");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::fileDoesNotExistError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("NetworkDomain", EA::WebKit::kLETContentNotFoundError, response.url().string(),"File does not exist");
+	return ResourceError("NetworkDomain", EA::WebKit::kLETContentNotFoundError, response.url(),"File does not exist");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::pluginWillHandleLoadError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::KLETPluginWillHandleLoadError, response.url().string(),"Loading is handled by the media engine");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::KLETPluginWillHandleLoadError, response.url(),"Loading is handled by the media engine");
 }
 
 bool FrameLoaderClientEA::shouldFallBack(const WebCore::ResourceError& error)
@@ -851,10 +852,10 @@ WTF::Ref<WebCore::DocumentLoader> FrameLoaderClientEA::createDocumentLoader(cons
     Ref<DocumentLoader> loader = DocumentLoader::create(request, substituteData);
     if (!deferMainResourceDataLoad || substituteData.isValid())
         loader->setDeferMainResourceDataLoad(false);
-    return WTF::move(loader);
+    return WTFMove(loader);
 }
 
-void FrameLoaderClientEA::convertMainResourceLoadToDownload(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&)
+void FrameLoaderClientEA::convertMainResourceLoadToDownload(WebCore::DocumentLoader*, SessionID, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&)
 {
     if (!m_webFrame)
         return;
@@ -959,11 +960,6 @@ bool FrameLoaderClientEA::shouldUseCredentialStorage(DocumentLoader*, unsigned l
 }
 
 void FrameLoaderClientEA::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
-{
-    notImplemented();
-}
-
-void FrameLoaderClientEA::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
 {
     notImplemented();
 }
@@ -1106,7 +1102,7 @@ void FrameLoaderClientEA::dispatchDidFailLoad(const WebCore::ResourceError& erro
 WebCore::Frame* FrameLoaderClientEA::dispatchCreatePage(const WebCore::NavigationAction& action)
 {
     if (!m_webFrame)
-        return 0;
+        return nullptr;
 	using namespace EA::WebKit;
  	if(EAWebKitClient* const pClient = GetEAWebKitClient(m_webFrame->page()->view()))
  	{
@@ -1125,7 +1121,7 @@ WebCore::Frame* FrameLoaderClientEA::dispatchCreatePage(const WebCore::Navigatio
  		}
  	}
  
- 	return 0;
+ 	return nullptr;
 }
 
 void FrameLoaderClientEA::dispatchDecidePolicyForResponse(const WebCore::ResourceResponse &response,const WebCore::ResourceRequest& ,WebCore::FramePolicyFunction function) 
@@ -1140,7 +1136,7 @@ void FrameLoaderClientEA::dispatchDecidePolicyForResponse(const WebCore::Resourc
 		return;
 	}
 
-	if (WebCore::contentDispositionType(response.httpHeaderField(HTTPHeaderName::ContentDisposition)) == WebCore::ContentDispositionAttachment)
+	if (contentDispositionType(response.httpHeaderField(HTTPHeaderName::ContentDisposition)) == ContentDispositionAttachment)
 		callPolicyFunction(function, PolicyDownload);
 	else if (canShowMIMEType(response.mimeType()))
 		callPolicyFunction(function, PolicyUse);
@@ -1148,7 +1144,7 @@ void FrameLoaderClientEA::dispatchDecidePolicyForResponse(const WebCore::Resourc
 		callPolicyFunction(function, PolicyDownload);
 }
 
-void FrameLoaderClientEA::dispatchDecidePolicyForNewWindowAction(const WebCore::NavigationAction& action, const WebCore::ResourceRequest& request, PassRefPtr<WebCore::FormState>, const WTF::String&,FramePolicyFunction function)
+void FrameLoaderClientEA::dispatchDecidePolicyForNewWindowAction(const WebCore::NavigationAction& action, const WebCore::ResourceRequest& request, WebCore::FormState*, const WTF::String&,FramePolicyFunction function)
 {
     EAW_ASSERT_MSG(m_webFrame,"No WebFrame!");
 	if(!m_webFrame)
@@ -1171,7 +1167,7 @@ void FrameLoaderClientEA::dispatchDecidePolicyForNewWindowAction(const WebCore::
     callPolicyFunction(function, PolicyUse);
 }
 
-void FrameLoaderClientEA::dispatchDecidePolicyForNavigationAction(const WebCore::NavigationAction& action, const WebCore::ResourceRequest& request, PassRefPtr<WebCore::FormState>,FramePolicyFunction function)
+void FrameLoaderClientEA::dispatchDecidePolicyForNavigationAction(const WebCore::NavigationAction& action, const WebCore::ResourceRequest& request, WebCore::FormState*,FramePolicyFunction function)
 {
 	EAW_ASSERT_MSG(m_webFrame,"No WebFrame!");
 	if(!m_webFrame)
@@ -1230,7 +1226,7 @@ void FrameLoaderClientEA::startDownload(const WebCore::ResourceRequest &, const 
 //     emit m_webFrame->page()->downloadRequested(request.toNetworkRequest(m_webFrame));
 }
 
-RefPtr<Frame> FrameLoaderClientEA::createFrame(const URL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
+RefPtr<Frame> FrameLoaderClientEA::createFrame(const URL& url, const String& name, HTMLFrameOwnerElement& ownerElement,
                                         const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight)
 {
     if (!m_webFrame)
@@ -1238,7 +1234,7 @@ RefPtr<Frame> FrameLoaderClientEA::createFrame(const URL& url, const String& nam
 
 	using namespace EA::WebKit;
 	
-	WebFrameData frameData(m_frame->page(), m_frame, ownerElement, name);
+	WebFrameData frameData(m_frame->page(), m_frame, &ownerElement, name);
 
     if (url.isEmpty())
         frameData.url = blankURL();
@@ -1271,11 +1267,11 @@ RefPtr<Frame> FrameLoaderClientEA::createFrame(const URL& url, const String& nam
     return frameData.frame;
 }
 
-ObjectContentType FrameLoaderClientEA::objectContentType(const URL& url, const String& mimeTypeIn, bool)
+ObjectContentType FrameLoaderClientEA::objectContentType(const URL& url, const String& mimeTypeIn)
 {
     String extension = url.path().substring(url.path().reverseFind('.') + 1);
 	if (url.isEmpty() && !mimeTypeIn.length())
-        return ObjectContentNone;
+        return ObjectContentType::None;
 
     String mimeType = mimeTypeIn;
     if (!mimeType.length()) {
@@ -1289,32 +1285,32 @@ ObjectContentType FrameLoaderClientEA::objectContentType(const URL& url, const S
 		mimeType = PluginDatabase::installedPlugins()->MIMETypeForExtension(extension);
     */
     if (!mimeType.length())
-        return ObjectContentFrame;
+        return ObjectContentType::Frame;
 
-	ObjectContentType plugInType = ObjectContentNone;
+	ObjectContentType plugInType = ObjectContentType::None;
     /*
     if (arePluginsEnabled && PluginDatabase::installedPlugins()->isMIMETypeRegistered(mimeType))
 		plugInType = ObjectContentNetscapePlugin;
 	else 
     */if (m_frame->page() && m_frame->page()->pluginData().supportsWebVisibleMimeType(mimeType,PluginData::AllPlugins))
-		plugInType = ObjectContentOtherPlugin;
+		plugInType = ObjectContentType::PlugIn;
 
 	if (MIMETypeRegistry::isSupportedImageMIMEType(mimeType))
-		return true/*shouldPreferPlugInsForImages*/ && plugInType != ObjectContentNone ? plugInType : ObjectContentImage;
+		return true/*shouldPreferPlugInsForImages*/ && plugInType != ObjectContentType::None ? plugInType : ObjectContentType::Image;
 
-	if (plugInType != ObjectContentNone)
+	if (plugInType != ObjectContentType::None)
 		return plugInType;
 
 	if (MIMETypeRegistry::isSupportedNonImageMIMEType(mimeType))
-		return ObjectContentFrame;
+		return ObjectContentType::Frame;
 
 	if (url.protocol() == "about")
-		return ObjectContentFrame;
+		return ObjectContentType::Frame;
 
-	return ObjectContentNone;
+	return ObjectContentType::None;
 }
 
-RefPtr<Widget> FrameLoaderClientEA::createPlugin(const IntSize& pluginSize, HTMLPlugInElement* element, const URL& url, const Vector<String>& paramNames,
+RefPtr<Widget> FrameLoaderClientEA::createPlugin(const IntSize& pluginSize, HTMLPlugInElement& element, const URL& url, const Vector<String>& paramNames,
                                           const Vector<String>& paramValues, const String& mimeType, bool loadManually)
 {
     if (!m_webFrame)
@@ -1332,7 +1328,7 @@ void FrameLoaderClientEA::redirectDataToPlugin(Widget* pluginWidget)
     m_hasSentResponseToPlugin = false;
 }
 
-PassRefPtr<Widget> FrameLoaderClientEA::createJavaAppletWidget(const IntSize& pluginSize, HTMLAppletElement* element, const URL& url,
+RefPtr<Widget> FrameLoaderClientEA::createJavaAppletWidget(const IntSize& pluginSize, HTMLAppletElement& element, const URL& url,
                                                     const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
     return createPlugin(pluginSize, element, url, paramNames, paramValues, "application/x-java-applet", true);
@@ -1343,10 +1339,44 @@ WTF::String FrameLoaderClientEA::overrideMediaType() const
 	return WTF::String();
 }
 
-PassRefPtr<FrameNetworkingContext> FrameLoaderClientEA::createNetworkingContext()
+Ref<FrameNetworkingContext> FrameLoaderClientEA::createNetworkingContext()
 {
     return FrameNetworkingContextEA::create(m_frame, m_webFrame,false);
 }
 
+void FrameLoaderClientEA::prefetchDNS(const String& hostname)
+{
+	notImplemented();
+}
+
+FrameLoaderClientEA::ContentDispositionType FrameLoaderClientEA::contentDispositionType(const String& contentDisposition)
+{
+    if (contentDisposition.isEmpty())
+        return ContentDispositionNone;
+
+    Vector<String> parameters;
+    contentDisposition.split(';', parameters);
+
+    String dispositionType = parameters[0];
+    dispositionType.stripWhiteSpace();
+
+    if (equalLettersIgnoringASCIICase(dispositionType, "inline"))
+        return ContentDispositionInline;
+
+    // Some broken sites just send bogus headers like
+    //
+    //   Content-Disposition: ; filename="file"
+    //   Content-Disposition: filename="file"
+    //   Content-Disposition: name="file"
+    //
+    // without a disposition token... screen those out.
+    if (!isValidHTTPToken(dispositionType))
+        return ContentDispositionNone;
+
+    // We have a content-disposition of "attachment" or unknown.
+    // RFC 2183, section 2.8 says that an unknown disposition
+    // value should be treated as "attachment"
+    return ContentDispositionAttachment;  
+}
 }
 

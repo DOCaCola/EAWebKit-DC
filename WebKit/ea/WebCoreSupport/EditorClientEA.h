@@ -50,8 +50,6 @@ class EditorClientEA : public EditorClient {
 public:
 	EditorClientEA(EA::WebKit::WebPage* page);
     
-    virtual void pageDestroyed() override;
-    
     virtual bool shouldDeleteRange(Range*) override;
     virtual bool smartInsertDeleteEnabled() override; 
     virtual bool isSelectTrailingWhitespaceEnabled() override; 
@@ -80,9 +78,9 @@ public:
     virtual void willWriteSelectionToPasteboard(Range*) override;
     virtual void didWriteSelectionToPasteboard() override;
     virtual void getClientPasteboardDataForRange(Range*, Vector<String>& pasteboardTypes, Vector<RefPtr<WebCore::SharedBuffer> >& pasteboardData) override;
-    
-    virtual void registerUndoStep(PassRefPtr<UndoStep>) override;
-    virtual void registerRedoStep(PassRefPtr<UndoStep>) override;
+
+    virtual void registerUndoStep(UndoStep&) override;
+    virtual void registerRedoStep(UndoStep&) override;
     virtual void clearUndoRedoOperations() override;
 
     virtual bool canCopyCut(Frame*, bool defaultValue) const override;
@@ -113,6 +111,8 @@ public:
 
     virtual bool supportsGlobalSelection() override;
 
+    void updateEditorStateAfterLayoutIfEditabilityChanged() final;
+    void canceledComposition() final {}
 	virtual void discardedComposition(Frame*) override {}
 	virtual void overflowScrollPositionChanged() override {}
 
