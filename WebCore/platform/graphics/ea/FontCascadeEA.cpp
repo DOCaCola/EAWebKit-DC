@@ -38,6 +38,8 @@
 #include <EASTL/fixed_vector.h>
 #include <internal/include/EAWebKit_p.h>
 #include <wtf/MathExtras.h>
+
+#include "NotImplemented.h"
 #include "PlatformContextCairo.h"
 #include "TextRun.h"
 #include "ShadowBlur.h"
@@ -626,6 +628,13 @@ int FontCascade::offsetForPositionForComplexText(const TextRun& /*run*/, float /
 bool FontCascade::canReturnFallbackFontsForComplexText()
 {
     return false;
+}
+
+float FontCascade::getGlyphsAndAdvancesForComplexText(const TextRun&, int, int, GlyphBuffer&, ForTextEmphasisOrNot) const
+{
+    // FIXME
+    notImplemented();
+    return 0.f;
 }
 
 bool FontCascade::canExpandAroundIdeographsInComplexText()

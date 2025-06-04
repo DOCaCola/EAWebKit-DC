@@ -62,7 +62,9 @@ public:
 
     virtual void fontLoaded(CachedFont*) override;
 
-    RefPtr<Font> font(const FontDescription&, bool syntheticBold, bool syntheticItalic, CSSFontSelector*, const FontFeatureSettings&, const FontVariantSettings&);
+    //+EAWKDC Change
+    RefPtr<Font> font(const FontCascadeDescription&, bool syntheticBold, bool syntheticItalic, CSSFontSelector*, const FontFeatureSettings&, const FontVariantSettings&);
+    //-EAWKDC Change
 
     void pruneTable();
 

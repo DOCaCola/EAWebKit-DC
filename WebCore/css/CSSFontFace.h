@@ -84,7 +84,9 @@ public:
 
     void fontLoaded(CSSFontFaceSource*);
 
-    RefPtr<Font> font(const FontDescription&, bool syntheticBold, bool syntheticItalic);
+    //+EAWKDC Change
+    RefPtr<Font> font(const FontCascadeDescription&, bool syntheticBold, bool syntheticItalic);
+    //-EAWKDC Change
 
     struct UnicodeRange {
         UnicodeRange(UChar32 from, UChar32 to)

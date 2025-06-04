@@ -101,7 +101,9 @@ void CSSFontFaceSource::fontLoaded(CachedFont*)
         m_face->fontLoaded(this);
 }
 
-RefPtr<Font> CSSFontFaceSource::font(const FontDescription& fontDescription, bool syntheticBold, bool syntheticItalic, CSSFontSelector* fontSelector, const FontFeatureSettings& fontFaceFeatures, const FontVariantSettings& fontFaceVariantSettings)
+//+EAWKDC Change
+RefPtr<Font> CSSFontFaceSource::font(const FontCascadeDescription& fontDescription, bool syntheticBold, bool syntheticItalic, CSSFontSelector* fontSelector, const FontFeatureSettings& fontFaceFeatures, const FontVariantSettings& fontFaceVariantSettings)
+//-EAWKDC Change
 {
     // If the font hasn't loaded or an error occurred, then we've got nothing.
     if (!isValid())

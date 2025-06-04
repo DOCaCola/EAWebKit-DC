@@ -175,7 +175,9 @@ public:
     GlyphData glyphDataForCharacter(UChar32) const;
     Glyph glyphForCharacter(UChar32) const;
 
-    RefPtr<Font> systemFallbackFontForCharacter(UChar32, const FontDescription&, bool isForPlatformFont) const;
+    //+EAWKDC Change
+    RefPtr<Font> systemFallbackFontForCharacter(UChar32, const FontCascadeDescription&, bool isForPlatformFont) const;
+    //-EAWKDC Change
 
     const GlyphPage* glyphPage(unsigned pageNumber) const;
 

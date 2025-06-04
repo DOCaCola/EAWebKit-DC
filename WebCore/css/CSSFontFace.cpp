@@ -107,7 +107,9 @@ void CSSFontFace::fontLoaded(CSSFontFaceSource* source)
 #endif
 }
 
-RefPtr<Font> CSSFontFace::font(const FontDescription& fontDescription, bool syntheticBold, bool syntheticItalic)
+//+EAWKDC Change
+RefPtr<Font> CSSFontFace::font(const FontCascadeDescription& fontDescription, bool syntheticBold, bool syntheticItalic)
+//-EAWKDC Change
 {
     m_activeSource = 0;
     if (!isValid())

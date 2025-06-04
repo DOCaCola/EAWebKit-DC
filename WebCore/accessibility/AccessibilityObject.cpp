@@ -1866,14 +1866,16 @@ bool AccessibilityObject::isAriaModalDescendant(Node* ariaModalNode) const
 
 bool AccessibilityObject::ignoredFromARIAModalPresence() const
 {
-    // We shouldn't ignore the top node.
+	//+EAWKDC Change - Linker fix
+#if HAVE(ACCESSIBILITY)
+	// We shouldn't ignore the top node.
     if (!node() || !node()->parentNode())
         return false;
     
     AXObjectCache* cache = axObjectCache();
     if (!cache)
         return false;
-    
+
     // ariaModalNode is the current displayed modal dialog.
     Node* ariaModalNode = cache->ariaModalNode();
     if (!ariaModalNode)
@@ -1882,8 +1884,12 @@ bool AccessibilityObject::ignoredFromARIAModalPresence() const
     // We only want to ignore the objects within the same frame as the modal dialog.
     if (ariaModalNode->document().frame() != this->frame())
         return false;
-    
+
     return !isAriaModalDescendant(ariaModalNode);
+#else
+    return false;
+#endif
+    //-EAWKDC Change
 }
 
 bool AccessibilityObject::hasTagName(const QualifiedName& tagName) const

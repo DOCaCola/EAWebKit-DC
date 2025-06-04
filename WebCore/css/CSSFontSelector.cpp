@@ -598,7 +598,9 @@ size_t CSSFontSelector::fallbackFontCount()
     return 0;
 }
 
-PassRefPtr<Font> CSSFontSelector::fallbackFontAt(const FontDescription& fontDescription, size_t index)
+//+EAWKDC Change
+PassRefPtr<Font> CSSFontSelector::fallbackFontAt(const FontCascadeDescription& fontDescription, size_t index)
+//-EAWKDC Change
 {
     ASSERT_UNUSED(index, !index);
 

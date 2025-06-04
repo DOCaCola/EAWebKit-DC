@@ -461,7 +461,9 @@ static SystemFallbackCache& systemFallbackCache()
     return map.get();
 }
 
-RefPtr<Font> Font::systemFallbackFontForCharacter(UChar32 character, const FontDescription& description, bool isForPlatformFont) const
+//+EAWKDC Change
+RefPtr<Font> Font::systemFallbackFontForCharacter(UChar32 character, const FontCascadeDescription& description, bool isForPlatformFont) const
+//-EAWKDC Change
 {
     auto fontAddResult = systemFallbackCache().add(this, CharacterFallbackMap());
 
